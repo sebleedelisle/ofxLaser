@@ -16,11 +16,7 @@ class DragHandle : public ofPoint{
 		set(0,0);
 	};
 	
-//	DragHandle(float xpos, float ypos) {
-//		set(xpos, ypos);
-//		
-//	};
-//	
+
 	void set(float xpos, float ypos, float r = 8) {
 		
 		x = xpos;

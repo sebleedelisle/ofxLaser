@@ -7,11 +7,12 @@
 #pragma once
 #include "ofMain.h"
 
-class ofxLaserPoint : public ofPoint {
+namespace ofxLaserX {
+class Point : public ofPoint {
 
 public:
 	
-	ofxLaserPoint(ofPoint p, ofColor c, float pointIntensity = 1, bool usecalibration = true ) {
+	Point(ofPoint p, ofColor c, float pointIntensity = 1, bool usecalibration = true ) {
 		
 		x = p.x;
 		y = p.y;
@@ -32,3 +33,4 @@ public:
 	
 
 };
+}

@@ -1,0 +1,10 @@
+<Laser_Blue>
+	<Laser_blue_calibration>
+		<blue_100>1</blue_100>
+		<blue_75>0.75</blue_75>
+		<blue_50>0.5</blue_50>
+		<blue_25>0.25</blue_25>
+		<blue_0>0</blue_0>
+	</Laser_blue_calibration>
+<Laser_Blue/>
+</Laser_Blue>
