@@ -12,10 +12,17 @@ void ofApp::setup(){
 
 	
 	ofxGuiSetDefaultWidth(300);
-	laserGui.setup(laser.parameters);
+	laserGui.setup();
+	laserGui.add(laser.parameters);
+	
+	laserGui.add(laser.redParams);
+	laserGui.add(laser.greenParams);
+	laserGui.add(laser.blueParams);
+
+	laserGui.loadFromFile("laserSettings.xml");
+
 	laserGui.setPosition(laserWidth+50, 0);
 	
-	laserGui.loadFromFile("laserSettings.xml");
 	
 	//laserGui.setWidthElements(400);
 	currentLaserEffect = 0;
@@ -45,6 +52,7 @@ void ofApp::draw() {
 	ofBackground(0);
 	laser.draw();
 	laserGui.draw();
+	colourGui.draw();
 	
 	ofNoFill();
 	ofSetLineWidth(1);

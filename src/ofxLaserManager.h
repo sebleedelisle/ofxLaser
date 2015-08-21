@@ -42,11 +42,14 @@ namespace ofxLaser {
 		
 		void drawTestPattern();
 		
+		
+		
 		void addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float intensity = 1, int maxpoints = -1);
 		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
 		void addLaserCircle(const ofPoint& ofpoint, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
 		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 
+		
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
 
@@ -59,6 +62,9 @@ namespace ofxLaser {
 		void processIldaPoints();
 		
 		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
+		
+		
+		
 		
 		ofxEtherdream etherdream;
 		ofParameter<string> etherdreamStatus;

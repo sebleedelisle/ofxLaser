@@ -31,6 +31,7 @@ public:
 	vector<ofPolyline> polyLines;
 	
 	ofxPanel laserGui;
+	ofxPanel colourGui; 
 	
 	float elapsedTime; 
 

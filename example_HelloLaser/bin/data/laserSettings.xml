@@ -104,4 +104,54 @@
 <preview_laser_path>1</preview_laser_path>
 	<show_post_transform_path>0</show_post_transform_path>
 <connect_etherdream>1</connect_etherdream>
+<show_warper_UI>0</show_warper_UI>
+<group>
+		<Laser_Manager>
+			<intensity>1</intensity>
+			<test_pattern>0</test_pattern>
+			<points_per_second>30000</points_per_second>
+			<colour_change_offset>-6</colour_change_offset>
+			<flip_x>1</flip_x>
+			<flip_y>1</flip_y>
+			<show_warper_UI>1</show_warper_UI>
+			<laser_on_during_move>0</laser_on_during_move>
+			<preview_laser>1</preview_laser>
+			<preview_laser_path>1</preview_laser_path>
+			<show_post_transform_path>0</show_post_transform_path>
+			<move_speed>6</move_speed>
+			<move_points_padding>1</move_points_padding>
+			<shape_pre_blank_points>1</shape_pre_blank_points>
+			<shape_post_blank_points>1</shape_post_blank_points>
+			<dot_max_points>7</dot_max_points>
+			<line_acceleration>0.5</line_acceleration>
+			<line_speed>20</line_speed>
+			<circle_overlap>20</circle_overlap>
+			<circle_acceleration>0.5</circle_acceleration>
+			<circle_speed>20</circle_speed>
+			<polyline_corner_threshold>90</polyline_corner_threshold>
+			<polyline_acceleration>0.5</polyline_acceleration>
+			<polyline_speed>20</polyline_speed>
+		</Laser_Manager>
+		<Laser_red_calibration>
+			<red_100>1</red_100>
+			<red_75>0.75</red_75>
+			<red_50>0.5</red_50>
+			<red_25>0.25</red_25>
+			<red_0>0</red_0>
+		</Laser_red_calibration>
+		<Laser_green_calibration>
+			<green_100>1</green_100>
+			<green_75>0.75</green_75>
+			<green_50>0.5</green_50>
+			<green_25>0.25</green_25>
+			<green_0>0</green_0>
+		</Laser_green_calibration>
+		<Laser_blue_calibration>
+			<blue_100>1</blue_100>
+			<blue_75>0.75</blue_75>
+			<blue_50>0.5</blue_50>
+			<blue_25>0.25</blue_25>
+			<blue_0>0</blue_0>
+		</Laser_blue_calibration>
+	</group>
 </Laser_Manager>
