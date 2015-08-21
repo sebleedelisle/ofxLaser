@@ -34,10 +34,11 @@ namespace ofxLaser {
 		
 		void setupParameters();
 		void roundPPS(int& v);
+		//void roundPPS(int& v);
 		
 		void connectToEtherdream();
 		void disconnectFromEtherdream();
-		void connectButtonPressed();
+		void connectButtonPressed(bool&v);
 		
 		void drawTestPattern();
 		
@@ -59,6 +60,7 @@ namespace ofxLaser {
 		
 		ofxEtherdream etherdream;
 		ofParameter<string> etherdreamStatus;
+		//bool shouldBeConnected;
 		
 		vector<ofxIlda::Point> ildaPoints;
 		vector<ofxLaser::Point> laserPoints;
@@ -69,7 +71,7 @@ namespace ofxLaser {
 		
 		
 		ofParameterGroup parameters;
-		ofxButton connectButton;
+		ofParameter<bool> connectButton;
 		ofParameter<float> intensity;
 		ofParameter<int> pps;
 		

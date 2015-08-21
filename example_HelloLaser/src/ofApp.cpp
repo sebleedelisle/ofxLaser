@@ -11,13 +11,6 @@ void ofApp::setup(){
 	laser.connectToEtherdream();
 
 	
-	for(int i = 0; i<10; i++) {
-		positions.push_back(ofPoint(ofRandom(laserWidth), ofRandom(laserHeight)));
-		velocities.push_back(ofPoint(30, 0));
-		velocities[i].rotate(ofRandom(360),ofPoint(0,0,1));
-		
-		
-	}
 	ofxGuiSetDefaultWidth(300);
 	laserGui.setup(laser.parameters);
 	laserGui.setPosition(laserWidth+50, 0);
@@ -25,7 +18,8 @@ void ofApp::setup(){
 	laserGui.loadFromFile("laserSettings.xml");
 	
 	//laserGui.setWidthElements(400);
-	
+	currentLaserEffect = 0;
+	numLaserEffects = 8;
 	
 }
 
@@ -55,63 +49,178 @@ void ofApp::draw() {
 	ofNoFill();
 	ofSetLineWidth(1);
 	ofRect(0,0,laserWidth, laserHeight);
+	
+	int ypos = laserHeight+20;
+	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 20, ypos+=30);
+	
+	ofDrawBitmapString("Left and Right Arrows to change current effect", 20, ypos+=30);
+	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
 
 }
 
 
 void ofApp :: showLaserEffect(int effectnum) {
 	
+	float left = laserWidth*0.1;
+	float top = laserHeight*0.1;
+	float right = laserWidth*0.9;
+	float bottom = laserHeight*0.9;
+	float width = laserWidth*0.8;
+	float height = laserHeight*0.8;
+	
+	switch (currentLaserEffect) {
+			
+		case 1: {
+			
+			// LASER LINES
+			int numlines = 10;
+			
+			for(int i = 0; i<numlines; i++) {
+				
+				float progress =(float)i/(float)(numlines-1);
+
+				float xpos =left + (width*progress);
+									
+				laser.addLaserLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				laser.addLaserLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+		
+			}
+
+			break;
+
+		}
+		
+			
+		case 2: {
+			
+			// LASER LINES ANIMATING
+			int numlines = 10;
+			
+			for(int i = 0; i<numlines; i++) {
+				
+				float progress =(float)i/(float)(numlines-1);
+				
+				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
+				
+				laser.addLaserLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				laser.addLaserLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+				
+			}
+			
+			break;
+			
+		}
+		
+			
+		case 3: {
+			
+			// LASER CIRCLES
+			int numCircles = 6;
+			
+			for(int i = 0; i<numCircles; i++) {
+				
+				float progress =(float)i/(float)(numCircles-1);
+				
+				float xpos =left + (width*progress);
+				
+				laser.addLaserCircle(ofPoint(xpos, top+height*0.3),30, ofColor::white);
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				
+				laser.addLaserCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				
+			}
+			
+			break;
+			
+		}
+			
+		case 4: {
+			
+			// LASER CIRCLES ANIMATING
+			int numCircles = 6;
+			
+			for(int i = 0; i<numCircles; i++) {
+				
+				float progress =(float)i/(float)(numCircles-1);
+				
+				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
+				
+				laser.addLaserCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white);
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				
+				laser.addLaserCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				
+			}
+			
+			break;
+			
+		}
+			
+		case 5: {
+			
+			// LASER PARTICLES
+			int numParticles = 10;
+			
+			for(int i = 0; i<numParticles; i++) {
+				
+				float progress =(float)i/(float)(numParticles-1);
+				
+				float xpos =left + (width*progress) ;
+				
+				laser.addLaserDot(ofPoint(xpos, top+height*0.3), ofColor::white);
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				laser.addLaserDot(ofPoint(xpos, top+height*0.7), c);
+				
+				
+				
+			}
+			
+			break;
+			
+		}
+		case 6: {
+			
+			// LASER PARTICLES ANIMATING
+			
+			float speed = 1;
+			for(int i = 0; i<30; i++) {
+		
+				ofColor c;
+				c.setHsb(i*6,255,255);
+				ofPoint p;
+				float spread = ofMap(cos(elapsedTime*0.4),1,-1,0.01,0.1);
+				p.x = sin((elapsedTime-((float)i*spread)) *1.83f * speed) * 300;
+				p.y = sin((elapsedTime-((float)i*spread)) *2.71f *speed) * 300;
+				p.x+=laserWidth/2;
+				p.y+=laserHeight/2;
+				laser.addLaserDot(p, c);
+				
+			}
+			
+			break;
+			
+		}
+
+			
+	}
 	// LASER PARTICLES ---------------------------------
-	//
-	//	for(int x = laserWidth*0.1; x<laserWidth*0.9; x+=laserWidth*0.2) {
-	//
-	//		laser.addLaserDot(ofPoint(x,laserHeight/2 ), ofColor::white, 1);
-	//	}
-	//
-	//	for(int i = 0; i<positions.size(); i++) {
-	//		ofPoint&p = positions[i];
-	//		ofPoint&v = velocities[i];
-	//		p+=v*ofGetLastFrameTime();
-	//		if((p.x>laserWidth) || (p.x<0)) {
-	//			v.x*=-1;
-	//			p.x = ofClamp(p.x, 0, laserWidth);
-	//		}
-	//		if((p.y>laserHeight) || (p.y<0)) {
-	//			v.y*=-1;
-	//			p.y = ofClamp(p.y, 0, laserHeight);
-	//		}
-	//		laser.addLaserDot(p, ofColor::white, 1);
-	//
-	//
-	//	}
+	
+
+
+
 	
 	
 	
 	// LASER SINE WAVE PARTICLES --------------------------------------
 	
-	float speed = 1;
-	for(int i = 0; i<30; i++) {
-		
-		ofColor c;
-		c.setHsb(i*6,255,255);
-		ofPoint p;
-		float spread = ofMap(cos(elapsedTime*0.4),1,-1,0.01,0.1);
-		p.x = sin((elapsedTime-((float)i*spread)) *1.83f * speed) * 300;
-		p.y = sin((elapsedTime-((float)i*spread)) *2.71f *speed) * 300;
-		p.x+=laserWidth/2;
-		p.y+=laserHeight/2;
-		laser.addLaserDot(p, c);
-		
-	}
-	
-	// LASER LINES
-	
-	//	for(int i = 0; i<10; i++) {
-	//		laser.addLaserLine(ofPoint(i*100, 100), ofPoint(i*100, 700), ofColor::white);
-	//
-	//	}
-	//
-	//
+
 	//	// LASER CIRCLES
 	//
 	//	for(int i = 1; i<10; i++) {
@@ -133,6 +242,12 @@ void ofApp :: showLaserEffect(int effectnum) {
 void ofApp::keyPressed(int key){
 	if(key =='c') {
 		polyLines.clear();
+	} else if (key == OF_KEY_LEFT) {
+		currentLaserEffect--;
+		if(currentLaserEffect<0) currentLaserEffect = numLaserEffects-1;
+	} else if (key == OF_KEY_RIGHT) {
+		currentLaserEffect++;
+		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
 	}
 
 }

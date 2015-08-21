@@ -47,7 +47,7 @@ void Manager :: setup (int width, int height) {
 
 
 
-void Manager :: connectButtonPressed(){
+void Manager :: connectButtonPressed(bool&v){
 	
 //	if(!shouldBeConnected) {
 //		connectToEtherdream();
@@ -1005,10 +1005,10 @@ void Manager :: setupParameters() {
 	
 	parameters.setName("Laser Manager");
 	
-	connectButton.setup("Etherdream connect");
+	connectButton.set("Etherdream connect");
 	connectButton.addListener(this, &Manager ::connectButtonPressed);
 	
-	//parameters.add(&connectButton);
+	//parameters.add(connectButton.set("connect etherdream", false));
 	
 	//parameters.add(etherdreamStatus.set("", "test"));
 	

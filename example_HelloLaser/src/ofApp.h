@@ -20,15 +20,13 @@ public:
 	void showLaserEffect(int effectnum);
 	
 	ofParameter<int> currentLaserEffect;
+	int numLaserEffects; 
 	
 	ofxLaser::Manager laser;
 	
 	bool drawingShape = false;
 	int laserWidth;
 	int laserHeight; 
-	
-	vector<ofPoint>positions;
-	vector<ofPoint>velocities;
 	
 	vector<ofPolyline> polyLines;
 	
