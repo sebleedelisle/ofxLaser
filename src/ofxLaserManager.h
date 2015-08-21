@@ -17,6 +17,7 @@
 #include "ofxLaserQuadWarp.h"
 
 
+
 namespace ofxLaser {
 	
 	class Manager {

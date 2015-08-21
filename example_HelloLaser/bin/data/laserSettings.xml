@@ -109,8 +109,8 @@
 		<Laser_Manager>
 			<intensity>1</intensity>
 			<test_pattern>0</test_pattern>
-			<points_per_second>30000</points_per_second>
-			<colour_change_offset>-6</colour_change_offset>
+			<points_per_second>20000</points_per_second>
+			<colour_change_offset>-4</colour_change_offset>
 			<flip_x>1</flip_x>
 			<flip_y>1</flip_y>
 			<show_warper_UI>1</show_warper_UI>
@@ -118,23 +118,23 @@
 			<preview_laser>1</preview_laser>
 			<preview_laser_path>1</preview_laser_path>
 			<show_post_transform_path>0</show_post_transform_path>
-			<move_speed>6</move_speed>
+			<move_speed>19.5714</move_speed>
 			<move_points_padding>1</move_points_padding>
-			<shape_pre_blank_points>1</shape_pre_blank_points>
+			<shape_pre_blank_points>0</shape_pre_blank_points>
 			<shape_post_blank_points>1</shape_post_blank_points>
-			<dot_max_points>7</dot_max_points>
+			<dot_max_points>5</dot_max_points>
 			<line_acceleration>0.5</line_acceleration>
 			<line_speed>20</line_speed>
-			<circle_overlap>20</circle_overlap>
-			<circle_acceleration>0.5</circle_acceleration>
+			<circle_overlap>0</circle_overlap>
+			<circle_acceleration>1.51643</circle_acceleration>
 			<circle_speed>20</circle_speed>
 			<polyline_corner_threshold>90</polyline_corner_threshold>
-			<polyline_acceleration>0.5</polyline_acceleration>
-			<polyline_speed>20</polyline_speed>
+			<polyline_acceleration>3.60643</polyline_acceleration>
+			<polyline_speed>23.8435</polyline_speed>
 		</Laser_Manager>
 		<Laser_red_calibration>
 			<red_100>1</red_100>
-			<red_75>0.75</red_75>
+			<red_75>0.744898</red_75>
 			<red_50>0.5</red_50>
 			<red_25>0.25</red_25>
 			<red_0>0</red_0>

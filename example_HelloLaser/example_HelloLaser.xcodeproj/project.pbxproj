@@ -557,8 +557,6 @@
 					../../../addons/ofxEtherdream/libs/driver,
 					../../../addons/ofxEtherdream/libs/driver/libetherdream,
 					../../../addons/ofxEtherdream/src,
-					../../../addons/ofxIlda/libs,
-					../../../addons/ofxIlda/src,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -602,8 +600,6 @@
 					../../../addons/ofxEtherdream/libs/driver,
 					../../../addons/ofxEtherdream/libs/driver/libetherdream,
 					../../../addons/ofxEtherdream/src,
-					../../../addons/ofxIlda/libs,
-					../../../addons/ofxIlda/src,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CPLUSPLUSFLAGS = (
@@ -628,6 +624,18 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = NONE;
+				HEADER_SEARCH_PATHS = (
+					"$(OF_CORE_HEADERS)",
+					../../../addons/ofxGui/libs,
+					../../../addons/ofxGui/src,
+					../../../addons/ofxXmlSettings/libs,
+					../../../addons/ofxXmlSettings/src,
+					../../../addons/ofxEtherdream/libs,
+					../../../addons/ofxEtherdream/libs/common,
+					../../../addons/ofxEtherdream/libs/driver,
+					../../../addons/ofxEtherdream/libs/driver/libetherdream,
+					../../../addons/ofxEtherdream/src,
+				);
 				ICON = "$(ICON_NAME_DEBUG)";
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
@@ -713,6 +721,18 @@
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../libs/glut/lib/osx\"";
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_MODEL_TUNING = NONE;
+				HEADER_SEARCH_PATHS = (
+					"$(OF_CORE_HEADERS)",
+					../../../addons/ofxGui/libs,
+					../../../addons/ofxGui/src,
+					../../../addons/ofxXmlSettings/libs,
+					../../../addons/ofxXmlSettings/src,
+					../../../addons/ofxEtherdream/libs,
+					../../../addons/ofxEtherdream/libs/common,
+					../../../addons/ofxEtherdream/libs/driver,
+					../../../addons/ofxEtherdream/libs/driver/libetherdream,
+					../../../addons/ofxEtherdream/src,
+				);
 				ICON = "$(ICON_NAME_RELEASE)";
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
 				INFOPLIST_FILE = "openFrameworks-Info.plist";
