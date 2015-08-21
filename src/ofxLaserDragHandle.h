@@ -8,6 +8,7 @@
 
 #include "ofMain.h"
 
+namespace ofxLaser {
 class DragHandle : public ofPoint{
 	
 	
@@ -78,3 +79,4 @@ class DragHandle : public ofPoint{
 	
 	
 };
+}

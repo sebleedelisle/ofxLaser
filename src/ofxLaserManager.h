@@ -14,7 +14,7 @@
 #include "ofxLaserLine.h"
 #include "ofxLaserCircle.h"
 #include "ofxLaserPolyline.h"
-#include "QuadWarp.h"
+#include "ofxLaserQuadWarp.h"
 
 
 namespace ofxLaser {
@@ -58,6 +58,8 @@ namespace ofxLaser {
 
 		void processIldaPoints();
 		
+		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
+		
 		ofxEtherdream etherdream;
 		ofParameter<string> etherdreamStatus;
 		//bool shouldBeConnected;
@@ -80,6 +82,7 @@ namespace ofxLaser {
 		
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
+		ofParameter<bool> showWarpUI; 
 		ofParameter<int> colourChangeDelay;
 		
 		ofParameter<int> shapePreBlank;

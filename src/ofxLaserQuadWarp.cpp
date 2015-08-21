@@ -5,12 +5,14 @@
 //
 //
 
-#include "QuadWarp.h"
+#include "ofxLaserQuadWarp.h"
+using namespace ofxLaser;
 
 QuadWarp::QuadWarp(string savelabel) {
 	initListeners();
 	
 	saveLabel = savelabel;
+	visible = true;
 	
 }
 
@@ -40,6 +42,8 @@ void QuadWarp :: initListeners() {
 }
 
 void QuadWarp :: draw() {
+	
+	if(!visible) return;
 	
 	ofPushStyle();
 	ofNoFill();
@@ -71,6 +75,9 @@ void QuadWarp :: startDragging(int handleIndex, ofPoint clickPos) {
 }
 
 bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
+	
+	
+	if(!visible) return false;
 	
 	bool handleHit = false;
 	
@@ -122,7 +129,10 @@ bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
 }
 
 bool QuadWarp :: mouseReleased(ofMouseEventArgs &e){
+	
+	
 	bool wasDragging = false;
+	
 	for(int i = 0; i<allHandles.size(); i++) {
 		if(allHandles[i]->stopDrag()) wasDragging = true;
 	}
@@ -200,6 +210,12 @@ void QuadWarp::saveSettings() {
 	
 	xml.saveFile(filename);
 	
+	
+}
+
+void QuadWarp::setVisible(bool warpvisible) {
+	
+	visible = warpvisible;
 	
 }
 

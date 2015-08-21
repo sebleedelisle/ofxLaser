@@ -162,8 +162,11 @@ void Manager :: draw() {
 	
 	// clear the shapes vector no matter what
 	shapes.clear();
-	
-	warp.draw();
+
+	warp.setVisible(showWarpUI);
+	if(showWarpUI) {
+		warp.draw();
+	}
 	
 	
 	
@@ -353,7 +356,6 @@ void Manager :: renderLaserPath() {
 			
 			int pointindex =floor(ofMap(ofGetMouseX(), previewRectangle.x, previewRectangle.getRight(), 0, previewPathMesh.getNumVertices()-1, true));
 			
-			//if(pointindex>=pathMesh.getNumVertices()) pointindex =pathMesh.getNumVertices();
 			
 			ofPoint p = previewPathMesh.getVertex(pointindex);
 			ofSetColor(0,255,0);
@@ -362,10 +364,6 @@ void Manager :: renderLaserPath() {
 		}
 	}
 	
-	// TODO - this needs to go somewhere else!
-//	warp.visible = showWarpPoints || (overrideSettings);
-//	warp.draw();
-
 	ofPopStyle();
 	
 }
@@ -836,75 +834,33 @@ void  Manager :: processIldaPoints() {
 		
 		// TODO proper colour calibration
 		ofColor c(p.r, p.g, p.b);
-		c*=intensity;
+		
+		c.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
+		c.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
+		c.b = calculateCalibratedBrightness(c.b, intensity, blue100, blue75, blue50, blue25, blue0);
+		
 		
 		ildaPoints.push_back(ofxIlda::Point(p, c, pmin, pmax));
 		
 	}
 	
 }
-//
-//void Manager :: addIldaPointRaw(ofPoint p, ofFloatColor c, bool useCalibration) {
-//	
-////	if(useCalibration) {
-////		c.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
-////		c.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
-////		c.b = calculateCalibratedBrightness(c.b, intensity, blue100, blue75, blue50, blue25, blue0);
-////	}
-//	
-//	if(!showPostTransformPreview) pathMesh.addVertex(p);
-//	
-//	
-//	ofPoint warpedpoint = p; // warp.getWarpedPoint(p);
-//	
-//	ofxIlda::Point ildapoint = ofPointToIldaPoint(warpedpoint, c);
-//	ildaPoints.push_back(ildapoint);
-//	
-//	if(showPostTransformPreview){
-//		ofPoint previewpoint;
-//		previewpoint.x = ofMap(ildapoint.x, kIldaMinPoint, kIldaMaxPoint, 0, appWidth);
-//		previewpoint.y = ofMap(ildapoint.y, kIldaMinPoint, kIldaMaxPoint, 0, appHeight);
-//		pathMesh.addVertex(previewpoint);
-//		
-//	}
-//	
-//}
-//
-//
-//ofxIlda::Point Manager :: ofPointToIldaPoint(const ofPoint& ofpoint, ofFloatColor colour){
-//	
-//	ofPoint p = ofpoint;
-//	
-//	ofxIlda::Point ildapoint;
-//	
-//	
-//	if(flipY) p.y= appHeight-p.y;
-//	if(flipX) p.x= appWidth-p.x;
-//	
-//	p.x = ofClamp(p.x, 0, appWidth);
-//	p.y = ofClamp(p.y, 0, appHeight);
-//	
-//	
-//	ildapoint.set(p, colour, pmin, pmax);
-//	return ildapoint;
-//	
-//}
-//
-//ofPoint Manager :: ildaPointToOfPoint(const ofxIlda::Point& ildapoint){
-//	
-//	ofxIlda::Point p = ildapoint;
-//	
-//	p.x = ofMap(p.x, kIldaMinPoint, kIldaMaxPoint, 0, appWidth);
-//	p.y = ofMap(p.y, kIldaMinPoint, kIldaMaxPoint, 0, appHeight);
-//	if(flipY) p.y= appHeight-p.y;
-//	if(flipX) p.x= appWidth-p.x;
-//	
-//	//	return  warp.getUnWarpedPoint(ofVec3f(p.x, p.y));
-//	return  ofVec3f(p.x, p.y);
-//
-//
-//}
-//
+
+
+float Manager::calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0){
+	
+	value *=intensity;
+	if(value<0.25) {
+		return ofMap(value, 0, 0.25, level0, level25);
+	} else if(value<0.5) {
+		return ofMap(value, 0.25, 0.5,level25, level50);
+	} else if(value<0.75) {
+		return ofMap(value, 0.5, 0.75,level50, level75);
+	} else {
+		return ofMap(value, 0.75, 1,level75, level100);
+	}
+	
+}
 
 
 
@@ -1035,6 +991,7 @@ void Manager :: setupParameters() {
 	
 	parameters.add(flipX.set("flip x", true));
 	parameters.add(flipY.set("flip y", true));
+	parameters.add(showWarpUI.set("show warper UI", true));
 	
 	parameters.add(laserOnWhileMoving.set("laser on during move", false));
 	
@@ -1075,19 +1032,19 @@ void Manager :: setupParameters() {
 		redParams.add(red75.set("red 75", 0.75,0,1));
 		redParams.add(red50.set("red 50", 0.5,0,1));
 		redParams.add(red25.set("red 25", 0.25,0,1));
-		redParams.add(red0.set("red 0", 0,0,0.5));
+		redParams.add(red0.set("red 0", 0,0,1));
 	
 		greenParams.add(green100.set("green 100", 1,0,1));
 		greenParams.add(green75.set("green 75", 0.75,0,1));
 		greenParams.add(green50.set("green 50", 0.5,0,1));
 		greenParams.add(green25.set("green 25", 0.25,0,1));
-		greenParams.add(green0.set("green 0", 0,0,0.5));
+		greenParams.add(green0.set("green 0", 0,0,1));
 	
 		blueParams.add(blue100.set("blue 100", 1,0,1));
 		blueParams.add(blue75.set("blue 75", 0.75,0,1));
 		blueParams.add(blue50.set("blue 50", 0.5,0,1));
 		blueParams.add(blue25.set("blue 25", 0.25,0,1));
-		blueParams.add(blue0.set("blue 0", 0,0,0.5));
+		blueParams.add(blue0.set("blue 0", 0,0,1));
 	
 		redParams.setName("Laser red calibration");
 		greenParams.setName("Laser green calibration");
@@ -1110,6 +1067,7 @@ void Manager :: setupParameters() {
 	//	};
 	
 }
+
 void Manager :: roundPPS(int& v) {
 	pps = round((float)pps/1000.0f)* 1000;
 
