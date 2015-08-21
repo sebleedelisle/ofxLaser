@@ -9,7 +9,7 @@
 #pragma once
 #include "ofxLaserPoint.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 class Shape {
 
 	public :
@@ -92,7 +92,7 @@ class Shape {
 		else return endPos;
 	};
 	
-	virtual void appendPointsToVector(vector<ofxLaserX::Point>& points) {
+	virtual void appendPointsToVector(vector<ofxLaser::Point>& points) {
 		
 	};
 	

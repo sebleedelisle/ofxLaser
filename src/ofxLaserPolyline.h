@@ -10,7 +10,7 @@
 #include "ofxLaserShape.h"
 #include "ofMain.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 	
 class Polyline : public Shape{
 	
@@ -34,7 +34,7 @@ class Polyline : public Shape{
 		
 	}
 
-	void appendPointsToVector(vector<ofxLaserX::Point>& points) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points) {
 		
 		ofPolyline& poly = polyline;
 		int startpoint = 0;
@@ -66,7 +66,7 @@ class Polyline : public Shape{
 					//pointcolour = laserpoly.getColourForPoint(unitDistances[i], p);
 
 					//addIldaPoint(p, pointcolour, laserpoly.intensity);
-					points.push_back(ofxLaserX::Point(p, colour));
+					points.push_back(ofxLaser::Point(p, colour));
 					// TODO reimplement preview mesh
 //					if(i>0) {
 //						laserpoly.previewMesh.addVertex(lastpoint);

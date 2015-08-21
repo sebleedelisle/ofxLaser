@@ -11,7 +11,6 @@
 		12054BEB1B8249AF00083D6B /* QuadWarp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12054BE91B8249AF00083D6B /* QuadWarp.cpp */; };
 		12054BEE1B824A7000083D6B /* DragHandle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12054BEC1B824A7000083D6B /* DragHandle.cpp */; };
 		12F31C3E1B7CCEA400B87E5D /* ofxLaserManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12F31C3C1B7CCEA400B87E5D /* ofxLaserManager.cpp */; };
-		12F31C471B7CE6EA00B87E5D /* Quint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12F31C451B7CE6EA00B87E5D /* Quint.cpp */; };
 		1CD33E884D9E3358252E82A1 /* ofxToggle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 907C5B5E104864A2D3A25745 /* ofxToggle.cpp */; };
 		24B475D09D396FD37823F959 /* test.c in Sources */ = {isa = PBXBuildFile; fileRef = 998154314347A01197567C72 /* test.c */; };
 		483908258D00B98B4BE69F07 /* ofxLabel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78D67A00EB899FAC09430597 /* ofxLabel.cpp */; };
@@ -95,8 +94,6 @@
 		12F31C411B7CDE0600B87E5D /* ofxLaserLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserLine.h; sourceTree = "<group>"; };
 		12F31C421B7CDE0600B87E5D /* ofxLaserPolyline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserPolyline.h; sourceTree = "<group>"; };
 		12F31C431B7CDE0600B87E5D /* ofxLaserShape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserShape.h; sourceTree = "<group>"; };
-		12F31C451B7CE6EA00B87E5D /* Quint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Quint.cpp; sourceTree = "<group>"; };
-		12F31C461B7CE6EA00B87E5D /* Quint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Quint.h; sourceTree = "<group>"; };
 		15F2C6477A769C03A56D1401 /* ofxSlider.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 30; name = ofxSlider.cpp; path = ../../../addons/ofxGui/src/ofxSlider.cpp; sourceTree = SOURCE_ROOT; };
 		17E65988300FBD9AAA2CD0CA /* ofxGui.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxGui.h; path = ../../../addons/ofxGui/src/ofxGui.h; sourceTree = SOURCE_ROOT; };
 		1C0DA2561397A7DE0246858B /* ofxGuiGroup.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 30; name = ofxGuiGroup.h; path = ../../../addons/ofxGui/src/ofxGuiGroup.h; sourceTree = SOURCE_ROOT; };
@@ -204,8 +201,6 @@
 			children = (
 				12054BE51B82298800083D6B /* ofxBezierWarp.cpp */,
 				12054BE61B82298800083D6B /* ofxBezierWarp.h */,
-				12F31C451B7CE6EA00B87E5D /* Quint.cpp */,
-				12F31C461B7CE6EA00B87E5D /* Quint.h */,
 				12F31C3F1B7CDE0600B87E5D /* ofxLaserCircle.h */,
 				12F31C401B7CDE0600B87E5D /* ofxLaserDot.h */,
 				12F31C411B7CDE0600B87E5D /* ofxLaserLine.h */,
@@ -525,7 +520,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				E4B69E200A3A1BDC003C02F2 /* main.cpp in Sources */,
-				12F31C471B7CE6EA00B87E5D /* Quint.cpp in Sources */,
 				E4B69E210A3A1BDC003C02F2 /* ofApp.cpp in Sources */,
 				856AA354D08AB4B323081444 /* ofxBaseGui.cpp in Sources */,
 				5CBB2AB3A60F65431D7B555D /* ofxButton.cpp in Sources */,

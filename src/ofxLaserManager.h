@@ -17,7 +17,7 @@
 #include "QuadWarp.h"
 
 
-namespace ofxLaserX {
+namespace ofxLaser {
 	
 	class Manager {
 		
@@ -52,8 +52,8 @@ namespace ofxLaserX {
 
 		
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
-		void addPoint(ofxLaserX::Point p);
-		void addPoints(vector<ofxLaserX::Point>&points);
+		void addPoint(ofxLaser::Point p);
+		void addPoints(vector<ofxLaser::Point>&points);
 
 		void processIldaPoints();
 		
@@ -61,7 +61,7 @@ namespace ofxLaserX {
 		ofParameter<string> etherdreamStatus;
 		
 		vector<ofxIlda::Point> ildaPoints;
-		vector<ofxLaserX::Point> laserPoints;
+		vector<ofxLaser::Point> laserPoints;
 		
 		QuadWarp warp;
 		
@@ -138,7 +138,7 @@ namespace ofxLaserX {
 		ofParameterGroup redParams, greenParams, blueParams;
 
 		
-		deque <ofxLaserX::Shape*> shapes;
+		deque <ofxLaser::Shape*> shapes;
 		
 		float appWidth;
 		float appHeight;

@@ -9,7 +9,7 @@
 
 #include "ofxLaserShape.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 class Circle : public Shape{
 	
 	public :
@@ -53,7 +53,7 @@ class Circle : public Shape{
 	
 	}
 	
-	void appendPointsToVector(vector<ofxLaserX::Point>& points) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points) {
 		
 		
 		float distanceTravelled = 2 * PI * radius + overlapDistance;
@@ -84,7 +84,7 @@ class Circle : public Shape{
 			p.x+=sin(ofDegToRad(angle))*radius;
 			p.y-=cos(ofDegToRad(angle))*radius;
 			
-			points.push_back(ofxLaserX::Point(p, colour));
+			points.push_back(ofxLaser::Point(p, colour));
 		}
 		
 		

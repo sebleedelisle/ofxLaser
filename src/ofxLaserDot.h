@@ -9,7 +9,7 @@
 
 #include "ofxLaserShape.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 class Dot : public Shape{
 	
 	public :
@@ -27,12 +27,12 @@ class Dot : public Shape{
 		tested = false;
 	}
 	
-	void appendPointsToVector(vector<ofxLaserX::Point>& points) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points) {
 		int particlecount = maxPoints * intensity;// ceil(dotMaxPoints* dot->intensity);
 		
 		for(int i = 0; i<particlecount; i++) {
 			//addIldaPoint(dot.getStartPos(), dot.colour);
-			points.push_back(ofxLaserX::Point(getStartPos(), colour));
+			points.push_back(ofxLaser::Point(getStartPos(), colour));
 		}
 	};
 

@@ -9,7 +9,7 @@
 
 #include "ofxLaserShape.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 class Line : public Shape{
 	
 	public :
@@ -31,7 +31,7 @@ class Line : public Shape{
 	}
 	
 	
-	void appendPointsToVector(vector<ofxLaserX::Point>& points) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points) {
 		
 		ofPoint& start = getStartPos();
 		ofPoint& end = getEndPos();
@@ -47,7 +47,7 @@ class Line : public Shape{
 			
 			float unitDistance = unitDistances[i];
 			
-			points.push_back(ofxLaserX::Point(start + (v*unitDistance), colour));
+			points.push_back(ofxLaser::Point(start + (v*unitDistance), colour));
 		}
 		
 		

@@ -17,7 +17,7 @@ public:
 	void mousePressed(int x, int y, int button);
 	void mouseReleased(int x, int y, int button);
 	
-	ofxLaserX::Manager laser;
+	ofxLaser::Manager laser;
 	
 	bool drawingShape = false;
 	int laserWidth;

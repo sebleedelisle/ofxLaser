@@ -8,7 +8,7 @@
 #include "ofxLaserManager.h"
 
 
-using namespace ofxLaserX;
+using namespace ofxLaser;
 
 Manager :: Manager() {
 	
@@ -174,9 +174,9 @@ void Manager :: draw() {
 void Manager :: drawShapes() {
 	
 	ofPoint currentPosition = laserHomePosition;
-	vector<ofxLaserX::Point> shapepoints;
+	vector<ofxLaser::Point> shapepoints;
 	
-	vector<ofxLaserX::Shape*> sortedShapes;
+	vector<ofxLaser::Shape*> sortedShapes;
 	
 	// sort the shapes by nearest neighbour
 	
@@ -184,7 +184,7 @@ void Manager :: drawShapes() {
 
 		ofFloatColor c = ofColor::white;
 		
-		shapes.push_front(new ofxLaserX::Dot(currentPosition, c, 0, 0));
+		shapes.push_front(new ofxLaser::Dot(currentPosition, c, 0, 0));
 		
 		
 		for(int i =0; i<shapes.size(); i++ ) {
@@ -209,7 +209,7 @@ void Manager :: drawShapes() {
 		do {
 			
 			
-			ofxLaserX::Shape& shape1 = *shapes[currentIndex];
+			ofxLaser::Shape& shape1 = *shapes[currentIndex];
 			
 			shape1.tested = true;
 			sortedShapes.push_back(&shape1);
@@ -221,7 +221,7 @@ void Manager :: drawShapes() {
 			
 			for(int j = 0; j<shapes.size(); j++) {
 				
-				ofxLaserX::Shape& shape2 = *shapes[j];
+				ofxLaser::Shape& shape2 = *shapes[j];
 				if((&shape1==&shape2) || (shape2.tested)) continue;
 				
 				shape2.reversed = false;
@@ -256,7 +256,7 @@ void Manager :: drawShapes() {
 		
 		for(int i = 0; i<sortedShapes.size(); i++) {
 			
-			ofxLaserX::Shape* shape = sortedShapes.at(i);
+			ofxLaser::Shape* shape = sortedShapes.at(i);
 			
 			// TODO add shape pre points switched on.
 			if(!currentPosition.match(shape->getStartPos(), 0.01)) {
@@ -295,7 +295,7 @@ void Manager :: drawShapes() {
 	
 	while(laserPoints.size()<minPoints) {
 		//const ofPoint p =currentPosition + ofPoint(0,10);
-		ofxLaserX::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
+		ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
 		shapepoints.clear();
 		blank.appendPointsToVector(shapepoints);
 		addPoints(shapepoints);
@@ -383,17 +383,17 @@ void Manager :: renderPreview() {
 	
 
 	
-	deque<ofxLaserX::Shape*>& newshapes = shapes; // (shapesHistory.size()>0) ? shapesHistory.back() : shapes;
+	deque<ofxLaser::Shape*>& newshapes = shapes; // (shapesHistory.size()>0) ? shapesHistory.back() : shapes;
 	
 	mesh.clear();
 	mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	
 	for(int i = 0; i<newshapes.size(); i++) {
 		
-		ofxLaserX::Shape* shape = newshapes[i];
+		ofxLaser::Shape* shape = newshapes[i];
 		
 		// Is it a dot?
-		ofxLaserX::Dot * dot = dynamic_cast<ofxLaserX::Dot*>(shape);
+		ofxLaser::Dot * dot = dynamic_cast<ofxLaser::Dot*>(shape);
 		if(dot) {
 			float radius = 1.5;
 			
@@ -415,7 +415,7 @@ void Manager :: renderPreview() {
 		}
 		
 		// Is it a circle?
-		ofxLaserX::Circle * circle = dynamic_cast<ofxLaserX::Circle*>(shape);
+		ofxLaser::Circle * circle = dynamic_cast<ofxLaser::Circle*>(shape);
 		if(circle) {
 			
 			ofVec3f v(0,-circle->radius);
@@ -435,7 +435,7 @@ void Manager :: renderPreview() {
 		}
 		
 //		// Is it a line?
-		ofxLaserX::Line * line = dynamic_cast<ofxLaserX::Line*>(shape);
+		ofxLaser::Line * line = dynamic_cast<ofxLaser::Line*>(shape);
 		if(line) {
 			mesh.addColor(ofColor::black);
 			mesh.addVertex(line->getStartPos());
@@ -450,7 +450,7 @@ void Manager :: renderPreview() {
 		}
 
 		// is it a poly?
-		ofxLaserX::Polyline* laserpoly = dynamic_cast<ofxLaserX::Polyline*>(shape);
+		ofxLaser::Polyline* laserpoly = dynamic_cast<ofxLaser::Polyline*>(shape);
 		if(laserpoly) {
 			ofPolyline& poly = laserpoly->polyline;
 			
@@ -501,15 +501,15 @@ void Manager :: renderPreview() {
 void Manager :: addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float dotintensity, int maxpoints){
 	
 	// TODO re-implement 3D to 2D conversion
-	//shapes.push_back(new ofxLaserX::Shape(gLProject(ofpoint), colour, intensity));
-	shapes.push_back(new ofxLaserX::Dot(ofpoint, colour, dotintensity, (maxpoints<0) ? (int)dotMaxPoints : maxpoints));
+	//shapes.push_back(new ofxLaser::Shape(gLProject(ofpoint), colour, intensity));
+	shapes.push_back(new ofxLaser::Dot(ofpoint, colour, dotintensity, (maxpoints<0) ? (int)dotMaxPoints : maxpoints));
 	
 }
 
 // TODO allow specification of acceleration and speed
 
 void Manager :: addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed, float acceleration) {
-	shapes.push_back(new ofxLaserX::Line(startpoint, endpoint, colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
+	shapes.push_back(new ofxLaser::Line(startpoint, endpoint, colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
 }
 
 // TODO allow specification of acceleration, speed, and overlap
@@ -517,7 +517,7 @@ void Manager :: addLaserCircle(const ofPoint& centre, float radius, ofFloatColor
 	
 	//ofPoint p = gLProject(ofpoint);
 	//float scalar = gLGetScaleForZ(ofpoint.z);
-	shapes.push_back(new ofxLaserX::Circle(centre, radius, colour, speed<0 ? (float)defaultCircleSpeed : speed, acceleration<0 ? (float)defaultCircleAcceleration : acceleration, overlap<0 ? (float)defaultCircleOverlap : overlap));
+	shapes.push_back(new ofxLaser::Circle(centre, radius, colour, speed<0 ? (float)defaultCircleSpeed : speed, acceleration<0 ? (float)defaultCircleAcceleration : acceleration, overlap<0 ? (float)defaultCircleOverlap : overlap));
 }
 
 
@@ -541,7 +541,7 @@ void Manager ::addLaserPolyline(const ofPolyline& line, ofColor colour, float sp
 //		
 //	}
 	
-	shapes.push_back(new ofxLaserX::Polyline(line, colour, acceleration< 0 ? (float) defaultPolylineAcceleration : acceleration, speed<0 ? (float) defaultPolylineSpeed : speed, cornerthreshold<0 ? (float) defaultPolylineCornerThreshold : cornerthreshold));
+	shapes.push_back(new ofxLaser::Polyline(line, colour, acceleration< 0 ? (float) defaultPolylineAcceleration : acceleration, speed<0 ? (float) defaultPolylineSpeed : speed, cornerthreshold<0 ? (float) defaultPolylineCornerThreshold : cornerthreshold));
 	
 	
 }
@@ -695,12 +695,12 @@ void Manager :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoin
 void Manager :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool useCalibration) {
 
 	
-	addPoint(ofxLaserX::Point(p, c, pointIntensity, useCalibration));
+	addPoint(ofxLaser::Point(p, c, pointIntensity, useCalibration));
 	
 }
 
 
-void Manager :: addPoints(vector<ofxLaserX::Point>&points) {
+void Manager :: addPoints(vector<ofxLaser::Point>&points) {
 	
 	
 	for(int i = 0; i<points.size();i++) {
@@ -713,7 +713,7 @@ void Manager :: addPoints(vector<ofxLaserX::Point>&points) {
 	
 }
 
-void Manager :: addPoint(ofxLaserX::Point p) {
+void Manager :: addPoint(ofxLaser::Point p) {
 	
 	
 //	p.r*=pointIntensity;
@@ -811,7 +811,7 @@ void  Manager :: processIldaPoints() {
 	for(int i = 0; i<laserPoints.size(); i++) {
 		
 		
-		ofxLaserX::Point &p = laserPoints[i];
+		ofxLaser::Point &p = laserPoints[i];
 
 		// TODO currently just scales using a rectangle. QuadWarp will
 		// eventually do proper perspective correction.

@@ -17,7 +17,11 @@ public:
 	void mousePressed(int x, int y, int button);
 	void mouseReleased(int x, int y, int button);
 	
-	ofxLaserX::Manager laser;
+	void showLaserEffect(int effectnum);
+	
+	ofParameter<int> currentLaserEffect;
+	
+	ofxLaser::Manager laser;
 	
 	bool drawingShape = false;
 	int laserWidth;
@@ -28,7 +32,7 @@ public:
 	
 	vector<ofPolyline> polyLines;
 	
-	ofxPanel gui;
+	ofxPanel laserGui;
 	
 	float elapsedTime; 
 

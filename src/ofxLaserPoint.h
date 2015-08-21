@@ -7,7 +7,7 @@
 #pragma once
 #include "ofMain.h"
 
-namespace ofxLaserX {
+namespace ofxLaser {
 class Point : public ofPoint {
 
 public:
