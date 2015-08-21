@@ -1,4 +1,0 @@
-ofxGui
-ofxXmlSettings
-ofxEtherdream
-ofxIlda
