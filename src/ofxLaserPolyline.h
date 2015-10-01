@@ -22,6 +22,7 @@ class Polyline : public Shape{
 		reversable = false;
 		
 		polyline = sourcepoly; // makes a copy
+		colour = polyColour;
 		
 		startPos = polyline.getVertices().front();
 		// to avoid a bug in polyline in open polys

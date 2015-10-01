@@ -238,7 +238,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 	
 	// LASER POLYLINES
 	for(int i = 0; i<polyLines.size(); i++) {
-		laser.addLaserPolyline(polyLines[i], ofColor::white);
+		laser.addLaserPolyline(polyLines[i], ofColor::red);
 	}
 	
 
