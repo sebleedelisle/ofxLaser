@@ -151,13 +151,15 @@ void Manager :: draw() {
 	
 	//showMask();
 	
-	// TODO if we're not using the delay system, let's
+	// TODO implement laser delay system
+	
+	// if we're not using the delay system, let's
 	// delete all the shapes
+	
 //	if(delay==0) {
 		for(int i = 0; i<shapes.size(); i++) {
 			delete shapes[i];
-}
-//
+		}
 //	}
 	
 	// clear the shapes vector no matter what
@@ -187,6 +189,7 @@ void Manager :: drawShapes() {
 
 		ofFloatColor c = ofColor::white;
 		
+		// add a dummy shape to fix the start position
 		shapes.push_front(new ofxLaser::Dot(currentPosition, c, 0, 0));
 		
 		
@@ -261,7 +264,7 @@ void Manager :: drawShapes() {
 			
 			ofxLaser::Shape* shape = sortedShapes.at(i);
 			
-			// TODO add shape pre points switched on.
+			// TODO add shape pre on-points (opposite of blank points).
 			if(!currentPosition.match(shape->getStartPos(), 0.01)) {
 				addPointsForMoveTo(currentPosition, shape->getStartPos());
 				
@@ -269,13 +272,7 @@ void Manager :: drawShapes() {
 				for(int i = 0; i<shapePreBlank; i++) {
 					addPoint(shape->getStartPos(), ofColor::black);
 				}
-			} else {
-				// no blanks if we're there already?
-				// PRE BLANK
-				//for(int i = 0; i<shapePreBlank; i++) {
-				//	addIldaPoint(shape->getStartPos(), shape.getC, 1);
-				//}
-			}
+			} // else no blanks if we're at the position already!
 			
 			shapepoints.clear();
 			shape->appendPointsToVector(shapepoints);
@@ -296,9 +293,11 @@ void Manager :: drawShapes() {
 	
 	addPointsForMoveTo(currentPosition, laserHomePosition);
 	
+	// if we don't have enough points then coast in a circle for a bit
+	// (otherwise some lasers' safety shut off kicks in if the mirrors
+	// stop moving)
 	while(laserPoints.size()<minPoints) {
-		//const ofPoint p =currentPosition + ofPoint(0,10);
-		ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
+			ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
 		shapepoints.clear();
 		blank.appendPointsToVector(shapepoints);
 		addPoints(shapepoints);
@@ -622,20 +621,9 @@ void Manager ::drawTestPattern() {
 			if(speed<5) speed = 5;
 
 			
-			addLaserLine(rect.getTopLeft()+ofPoint(0,y),rect.getTopRight()+ofPoint(0,y),c, speed,200);
+			addLaserLine(rect.getTopLeft()+ofPoint(0,y),rect.getTopRight()+ofPoint(0,y),c, speed, 200);
 			
-//
-			
-			// 0 = normalspeed;
-			// 1 = normalspeed * 0.75
-			// 2 = normalspeed * 0.5
-			// 3 = normalspeed * 0.25
-			
-			
-			// 0 = 1;
-			// 1 = 0.75
-			// 2 = 0.5;
-			// 3 = 0.25
+
 		}
 		
 		
@@ -833,7 +821,8 @@ void  Manager :: processIldaPoints() {
 		
 		
 		// TODO proper colour calibration
-		ofColor c(p.r, p.g, p.b);
+		ofFloatColor c(p.r / 255.0f, p.g / 255.0f, p.b / 255.0f);
+
 		
 		c.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
 		c.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
@@ -998,7 +987,7 @@ void Manager :: setupParameters() {
 	parameters.add(renderLaserPreview.set("preview laser", true));
 	parameters.add(renderLaserPathPreview.set("preview laser path", true));
 	
-	parameters.add(showPostTransformPreview.set("show post transform path", false));
+	//parameters.add(showPostTransformPreview.set("show post transform path", false));
 	
 	
 	parameters.add(moveSpeed.set("move speed", 6,2,20));

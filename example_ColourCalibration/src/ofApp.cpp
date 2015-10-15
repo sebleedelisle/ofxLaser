@@ -11,7 +11,7 @@ void ofApp::setup(){
 	laser.connectToEtherdream();
 
 	
-	ofxGuiSetDefaultWidth(300);
+	ofxGuiSetDefaultWidth(250);
 	laserGui.setup(laser.parameters);
 	laserGui.setPosition(laserWidth+50, 0);
 	
@@ -29,7 +29,7 @@ void ofApp::setup(){
 	blueGui.loadFromFile("laserblue.xml");
 
 	
-	int panelwidth  = 220;
+	int panelwidth  = 260;
 	redGui.setPosition(ofPoint(10 ,10));
 	greenGui.setPosition(ofPoint(10 +panelwidth + 10,10));
 	blueGui.setPosition(ofPoint(10 +panelwidth*2 + 20,10));

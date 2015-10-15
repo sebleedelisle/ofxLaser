@@ -73,13 +73,13 @@ class Circle : public Shape{
 			
 			// an attempt to fade out the overlap. Not sure if it works.
 			// TODO check that it works!
-			
-			if(angle<overlapAngle/2) {
-				segmentColour*= ofMap(angle, -overlapAngle/2,overlapAngle/2, 0, 1);
-			} if(angle> 360 - overlapAngle/2) {
-				segmentColour *= ofMap(angle, 360 -overlapAngle/2,360 + overlapAngle/2, 1, 0);
+			if(overlapAngle>0) {
+				if(angle<overlapAngle/2) {
+					segmentColour*= ofMap(angle, -overlapAngle/2,overlapAngle/2, 0, 1);
+				} if(angle> 360 - overlapAngle/2) {
+					segmentColour *= ofMap(angle, 360 -overlapAngle/2,360 + overlapAngle/2, 1, 0);
+				}
 			}
-			
 			p.set(pos);
 			p.x+=sin(ofDegToRad(angle))*radius;
 			p.y-=cos(ofDegToRad(angle))*radius;
