@@ -238,7 +238,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 	
 	// LASER POLYLINES
 	for(int i = 0; i<polyLines.size(); i++) {
-		laser.addLaserPolyline(polyLines[i], ofColor::red);
+		laser.addLaserPolyline(polyLines[i], ofColor::green);
 	}
 	
 
@@ -292,5 +292,6 @@ void ofApp::mouseReleased(int x, int y, int button) {
 //--------------------------------------------------------------
 void ofApp::exit(){
 	laserGui.saveToFile("laserSettings.xml");
+    laser.warp.saveSettings();
 
 }

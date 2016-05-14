@@ -1,0 +1,18 @@
+<quad>
+    <upperLeft>
+        <x>178.000000000</x>
+        <y>8.000000000</y>
+    </upperLeft>
+    <upperRight>
+        <x>622.000000000</x>
+        <y>20.000000000</y>
+    </upperRight>
+    <lowerRight>
+        <x>634.000000000</x>
+        <y>406.000000000</y>
+    </lowerRight>
+    <lowerLeft>
+        <x>161.000000000</x>
+        <y>412.000000000</y>
+    </lowerLeft>
+</quad>

@@ -3,8 +3,8 @@
 		<green_100>1</green_100>
 		<green_75>0.75</green_75>
 		<green_50>0.5</green_50>
-		<green_25>0.431973</green_25>
-		<green_0>0.379252</green_0>
+		<green_25>0.25</green_25>
+		<green_0>0</green_0>
 	</Laser_green_calibration>
 <Laser_Green/>
 </Laser_Green>

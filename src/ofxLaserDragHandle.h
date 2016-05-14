@@ -38,19 +38,30 @@ class DragHandle : public ofPoint{
 		ofPopStyle();
 	};
 	
-	void startDrag(ofPoint clickPos, bool dragXAxis = true, bool dragYAxis = true) {
+	void startDrag(ofPoint clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) {
 		offset = clickPos - *this;
 		isDragging = true;
 		xAxis = dragXAxis;
 		yAxis = dragYAxis;
+		altKeyDisable = dontMoveWhenAltPressed;
+		startPos = *this;
 		
 		
 	};
 	
 	bool updateDrag(ofPoint pos) {
+		
+		
 		if(isDragging) {
+			
 			if(xAxis) x = pos.x - offset.x;
 			if(yAxis) y = pos.y - offset.y;
+			
+			if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
+				x = startPos.x;
+				y = startPos.y;
+			}
+			
 			return true;
 		} else {
 			return false;
@@ -70,12 +81,13 @@ class DragHandle : public ofPoint{
 		return(distance(hitpoint)<radius);
 	}
 	
-	ofPoint offset;
+	ofPoint offset, startPos;
 	bool isDragging = false;
 	
 	float radius = 5;
 	bool xAxis;
 	bool yAxis;
+	bool altKeyDisable;
 	
 	
 };

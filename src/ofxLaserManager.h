@@ -16,6 +16,7 @@
 #include "ofxLaserPolyline.h"
 #include "ofxLaserQuadWarp.h"
 
+#include "ofxOpenCv.h"
 
 
 namespace ofxLaser {
@@ -65,7 +66,7 @@ namespace ofxLaser {
 		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
 		
 		
-		
+		void updateHomography();
 		
 		ofxEtherdream etherdream;
 		ofParameter<string> etherdreamStatus;
@@ -99,7 +100,6 @@ namespace ofxLaser {
 		ofParameter<int> dotMaxPoints;
 		
 		
-		
 		// preview stuff
 		
 		ofParameter<bool> laserOnWhileMoving;
@@ -114,6 +114,8 @@ namespace ofxLaser {
 		// Mesh used for previewing the laser path
 		ofMesh previewPathMesh;
 		
+		// probably sensible to move these settings into a laser setting
+		// object
 		// the speed for movement and acceleration
 		ofParameter<float> moveSpeed;
 		ofParameter<int>   movePointsPadding;
@@ -129,6 +131,9 @@ namespace ofxLaser {
 		ofParameter<float> defaultPolylineSpeed;
 		ofParameter<float> defaultPolylineCornerThreshold;
 
+		
+		// would probably be sensible to move these settings out into a colour
+		// calibration object.
 		ofParameter<float>red100;
 		ofParameter<float>red75;
 		ofParameter<float>red50;
@@ -149,6 +154,9 @@ namespace ofxLaser {
 
 		ofParameterGroup redParams, greenParams, blueParams;
 
+		// should probably be broken out into a zone object
+		cv::Mat homography;
+		
 		
 		deque <ofxLaser::Shape*> shapes;
 		

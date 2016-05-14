@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxLaserManager.h"
 #include "ofxGui.h"
+#include "Particle.h"
 
 class ofApp : public ofBaseApp{
 	
@@ -29,6 +30,8 @@ public:
 	int laserHeight; 
 	
 	vector<ofPolyline> polyLines;
+    vector<Particle> particles;
+    ofPolyline square;
 	
 	ofxPanel laserGui;
 	ofxPanel colourGui; 
@@ -36,4 +39,3 @@ public:
 	float elapsedTime; 
 
 };
-

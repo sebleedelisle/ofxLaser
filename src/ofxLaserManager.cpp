@@ -43,6 +43,7 @@ void Manager :: setup (int width, int height) {
 
 	
 	laserHomePosition = maskRectangle.getCenter();
+	updateHomography();
 }
 
 
@@ -62,7 +63,9 @@ void Manager :: update() {
 	
 	minPoints = pps / 50;
 
-	//resetIldaPoints();
+	
+	if(warp.checkDirty()) updateHomography();
+	
 	
 	// clear all pre-existing points.
 	ildaPoints.clear();
@@ -170,10 +173,7 @@ void Manager :: draw() {
 		warp.draw();
 	}
 	
-	
-	
 }
-
 
 
 void Manager :: drawShapes() {
@@ -802,17 +802,44 @@ void  Manager :: processIldaPoints() {
 		// TODO currently just scales using a rectangle. QuadWarp will
 		// eventually do proper perspective correction.
 		
-		p.x = ofMap(p.x, 0, appWidth, warp.handles[0].x, warp.handles[2].x);
-		p.y = ofMap(p.y, 0, appHeight, warp.handles[0].y, warp.handles[2].y);
-		if(flipY) p.y= appHeight-p.y;
-		if(flipX) p.x= appWidth-p.x;
+		
+//		ofPoint tp = p;
+//		
+//		p.x = ofMap(tp.x, 0, appWidth, warp.handles[0].x, warp.handles[2].x);
+//		p.y = ofMap(tp.y, 0, appHeight, warp.handles[0].y, warp.handles[2].y);
 	
 		// shouldn't need to do this once we have proper clamping
 		p.x = ofClamp(p.x, 0, appWidth);
 		p.y = ofClamp(p.y, 0, appHeight);
-	
-	
 		
+		
+		vector<cv::Point2f> pre, post;
+		
+		pre.push_back(cv::Point2f(p.x, p.y));
+		post.push_back(cv::Point2f());
+		
+		//cout << "getWarpedPoint" << pre[0] << endl;
+		
+		cv::perspectiveTransform(pre, post, homography);
+		//cout << "warped" << post[0] << endl;
+		
+		
+		//	return ofxCv::toOf(pre[0]);
+		
+		//	return point;s
+		
+		p.x = post[0].x;
+		p.y = post[0].y;
+		
+		
+		
+		if(flipY) p.y= appHeight-p.y;
+		if(flipX) p.x= appWidth-p.x;
+		
+
+	
+	
+
 		if(showPostTransformPreview){
 			ofPoint previewpoint(p.x, p.y);
 			previewPathMesh.addVertex(previewpoint);
@@ -833,6 +860,30 @@ void  Manager :: processIldaPoints() {
 		
 	}
 	
+}
+
+
+
+void Manager::updateHomography() {
+	
+	
+	vector<cv::Point2f> srcCVPoints, dstCVPoints;
+	
+	
+	for(int i  = 0;i<4; i++) {
+		bool left = (i+1)%4 <2;
+		bool top = i<2;
+	
+		srcCVPoints.push_back(cv::Point2f(left? 0 : appWidth, top ? 0 : appHeight));
+		dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
+		
+	}
+	
+	
+	
+	//cout << srcPoints[3] << " " << dstPoints[3] << endl;
+	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints));
+//	inverseHomography = homography.inv();
 }
 
 
@@ -929,6 +980,7 @@ void Manager :: setupParameters() {
 	float y = appHeight * 0.1;
 	float h = appHeight * 0.8;
 	warp.set(x, y, w, h);
+    warp.loadSettings();
 	
 //	warp.label = "laserWarp";
 //	warp.setDstPoint(0, ofVec2f(x1,y1));
@@ -988,7 +1040,7 @@ void Manager :: setupParameters() {
 	parameters.add(renderLaserPathPreview.set("preview laser path", true));
 	
 	//parameters.add(showPostTransformPreview.set("show post transform path", false));
-	
+	showPostTransformPreview = false;
 	
 	parameters.add(moveSpeed.set("move speed", 6,2,20));
 	parameters.add(movePointsPadding.set("move points padding", 1,0,20));

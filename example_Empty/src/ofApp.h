@@ -29,6 +29,7 @@ public:
 	int laserHeight; 
 	
 	vector<ofPolyline> polyLines;
+    ofPolyline square;
 	
 	ofxPanel laserGui;
 	ofxPanel colourGui; 
@@ -36,4 +37,3 @@ public:
 	float elapsedTime; 
 
 };
-

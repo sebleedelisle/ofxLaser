@@ -1,0 +1,27 @@
+<Laser_Manager>
+	<intensity>0.533333</intensity>
+	<test_pattern>1</test_pattern>
+	<points_per_second>23000</points_per_second>
+	<colour_change_offset>-3</colour_change_offset>
+	<flip_x>1</flip_x>
+	<flip_y>1</flip_y>
+	<show_warper_UI>1</show_warper_UI>
+	<laser_on_during_move>0</laser_on_during_move>
+	<preview_laser>1</preview_laser>
+	<preview_laser_path>1</preview_laser_path>
+	<show_post_transform_path>0</show_post_transform_path>
+	<move_speed>20</move_speed>
+	<move_points_padding>1</move_points_padding>
+	<shape_pre_blank_points>6</shape_pre_blank_points>
+	<shape_post_blank_points>3</shape_post_blank_points>
+	<dot_max_points>6</dot_max_points>
+	<line_acceleration>4</line_acceleration>
+	<line_speed>29.4867</line_speed>
+	<circle_overlap>0</circle_overlap>
+	<circle_acceleration>1.3134</circle_acceleration>
+	<circle_speed>20</circle_speed>
+	<polyline_corner_threshold>100</polyline_corner_threshold>
+	<polyline_acceleration>3.3483</polyline_acceleration>
+	<polyline_speed>7.19333</polyline_speed>
+<Laser_Manager/>
+</Laser_Manager>

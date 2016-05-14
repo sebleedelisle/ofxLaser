@@ -9,6 +9,7 @@
 #include "ofxLaserDragHandle.h"
 #include "ofxXmlSettings.h"
 
+
 namespace ofxLaser {
 class QuadWarp {
 	
@@ -32,6 +33,8 @@ class QuadWarp {
 	void saveSettings();
 	
 	void setVisible(bool warpvisible);
+	bool checkDirty(); 
+	
 
 	string saveLabel;
 	
@@ -44,6 +47,8 @@ class QuadWarp {
 	
 	protected :
 	bool visible; 
+	bool isDirty;
+
 	
 };
 }

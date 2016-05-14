@@ -35,9 +35,6 @@ void QuadWarp :: initListeners() {
 	ofAddListener(ofEvents().mousePressed, this, &QuadWarp::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
 	ofAddListener(ofEvents().mouseReleased, this, &QuadWarp::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
 	ofAddListener(ofEvents().mouseDragged, this, &QuadWarp::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
-	
-
-
 
 }
 
@@ -48,6 +45,7 @@ void QuadWarp :: draw() {
 	ofPushStyle();
 	ofNoFill();
 	ofSetLineWidth(1);
+	if(isDirty) ofSetColor(ofColor::red);
 	
 	for(int i = 0; i<numHandles; i++) {
 		ofLine(handles[i],  handles[(i+1)%4]);
@@ -60,17 +58,50 @@ void QuadWarp :: draw() {
 	}
 	
 	centreHandle.draw();
+	isDirty = false;
+
 }
+
+bool QuadWarp::checkDirty() {
+	if(isDirty) {
+		//isDirty = false;
+		return true;
+	} else {
+		return false;
+	}
+	
+	
+}
+
+//
+//void QuadWarp::updateHomography() {
+//	
+////	
+////	vector<cv::Point2f> srcCVPoints, dstCVPoints;
+////	if(srcPoints.size()!=dstPoints.size()) {
+////		cout << "RUH ROH" << endl;
+////	}
+////	
+////	
+////	for(int i = 0; i < srcPoints.size(); i++) {
+////		srcCVPoints.push_back(Point2f(srcPoints[i].x , srcPoints[i].y));
+////		dstCVPoints.push_back(Point2f(dstPoints[i].x, dstPoints[i].y));
+////	}
+////	
+////	
+////	//cout << srcPoints[3] << " " << dstPoints[3] << endl;
+////	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints));
+////	inverseHomography = homography.inv();
+//}
+//
+
 
 
 void QuadWarp :: startDragging(int handleIndex, ofPoint clickPos) {
 	
 	handles[handleIndex].startDrag(clickPos);
-	handles[(handleIndex+1)%4].startDrag(clickPos, handleIndex%2==1,handleIndex%2==0);
-	handles[(handleIndex+3)%4].startDrag(clickPos, handleIndex%2==0, handleIndex%2==1);
-	
-
-	
+	handles[(handleIndex+1)%4].startDrag(clickPos, handleIndex%2==1,handleIndex%2==0, true);
+	handles[(handleIndex+3)%4].startDrag(clickPos, handleIndex%2==0, handleIndex%2==1, true);
 	
 }
 
@@ -119,9 +150,16 @@ bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
 	if(!dragging) {
 		dragging = centreHandle.updateDrag(e);
 	} else {
-		centreHandle.set(bounds.getCenter());
+		centreHandle.set(0,0);
+		for(int i = 0; i<4; i++) {
+			centreHandle+=handles[i];
+		}
+		centreHandle/=4;
+		//	centreHandle.set(bounds.getCenter());
 		
 	}
+	
+	isDirty |= dragging;
 	
 	return dragging;
 	
