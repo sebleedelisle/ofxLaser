@@ -2,7 +2,7 @@
 	<Laser_Manager>
 		<intensity>1</intensity>
 		<test_pattern>0</test_pattern>
-		<points_per_second>30000</points_per_second>
+		<points_per_second>42000</points_per_second>
 		<colour_change_offset>-6</colour_change_offset>
 		<flip_x>1</flip_x>
 		<flip_y>1</flip_y>
@@ -45,4 +45,5 @@
 		<blue_25>0.25</blue_25>
 		<blue_0>0</blue_0>
 	</Laser_blue_calibration>
+<group/>
 </group>

@@ -16,13 +16,18 @@ class Polyline : public Shape{
 	
 	public :
 	
-	Polyline(const ofPolyline& sourcepoly, ofFloatColor polyColour, float polyAcceleration, float polySpeed, float polyCornerThresholdAngle){
+	Polyline(const ofPolyline& sourcepoly, ofFloatColor polyColour, float polyAcceleration, float polySpeed, float polyCornerThresholdAngle, ofPoint pos = ofPoint::zero(), float rotation = 0, ofPoint scale = ofPoint::one()){
 		
 		// to do - implement reversibility!
 		reversable = false;
 		
-		polyline = sourcepoly; // makes a copy
+		//polyline.clear();
+		
+		transformPolyline(sourcepoly, polyline, pos, rotation, scale); // makes a copy
 		colour = polyColour;
+		
+		
+		
 		
 		startPos = polyline.getVertices().front();
 		// to avoid a bug in polyline in open polys
@@ -32,6 +37,19 @@ class Polyline : public Shape{
 		speed = polySpeed;
 		//previewMesh.setMode(OF_PRIMITIVE_LINES);
 		cornerThresholdAngle = polyCornerThresholdAngle;
+		
+	}
+
+	
+	void transformPolyline(const ofPolyline& source, ofPolyline& target, ofPoint pos, float rotation, ofPoint scale) {
+		
+		target = source;
+		for(int i = 0; i<target.size(); i++) {
+			ofPoint& p = target[i];
+			p*=scale;
+			p.rotate(rotation, ofPoint(0,0,1));
+			p+=pos;
+		}
 		
 	}
 
@@ -159,13 +177,10 @@ class Polyline : public Shape{
 	
 	
 	~Polyline() {
-		// not sure if there's any point clearing the polyline or the
-		// previewMesh - they should just get destroyed, right?
+		//cout << "Laser::polyline destroyed"<< endl;
+		// not sure if there's any point clearing the polyline - they should just get destroyed, right?
 		polyline.clear();
-		// assumes that this object owns the colourSystem object.
-		// Bit nasty.
-		//if(colourSystem!=NULL) delete colourSystem;
-		//previewMesh.clear();
+
 		
 	}
 	

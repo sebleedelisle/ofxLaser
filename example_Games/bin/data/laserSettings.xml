@@ -107,10 +107,10 @@
 <show_warper_UI>0</show_warper_UI>
 <group>
 		<Laser_Manager>
-			<intensity>0.0680272</intensity>
+			<intensity>0.197279</intensity>
 			<test_pattern>0</test_pattern>
-			<points_per_second>33000</points_per_second>
-			<colour_change_offset>-4</colour_change_offset>
+			<points_per_second>38000</points_per_second>
+			<colour_change_offset>-6</colour_change_offset>
 			<flip_x>0</flip_x>
 			<flip_y>1</flip_y>
 			<show_warper_UI>1</show_warper_UI>
@@ -118,40 +118,43 @@
 			<preview_laser>1</preview_laser>
 			<preview_laser_path>1</preview_laser_path>
 			<show_post_transform_path>0</show_post_transform_path>
-			<move_speed>6.77551</move_speed>
+			<move_speed>9.83673</move_speed>
 			<move_points_padding>1</move_points_padding>
-			<shape_pre_blank_points>0</shape_pre_blank_points>
-			<shape_post_blank_points>0</shape_post_blank_points>
-			<dot_max_points>0</dot_max_points>
-			<line_acceleration>1.10929</line_acceleration>
-			<line_speed>20</line_speed>
-			<circle_overlap>1.70068</circle_overlap>
-			<circle_acceleration>0.892143</circle_acceleration>
-			<circle_speed>6.39456</circle_speed>
-			<polyline_corner_threshold>60.5442</polyline_corner_threshold>
-			<polyline_acceleration>0.485</polyline_acceleration>
-			<polyline_speed>7.42857</polyline_speed>
+			<shape_pre_blank_points>1</shape_pre_blank_points>
+			<shape_post_blank_points>1</shape_post_blank_points>
+			<dot_max_points>100</dot_max_points>
+			<line_acceleration>0.607143</line_acceleration>
+			<line_speed>4.84354</line_speed>
+			<circle_overlap>0</circle_overlap>
+			<circle_acceleration>1.17714</circle_acceleration>
+			<circle_speed>7.68707</circle_speed>
+			<polyline_corner_threshold>32.3129</polyline_corner_threshold>
+			<polyline_acceleration>1.35357</polyline_acceleration>
+			<polyline_speed>27.3333</polyline_speed>
 		</Laser_Manager>
 		<Laser_red_calibration>
-			<red_100>1</red_100>
-			<red_75>0.744898</red_75>
-			<red_50>0.5</red_50>
-			<red_25>0.25</red_25>
-			<red_0>0</red_0>
+			<red_100>0.493197</red_100>
+			<red_75>0.35034</red_75>
+			<red_50>0.289116</red_50>
+			<red_25>0.251701</red_25>
+			<red_0>0.0986395</red_0>
 		</Laser_red_calibration>
 		<Laser_green_calibration>
 			<green_100>1</green_100>
-			<green_75>0.75</green_75>
-			<green_50>0.5</green_50>
-			<green_25>0.25</green_25>
-			<green_0>0</green_0>
+			<green_75>0.877551</green_75>
+			<green_50>0.64966</green_50>
+			<green_25>0.435374</green_25>
+			<green_0>0.0816327</green_0>
 		</Laser_green_calibration>
 		<Laser_blue_calibration>
-			<blue_100>1</blue_100>
-			<blue_75>0.75</blue_75>
-			<blue_50>0.5</blue_50>
-			<blue_25>0.25</blue_25>
-			<blue_0>0</blue_0>
+			<blue_100>0.636054</blue_100>
+			<blue_75>0.462585</blue_75>
+			<blue_50>0.340136</blue_50>
+			<blue_25>0.323129</blue_25>
+			<blue_0>0.0918367</blue_0>
 		</Laser_blue_calibration>
+	<UnknownName>-10.6446</UnknownName>
+	<flappy_sensitivity>0.533333</flappy_sensitivity>
+	<time_speed>1</time_speed>
 	</group>
 </Laser_Manager>

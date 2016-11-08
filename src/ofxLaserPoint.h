@@ -12,6 +12,13 @@ class Point : public ofPoint {
 
 public:
 	
+	Point() {
+		x = y = z = 0;
+		r = g = b = 0;
+		useCalibration = true;
+		intensity = 1;
+		
+	}
 	Point(ofPoint p, ofColor c, float pointIntensity = 1, bool usecalibration = true ) {
 		
 		x = p.x;
@@ -22,6 +29,10 @@ public:
 		b = c.b;
 		useCalibration = usecalibration;
 		intensity = pointIntensity;
+	}
+	
+	ofColor getColor() {
+		return ofColor(r, g, b);
 	}
 	
 	float r;

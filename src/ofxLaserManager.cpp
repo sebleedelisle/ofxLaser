@@ -7,6 +7,10 @@
 
 #include "ofxLaserManager.h"
 
+// TODO :
+// Culling system :
+// * Doesn't add shapes to the list if they are entirely outside of the mask rectangle
+// * Perhaps add smart off screen handling to each shape.
 
 using namespace ofxLaser;
 
@@ -106,13 +110,9 @@ void Manager :: draw() {
 	
 	
 	//updateRenderDelay();
-	
-	
-	
+
 	drawShapes();
-	
-	
-	
+
 	//ofRectangle boundsRectangle(maskRectangle.getCenter(), 0,0);
 	
 	// update the bounds rectangle
@@ -123,18 +123,13 @@ void Manager :: draw() {
 	}
 	renderLaserPath();
 
-	
-	
 	vector<ofxIlda::Point> adjustedPoints;
-	
 	
 	// Make adjustments for the colour change delay
 	
 	for(int i = 0; i<ildaPoints.size(); i++) {
 		
 		ofxIlda::Point p = ildaPoints.at(i);
-		
-		
 		
 		int colourPointIndex = i+colourChangeDelay;
 		while(colourPointIndex<0) colourPointIndex+=ildaPoints.size();
@@ -214,7 +209,6 @@ void Manager :: drawShapes() {
 		
 		do {
 			
-			
 			ofxLaser::Shape& shape1 = *shapes[currentIndex];
 			
 			shape1.tested = true;
@@ -258,8 +252,6 @@ void Manager :: drawShapes() {
 		
 		addPoint(currentPosition, ofColor::black);
 		
-		
-		
 		for(int i = 0; i<sortedShapes.size(); i++) {
 			
 			ofxLaser::Shape* shape = sortedShapes.at(i);
@@ -272,10 +264,14 @@ void Manager :: drawShapes() {
 				for(int i = 0; i<shapePreBlank; i++) {
 					addPoint(shape->getStartPos(), ofColor::black);
 				}
+			
+				
 			} // else no blanks if we're at the position already!
+			
 			
 			shapepoints.clear();
 			shape->appendPointsToVector(shapepoints);
+			
 			addPoints(shapepoints);
 			
 			
@@ -296,13 +292,18 @@ void Manager :: drawShapes() {
 	// if we don't have enough points then coast in a circle for a bit
 	// (otherwise some lasers' safety shut off kicks in if the mirrors
 	// stop moving)
-	while(laserPoints.size()<minPoints) {
-			ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
+
+	while(laserPoints.size() + shapepoints.size()<minPoints) {
+		ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
 		shapepoints.clear();
+		
 		blank.appendPointsToVector(shapepoints);
 		addPoints(shapepoints);
-	}
 
+		
+	}
+	
+	
 	processIldaPoints();
 	
 
@@ -315,6 +316,13 @@ void Manager :: drawShapes() {
 		shapes.pop_front();
 	}
 	laserHomePosition += (currentPosition-laserHomePosition)*0.01;
+	if(!maskRectangle.inside(laserHomePosition)) {
+		if(laserHomePosition.x>maskRectangle.getRight()) laserHomePosition.x = maskRectangle.getRight();
+		else if(laserHomePosition.x<maskRectangle.getLeft()) laserHomePosition.x = maskRectangle.getLeft();
+		if(laserHomePosition.y>maskRectangle.getBottom()) laserHomePosition.y = maskRectangle.getBottom();
+		else if(laserHomePosition.y<maskRectangle.getTop()) laserHomePosition.y = maskRectangle.getTop();
+	}
+
 	
 	
 	
@@ -378,8 +386,6 @@ void Manager :: renderPreview() {
 	
 	ofMesh mesh;
 	
-
-	
 	deque<ofxLaser::Shape*>& newshapes = shapes; // (shapesHistory.size()>0) ? shapesHistory.back() : shapes;
 	
 	mesh.clear();
@@ -431,7 +437,7 @@ void Manager :: renderPreview() {
 			mesh.addVertex(v+circle->pos);
 		}
 		
-//		// Is it a line?
+		// Is it a line?
 		ofxLaser::Line * line = dynamic_cast<ofxLaser::Line*>(shape);
 		if(line) {
 			mesh.addColor(ofColor::black);
@@ -492,7 +498,6 @@ void Manager :: renderPreview() {
 }
 
 
-
 // TODO for all shapes, re-implement 3D to 2D conversion
 
 void Manager :: addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float dotintensity, int maxpoints){
@@ -503,13 +508,12 @@ void Manager :: addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float d
 	
 }
 
-// TODO allow specification of acceleration and speed
 
 void Manager :: addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed, float acceleration) {
 	shapes.push_back(new ofxLaser::Line(startpoint, endpoint, colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
 }
 
-// TODO allow specification of acceleration, speed, and overlap
+
 void Manager :: addLaserCircle(const ofPoint& centre, float radius, ofFloatColor colour, float speed, float acceleration, float overlap){
 	
 	//ofPoint p = gLProject(ofpoint);
@@ -518,9 +522,16 @@ void Manager :: addLaserCircle(const ofPoint& centre, float radius, ofFloatColor
 }
 
 
-// TODO implement multicolour, and allow custom acceleration and speed
+// TODO implement multicolour
 
 void Manager ::addLaserPolyline(const ofPolyline& line, ofColor colour, float speed, float acceleration, float cornerthreshold){
+
+	addLaserPolyline(line, colour, ofPoint::zero(), 0, ofPoint::one(), speed, acceleration, cornerthreshold);
+	
+}
+
+void Manager :: addLaserPolyline(const ofPolyline& line, ofColor colour, ofPoint pos, float rotation, ofPoint scale, float speed, float acceleration, float cornerthreshold) {
+
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -530,17 +541,29 @@ void Manager ::addLaserPolyline(const ofPolyline& line, ofColor colour, float sp
 	
 	//***
 	// convert to 2D TODO - reimplement
-//	ofPolyline& polyline = tmpPoly;
-//	polyline.clear();
-//	
-//	for(int i = 0; i<line.getVertices().size(); i++) {
-//		polyline.addVertex(gLProject(line.getVertices()[i]));
-//		
-//	}
+	//	ofPolyline& polyline = tmpPoly;
+	//	polyline.clear();
+	//
+	//	for(int i = 0; i<line.getVertices().size(); i++) {
+	//		polyline.addVertex(gLProject(line.getVertices()[i]));
+	//
+	//	}
 	
-	shapes.push_back(new ofxLaser::Polyline(line, colour, acceleration< 0 ? (float) defaultPolylineAcceleration : acceleration, speed<0 ? (float) defaultPolylineSpeed : speed, cornerthreshold<0 ? (float) defaultPolylineCornerThreshold : cornerthreshold));
-	
-	
+	shapes.push_back(
+		new ofxLaser::Polyline(line, colour,
+							   acceleration< 0 ? (float) defaultPolylineAcceleration : acceleration,
+							   speed<0 ? (float) defaultPolylineSpeed : speed,
+							   cornerthreshold<0 ? (float) defaultPolylineCornerThreshold : cornerthreshold,
+							   pos, rotation, scale) );
+
+}
+
+
+void Manager::addLaserRect(const ofRectangle&rect, ofFloatColor colour, float speed, float acceleration){
+	addLaserLine(rect.getTopLeft(), rect.getTopRight(), colour, speed, acceleration);
+	addLaserLine(rect.getTopRight(), rect.getBottomRight(), colour, speed, acceleration);
+	addLaserLine(rect.getBottomRight(), rect.getBottomLeft(), colour, speed, acceleration);
+	addLaserLine(rect.getBottomLeft(), rect.getTopLeft(), colour, speed, acceleration);
 }
 
 
@@ -701,21 +724,57 @@ void Manager :: addPoints(vector<ofxLaser::Point>&points) {
 
 void Manager :: addPoint(ofxLaser::Point p) {
 	
+	// are we outside the mask? NB can't use inside because I want points on the edge
+	if(p.x<maskRectangle.getLeft() ||
+		p.x>maskRectangle.getRight() ||
+		p.y<maskRectangle.getTop() ||
+		p.y>maskRectangle.getBottom()) {
+		
+		// then we are offscreen!
+		// TODO - better intersection between last point and this one, currently just clamp
+		p.x = ofClamp(p.x, maskRectangle.getLeft(), maskRectangle.getRight());
+		p.y = ofClamp(p.y, maskRectangle.getTop(), maskRectangle.getBottom());
+		
+		if(!offScreen) {
+			offScreen = true;
+			offScreenPoint = p;
+			laserPoints.push_back(offScreenPoint);
+			
+			if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
+		}
+		lastClampedOffScreenPoint = p;
+	} else {
+		// if we're currently offScreen we need to move between the last point and this one
+		// TODO - better intersection between last point and this one
+		if(offScreen) {
+			offScreen = false;
+			
+			ofPoint target = p;
+			ofPoint start = offScreenPoint;
+			
+			ofPoint v = target-start;
+			
+			float blanknum = v.length()/moveSpeed + movePointsPadding;
+			
+			for(int j = 0; j<blanknum; j++) {
+				
+				float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
+				
+				ofPoint c = (v* t) + start;
+				laserPoints.push_back(ofxLaser::Point(c, (laserOnWhileMoving && j%2==0) ? ofColor(100,0,0) : ofColor::black));
+				
+				if(!showPostTransformPreview) previewPathMesh.addVertex(c);
+			}
+
+			
+		}
+		
+		
+		laserPoints.push_back(p);
 	
-//	p.r*=pointIntensity;
-//	p.g*=pointIntensity;
-//	p.b*=pointIntensity;
+		if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
 	
-	//	if(useCalibration) {
-	//		p.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
-	//		p.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
-	//		p.b = calculateCalibratedBrightness(c.b, intensity, blue100, blue75, blue50, blue25, blue0);
-	//	}
-	
-	laserPoints.push_back(p);
-	
-	if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
-	
+	}
 	
 }
 
@@ -799,16 +858,8 @@ void  Manager :: processIldaPoints() {
 		
 		ofxLaser::Point &p = laserPoints[i];
 
-		// TODO currently just scales using a rectangle. QuadWarp will
-		// eventually do proper perspective correction.
 		
-		
-//		ofPoint tp = p;
-//		
-//		p.x = ofMap(tp.x, 0, appWidth, warp.handles[0].x, warp.handles[2].x);
-//		p.y = ofMap(tp.y, 0, appHeight, warp.handles[0].y, warp.handles[2].y);
 	
-		// shouldn't need to do this once we have proper clamping
 		p.x = ofClamp(p.x, 0, appWidth);
 		p.y = ofClamp(p.y, 0, appHeight);
 		
@@ -831,15 +882,9 @@ void  Manager :: processIldaPoints() {
 		p.x = post[0].x;
 		p.y = post[0].y;
 		
-		
-		
 		if(flipY) p.y= appHeight-p.y;
 		if(flipX) p.x= appWidth-p.x;
 		
-
-	
-	
-
 		if(showPostTransformPreview){
 			ofPoint previewpoint(p.x, p.y);
 			previewPathMesh.addVertex(previewpoint);
@@ -847,7 +892,6 @@ void  Manager :: processIldaPoints() {
 		}
 		
 		
-		// TODO proper colour calibration
 		ofFloatColor c(p.r / 255.0f, p.g / 255.0f, p.b / 255.0f);
 
 		
@@ -998,8 +1042,6 @@ void Manager :: setupParameters() {
 //	
 //	warp.dragSpeed = 1;
 	
-
-	
 	parameters.setName("Laser Manager");
 	
 	connectButton.set("Etherdream connect");
@@ -1013,10 +1055,9 @@ void Manager :: setupParameters() {
 	
 	parameters.add(testPattern.set("test pattern", 0, 0, numTestPatterns));
 	//parameters.add(delay.set("sync delay", 0, 0, 0.4));
-	parameters.add(pps.set("points per second", 30000, 5000, 100000));
+	parameters.add(pps.set("points per second", 30000, 500, 100000));
 	
 	pps.addListener(this, &Manager ::roundPPS);
-	
 	
 	//parameters.add(maskMarginTop.set("mask margin top", 0, 0, appHeight));
 	//parameters.add(maskMarginBottom.set("mask margin bottom", 0, 0, appHeight));
@@ -1026,7 +1067,6 @@ void Manager :: setupParameters() {
 	//parameters.add(showMaskBitmap.set("show mask bitmap", true));
 	
 	//parameters.add(showWarpPoints.set("show warp points", false));
-	
 	
 	parameters.add(colourChangeDelay.set("colour change offset", -6, -15, 15));
 	
@@ -1110,6 +1150,6 @@ void Manager :: setupParameters() {
 }
 
 void Manager :: roundPPS(int& v) {
-	pps = round((float)pps/1000.0f)* 1000;
+	pps = round((float)pps/500.0f)* 500;
 
 }

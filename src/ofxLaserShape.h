@@ -15,7 +15,7 @@ class Shape {
 	public :
 
 	Shape(){};
-	~Shape(){
+	virtual ~Shape(){
 		//cout << "LASER SHAPE DESTROY!!!" << endl;
 	};
 	virtual void renderPreview(){};

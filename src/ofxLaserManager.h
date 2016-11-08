@@ -48,7 +48,9 @@ namespace ofxLaser {
 		
 		void addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float intensity = 1, int maxpoints = -1);
 		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
+		void addLaserRect(const ofRectangle&rect, ofFloatColor colour, float speed = -1, float acceleration = -1);
 		void addLaserCircle(const ofPoint& ofpoint, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
+		void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 
 		
@@ -76,9 +78,6 @@ namespace ofxLaser {
 		vector<ofxLaser::Point> laserPoints;
 		
 		QuadWarp warp;
-		
-		ofRectangle maskRectangle;
-		
 		
 		ofParameterGroup parameters;
 		ofParameter<bool> connectButton;
@@ -167,11 +166,13 @@ namespace ofxLaser {
 		ofPoint pmax;
 		int minPoints;
 		
-		ofPoint laserHomePosition; 
+		ofPoint laserHomePosition;
 		
+		// masking system
+		ofRectangle maskRectangle;
 		bool offScreen;
-		ofVec2f offScreenPoint;
-		ofVec2f lastClampedOffScreenPoint;
+		ofxLaser::Point offScreenPoint;
+		ofxLaser::Point lastClampedOffScreenPoint;
 
 	};
 }
