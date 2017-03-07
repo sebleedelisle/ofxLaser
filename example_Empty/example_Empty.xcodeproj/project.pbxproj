@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		12054BEB1B8249AF00083D6B /* ofxLaserQuadWarp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12054BE91B8249AF00083D6B /* ofxLaserQuadWarp.cpp */; };
+		1227E48A1E6F2D410050790A /* ofxLaserPolyline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1227E4891E6F2D410050790A /* ofxLaserPolyline.cpp */; };
 		124E236D1B8399D8009894FE /* ofxLaserManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 124E23691B8399D8009894FE /* ofxLaserManager.cpp */; };
 		125BE69D1BF20D540030FC80 /* ofxCvColorImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 125BE6261BF20D540030FC80 /* ofxCvColorImage.cpp */; };
 		125BE69E1BF20D540030FC80 /* ofxCvContourFinder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 125BE6291BF20D540030FC80 /* ofxCvContourFinder.cpp */; };
@@ -90,6 +91,7 @@
 		12054BEA1B8249AF00083D6B /* ofxLaserQuadWarp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserQuadWarp.h; sourceTree = "<group>"; };
 		12054BED1B824A7000083D6B /* ofxLaserDragHandle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserDragHandle.h; sourceTree = "<group>"; };
 		121717CF1B87784E0032DF72 /* ofxIldaPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxIldaPoint.h; sourceTree = "<group>"; };
+		1227E4891E6F2D410050790A /* ofxLaserPolyline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxLaserPolyline.cpp; sourceTree = "<group>"; };
 		124E23661B8399D8009894FE /* ofxLaserCircle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserCircle.h; sourceTree = "<group>"; };
 		124E23671B8399D8009894FE /* ofxLaserDot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserDot.h; sourceTree = "<group>"; };
 		124E23681B8399D8009894FE /* ofxLaserLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserLine.h; sourceTree = "<group>"; };
@@ -576,6 +578,7 @@
 		12F31C3B1B7CCE6600B87E5D /* src */ = {
 			isa = PBXGroup;
 			children = (
+				1227E4891E6F2D410050790A /* ofxLaserPolyline.cpp */,
 				121717CF1B87784E0032DF72 /* ofxIldaPoint.h */,
 				124E23661B8399D8009894FE /* ofxLaserCircle.h */,
 				124E23671B8399D8009894FE /* ofxLaserDot.h */,
@@ -892,6 +895,7 @@
 				1CD33E884D9E3358252E82A1 /* ofxToggle.cpp in Sources */,
 				12054BEB1B8249AF00083D6B /* ofxLaserQuadWarp.cpp in Sources */,
 				63B57AC5BF4EF088491E0317 /* ofxXmlSettings.cpp in Sources */,
+				1227E48A1E6F2D410050790A /* ofxLaserPolyline.cpp in Sources */,
 				933A2227713C720CEFF80FD9 /* tinyxml.cpp in Sources */,
 				9D44DC88EF9E7991B4A09951 /* tinyxmlerror.cpp in Sources */,
 				5A4349E9754D6FA14C0F2A3A /* tinyxmlparser.cpp in Sources */,

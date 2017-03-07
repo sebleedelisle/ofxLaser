@@ -381,7 +381,7 @@ void Manager :: renderLaserPath(const ofRectangle previewRectangle) {
             
             ofPoint p = previewPathMesh.getVertex(pointindex);
             ofSetColor(0,255,0);
-            ofDrawCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight()), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5);
+            ofCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight()), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5);
             
         }
     }
