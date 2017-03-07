@@ -31,7 +31,8 @@ Manager :: Manager() {
 
 
 void Manager :: setup (int width, int height) {
-	
+	    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager.setup");
+    
 	//ofSetFrameRate(20);
 	appWidth = width;
 	appHeight = height;
