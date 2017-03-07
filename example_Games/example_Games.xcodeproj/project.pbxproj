@@ -25,6 +25,7 @@
 		12A8B0451CEB5B8400D5F31C /* svgtiny_gradient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12A8B03D1CEB5B8400D5F31C /* svgtiny_gradient.cpp */; };
 		12A8B0461CEB5B8400D5F31C /* svgtiny_list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12A8B03F1CEB5B8400D5F31C /* svgtiny_list.cpp */; };
 		12A8B0471CEB5B8400D5F31C /* ofxSvg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12A8B0411CEB5B8400D5F31C /* ofxSvg.cpp */; };
+		12C665C81E6483850016DAC6 /* ofxLaserPolyline.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12C665C71E6483850016DAC6 /* ofxLaserPolyline.cpp */; };
 		12FD1B661CFB4D1F00AB622C /* Asteroids.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12FD1B651CFB4D1F00AB622C /* Asteroids.cpp */; };
 		12FD1B691CFB4DCA00AB622C /* Bullet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12FD1B671CFB4DCA00AB622C /* Bullet.cpp */; };
 		12FD1B6E1CFB4EAF00AB622C /* Asteroid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 12FD1B6D1CFB4EAF00AB622C /* Asteroid.cpp */; };
@@ -226,6 +227,7 @@
 		12A8B03F1CEB5B8400D5F31C /* svgtiny_list.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = svgtiny_list.cpp; sourceTree = "<group>"; };
 		12A8B0411CEB5B8400D5F31C /* ofxSvg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxSvg.cpp; sourceTree = "<group>"; };
 		12A8B0421CEB5B8400D5F31C /* ofxSvg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxSvg.h; sourceTree = "<group>"; };
+		12C665C71E6483850016DAC6 /* ofxLaserPolyline.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxLaserPolyline.cpp; sourceTree = "<group>"; };
 		12D0D18E1B7D217400B254AB /* ofxLaserPoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofxLaserPoint.h; sourceTree = "<group>"; };
 		12FD1B641CFB4BFC00AB622C /* Asteroid.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Asteroid.h; sourceTree = "<group>"; };
 		12FD1B651CFB4D1F00AB622C /* Asteroids.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Asteroids.cpp; sourceTree = "<group>"; };
@@ -670,6 +672,7 @@
 		12F31C3B1B7CCE6600B87E5D /* src */ = {
 			isa = PBXGroup;
 			children = (
+				12C665C71E6483850016DAC6 /* ofxLaserPolyline.cpp */,
 				121717CF1B87784E0032DF72 /* ofxIldaPoint.h */,
 				124E23661B8399D8009894FE /* ofxLaserCircle.h */,
 				124E23671B8399D8009894FE /* ofxLaserDot.h */,
@@ -1015,6 +1018,7 @@
 				483908258D00B98B4BE69F07 /* ofxLabel.cpp in Sources */,
 				12FD1B6E1CFB4EAF00AB622C /* Asteroid.cpp in Sources */,
 				F285EB3169F1566CA3D93C20 /* ofxPanel.cpp in Sources */,
+				12C665C81E6483850016DAC6 /* ofxLaserPolyline.cpp in Sources */,
 				837220E80EB56CD44AD27F2A /* ofxSlider.cpp in Sources */,
 				12A8B0461CEB5B8400D5F31C /* svgtiny_list.cpp in Sources */,
 				B56FE57CC35806596D38118C /* ofxSliderGroup.cpp in Sources */,

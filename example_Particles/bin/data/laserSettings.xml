@@ -107,9 +107,9 @@
 <show_warper_UI>0</show_warper_UI>
 <group>
 		<Laser_Manager>
-			<intensity>0.0680272</intensity>
+			<intensity>0.326531</intensity>
 			<test_pattern>0</test_pattern>
-			<points_per_second>33000</points_per_second>
+			<points_per_second>30000</points_per_second>
 			<colour_change_offset>-4</colour_change_offset>
 			<flip_x>0</flip_x>
 			<flip_y>1</flip_y>
@@ -122,12 +122,12 @@
 			<move_points_padding>1</move_points_padding>
 			<shape_pre_blank_points>0</shape_pre_blank_points>
 			<shape_post_blank_points>0</shape_post_blank_points>
-			<dot_max_points>0</dot_max_points>
+			<dot_max_points>7</dot_max_points>
 			<line_acceleration>1.10929</line_acceleration>
 			<line_speed>20</line_speed>
 			<circle_overlap>1.70068</circle_overlap>
-			<circle_acceleration>0.892143</circle_acceleration>
-			<circle_speed>6.39456</circle_speed>
+			<circle_acceleration>2.11357</circle_acceleration>
+			<circle_speed>3.68027</circle_speed>
 			<polyline_corner_threshold>60.5442</polyline_corner_threshold>
 			<polyline_acceleration>0.485</polyline_acceleration>
 			<polyline_speed>7.42857</polyline_speed>
@@ -135,8 +135,8 @@
 		<Laser_red_calibration>
 			<red_100>1</red_100>
 			<red_75>0.744898</red_75>
-			<red_50>0.5</red_50>
-			<red_25>0.25</red_25>
+			<red_50>0.52381</red_50>
+			<red_25>0.285714</red_25>
 			<red_0>0</red_0>
 		</Laser_red_calibration>
 		<Laser_green_calibration>

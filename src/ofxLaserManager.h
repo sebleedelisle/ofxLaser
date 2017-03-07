@@ -22,8 +22,14 @@
 namespace ofxLaser {
 	
 	class Manager {
-		
+        
+        
+     	
 		public:
+        
+        static Manager * instance();
+        static Manager * laserManager;
+        
 		
 		Manager();
 		
@@ -33,6 +39,7 @@ namespace ofxLaser {
 		void drawShapes();
 		void renderPreview();
 		void renderLaserPath();
+        void renderLaserPath(const ofRectangle previewRect);
 		
 		void setupParameters();
 		void roundPPS(int& v);
@@ -50,7 +57,8 @@ namespace ofxLaser {
 		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
 		void addLaserRect(const ofRectangle&rect, ofFloatColor colour, float speed = -1, float acceleration = -1);
 		void addLaserCircle(const ofPoint& ofpoint, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
-		void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
+        
+      		void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 
 		
@@ -70,6 +78,36 @@ namespace ofxLaser {
 		
 		void updateHomography();
 		
+        // converts openGL coords to screen coords //
+        static ofVec3f gLProject(ofVec3f p) {
+            return gLProject(p.x, p.y, p.z);
+            
+        }
+        static ofVec3f gLProject( float ax, float ay, float az ) {
+            GLdouble model_view[16];
+            glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
+            
+            GLdouble projection[16];
+            glGetDoublev(GL_PROJECTION_MATRIX, projection);
+            
+            GLint viewport[4];
+            glGetIntegerv(GL_VIEWPORT, viewport);
+            
+            GLdouble X, Y, Z = 0;
+            gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
+            
+            //return ofVec3f(X, Y, 0.0f);
+            return ofVec3f(ax, ay,az);
+            
+        }
+        
+        static float gLGetScaleForZ(float z) {
+            // CHECK this is a point in the top left - problem? 
+            return gLProject(1, 0, z).x ;
+        }
+
+        
+        
 		ofxEtherdream etherdream;
 		ofParameter<string> etherdreamStatus;
 		//bool shouldBeConnected;
@@ -156,7 +194,7 @@ namespace ofxLaser {
 		// should probably be broken out into a zone object
 		cv::Mat homography;
 		
-		
+        ofPolyline tmpPoly;
 		deque <ofxLaser::Shape*> shapes;
 		
 		float appWidth;

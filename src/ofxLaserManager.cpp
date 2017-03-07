@@ -14,8 +14,18 @@
 
 using namespace ofxLaser;
 
+Manager * Manager :: laserManager = NULL;
+
+Manager * Manager::instance() {
+    if(laserManager == NULL) {
+        laserManager = new Manager();
+    }
+    return laserManager;
+}
+
+
 Manager :: Manager() {
-	
+    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
 
 }
 
@@ -26,6 +36,7 @@ void Manager :: setup (int width, int height) {
 	appWidth = width;
 	appHeight = height;
 	maskRectangle.set(0,0,width, height);
+    showPostTransformPreview = false;
 	
 	//shouldBeConnected = false;
 	
@@ -167,7 +178,13 @@ void Manager :: draw() {
 	if(showWarpUI) {
 		warp.draw();
 	}
-	
+    
+    ofSetColor(255);
+    ofPushMatrix();
+    ofTranslate(ofGetMouseX(), ofGetMouseY());
+    ofLine(0,0,0,10);
+    ofLine(0,0,6,8);
+    ofPopMatrix();
 }
 
 
@@ -329,50 +346,55 @@ void Manager :: drawShapes() {
 }
 
 
+void Manager :: renderLaserPath(const ofRectangle previewRectangle) {
+    ofPushStyle();
+    
+   // bool overrideSettings = false;
+    
+    if(renderLaserPathPreview) {
+        
+        ofPushMatrix();
+        
+        ofTranslate(previewRectangle.getTopLeft());
+        float scale =  previewRectangle.width / appWidth;
+        ofScale(scale, scale);
+        
+        //ofDisableBlendMode();
+        ofNoFill();
+        ofSetLineWidth(1);
+        ofSetColor(0,0,255);
+        previewPathMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+        previewPathMesh.draw();
+        
+        
+        ofSetColor(255,255,255);
+        previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
+        previewPathMesh.draw();
+        ofPopMatrix();
+        
+        // THIS CODE HIGHLIGHTS A POINT DEPENDENT ON THE MOUSE POS
+        //
+        if(previewPathMesh.getNumVertices()>0) {
+            
+            int pointindex =floor(ofMap(ofGetMouseX(), previewRectangle.x, previewRectangle.getRight(), 0, previewPathMesh.getNumVertices()-1, true));
+            
+            
+            ofPoint p = previewPathMesh.getVertex(pointindex);
+            ofSetColor(0,255,0);
+            ofDrawCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight()), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5);
+            
+        }
+    }
+    
+    ofPopStyle();
+}
+
 void Manager :: renderLaserPath() {
 	
-	ofPushStyle();
 	
-	bool overrideSettings = false;
-	ofRectangle previewRectangle = maskRectangle;
-	
-	if((renderLaserPathPreview)||(overrideSettings)) {
-		
-		ofPushMatrix();
-		
-		ofTranslate(previewRectangle.getTopLeft());
-		float scale =  previewRectangle.width / appWidth;
-		ofScale(scale, scale);
-		
-		//ofDisableBlendMode();
-		ofNoFill();
-		ofSetLineWidth(1);
-		ofSetColor(0,0,255);
-		previewPathMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
-		previewPathMesh.draw();
-		
-		
-		ofSetColor(255,255,255);
-		previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-		previewPathMesh.draw();
-		ofPopMatrix();
-		
-		// THIS CODE HIGHLIGHTS A POINT DEPENDENT ON THE MOUSE POS
-//		
-		if(previewPathMesh.getNumVertices()>0) {
-			
-			int pointindex =floor(ofMap(ofGetMouseX(), previewRectangle.x, previewRectangle.getRight(), 0, previewPathMesh.getNumVertices()-1, true));
-			
-			
-			ofPoint p = previewPathMesh.getVertex(pointindex);
-			ofSetColor(0,255,0);
-			ofCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight()), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5);
-			
-		}
-	}
-	
-	ofPopStyle();
-	
+    ofRectangle previewRectangle = maskRectangle;
+    renderLaserPath(previewRectangle);
+    
 }
 
 
@@ -504,25 +526,27 @@ void Manager :: addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float d
 	
 	// TODO re-implement 3D to 2D conversion
 	//shapes.push_back(new ofxLaser::Shape(gLProject(ofpoint), colour, intensity));
-	shapes.push_back(new ofxLaser::Dot(ofpoint, colour, dotintensity, (maxpoints<0) ? (int)dotMaxPoints : maxpoints));
+	shapes.push_back(new ofxLaser::Dot(gLProject(ofpoint), colour, dotintensity, (maxpoints<0) ? (int)dotMaxPoints : maxpoints));
 	
 }
 
 
 void Manager :: addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed, float acceleration) {
-	shapes.push_back(new ofxLaser::Line(startpoint, endpoint, colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
+	shapes.push_back(new ofxLaser::Line(gLProject(startpoint), gLProject(endpoint), colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
 }
 
 
 void Manager :: addLaserCircle(const ofPoint& centre, float radius, ofFloatColor colour, float speed, float acceleration, float overlap){
 	
-	//ofPoint p = gLProject(ofpoint);
-	//float scalar = gLGetScaleForZ(ofpoint.z);
-	shapes.push_back(new ofxLaser::Circle(centre, radius, colour, speed<0 ? (float)defaultCircleSpeed : speed, acceleration<0 ? (float)defaultCircleAcceleration : acceleration, overlap<0 ? (float)defaultCircleOverlap : overlap));
+	ofPoint p = gLProject(centre);
+	float scalar = gLGetScaleForZ(centre.z);
+	shapes.push_back(new ofxLaser::Circle(p, radius*scalar, colour, speed<0 ? (float)defaultCircleSpeed : speed, acceleration<0 ? (float)defaultCircleAcceleration : acceleration, overlap<0 ? (float)defaultCircleOverlap : overlap));
 }
 
 
 // TODO implement multicolour
+
+
 
 void Manager ::addLaserPolyline(const ofPolyline& line, ofColor colour, float speed, float acceleration, float cornerthreshold){
 
@@ -541,13 +565,13 @@ void Manager :: addLaserPolyline(const ofPolyline& line, ofColor colour, ofPoint
 	
 	//***
 	// convert to 2D TODO - reimplement
-	//	ofPolyline& polyline = tmpPoly;
-	//	polyline.clear();
-	//
-	//	for(int i = 0; i<line.getVertices().size(); i++) {
-	//		polyline.addVertex(gLProject(line.getVertices()[i]));
-	//
-	//	}
+//    ofPolyline& polyline = tmpPoly;
+//    polyline.clear();
+//
+//    for(int i = 0; i<line.getVertices().size(); i++) {
+//        polyline.addVertex(gLProject(line.getVertices()[i]));
+//
+//    }
 	
 	shapes.push_back(
 		new ofxLaser::Polyline(line, colour,
@@ -1057,7 +1081,7 @@ void Manager :: setupParameters() {
 	//parameters.add(delay.set("sync delay", 0, 0, 0.4));
 	parameters.add(pps.set("points per second", 30000, 500, 100000));
 	
-	pps.addListener(this, &Manager ::roundPPS);
+	//pps.addListener(this, &Manager ::roundPPS);
 	
 	//parameters.add(maskMarginTop.set("mask margin top", 0, 0, appHeight));
 	//parameters.add(maskMarginBottom.set("mask margin bottom", 0, 0, appHeight));
@@ -1079,7 +1103,7 @@ void Manager :: setupParameters() {
 	parameters.add(renderLaserPreview.set("preview laser", true));
 	parameters.add(renderLaserPathPreview.set("preview laser path", true));
 	
-	//parameters.add(showPostTransformPreview.set("show post transform path", false));
+	parameters.add(showPostTransformPreview.set("show post transform path", false));
 	showPostTransformPreview = false;
 	
 	parameters.add(moveSpeed.set("move speed", 6,2,20));
@@ -1101,14 +1125,6 @@ void Manager :: setupParameters() {
 	parameters.add(defaultPolylineAcceleration.set("polyline acceleration", 0.5, 0.01, 4));
 	parameters.add(defaultPolylineSpeed.set("polyline speed", 20,2, 40));
 	
-	//parameters.add(speedEasedLine.set("eased line speed", 8, 2, 20));
-	//parameters.add(paddingEasedLine.set("eased line padding", 1,0, 20));
-	//parameters.add(spiralSpacing.set("spiral spacing", 10,1, 20));
-	
-	// where is this getting set up?
-	//	homographyParameters.setName("Laser Homography");
-	//
-	//
 		redParams.add(red100.set("red 100", 1,0,1));
 		redParams.add(red75.set("red 75", 0.75,0,1));
 		redParams.add(red50.set("red 50", 0.5,0,1));
@@ -1131,22 +1147,7 @@ void Manager :: setupParameters() {
 		greenParams.setName("Laser green calibration");
 		blueParams.setName("Laser blue calibration");
 	//
-	//	colourChangeDelay = -6;
-	
-	//	warp.visible = true;
-	
-	//	warp.dragSpeed = 1;
-	
-	//	maskMarginTop.addListener(this, &LaserManager::updateMaskRectangleParam);
-	//	maskMarginBottom.addListener(this, &LaserManager::updateMaskRectangleParam);
-	//	maskMarginLeft.addListener(this, &LaserManager::updateMaskRectangleParam);
-	//	maskMarginRight.addListener(this, &LaserManager::updateMaskRectangleParam);
-	
-	//	updateMaskRectangle();
-	//	if(!maskBitmap.loadImage("img/LaserMask.png")) {
-	//		maskBitmap.allocate(appWidth, appHeight, OF_IMAGE_COLOR);
-	//	};
-	
+		
 }
 
 void Manager :: roundPPS(int& v) {

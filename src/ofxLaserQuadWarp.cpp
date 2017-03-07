@@ -174,7 +174,7 @@ bool QuadWarp :: mouseReleased(ofMouseEventArgs &e){
 	for(int i = 0; i<allHandles.size(); i++) {
 		if(allHandles[i]->stopDrag()) wasDragging = true;
 	}
-	
+    saveSettings();
 	return wasDragging;
 	
 }

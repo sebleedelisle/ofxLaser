@@ -1096,7 +1096,9 @@
 					"$(PROJECT_DIR)/ofxOpenCv/libs/opencv/lib/osx",
 					/Users/sebretina/Dropbox/of_v0.8.4_osx_release/addons/ofxOpenCv/libs/opencv/lib/osx,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_NAME = example_EmptyDebug;
+				SDKROOT = macosx10.8;
 				USER_HEADER_SEARCH_PATHS = ../../ofxOpenCv/libs/opencv/include/;
 				WRAPPER_EXTENSION = app;
 			};
@@ -1196,7 +1198,9 @@
 					"$(PROJECT_DIR)/ofxOpenCv/libs/opencv/lib/osx",
 					/Users/sebretina/Dropbox/of_v0.8.4_osx_release/addons/ofxOpenCv/libs/opencv/lib/osx,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_NAME = example_EmptyDebug;
+				SDKROOT = macosx10.8;
 				USER_HEADER_SEARCH_PATHS = ../../ofxOpenCv/libs/opencv/include/;
 				WRAPPER_EXTENSION = app;
 			};

@@ -113,7 +113,7 @@
 			<colour_change_offset>-6</colour_change_offset>
 			<flip_x>0</flip_x>
 			<flip_y>1</flip_y>
-			<show_warper_UI>1</show_warper_UI>
+			<show_warper_UI>0</show_warper_UI>
 			<laser_on_during_move>0</laser_on_during_move>
 			<preview_laser>1</preview_laser>
 			<preview_laser_path>1</preview_laser_path>
