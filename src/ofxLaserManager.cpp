@@ -53,6 +53,7 @@ void Manager :: setup (int width, int height) {
 	
 	testPattern = 0;
 	numTestPatterns = 5;
+    //use3D = false;
 	
 	
 	setupParameters();
@@ -60,11 +61,14 @@ void Manager :: setup (int width, int height) {
 	
 	laserHomePosition = maskRectangle.getCenter();
 	updateHomography();
+    
+    dac.setup();
+    
 }
 
 
 
-void Manager :: connectButtonPressed(bool&v){
+//void Manager :: connectButtonPressed(bool&v){
 	
 //	if(!shouldBeConnected) {
 //		connectToEtherdream();
@@ -73,7 +77,7 @@ void Manager :: connectButtonPressed(bool&v){
 //	}
 	
 	
-}
+//}
 
 void Manager :: update() {
 	
@@ -105,7 +109,7 @@ void Manager :: update() {
 //	
 
 	
-	etherdream.checkConnection();
+	//etherdream.checkConnection();
 	
 	// at this point we should report if the laser has disconnected.
 	
@@ -156,8 +160,8 @@ void Manager :: draw() {
 		
 	}
 	
-	etherdream.setPoints(adjustedPoints);
-	etherdream.setPPS(pps);
+	dac.setPoints(adjustedPoints, pps);
+	//etherdream.setPPS(pps);
 	
 	//showMask();
 	
@@ -175,10 +179,7 @@ void Manager :: draw() {
 	// clear the shapes vector no matter what
 	shapes.clear();
 
-	warp.setVisible(showWarpUI);
-	if(showWarpUI) {
-		warp.draw();
-	}
+    drawWarpPoints();
     
     ofSetColor(255);
     ofPushMatrix();
@@ -188,6 +189,19 @@ void Manager :: draw() {
     ofPopMatrix();
 }
 
+void Manager :: drawWarpPoints(const ofRectangle& previewRect) {
+    warp.offset.set(previewRect.getTopLeft());
+    warp.scale = previewRect.getWidth()/appWidth; 
+    warp.setVisible(showWarpUI);
+    if(showWarpUI) {
+        warp.draw();
+    }
+}
+void Manager :: drawWarpPoints() {
+
+    ofRectangle previewRectangle = ofRectangle(0,0,appWidth, appHeight);
+    drawWarpPoints(previewRectangle);
+}
 
 void Manager :: drawShapes() {
 	
@@ -311,6 +325,7 @@ void Manager :: drawShapes() {
 	// (otherwise some lasers' safety shut off kicks in if the mirrors
 	// stop moving)
 
+    if(!maskRectangle.inside(laserHomePosition)) laserHomePosition = maskRectangle.getCenter();
 	while(laserPoints.size() + shapepoints.size()<minPoints) {
 		ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
 		shapepoints.clear();
@@ -347,7 +362,7 @@ void Manager :: drawShapes() {
 }
 
 
-void Manager :: renderLaserPath(const ofRectangle previewRectangle) {
+void Manager :: renderLaserPath(const ofRectangle& previewRectangle) {
     ofPushStyle();
     
    // bool overrideSettings = false;
@@ -382,7 +397,7 @@ void Manager :: renderLaserPath(const ofRectangle previewRectangle) {
             
             ofPoint p = previewPathMesh.getVertex(pointindex);
             ofSetColor(0,255,0);
-            ofCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight()), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5);
+            ofCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight(), true), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5, true);
             
         }
     }
@@ -393,7 +408,7 @@ void Manager :: renderLaserPath(const ofRectangle previewRectangle) {
 void Manager :: renderLaserPath() {
 	
 	
-    ofRectangle previewRectangle = maskRectangle;
+    ofRectangle previewRectangle = ofRectangle(0,0,appWidth, appHeight);//maskRectangle;
     renderLaserPath(previewRectangle);
     
 }
@@ -534,6 +549,7 @@ void Manager :: addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float d
 
 void Manager :: addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed, float acceleration) {
 	shapes.push_back(new ofxLaser::Line(gLProject(startpoint), gLProject(endpoint), colour, speed<0 ? (float)defaultLineSpeed : speed, acceleration<0 ? (float) defaultLineAcceleration : acceleration));
+    
 }
 
 
@@ -584,11 +600,61 @@ void Manager :: addLaserPolyline(const ofPolyline& line, ofColor colour, ofPoint
 }
 
 
-void Manager::addLaserRect(const ofRectangle&rect, ofFloatColor colour, float speed, float acceleration){
+void Manager::addLaserSpiral(const ofPoint& pos, float innerRadius, float outerRadius, ofColor colour, float speed, float spacing){
+    shapes.push_back(
+                     new ofxLaser::Spiral(pos, innerRadius, outerRadius, colour,
+                            speed<0 ? (float) defaultSpiralSpeed : speed,
+                            spacing<0 ? (float) defaultSpiralSpacing : spacing ));
+}
+
+
+
+void Manager::addLaserRect(const ofRectangle&rect, ofColor colour, float speed, float acceleration){
 	addLaserLine(rect.getTopLeft(), rect.getTopRight(), colour, speed, acceleration);
 	addLaserLine(rect.getTopRight(), rect.getBottomRight(), colour, speed, acceleration);
 	addLaserLine(rect.getBottomRight(), rect.getBottomLeft(), colour, speed, acceleration);
 	addLaserLine(rect.getBottomLeft(), rect.getTopLeft(), colour, speed, acceleration);
+}
+
+void Manager::addLaserSVG(ofxSVG &svg, ofPoint pos, ofPoint scale, ofPoint rotation, float brightness, float speed, float acceleration, float cornerthreshold ) {
+    
+    ofVec3f centrePoint = ofVec3f(svg.getWidth()/2, svg.getHeight()/2);
+    
+    ofPolyline lastline;
+    ofPolyline newline;
+    
+    for(int i=0; i<svg.getNumPath(); i++ ) {
+        
+        const vector<ofPolyline>& lines = svg.getPathAt(i).getOutline();
+        ofColor col = svg.getPathAt(i).getStrokeColor();
+        
+        //		if(lines.size()>0) newline = lines[0];
+        //		if(newline.getVertices() == lastline.getVertices()) continue;
+        //
+        for(int j=0; j<lines.size(); j++) {
+            ofPolyline line = lines[j];
+            
+            vector<ofVec3f>& vertices = line.getVertices();
+            //cout << i<< " " << vertices.size() << endl;
+            for(int i = 0; i<vertices.size(); i++) {
+                ofVec3f& v = vertices[i];
+                v-=centrePoint;
+                v.rotate(rotation.x, ofPoint(1,0,0));
+                v.rotate(rotation.y, ofPoint(0,1,0));
+                v.rotate(rotation.z, ofPoint(0,0,1));
+                v*=scale;
+                v+=pos;
+            }
+            line.simplify(0.1);
+            
+            addLaserPolyline(line,col*brightness, speed, acceleration, cornerthreshold);
+            
+        }
+        
+        lastline = newline;
+    }
+    
+    
 }
 
 
@@ -597,16 +663,16 @@ void Manager ::drawTestPattern() {
 	if(testPattern==1) {
 		
 		
-		ofPoint v = maskRectangle.getBottomRight() - maskRectangle.getTopLeft();
-		for(float y = 0; y<=1; y+=0.333333333) {
+		ofPoint v = maskRectangle.getBottomRight() - maskRectangle.getTopLeft()-ofPoint(0.2,0.2);
+		for(float y = 0; y<=1.1; y+=0.333333333) {
 			
-			addLaserLine(ofPoint(maskRectangle.getLeft(), maskRectangle.getTop()+v.y*y),ofPoint(maskRectangle.getRight(), maskRectangle.getTop()+v.y*y), ofColor::white );
+			addLaserLine(ofPoint(maskRectangle.getLeft()+0.1, maskRectangle.getTop()+0.1+v.y*y),ofPoint(maskRectangle.getRight()-0.1, maskRectangle.getTop()+0.1+v.y*y), ofColor::white );
 		}
 
-		for(float x =0 ; x<=1; x+=0.3333333333) {
+		for(float x =0 ; x<=1.1; x+=0.3333333333) {
 			
 			
-			addLaserLine(ofPoint(maskRectangle.x + v.x*x, maskRectangle.getTop()),ofPoint(maskRectangle.x + v.x*x, maskRectangle.getBottom()), ofColor::red );
+			addLaserLine(ofPoint(maskRectangle.getLeft()+0.1+ v.x*x, maskRectangle.getTop()+0.1),ofPoint(maskRectangle.getLeft()+0.1 + v.x*x, maskRectangle.getBottom()-0.1), ofColor::red );
 			
 		}
 		
@@ -794,7 +860,7 @@ void Manager :: addPoint(ofxLaser::Point p) {
 			
 		}
 		
-		
+        if(!laserArmed) p.r = p.g = p.b =  0;
 		laserPoints.push_back(p);
 	
 		if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
@@ -939,19 +1005,31 @@ void Manager::updateHomography() {
 	vector<cv::Point2f> srcCVPoints, dstCVPoints;
 	
 	
-	for(int i  = 0;i<4; i++) {
-		bool left = (i+1)%4 <2;
-		bool top = i<2;
-	
-		srcCVPoints.push_back(cv::Point2f(left? 0 : appWidth, top ? 0 : appHeight));
-		dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
-		
-	}
-	
+//	for(int i  = 0;i<4; i++) {
+//		bool left = (i+1)%4 <2;
+//		bool top = i<2;
+//	
+//		srcCVPoints.push_back(cv::Point2f(left? 0 : appWidth, top ? 0 : appHeight));
+//		dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
+//		
+//	}
+        for(int i = 0; i<4; i++) {
+            float xpos = ((float)(i%2)/1.0f*appWidth)+0;
+            float ypos = (floor((float)(i/2))/1.0f*appHeight)+0;
+            srcCVPoints.push_back(cv::Point2f(xpos, ypos));
+            dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
+        }
+//    for(int i = 0; i<16; i++) {
+//        float xpos = ((float)(i%4)/3.0f*appWidth)+0;
+//        float ypos = (floor((float)(i/4))/3.0f*appHeight)+0;
+//        srcCVPoints.push_back(cv::Point2f(xpos, ypos));
+//        dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
+//    }
+//    
 	
 	
 	//cout << srcPoints[3] << " " << dstPoints[3] << endl;
-	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints));
+	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
 //	inverseHomography = homography.inv();
 }
 
@@ -973,18 +1051,18 @@ float Manager::calculateCalibratedBrightness(float value, float intensity, float
 
 
 
-void Manager :: connectToEtherdream() {
-	
-	etherdream.setup();
-	//shouldBeConnected = true;
-	//etherdream.setPPS(10000);
-}
-void Manager :: disconnectFromEtherdream() {
-	
-	etherdream.kill();
-	//shouldBeConnected = false;
-	
-}
+//void Manager :: connectToEtherdream() {
+//	
+//	etherdream.setup();
+//	//shouldBeConnected = true;
+//	//etherdream.setPPS(10000);
+//}
+//void Manager :: disconnectFromEtherdream() {
+//	
+//	etherdream.kill();
+//	//shouldBeConnected = false;
+//	
+//}
 
 
 //void Manager :: updateRenderDelay() {
@@ -1069,8 +1147,8 @@ void Manager :: setupParameters() {
 	
 	parameters.setName("Laser Manager");
 	
-	connectButton.set("Etherdream connect");
-	connectButton.addListener(this, &Manager ::connectButtonPressed);
+	parameters.add(laserArmed.set("Laser Armed", false));
+	//connectButton.addListener(this, &Manager ::connectButtonPressed);
 	
 	//parameters.add(connectButton.set("connect etherdream", false));
 	
@@ -1084,12 +1162,12 @@ void Manager :: setupParameters() {
 	
 	//pps.addListener(this, &Manager ::roundPPS);
 	
-	//parameters.add(maskMarginTop.set("mask margin top", 0, 0, appHeight));
-	//parameters.add(maskMarginBottom.set("mask margin bottom", 0, 0, appHeight));
-	//parameters.add(maskMarginLeft.set("mask margin left", 0, 0, appWidth));
-	//parameters.add(maskMarginRight.set("mask margin right", 0, 0, appWidth));
-	//parameters.add(useMaskBitmap.set("use mask bitmap", true));
-	//parameters.add(showMaskBitmap.set("show mask bitmap", true));
+	parameters.add(maskMarginTop.set("mask margin top", 0, 0, appHeight));
+	parameters.add(maskMarginBottom.set("mask margin bottom", 0, 0, appHeight));
+	parameters.add(maskMarginLeft.set("mask margin left", 0, 0, appWidth));
+	parameters.add(maskMarginRight.set("mask margin right", 0, 0, appWidth));
+//	parameters.add(useMaskBitmap.set("use mask bitmap", true));
+//	parameters.add(showMaskBitmap.set("show mask bitmap", true));
 	
 	//parameters.add(showWarpPoints.set("show warp points", false));
 	
@@ -1126,28 +1204,36 @@ void Manager :: setupParameters() {
 	parameters.add(defaultPolylineAcceleration.set("polyline acceleration", 0.5, 0.01, 4));
 	parameters.add(defaultPolylineSpeed.set("polyline speed", 20,2, 40));
 	
-		redParams.add(red100.set("red 100", 1,0,1));
-		redParams.add(red75.set("red 75", 0.75,0,1));
-		redParams.add(red50.set("red 50", 0.5,0,1));
-		redParams.add(red25.set("red 25", 0.25,0,1));
-		redParams.add(red0.set("red 0", 0,0,1));
+    parameters.add(defaultSpiralSpeed.set("spiral speed", 20,2, 40));
+    parameters.add(defaultSpiralSpacing.set("spiral spacing", 10, 1, 20));
+    
+    redParams.add(red100.set("red 100", 1,0,1));
+    redParams.add(red75.set("red 75", 0.75,0,1));
+    redParams.add(red50.set("red 50", 0.5,0,1));
+    redParams.add(red25.set("red 25", 0.25,0,1));
+    redParams.add(red0.set("red 0", 0,0,1));
+
+    greenParams.add(green100.set("green 100", 1,0,1));
+    greenParams.add(green75.set("green 75", 0.75,0,1));
+    greenParams.add(green50.set("green 50", 0.5,0,1));
+    greenParams.add(green25.set("green 25", 0.25,0,1));
+    greenParams.add(green0.set("green 0", 0,0,1));
+
+    blueParams.add(blue100.set("blue 100", 1,0,1));
+    blueParams.add(blue75.set("blue 75", 0.75,0,1));
+    blueParams.add(blue50.set("blue 50", 0.5,0,1));
+    blueParams.add(blue25.set("blue 25", 0.25,0,1));
+    blueParams.add(blue0.set("blue 0", 0,0,1));
+
+    redParams.setName("Laser red calibration");
+    greenParams.setName("Laser green calibration");
+    blueParams.setName("Laser blue calibration");
+    
+    maskMarginTop.addListener(this, &Manager::updateMaskRectangleParam);
+    maskMarginBottom.addListener(this, &Manager::updateMaskRectangleParam);
+    maskMarginLeft.addListener(this, &Manager::updateMaskRectangleParam);
+    maskMarginRight.addListener(this, &Manager::updateMaskRectangleParam);
 	
-		greenParams.add(green100.set("green 100", 1,0,1));
-		greenParams.add(green75.set("green 75", 0.75,0,1));
-		greenParams.add(green50.set("green 50", 0.5,0,1));
-		greenParams.add(green25.set("green 25", 0.25,0,1));
-		greenParams.add(green0.set("green 0", 0,0,1));
-	
-		blueParams.add(blue100.set("blue 100", 1,0,1));
-		blueParams.add(blue75.set("blue 75", 0.75,0,1));
-		blueParams.add(blue50.set("blue 50", 0.5,0,1));
-		blueParams.add(blue25.set("blue 25", 0.25,0,1));
-		blueParams.add(blue0.set("blue 0", 0,0,1));
-	
-		redParams.setName("Laser red calibration");
-		greenParams.setName("Laser green calibration");
-		blueParams.setName("Laser blue calibration");
-	//
 		
 }
 
@@ -1155,3 +1241,19 @@ void Manager :: roundPPS(int& v) {
 	pps = round((float)pps/500.0f)* 500;
 
 }
+
+
+
+void Manager :: updateMaskRectangle() {
+    maskRectangle.x = maskMarginLeft;
+    maskRectangle.y = maskMarginTop;
+    maskRectangle.width = appWidth-maskMarginRight - maskMarginLeft;
+    maskRectangle.height = appHeight - maskMarginBottom- maskMarginTop;
+    //maskRectangleBrightness = 1;
+    
+}
+void Manager :: updateMaskRectangleParam(float& value) {
+    updateMaskRectangle();
+    
+}
+

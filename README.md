@@ -24,10 +24,12 @@ Dependencies
 ofxEtherdream (my fork) [github.com/sebleedelisle/ofxEtherdream](https://github.com/sebleedelisle/ofxEtherdream)
 ofxXmlSettings (comes with oF)
 ofxGui (comes with oF)
+ofxOpenCv (comes with oF)
 
 Compatibility
 ------------
-openFrameworks 0084  
+openFrameworks 0084 - initially written in 0084
+openFrameworks 0098 - currently tested with 0098
 
 
 

@@ -39,7 +39,7 @@ class DragHandle : public ofPoint{
 	};
 	
 	void startDrag(ofPoint clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) {
-		offset = clickPos - *this;
+		clickOffset = clickPos - *this;
 		isDragging = true;
 		xAxis = dragXAxis;
 		yAxis = dragYAxis;
@@ -54,8 +54,8 @@ class DragHandle : public ofPoint{
 		
 		if(isDragging) {
 			
-			if(xAxis) x = pos.x - offset.x;
-			if(yAxis) y = pos.y - offset.y;
+			if(xAxis) x = pos.x - clickOffset.x;
+			if(yAxis) y = pos.y - clickOffset.y;
 			
 			if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
 				x = startPos.x;
@@ -81,7 +81,7 @@ class DragHandle : public ofPoint{
 		return(distance(hitpoint)<radius);
 	}
 	
-	ofPoint offset, startPos;
+	ofPoint clickOffset, startPos;
 	bool isDragging = false;
 	
 	float radius = 5;

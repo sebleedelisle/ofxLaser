@@ -6,17 +6,19 @@
 
 #pragma once
 
-#include "ofxEtherdream.h"
+//#include "ofxEtherdream.h"
 #include "ofxGui.h"
+#include "ofxSVG.h"
 #include "ofxLaserShape.h"
 #include "ofxLaserPoint.h"
 #include "ofxLaserDot.h"
 #include "ofxLaserLine.h"
 #include "ofxLaserCircle.h"
 #include "ofxLaserPolyline.h"
+#include "ofxLaserSpiral.h"
 #include "ofxLaserQuadWarp.h"
-
 #include "ofxOpenCv.h"
+#include "EtherdreamDAC.h"
 
 
 namespace ofxLaser {
@@ -39,29 +41,27 @@ namespace ofxLaser {
 		void drawShapes();
 		void renderPreview();
 		void renderLaserPath();
-        void renderLaserPath(const ofRectangle previewRect);
+        void renderLaserPath(const ofRectangle& previewRect);
+        void drawWarpPoints();
+        void drawWarpPoints(const ofRectangle& previewRect);
 		
 		void setupParameters();
 		void roundPPS(int& v);
-		//void roundPPS(int& v);
-		
-		void connectToEtherdream();
-		void disconnectFromEtherdream();
-		void connectButtonPressed(bool&v);
-		
-		void drawTestPattern();
-		
-		
-		
-		void addLaserDot(const ofPoint& ofpoint, ofFloatColor colour, float intensity = 1, int maxpoints = -1);
-		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
-		void addLaserRect(const ofRectangle&rect, ofFloatColor colour, float speed = -1, float acceleration = -1);
-		void addLaserCircle(const ofPoint& ofpoint, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
-        
-      		void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
-		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
 
 		
+		void drawTestPattern();
+
+		void addLaserDot(const ofPoint& pos, ofFloatColor colour, float intensity = 1, int maxpoints = -1);
+		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
+		void addLaserRect(const ofRectangle&rect, ofColor colour, float speed = -1, float acceleration = -1);
+        void addLaserCircle(const ofPoint& pos, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
+        void addLaserSpiral(const ofPoint& pos, float innerRadius, float outerRadius, ofColor colour, float speed = -1, float spacing = -1);
+        
+        void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
+		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
+
+        void addLaserSVG(ofxSVG &svg, ofPoint pos, ofPoint scale, ofPoint rotation, float brightness =1, float speed=-1, float acceleration=-1, float cornerthreshold=-1 );
+            
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
 
@@ -77,6 +77,10 @@ namespace ofxLaser {
 		
 		
 		void updateHomography();
+
+        void updateMaskRectangleParam(float& value);
+        void updateMaskRectangle();
+
 		
         // converts openGL coords to screen coords //
         static ofVec3f gLProject(ofVec3f p) {
@@ -84,6 +88,9 @@ namespace ofxLaser {
             
         }
         static ofVec3f gLProject( float ax, float ay, float az ) {
+            
+            //return ofVec3f(ax,ay,0);
+            
             GLdouble model_view[16];
             glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
             
@@ -95,10 +102,11 @@ namespace ofxLaser {
             
             GLdouble X, Y, Z = 0;
             gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
+            //gluUnProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
             
-            //return ofVec3f(X, Y, 0.0f);
-            return ofVec3f(ax, ay,az);
             
+            //return ofVec3f(ax, ay,0);
+            return ofVec3f(X, Y, 0.0f);
         }
         
         static float gLGetScaleForZ(float z) {
@@ -108,8 +116,8 @@ namespace ofxLaser {
 
         
         
-		ofxEtherdream etherdream;
-		ofParameter<string> etherdreamStatus;
+		EtherdreamDAC dac;
+		//ofParameter<string> etherdreamStatus;
 		//bool shouldBeConnected;
 		
 		vector<ofxIlda::Point> ildaPoints;
@@ -118,7 +126,7 @@ namespace ofxLaser {
 		QuadWarp warp;
 		
 		ofParameterGroup parameters;
-		ofParameter<bool> connectButton;
+		ofParameter<bool> laserArmed;
 		ofParameter<float> intensity;
 		ofParameter<int> pps;
 		
@@ -127,7 +135,15 @@ namespace ofxLaser {
 		
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
-		ofParameter<bool> showWarpUI; 
+		ofParameter<bool> showWarpUI;
+        
+        ofParameter<float> maskMarginBottom;
+        ofParameter<float> maskMarginTop;
+        ofParameter<float> maskMarginLeft;
+        ofParameter<float> maskMarginRight;
+//        ofParameter<bool> useMaskBitmap; // coming soon!
+//        ofParameter<bool> showMaskBitmap;
+        
 		ofParameter<int> colourChangeDelay;
 		
 		ofParameter<int> shapePreBlank;
@@ -135,7 +151,7 @@ namespace ofxLaser {
 		
 		// the number of points for a dot
 		ofParameter<int> dotMaxPoints;
-		
+		//ofParameter<int> use3D;
 		
 		// preview stuff
 		
@@ -165,8 +181,11 @@ namespace ofxLaser {
 		ofParameter<float> defaultCircleOverlap;
 
 		ofParameter<float> defaultPolylineAcceleration;
-		ofParameter<float> defaultPolylineSpeed;
-		ofParameter<float> defaultPolylineCornerThreshold;
+        ofParameter<float> defaultPolylineSpeed;
+        ofParameter<float> defaultPolylineCornerThreshold;
+
+        ofParameter<float> defaultSpiralSpeed;
+        ofParameter<float> defaultSpiralSpacing;
 
 		
 		// would probably be sensible to move these settings out into a colour

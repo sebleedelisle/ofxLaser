@@ -8,7 +8,7 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
-	laser.connectToEtherdream();
+	//laser.connectToEtherdream();
 
 	
 	ofxGuiSetDefaultWidth(300);
@@ -34,12 +34,9 @@ void ofApp::setup(){
 void ofApp::update(){
 	float deltaTime = ofClamp(ofGetLastFrameTime(), 0, 0.2);
 	elapsedTime+=deltaTime;
+    laser.update();
 	
 	
-	showLaserEffect(currentLaserEffect);
-	
-	
-	laser.update();
 
 }
 
@@ -50,7 +47,7 @@ void ofApp::draw() {
 	
 
 	ofBackground(0);
-	laser.draw();
+    
 	laserGui.draw();
 	colourGui.draw();
 	
@@ -63,12 +60,20 @@ void ofApp::draw() {
 	
 	ofDrawBitmapString("Left and Right Arrows to change current effect", 20, ypos+=30);
 	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
+    
+    ofSetupScreenPerspective(1280,1024,50);
+    
+    showLaserEffect(currentLaserEffect);
+
+
+    laser.draw();
 
 }
 
 
 void ofApp :: showLaserEffect(int effectnum) {
-	
+    
+    
 	float left = laserWidth*0.1;
 	float top = laserHeight*0.1;
 	float right = laserWidth*0.9;
@@ -90,6 +95,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				float xpos =left + (width*progress);
 									
 				laser.addLaserLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+                //ofLine(xpos, top+height*0.1, xpos, top+height*0.4);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				laser.addLaserLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
@@ -291,6 +297,7 @@ void ofApp::mouseReleased(int x, int y, int button) {
 
 //--------------------------------------------------------------
 void ofApp::exit(){
+    laser.testPattern = 0; 
 	laserGui.saveToFile("laserSettings.xml");
     laser.warp.saveSettings();
 

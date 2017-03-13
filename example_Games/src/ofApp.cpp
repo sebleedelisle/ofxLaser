@@ -9,7 +9,7 @@ void ofApp::setup(){
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
 	laser.maskRectangle.height = 600;
-	laser.connectToEtherdream();
+	//laser.connectToEtherdream();
 
 	ofxGuiSetDefaultWidth(300);
 	laserGui.setup();

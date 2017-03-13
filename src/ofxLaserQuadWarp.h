@@ -45,9 +45,13 @@ class QuadWarp {
 	float width;
 	float height;
 	
+    ofPoint offset;
+    float scale;
+    
 	protected :
 	bool visible; 
 	bool isDirty;
+
 
 	
 };

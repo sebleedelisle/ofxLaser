@@ -17,13 +17,24 @@ QuadWarp::QuadWarp(string savelabel) {
 }
 
 void QuadWarp::set (float x, float y, float w, float h) {
-	
-	for(int i  = 0;i<4; i++) {
-		bool left = (i+1)%4 <2; 
-		bool top = i<2;
-		handles[i].set(left? x : x+w, top ? y : y+h);
-		allHandles.push_back(&handles[i]);
-	}
+
+        for(int i = 0; i<4; i++) {
+            float xpos = ((float)(i%2)/1.0f*w)+x;
+            float ypos = (floor((float)(i/2))/1.0f*h)+y;
+    
+            handles[i].set(xpos, ypos);
+            allHandles.push_back(&handles[i]);
+        }
+
+//    
+//    for(int i = 0; i<16; i++) {
+//        float xpos = ((float)(i%4)/3.0f*w)+x;
+//        float ypos = (floor((float)(i/4))/3.0f*h)+y;
+//        
+//        handles[i].set(xpos, ypos);
+//        allHandles.push_back(&handles[i]);
+//    }
+//    
 	centreHandle.set(x + (w/2.0f), y+(h/2.0f));
 	allHandles.push_back(&centreHandle);
 	
@@ -41,16 +52,26 @@ void QuadWarp :: initListeners() {
 void QuadWarp :: draw() {
 	
 	if(!visible) return;
-	
+    ofPushMatrix();
+    ofTranslate(offset);
+    ofScale(scale, scale);
+    
 	ofPushStyle();
 	ofNoFill();
-	ofSetLineWidth(1);
+	ofSetLineWidth(1/scale);
 	if(isDirty) ofSetColor(ofColor::red);
 	
 	for(int i = 0; i<numHandles; i++) {
-		ofLine(handles[i],  handles[(i+1)%4]);
+		//ofLine(handles[i],  handles[(i+1)%4]);
+        ofCircle(handles[i], 5);
+        ofDrawBitmapString(ofToString(i), handles[i]+ofPoint(10,10));
 		
 	}
+    ofLine(handles[0], handles[1]);
+    ofLine(handles[1], handles[3]);
+    ofLine(handles[3], handles[2]);
+    ofLine(handles[2], handles[0]);
+    
 	ofPopStyle();
 	
 	for(int i = 0; i<numHandles; i++) {
@@ -59,7 +80,7 @@ void QuadWarp :: draw() {
 	
 	centreHandle.draw();
 	isDirty = false;
-
+    ofPopMatrix();
 }
 
 bool QuadWarp::checkDirty() {
@@ -73,35 +94,24 @@ bool QuadWarp::checkDirty() {
 	
 }
 
-//
-//void QuadWarp::updateHomography() {
-//	
-////	
-////	vector<cv::Point2f> srcCVPoints, dstCVPoints;
-////	if(srcPoints.size()!=dstPoints.size()) {
-////		cout << "RUH ROH" << endl;
-////	}
-////	
-////	
-////	for(int i = 0; i < srcPoints.size(); i++) {
-////		srcCVPoints.push_back(Point2f(srcPoints[i].x , srcPoints[i].y));
-////		dstCVPoints.push_back(Point2f(dstPoints[i].x, dstPoints[i].y));
-////	}
-////	
-////	
-////	//cout << srcPoints[3] << " " << dstPoints[3] << endl;
-////	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints));
-////	inverseHomography = homography.inv();
-//}
-//
-
-
 
 void QuadWarp :: startDragging(int handleIndex, ofPoint clickPos) {
 	
 	handles[handleIndex].startDrag(clickPos);
-	handles[(handleIndex+1)%4].startDrag(clickPos, handleIndex%2==1,handleIndex%2==0, true);
-	handles[(handleIndex+3)%4].startDrag(clickPos, handleIndex%2==0, handleIndex%2==1, true);
+    
+    int x = ((handleIndex%2)+1)%2;
+    int y = handleIndex/2;
+    
+    
+    int xhandleindex = x+(y*2);
+    
+    x = handleIndex%2;
+    y = ((handleIndex/2)+1)%2;
+    int yhandleindex = x+(y*2);
+    
+    handles[xhandleindex].startDrag(clickPos, false,true, true);
+    handles[yhandleindex].startDrag(clickPos, true,false, true);
+    
 	
 }
 
@@ -112,12 +122,16 @@ bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 	
 	bool handleHit = false;
 	
-	if(centreHandle.hitTest(e)) {
+    ofPoint mousePoint = e;
+    mousePoint-=offset;
+    mousePoint/=scale;
+    
+	if(centreHandle.hitTest(mousePoint)) {
 		
-		centreHandle.startDrag(e);
+		centreHandle.startDrag(mousePoint);
 		handleHit = true;
 		for(int i = 0; i<numHandles; i++) {
-			handles[i].startDrag(e);
+			handles[i].startDrag(mousePoint);
 		}
 			
 		
@@ -125,9 +139,8 @@ bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 	} else {
 
 		for(int i = 0; i<numHandles; i++) {
-			if(handles[i].hitTest(e)) {
-			//	handles[i].startDrag(e);
-				startDragging(i, e);
+			if(handles[i].hitTest(mousePoint)) {
+				startDragging(i, mousePoint);
 				handleHit = true;
 			}
 		
@@ -140,15 +153,19 @@ bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 
 bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
 	
+    ofPoint mousePoint = e;
+    mousePoint-=offset;
+    mousePoint/=scale;
+    
 	ofRectangle bounds(centreHandle, 0, 0);
 	bool dragging = false;
 	for(int i = 0; i<numHandles; i++) {
-		if(handles[i].updateDrag(e)) dragging = true;
+		if(handles[i].updateDrag(mousePoint)) dragging = true;
 		bounds.growToInclude(handles[i]);
 	}
 	
 	if(!dragging) {
-		dragging = centreHandle.updateDrag(e);
+		dragging = centreHandle.updateDrag(mousePoint);
 	} else {
 		centreHandle.set(0,0);
 		for(int i = 0; i<4; i++) {
@@ -168,7 +185,8 @@ bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
 
 bool QuadWarp :: mouseReleased(ofMouseEventArgs &e){
 	
-	
+
+    
 	bool wasDragging = false;
 	
 	for(int i = 0; i<allHandles.size(); i++) {
@@ -182,7 +200,7 @@ bool QuadWarp :: mouseReleased(ofMouseEventArgs &e){
 
 
 bool QuadWarp::loadSettings() {
-	
+
 	string filename = saveLabel+".xml";
 	ofxXmlSettings xml;
 	if(!xml.loadFile(filename)) {
@@ -200,11 +218,13 @@ bool QuadWarp::loadSettings() {
 	handles[1].x	= xml.getValue("quad:upperRight:x", 1.0);
 	handles[1].y	= xml.getValue("quad:upperRight:y", 0.0);
 	
-	handles[2].x	= xml.getValue("quad:lowerRight:x", 1.0);
-	handles[2].y	= xml.getValue("quad:lowerRight:y", 1.0);
+    handles[2].x	= xml.getValue("quad:lowerLeft:x", 0.0);
+    handles[2].y	= xml.getValue("quad:lowerLeft:y", 1.0);
+    
+	handles[3].x	= xml.getValue("quad:lowerRight:x", 1.0);
+	handles[3].y	= xml.getValue("quad:lowerRight:y", 1.0);
 	
-	handles[3].x	= xml.getValue("quad:lowerLeft:x", 0.0);
-	handles[3].y	= xml.getValue("quad:lowerLeft:y", 1.0);
+
 	
 	
 	//updateCentrePoint();
@@ -232,18 +252,20 @@ void QuadWarp::saveSettings() {
 	xml.addValue("x", handles[1].x);
 	xml.addValue("y", handles[1].y);
 	xml.popTag();
-	
+    
+    xml.addTag("lowerLeft");
+    xml.pushTag("lowerLeft");
+    xml.addValue("x", handles[2].x);
+    xml.addValue("y", handles[2].y);
+    xml.popTag();
+    
 	xml.addTag("lowerRight");
 	xml.pushTag("lowerRight");
-	xml.addValue("x", handles[2].x);
-	xml.addValue("y", handles[2].y);
-	xml.popTag();
-	
-	xml.addTag("lowerLeft");
-	xml.pushTag("lowerLeft");
 	xml.addValue("x", handles[3].x);
 	xml.addValue("y", handles[3].y);
 	xml.popTag();
+	
+
 	
 	
 	xml.saveFile(filename);
