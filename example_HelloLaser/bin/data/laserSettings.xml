@@ -1,10 +1,10 @@
 <group>
 	<Laser_Manager>
-		<intensity>0.214286</intensity>
+		<intensity>0.1</intensity>
 		<test_pattern>0</test_pattern>
 		<points_per_second>29943</points_per_second>
 		<colour_change_offset>-6</colour_change_offset>
-		<flip_x>1</flip_x>
+		<flip_x>0</flip_x>
 		<flip_y>1</flip_y>
 		<show_warper_UI>1</show_warper_UI>
 		<laser_on_during_move>0</laser_on_during_move>
@@ -18,12 +18,19 @@
 		<dot_max_points>7</dot_max_points>
 		<line_acceleration>0.5</line_acceleration>
 		<line_speed>20</line_speed>
-		<circle_overlap>20</circle_overlap>
-		<circle_acceleration>0.5</circle_acceleration>
-		<circle_speed>20</circle_speed>
+		<circle_overlap>0</circle_overlap>
+		<circle_acceleration>0.539286</circle_acceleration>
+		<circle_speed>15.9592</circle_speed>
 		<polyline_corner_threshold>90</polyline_corner_threshold>
 		<polyline_acceleration>0.5</polyline_acceleration>
 		<polyline_speed>20</polyline_speed>
+	<Laser_Armed>0</Laser_Armed>
+		<mask_margin_top>0</mask_margin_top>
+		<mask_margin_bottom>0</mask_margin_bottom>
+		<mask_margin_left>0</mask_margin_left>
+		<mask_margin_right>0</mask_margin_right>
+		<spiral_speed>20</spiral_speed>
+		<spiral_spacing>10</spiral_spacing>
 	</Laser_Manager>
 	<Laser_red_calibration>
 		<red_100>1</red_100>

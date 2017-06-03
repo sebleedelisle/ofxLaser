@@ -102,11 +102,11 @@ namespace ofxLaser {
             
             GLdouble X, Y, Z = 0;
             gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
-            //gluUnProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
+          
             
             
-            //return ofVec3f(ax, ay,0);
-            return ofVec3f(X, Y, 0.0f);
+            return ofVec3f(ax, ay,0);
+            //return ofVec3f(X, Y, 0.0f);
         }
         
         static float gLGetScaleForZ(float z) {

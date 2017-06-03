@@ -8,9 +8,7 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
-	laser.connectToEtherdream();
-
-	
+		
 	ofxGuiSetDefaultWidth(300);
 	laserGui.setup();
 	laserGui.add(laser.parameters);
@@ -20,15 +18,16 @@ void ofApp::setup(){
 	laserGui.add(laser.blueParams);
 
 	laserGui.loadFromFile("laserSettings.xml");
+    laser.laserArmed = false;
+    laser.intensity = 0.1;
 
 	laserGui.setPosition(laserWidth+50, 0);
 	
 	
-	//laserGui.setWidthElements(400);
 	currentLaserEffect = 0;
 	numLaserEffects = 8;
     
-    for(int i = 0; i<100; i++) {
+    for(int i = 0; i<10; i++) {
         Particle p;
         p.pos.set(ofRandom(laserWidth), ofRandom(laserHeight));
         //p.vel.set(0,80);
@@ -38,9 +37,9 @@ void ofApp::setup(){
         p.size = (250.0+z) / z;
         particles.push_back(p);
         
-    
+        
+        ofLog(OF_LOG_NOTICE, ofToString(p.size));
     }
-
     ofRectangle rect(laserWidth*0.1,laserHeight*0.1,laserWidth*0.8, laserHeight*0.8);
     square.addVertex(rect.getTopLeft());
     square.addVertex(rect.getTopRight());
@@ -49,7 +48,8 @@ void ofApp::setup(){
     square.addVertex(rect.getTopLeft());
     
     
-    
+    ofSetVerticalSync(false);
+
     
 }
 
@@ -78,20 +78,25 @@ void ofApp::draw() {
 	
 	ofNoFill();
 	ofSetLineWidth(1);
-	ofRect(0,0,laserWidth, laserHeight);
+	ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 	int ypos = laserHeight+20;
 	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 20, ypos+=30);
 	
 	ofDrawBitmapString("Left and Right Arrows to change current effect", 20, ypos+=30);
-	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
+    ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
+    ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
 
+    ofDrawBitmapString(ofToString(ofGetFrameRate()), 10,10);
+
+    
 }
 
 
 void ofApp :: showLaserEffect(int effectnum) {
 	
     float deltaTime = ofClamp(ofGetLastFrameTime(), 0, 0.2);
+    deltaTime*=0.5;
     elapsedTime+=deltaTime;
     
     //laser.addLaserPolyline(square, ofColor::cyan);
@@ -107,8 +112,8 @@ void ofApp :: showLaserEffect(int effectnum) {
         if(p.pos.x<0) p.pos.x+=laserWidth;
         else if(p.pos.x>laserWidth) p.pos.x-=laserWidth;
         
-        if(p.size<1.5)
-            laser.addLaserDot(p.pos, ofColor::white);
+       if(p.size<4)
+            laser.addLaserDot(p.pos, ofColor::white,p.size/5.0f);
         else {
              laser.addLaserCircle(p.pos, p.size, ofColor::white);
         }

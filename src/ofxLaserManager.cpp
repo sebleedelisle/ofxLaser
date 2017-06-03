@@ -119,7 +119,7 @@ void Manager :: update() {
 
 void Manager :: draw() {
 	
-	
+    //ofSetupScreenPerspective(800,800);
 	//ofPoint startPosition(maskRectangle.getCenter());
 	
 	if(testPattern>0) drawTestPattern();
@@ -184,8 +184,8 @@ void Manager :: draw() {
     ofSetColor(255);
     ofPushMatrix();
     ofTranslate(ofGetMouseX(), ofGetMouseY());
-    ofLine(0,0,0,10);
-    ofLine(0,0,6,8);
+    ofDrawLine(0,0,0,10);
+    ofDrawLine(0,0,6,8);
     ofPopMatrix();
 }
 
@@ -258,14 +258,14 @@ void Manager :: drawShapes() {
 				
 				shape2.reversed = false;
 				
-				if(shape1.getEndPos().distanceSquared(shape2.getStartPos()) < shortestDistance) {
-					shortestDistance = shape1.getEndPos().distanceSquared(shape2.getStartPos());
+				if(shape1.getEndPos().squareDistance(shape2.getStartPos()) < shortestDistance) {
+					shortestDistance = shape1.getEndPos().squareDistance(shape2.getStartPos());
 					nextDotIndex = j;
 					reversed = false;
 				}
 				
-				if((shape2.reversable) && (shape1.getEndPos().distanceSquared(shape2.getEndPos()) < shortestDistance)) {
-					shortestDistance = shape1.getEndPos().distanceSquared(shape2.getEndPos());
+				if((shape2.reversable) && (shape1.getEndPos().squareDistance(shape2.getEndPos()) < shortestDistance)) {
+					shortestDistance = shape1.getEndPos().squareDistance(shape2.getEndPos());
 					nextDotIndex = j;
 					reversed = true;
 				}
@@ -357,8 +357,6 @@ void Manager :: drawShapes() {
 	}
 
 	
-	
-	
 }
 
 
@@ -397,7 +395,7 @@ void Manager :: renderLaserPath(const ofRectangle& previewRectangle) {
             
             ofPoint p = previewPathMesh.getVertex(pointindex);
             ofSetColor(0,255,0);
-            ofCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight(), true), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5, true);
+            ofDrawCircle(ofMap(p.x, 0, appWidth, previewRectangle.x, previewRectangle.getRight(), true), ofMap(p.y, 0, appHeight, previewRectangle.y, previewRectangle.getBottom()), 5, true);
             
         }
     }
@@ -829,7 +827,9 @@ void Manager :: addPoint(ofxLaser::Point p) {
 		if(!offScreen) {
 			offScreen = true;
 			offScreenPoint = p;
+          
 			laserPoints.push_back(offScreenPoint);
+           
 			
 			if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
 		}
@@ -860,7 +860,7 @@ void Manager :: addPoint(ofxLaser::Point p) {
 			
 		}
 		
-        if(!laserArmed) p.r = p.g = p.b =  0;
+        
 		laserPoints.push_back(p);
 	
 		if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
@@ -868,76 +868,6 @@ void Manager :: addPoint(ofxLaser::Point p) {
 	}
 	
 }
-
-
-
-//
-//void Manager :: addIldaPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool useCalibration){
-//	
-//	
-//	// TODO should be smarter about this. Ideally we should calculate
-//	// the point that it crosses the line and use that as the last point.
-//	
-//	
-//	// inside doesn't work because I need points on the edge of the rect to work.
-//
-//	if(p.x<maskRectangle.getLeft() ||
-//		p.x>maskRectangle.getRight() ||
-//		p.y<maskRectangle.getTop() ||
-//		p.y>maskRectangle.getBottom()) {
-//		
-//		p.x = ofClamp(p.x, maskRectangle.getLeft(), maskRectangle.getRight());
-//		p.y = ofClamp(p.y, maskRectangle.getTop(), maskRectangle.getBottom());
-//		
-//		
-//		if(!offScreen) {
-//			offScreen = true;
-//			offScreenPoint = p;
-//			addPoint(offScreenPoint, c, useCalibration);
-//			
-//		}
-//		lastClampedOffScreenPoint = p;
-//		
-//		
-//	} else {
-//		
-//		if(offScreen){
-//			// ease between offScreenPoint and lastClampedOffScreenPoint
-//			offScreen = false;
-//			
-//			ofPoint target = lastClampedOffScreenPoint;
-//			ofPoint start = offScreenPoint;
-//			
-//			ofPoint v = target-start;
-//			
-//			float blanknum = v.length()/moveSpeed + movePointsPadding;
-//			
-//			for(int j = 0; j<blanknum; j++) {
-//				
-//				float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
-//				
-//				ofPoint c = (v* t) + start;
-//				addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(100,0,0) : ofColor::black, useCalibration);
-//				
-//			}
-//		}
-//		
-//		c.r*=pointIntensity;
-//		c.g*=pointIntensity;
-//		c.b*=pointIntensity;
-//		
-////		if(useMaskBitmap) {
-////			float brightness = maskBitmap.getColor(p.x/appWidth* (float)maskBitmap.getWidth(), p.y/appHeight * (float)maskBitmap.getHeight()).getBrightness();
-////			c*= brightness/255.0f;
-////			
-////			
-////		}
-//		
-//		
-//		addPoint(p, c, useCalibration);
-//		
-//	}
-//}
 
 
 void  Manager :: processIldaPoints() {
@@ -989,7 +919,7 @@ void  Manager :: processIldaPoints() {
 		c.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
 		c.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
 		c.b = calculateCalibratedBrightness(c.b, intensity, blue100, blue75, blue50, blue25, blue0);
-		
+        if(!laserArmed) c.set(0,0,0);
 		
 		ildaPoints.push_back(ofxIlda::Point(p, c, pmin, pmax));
 		

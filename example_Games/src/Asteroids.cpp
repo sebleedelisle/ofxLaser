@@ -22,16 +22,16 @@ Asteroids :: Asteroids() {
 	gameRect.set(0,0,800,600);
 	reset();
 	
-	laserSound.loadSound("fire.wav");
-	bangSmall.loadSound("bangSmall.wav");
-	bangMedium.loadSound("bangMedium.wav");
-	bangLarge.loadSound("bangLarge.wav");
+	laserSound.load("fire.wav");
+	bangSmall.load("bangSmall.wav");
+	bangMedium.load("bangMedium.wav");
+	bangLarge.load("bangLarge.wav");
     
 	ofAddListener(ofEvents().keyPressed, this, &Asteroids::keyPressed);
 	ofAddListener(ofEvents().keyReleased, this, &Asteroids::keyReleased);
 	
-	clickOn.loadSound("clickon.wav");
-	clickOff.loadSound("clickoff.wav");
+	clickOn.load("clickon.wav");
+	clickOff.load("clickoff.wav");
 	
 	textWriter.lineRandomness = 0;
 	textWriter.colourFlickerMin = 1;

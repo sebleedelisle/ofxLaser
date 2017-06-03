@@ -1,4 +1,5 @@
 ofxGui
+ofxLaser
+ofxOpenCv
+ofxSvg
 ofxXmlSettings
-ofxEtherdream
-ofxIlda

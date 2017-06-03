@@ -8,8 +8,6 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
-	laser.connectToEtherdream();
-
 	
 	ofxGuiSetDefaultWidth(250);
 	laserGui.setup(laser.parameters);

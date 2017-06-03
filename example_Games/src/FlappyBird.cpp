@@ -157,7 +157,7 @@ void FlappyBird :: renderBird(ofxLaser::Manager &laserManager){
 	
 	for(int i=0; i<svg.getNumPath(); i++ ) {
 		
-		vector<ofPolyline>& lines = svg.getPathAt(i).getOutline();
+		const vector<ofPolyline>& lines = svg.getPathAt(i).getOutline();
 		ofColor col = svg.getPathAt(i).getStrokeColor();
 		
 		for(int j=0; j<lines.size(); j++) {

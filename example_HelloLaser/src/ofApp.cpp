@@ -20,11 +20,10 @@ void ofApp::setup(){
 	laserGui.add(laser.blueParams);
 
 	laserGui.loadFromFile("laserSettings.xml");
-
+    laser.laserArmed = false;   // << essential to make sure armed state isn't retained
+    laser.intensity= 0.1;       // << always safer to start with the laser dimmed
 	laserGui.setPosition(laserWidth+50, 0);
 	
-	
-	//laserGui.setWidthElements(400);
 	currentLaserEffect = 0;
 	numLaserEffects = 8;
 	
@@ -53,7 +52,7 @@ void ofApp::draw() {
 	
 	ofNoFill();
 	ofSetLineWidth(1);
-	ofRect(0,0,laserWidth, laserHeight);
+	ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 	int ypos = laserHeight+20;
 	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 20, ypos+=30);

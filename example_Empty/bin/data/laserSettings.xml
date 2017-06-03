@@ -23,6 +23,14 @@
 		<polyline_corner_threshold>90</polyline_corner_threshold>
 		<polyline_acceleration>0.5</polyline_acceleration>
 		<polyline_speed>20</polyline_speed>
+	<show_post_transform_path>0</show_post_transform_path>
+	<Laser_Armed>0</Laser_Armed>
+		<mask_margin_top>0</mask_margin_top>
+		<mask_margin_bottom>0</mask_margin_bottom>
+		<mask_margin_left>0</mask_margin_left>
+		<mask_margin_right>0</mask_margin_right>
+		<spiral_speed>20</spiral_speed>
+		<spiral_spacing>10</spiral_spacing>
 	</Laser_Manager>
 	<Laser_red_calibration>
 		<red_100>1</red_100>

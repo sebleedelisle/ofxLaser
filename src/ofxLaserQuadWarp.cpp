@@ -18,24 +18,15 @@ QuadWarp::QuadWarp(string savelabel) {
 
 void QuadWarp::set (float x, float y, float w, float h) {
 
-        for(int i = 0; i<4; i++) {
-            float xpos = ((float)(i%2)/1.0f*w)+x;
-            float ypos = (floor((float)(i/2))/1.0f*h)+y;
-    
-            handles[i].set(xpos, ypos);
-            allHandles.push_back(&handles[i]);
-        }
+    for(int i = 0; i<4; i++) {
+        float xpos = ((float)(i%2)/1.0f*w)+x;
+        float ypos = (floor((float)(i/2))/1.0f*h)+y;
 
-//    
-//    for(int i = 0; i<16; i++) {
-//        float xpos = ((float)(i%4)/3.0f*w)+x;
-//        float ypos = (floor((float)(i/4))/3.0f*h)+y;
-//        
-//        handles[i].set(xpos, ypos);
-//        allHandles.push_back(&handles[i]);
-//    }
-//    
-	centreHandle.set(x + (w/2.0f), y+(h/2.0f));
+        handles[i].set(xpos, ypos);
+        allHandles.push_back(&handles[i]);
+    }
+
+    centreHandle.set(x + (w/2.0f), y+(h/2.0f));
 	allHandles.push_back(&centreHandle);
 	
 }
@@ -63,14 +54,14 @@ void QuadWarp :: draw() {
 	
 	for(int i = 0; i<numHandles; i++) {
 		//ofLine(handles[i],  handles[(i+1)%4]);
-        ofCircle(handles[i], 5);
+        ofDrawCircle(handles[i], 5);
         ofDrawBitmapString(ofToString(i), handles[i]+ofPoint(10,10));
 		
 	}
-    ofLine(handles[0], handles[1]);
-    ofLine(handles[1], handles[3]);
-    ofLine(handles[3], handles[2]);
-    ofLine(handles[2], handles[0]);
+    ofDrawLine(handles[0], handles[1]);
+    ofDrawLine(handles[1], handles[3]);
+    ofDrawLine(handles[3], handles[2]);
+    ofDrawLine(handles[2], handles[0]);
     
 	ofPopStyle();
 	

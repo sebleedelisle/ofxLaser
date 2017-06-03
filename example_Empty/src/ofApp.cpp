@@ -8,8 +8,6 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
-	laser.connectToEtherdream();
-
 	
 	ofxGuiSetDefaultWidth(300);
 	laserGui.setup();
@@ -51,7 +49,7 @@ void ofApp::draw() {
 	
 	ofNoFill();
 	ofSetLineWidth(1);
-	ofRect(0,0,laserWidth, laserHeight);
+	ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 
 }

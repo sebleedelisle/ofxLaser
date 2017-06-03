@@ -73,21 +73,21 @@ void ofApp::draw() {
 	if(!blankAll) {
 		ofNoFill();
 		ofSetLineWidth(1);
-		ofRect(laser.maskRectangle);
+		ofDrawRectangle(laser.maskRectangle);
 		
 		int ypos = laserHeight+20;
 		ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 20, ypos+=30);
 		
 		ofDrawBitmapString("[ and ] to change current effect", 20, ypos+=30);
 		ofDrawBitmapString(ofToString(smoothedInputVolume), 20, ypos+=30);
-		ofRect(20,ypos+=30,smoothedInputVolume*600, 20);
+		ofDrawRectangle(20,ypos+=30,smoothedInputVolume*600, 20);
 	}
 
 	ofSetColor(255);
 	ofPushMatrix();
 	ofTranslate(ofGetMouseX(), ofGetMouseY());
-	ofLine(0,0,0,10);
-	ofLine(0,0,6,8);
+	ofDrawLine(0,0,0,10);
+	ofDrawLine(0,0,6,8);
 	ofPopMatrix();
 }
 

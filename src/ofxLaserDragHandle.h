@@ -34,7 +34,7 @@ class DragHandle : public ofPoint{
 		ofPushStyle();
 		ofNoFill();
 		ofSetLineWidth(1);
-		ofCircle(*this, radius);
+		ofDrawCircle(*this, radius);
 		ofPopStyle();
 	};
 	

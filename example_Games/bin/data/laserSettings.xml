@@ -107,13 +107,13 @@
 <show_warper_UI>0</show_warper_UI>
 <group>
 		<Laser_Manager>
-			<intensity>0.197279</intensity>
+			<intensity>0.170068</intensity>
 			<test_pattern>0</test_pattern>
 			<points_per_second>38000</points_per_second>
 			<colour_change_offset>-6</colour_change_offset>
 			<flip_x>0</flip_x>
 			<flip_y>1</flip_y>
-			<show_warper_UI>0</show_warper_UI>
+			<show_warper_UI>1</show_warper_UI>
 			<laser_on_during_move>0</laser_on_during_move>
 			<preview_laser>1</preview_laser>
 			<preview_laser_path>1</preview_laser_path>
@@ -131,6 +131,13 @@
 			<polyline_corner_threshold>32.3129</polyline_corner_threshold>
 			<polyline_acceleration>1.35357</polyline_acceleration>
 			<polyline_speed>27.3333</polyline_speed>
+		<Laser_Armed>1</Laser_Armed>
+			<mask_margin_top>0</mask_margin_top>
+			<mask_margin_bottom>0</mask_margin_bottom>
+			<mask_margin_left>0</mask_margin_left>
+			<mask_margin_right>0</mask_margin_right>
+			<spiral_speed>20</spiral_speed>
+			<spiral_spacing>10</spiral_spacing>
 		</Laser_Manager>
 		<Laser_red_calibration>
 			<red_100>0.493197</red_100>
