@@ -255,10 +255,7 @@ void QuadWarp::saveSettings() {
 	xml.addValue("x", handles[3].x);
 	xml.addValue("y", handles[3].y);
 	xml.popTag();
-	
 
-	
-	
 	xml.saveFile(filename);
 	
 	

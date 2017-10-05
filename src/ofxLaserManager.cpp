@@ -32,7 +32,7 @@ Manager :: Manager() {
 
 void Manager :: setup (int width, int height) {
 	    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager.setup");
-    
+	
 	//ofSetFrameRate(20);
 	appWidth = width;
 	appHeight = height;
@@ -61,23 +61,16 @@ void Manager :: setup (int width, int height) {
 	
 	laserHomePosition = maskRectangle.getCenter();
 	updateHomography();
-    
+	
+	if(!maskBitmap.load("LaserMask.png")) {
+		maskBitmap.allocate(appWidth, appHeight, OF_IMAGE_COLOR);
+		maskBitmap.save("LaserMask.png");
+	};
+	
+	
     dac.setup();
     
 }
-
-
-
-//void Manager :: connectButtonPressed(bool&v){
-	
-//	if(!shouldBeConnected) {
-//		connectToEtherdream();
-//	} else {
-//		disconnectFromEtherdream();
-//	}
-	
-	
-//}
 
 void Manager :: update() {
 	
@@ -90,30 +83,12 @@ void Manager :: update() {
 	// clear all pre-existing points.
 	ildaPoints.clear();
 	laserPoints.clear();
+    
 	// clear the previewPathMesh - the blue and white laser preview
 	previewPathMesh.clear();
-	
-//	
-//	string etherdreamstate = etherdream.getStateString();
-//	
-//	etherdreamStatus = etherdream.getStateString();//etherdream.getDeviceStateString() + " " + (etherdreamstate) + " "+ ofToString(shouldBeConnected)+" " +ofToString(restartCount);
-//	
-//	if(etherdream.state==ETHERDREAM_DISCONNECTED){
-//		
-//		restartCount++;
-//		disconnectFromEtherdream();
-//		beep.play();
-//		connectToEtherdream();
-//	}
-//	
-//	
 
-	
-	//etherdream.checkConnection();
-	
-	// at this point we should report if the laser has disconnected.
-	
-	//lastState = etherdreamstate;
+
+
 	
 }
 
@@ -164,7 +139,15 @@ void Manager :: draw() {
 	//etherdream.setPPS(pps);
 	
 	//showMask();
-	
+	if(showMaskBitmap) {
+		ofPushStyle();
+		//		ofEnableAlphaBlending();
+		ofEnableBlendMode(OF_BLENDMODE_SCREEN);
+		ofSetColor(50,0,0);
+		maskBitmap.draw(0,0,appWidth, appHeight);
+		ofPopStyle();
+	}
+
 	// TODO implement laser delay system
 	
 	// if we're not using the delay system, let's
@@ -181,12 +164,12 @@ void Manager :: draw() {
 
     drawWarpPoints();
     
-    ofSetColor(255);
-    ofPushMatrix();
-    ofTranslate(ofGetMouseX(), ofGetMouseY());
-    ofDrawLine(0,0,0,10);
-    ofDrawLine(0,0,6,8);
-    ofPopMatrix();
+//    ofSetColor(255);
+//    ofPushMatrix();
+//    ofTranslate(ofGetMouseX(), ofGetMouseY());
+//    ofDrawLine(0,0,0,10);
+//    ofDrawLine(0,0,6,8);
+//    ofPopMatrix();
 }
 
 void Manager :: drawWarpPoints(const ofRectangle& previewRect) {
@@ -886,6 +869,14 @@ void  Manager :: processIldaPoints() {
 		
 		
 		vector<cv::Point2f> pre, post;
+		ofColor maskPixelColour;
+		if(useMaskBitmap) {
+			maskPixelColour = maskBitmap.getColor(p.x/appWidth* (float)maskBitmap.getWidth(), p.y/appHeight * (float)maskBitmap.getHeight());
+			
+			//cout << "brightness " << brightness << endl;
+			
+		}
+		
 		
 		pre.push_back(cv::Point2f(p.x, p.y));
 		post.push_back(cv::Point2f());
@@ -914,7 +905,11 @@ void  Manager :: processIldaPoints() {
 		
 		
 		ofFloatColor c(p.r / 255.0f, p.g / 255.0f, p.b / 255.0f);
-
+		if(useMaskBitmap) {
+			c.r*=((float)maskPixelColour.r/255.0);
+			c.g*=((float)maskPixelColour.g/255.0);
+			c.b*=((float)maskPixelColour.b/255.0);
+		}
 		
 		c.r = calculateCalibratedBrightness(c.r, intensity, red100, red75, red50, red25, red0);
 		c.g = calculateCalibratedBrightness(c.g, intensity, green100, green75, green50, green25, green0);
@@ -978,21 +973,6 @@ float Manager::calculateCalibratedBrightness(float value, float intensity, float
 	}
 	
 }
-
-
-
-//void Manager :: connectToEtherdream() {
-//	
-//	etherdream.setup();
-//	//shouldBeConnected = true;
-//	//etherdream.setPPS(10000);
-//}
-//void Manager :: disconnectFromEtherdream() {
-//	
-//	etherdream.kill();
-//	//shouldBeConnected = false;
-//	
-//}
 
 
 //void Manager :: updateRenderDelay() {
@@ -1078,26 +1058,20 @@ void Manager :: setupParameters() {
 	parameters.setName("Laser Manager");
 	
 	parameters.add(laserArmed.set("Laser Armed", false));
-	//connectButton.addListener(this, &Manager ::connectButtonPressed);
-	
-	//parameters.add(connectButton.set("connect etherdream", false));
-	
-	//parameters.add(etherdreamStatus.set("", "test"));
 	
 	parameters.add(intensity.set("intensity", 1, 0, 1));
 	
 	parameters.add(testPattern.set("test pattern", 0, 0, numTestPatterns));
 	//parameters.add(delay.set("sync delay", 0, 0, 0.4));
 	parameters.add(pps.set("points per second", 30000, 500, 100000));
-	
-	//pps.addListener(this, &Manager ::roundPPS);
+	pps.addListener(this, &Manager ::roundPPS);
 	
 	parameters.add(maskMarginTop.set("mask margin top", 0, 0, appHeight));
 	parameters.add(maskMarginBottom.set("mask margin bottom", 0, 0, appHeight));
 	parameters.add(maskMarginLeft.set("mask margin left", 0, 0, appWidth));
 	parameters.add(maskMarginRight.set("mask margin right", 0, 0, appWidth));
-//	parameters.add(useMaskBitmap.set("use mask bitmap", true));
-//	parameters.add(showMaskBitmap.set("show mask bitmap", true));
+	parameters.add(useMaskBitmap.set("use mask bitmap", true));
+	parameters.add(showMaskBitmap.set("show mask bitmap", false));
 	
 	//parameters.add(showWarpPoints.set("show warp points", false));
 	
@@ -1168,7 +1142,7 @@ void Manager :: setupParameters() {
 }
 
 void Manager :: roundPPS(int& v) {
-	pps = round((float)pps/500.0f)* 500;
+	pps = round((float)pps/100.0f)* 100;
 
 }
 

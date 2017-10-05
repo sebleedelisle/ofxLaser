@@ -1,8 +1,8 @@
 <group>
 	<Laser_Manager>
-		<intensity>0.1</intensity>
+		<intensity>0.911565</intensity>
 		<test_pattern>0</test_pattern>
-		<points_per_second>29943</points_per_second>
+		<points_per_second>29900</points_per_second>
 		<colour_change_offset>-6</colour_change_offset>
 		<flip_x>0</flip_x>
 		<flip_y>1</flip_y>
@@ -15,7 +15,7 @@
 		<move_points_padding>1</move_points_padding>
 		<shape_pre_blank_points>1</shape_pre_blank_points>
 		<shape_post_blank_points>1</shape_post_blank_points>
-		<dot_max_points>7</dot_max_points>
+		<dot_max_points>16</dot_max_points>
 		<line_acceleration>0.5</line_acceleration>
 		<line_speed>20</line_speed>
 		<circle_overlap>0</circle_overlap>
@@ -24,7 +24,7 @@
 		<polyline_corner_threshold>90</polyline_corner_threshold>
 		<polyline_acceleration>0.5</polyline_acceleration>
 		<polyline_speed>20</polyline_speed>
-	<Laser_Armed>0</Laser_Armed>
+	<Laser_Armed>1</Laser_Armed>
 		<mask_margin_top>0</mask_margin_top>
 		<mask_margin_bottom>0</mask_margin_bottom>
 		<mask_margin_left>0</mask_margin_left>

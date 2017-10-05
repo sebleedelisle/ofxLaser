@@ -1,6 +1,6 @@
 <group>
 	<Laser_Manager>
-		<intensity>1</intensity>
+		<intensity>0.132653</intensity>
 		<test_pattern>0</test_pattern>
 		<points_per_second>42000</points_per_second>
 		<colour_change_offset>-6</colour_change_offset>

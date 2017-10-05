@@ -105,8 +105,8 @@ namespace ofxLaser {
           
             
             
-            return ofVec3f(ax, ay,0);
-            //return ofVec3f(X, Y, 0.0f);
+            //return ofVec3f(ax, ay,0);
+            return ofVec3f(X, Y, 0.0f);
         }
         
         static float gLGetScaleForZ(float z) {
@@ -141,8 +141,8 @@ namespace ofxLaser {
         ofParameter<float> maskMarginTop;
         ofParameter<float> maskMarginLeft;
         ofParameter<float> maskMarginRight;
-//        ofParameter<bool> useMaskBitmap; // coming soon!
-//        ofParameter<bool> showMaskBitmap;
+        ofParameter<bool> useMaskBitmap;
+		ofParameter<bool> showMaskBitmap;
         
 		ofParameter<int> colourChangeDelay;
 		
@@ -166,6 +166,9 @@ namespace ofxLaser {
 		
 		// Mesh used for previewing the laser path
 		ofMesh previewPathMesh;
+		
+		ofImage maskBitmap;
+		
 		
 		// probably sensible to move these settings into a laser setting
 		// object

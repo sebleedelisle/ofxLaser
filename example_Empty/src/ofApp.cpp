@@ -10,6 +10,7 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 	
 	ofxGuiSetDefaultWidth(300);
+    ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
 	laserGui.setup();
 	laserGui.add(laser.parameters);
 	
@@ -18,14 +19,15 @@ void ofApp::setup(){
 	laserGui.add(laser.blueParams);
 
 	laserGui.loadFromFile("laserSettings.xml");
+    laser.laserArmed = false; 
 
-	laserGui.setPosition(laserWidth+50, 0);
-	
+	laserGui.setPosition(ofGetWidth()-320, 10);
+    
+    laserGui.loadFont("Verdana.ttf", 8, false);
 
     
-    
-    
-    
+
+
 }
 
 //--------------------------------------------------------------
