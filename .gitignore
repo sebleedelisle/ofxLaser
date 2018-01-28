@@ -35,6 +35,11 @@ docs/tagfile.xml
 #XCode 4
 xcuserdata
 *.xcworkspace
+*.xcodeproj
+openFrameworks-Info.plist
+Makefile
+Project.xconfig
+
 
 # Code::Blocks
 *.depend
