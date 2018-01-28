@@ -5,7 +5,7 @@ An openFrameworks addon for rendering shapes with a standard iLDA laser projecto
 
 Safety Notice
 =============
-**LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK**. Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Take laser safety training and get licenced to use high power lasers in your locale. In the UK I can recommend (this one)[https://www.lvroptical.com/display.html]
+**LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK**. Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Take laser safety training and get licenced to use high power lasers in your locale. In the UK I can recommend [this one](https://www.lvroptical.com/display.html)
 
 Features
 ----------
