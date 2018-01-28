@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserManager.h"
+#include "ofxLaserDacEtherdream.h"
 #include "ofxGui.h"
 
 class ofApp : public ofBaseApp{
@@ -23,16 +24,15 @@ public:
 	int numLaserEffects; 
 	
 	ofxLaser::Manager laser;
-	
+    ofxLaser::DacEtherdream dac;
 	bool drawingShape = false;
 	int laserWidth;
-	int laserHeight; 
+	int laserHeight;
+    
+    
 	
 	vector<ofPolyline> polyLines;
-	
-	ofxPanel laserGui;
-	ofxPanel colourGui; 
-	
+		
 	float elapsedTime; 
 
 };

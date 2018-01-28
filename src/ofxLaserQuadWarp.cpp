@@ -8,26 +8,54 @@
 #include "ofxLaserQuadWarp.h"
 using namespace ofxLaser;
 
-QuadWarp::QuadWarp(string savelabel) {
+QuadWarp::QuadWarp(string savelabel, string displaylabel) {
 	initListeners();
 	
 	saveLabel = savelabel;
+	displayLabel = displaylabel; 
 	visible = true;
+	isDirty=true;
+    selected = true;
+	//updateHomography();
 	
 }
 
-void QuadWarp::set (float x, float y, float w, float h) {
+void QuadWarp::setDst (const ofRectangle& rect) {
+	setDst(rect.x, rect.y, rect.getWidth(), rect.getHeight());
+}
 
-    for(int i = 0; i<4; i++) {
-        float xpos = ((float)(i%2)/1.0f*w)+x;
-        float ypos = (floor((float)(i/2))/1.0f*h)+y;
-
-        handles[i].set(xpos, ypos);
-        allHandles.push_back(&handles[i]);
-    }
-
-    centreHandle.set(x + (w/2.0f), y+(h/2.0f));
+void QuadWarp::setDst(float x, float y, float w, float h) {
+	
+	for(int i = 0; i<4; i++) {
+		float xpos = ((float)(i%2)/1.0f*w)+x;
+		float ypos = (floor((float)(i/2))/1.0f*h)+y;
+		
+		handles[i].set(xpos, ypos);
+		allHandles.push_back(&handles[i]);
+	}
+	
+	centreHandle.set(x + (w/2.0f), y+(h/2.0f));
 	allHandles.push_back(&centreHandle);
+   
+	
+}
+
+void QuadWarp::setSrc (const ofRectangle& rect) {
+	setSrc(rect.x, rect.y, rect.getWidth(), rect.getHeight());
+}
+
+
+void QuadWarp::setSrc (float x, float y, float w, float h) {
+	
+	srcPoints.clear();
+	for(int i = 0; i<4; i++) {
+		float xpos = ((float)(i%2)/1.0f*w)+x;
+		float ypos = (floor((float)(i/2))/1.0f*h)+y;
+		
+		srcPoints.emplace_back(xpos, ypos);
+	}
+    srcPoints.emplace_back(x+w, y+h/2);
+	
 	
 }
 
@@ -49,34 +77,62 @@ void QuadWarp :: draw() {
     
 	ofPushStyle();
 	ofNoFill();
-	ofSetLineWidth(1/scale);
-	if(isDirty) ofSetColor(ofColor::red);
+	ofSetLineWidth(1);
 	
-	for(int i = 0; i<numHandles; i++) {
-		//ofLine(handles[i],  handles[(i+1)%4]);
-        ofDrawCircle(handles[i], 5);
-        ofDrawBitmapString(ofToString(i), handles[i]+ofPoint(10,10));
-		
+	if(isDirty) {
+		updateHomography();
+		//ofSetColor(ofColor::red);
 	}
-    ofDrawLine(handles[0], handles[1]);
+	
+	
+	
     ofDrawLine(handles[1], handles[3]);
     ofDrawLine(handles[3], handles[2]);
-    ofDrawLine(handles[2], handles[0]);
+	ofDrawLine(handles[0], handles[1]);
+	ofDrawLine(handles[2], handles[0]);
+	
+	ofPoint p1 = srcPoints[0].getInterpolated(srcPoints[1], 0.1);
+	ofPoint p2 = srcPoints[0].getInterpolated(srcPoints[2], 0.1);
+	p1 = getWarpedPoint(p1);
+	p2 = getWarpedPoint(p2);
+	ofDrawLine(p1,p2);
+	
     
 	ofPopStyle();
+    if(selected) {
+        for(int i = 0; i<numHandles; i++) {
+            handles[i].draw();
+        }
 	
-	for(int i = 0; i<numHandles; i++) {
-		handles[i].draw();
-	}
+        centreHandle.draw();
+    }
+    
+    float textwidth = displayLabel.size()*8;
+	ofDrawBitmapString(displayLabel, centreHandle-ofPoint(textwidth/2, 5));
 	
-	centreHandle.draw();
 	isDirty = false;
     ofPopMatrix();
 }
 
+void QuadWarp::updateHomography() {
+	
+	// the source points are the zone points in screen space
+	// the dest points are points in the projector space
+	
+	vector<cv::Point2f> srcCVPoints, dstCVPoints;
+	
+
+	for(int i = 0; i<4; i++) {
+		srcCVPoints.push_back(cv::Point2f(srcPoints[i].x, srcPoints[i].y));
+		dstCVPoints.push_back(cv::Point2f(handles[i].x, handles[i].y));
+	}
+	
+	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
+	inverseHomography = homography.inv();
+}
+
 bool QuadWarp::checkDirty() {
 	if(isDirty) {
-		//isDirty = false;
 		return true;
 	} else {
 		return false;
@@ -105,17 +161,35 @@ void QuadWarp :: startDragging(int handleIndex, ofPoint clickPos) {
     
 	
 }
+bool QuadWarp :: hitTest(ofPoint mousePoint) {
+    
+    mousePoint-=offset;
+    mousePoint/=scale;
+    
+    ofPolyline poly;
+   
+    poly.addVertex(handles[0]);
+    poly.addVertex(handles[1]);
+    poly.addVertex(handles[3]);
+    poly.addVertex(handles[2]);
 
+    poly.close();
+    return(poly.inside(mousePoint));
+
+}
 bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 	
-	
+        
 	if(!visible) return false;
-	
-	bool handleHit = false;
-	
+    if(!selected) return false;
     ofPoint mousePoint = e;
     mousePoint-=offset;
     mousePoint/=scale;
+    
+   
+    
+	bool handleHit = false;
+	
     
 	if(centreHandle.hitTest(mousePoint)) {
 		
@@ -125,9 +199,8 @@ bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 			handles[i].startDrag(mousePoint);
 		}
 			
-		
-		
-	} else {
+    
+    } else {
 
 		for(int i = 0; i<numHandles; i++) {
 			if(handles[i].hitTest(mousePoint)) {
@@ -143,7 +216,10 @@ bool QuadWarp :: mousePressed(ofMouseEventArgs &e){
 }
 
 bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
-	
+
+	if(!visible) return false;
+	if(!selected) return false;
+
     ofPoint mousePoint = e;
     mousePoint-=offset;
     mousePoint/=scale;
@@ -154,40 +230,48 @@ bool QuadWarp :: mouseDragged(ofMouseEventArgs &e){
 		if(handles[i].updateDrag(mousePoint)) dragging = true;
 		bounds.growToInclude(handles[i]);
 	}
-	
-	if(!dragging) {
+ 	if(!dragging) {
 		dragging = centreHandle.updateDrag(mousePoint);
 	} else {
-		centreHandle.set(0,0);
-		for(int i = 0; i<4; i++) {
-			centreHandle+=handles[i];
-		}
-		centreHandle/=4;
-		//	centreHandle.set(bounds.getCenter());
+		updateCentreHandle();
 		
 	}
 	
 	isDirty |= dragging;
+	
 	
 	return dragging;
 	
 	
 }
 
+
 bool QuadWarp :: mouseReleased(ofMouseEventArgs &e){
 	
+	if(!visible) return false;
+	if(!selected) return false;
 
-    
+	
 	bool wasDragging = false;
 	
 	for(int i = 0; i<allHandles.size(); i++) {
 		if(allHandles[i]->stopDrag()) wasDragging = true;
 	}
-    saveSettings();
+	saveSettings();
 	return wasDragging;
 	
 }
 
+
+
+void QuadWarp::updateCentreHandle() {
+	centreHandle.set(0,0);
+	for(int i = 0; i<4; i++) {
+		centreHandle+=handles[i];
+	}
+	centreHandle/=4;
+	//	centreHandle.set(bounds.getCenter());
+}
 
 
 bool QuadWarp::loadSettings() {
@@ -217,8 +301,7 @@ bool QuadWarp::loadSettings() {
 	
 
 	
-	
-	//updateCentrePoint();
+	updateCentreHandle();
 	
 	return true;
 }
@@ -264,6 +347,81 @@ void QuadWarp::saveSettings() {
 void QuadWarp::setVisible(bool warpvisible) {
 	
 	visible = warpvisible;
+	
+}
+
+ofxLaser::Point QuadWarp::getWarpedPoint(const ofxLaser::Point& p){
+	
+	if(post.size()<1) pre.resize(1);
+	if(post.size()<1) pre.resize(1);
+	pre[0].x = p.x;
+	pre[0].y = p.y;
+	
+	
+	cv::perspectiveTransform(pre, post, homography);
+	ofxLaser::Point point =p;
+	point.x = post[0].x;
+	point.y = post[0].y;
+	
+	return point;
+	
+}
+
+
+ofxLaser::Point QuadWarp::getUnWarpedPoint(const ofxLaser::Point& p){
+
+	
+	if(post.size()<1) pre.resize(1);
+	if(post.size()<1) pre.resize(1);
+	pre[0].x = p.x;
+	pre[0].y = p.y;
+
+	cv::perspectiveTransform(pre, post, inverseHomography);
+	ofxLaser::Point point =p;
+	point.x = post[0].x;
+	point.y = post[0].y;
+	
+	return point;
+	
+	
+	
+}
+
+ofPoint QuadWarp::getWarpedPoint(const ofPoint& p){
+	
+	if(post.size()<1) pre.resize(1);
+	if(post.size()<1) pre.resize(1);
+	pre[0].x = p.x;
+	pre[0].y = p.y;
+
+	
+	// TODO
+	cv::perspectiveTransform(pre, post, homography);
+	ofPoint point =p;
+	point.x = post[0].x;
+	point.y = post[0].y;
+	
+	return point;
+	
+	
+	
+}
+
+
+ofPoint QuadWarp::getUnWarpedPoint(const ofPoint& p){
+	if(post.size()<1) pre.resize(1);
+	if(post.size()<1) pre.resize(1);
+	pre[0].x = p.x;
+	pre[0].y = p.y;
+
+	cv::perspectiveTransform(pre, post, inverseHomography);
+	ofPoint point =p;
+	point.x = post[0].x;
+	point.y = post[0].y;
+	
+	return point;
+	
+	
 	
 }
 

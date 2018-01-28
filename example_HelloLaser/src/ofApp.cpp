@@ -8,25 +8,16 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
-	//laser.connectToEtherdream();
 
+    laser.addProjector(dac);
+    
+    string dacIP = "169.254.99.140";
+    dac.setup(dacIP);
 	
-	ofxGuiSetDefaultWidth(300);
-	laserGui.setup();
-	laserGui.add(laser.parameters);
-	
-	laserGui.add(laser.redParams);
-	laserGui.add(laser.greenParams);
-	laserGui.add(laser.blueParams);
-
-	laserGui.loadFromFile("laserSettings.xml");
-    laser.laserArmed = false;   // << essential to make sure armed state isn't retained
-    laser.intensity= 0.1;       // << always safer to start with the laser dimmed
-	laserGui.setPosition(laserWidth+50, 0);
-	
-	currentLaserEffect = 0;
+    laser.initGui();
+    currentLaserEffect = 0;
 	numLaserEffects = 8;
-	
+	 
 }
 
 //--------------------------------------------------------------
@@ -48,8 +39,6 @@ void ofApp::draw() {
 
 	ofBackground(0);
     
-	laserGui.draw();
-	colourGui.draw();
 	
 	ofNoFill();
 	ofSetLineWidth(1);
@@ -65,8 +54,8 @@ void ofApp::draw() {
     
     showLaserEffect(currentLaserEffect);
 
-
-    laser.draw();
+    laser.send();
+    laser.drawUI();
 
 }
 
@@ -84,7 +73,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 	switch (currentLaserEffect) {
 			
 		case 1: {
-			
+
 			// LASER LINES
 			int numlines = 10;
 			
@@ -94,15 +83,15 @@ void ofApp :: showLaserEffect(int effectnum) {
 
 				float xpos =left + (width*progress);
 									
-				laser.addLaserLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
-                //ofLine(xpos, top+height*0.1, xpos, top+height*0.4);
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+              
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
-				laser.addLaserLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
 		
 			}
 
-			break;
+            break;
 
 		}
 		
@@ -118,10 +107,10 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
-				laser.addLaserLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
-				laser.addLaserLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
 				
 			}
 			
@@ -141,11 +130,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress);
 				
-				laser.addLaserCircle(ofPoint(xpos, top+height*0.3),30, ofColor::white);
+				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor::white);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				
-				laser.addLaserCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
 				
 			}
 			
@@ -164,11 +153,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
-				laser.addLaserCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white);
+				laser.drawCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				
-				laser.addLaserCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
 				
 			}
 			
@@ -187,10 +176,10 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) ;
 				
-				laser.addLaserDot(ofPoint(xpos, top+height*0.3), ofColor::white);
+				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor::white);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
-				laser.addLaserDot(ofPoint(xpos, top+height*0.7), c);
+				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
 				
 				
 				
@@ -214,7 +203,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				p.y = sin((elapsedTime-((float)i*spread)) *2.71f *speed) * 300;
 				p.x+=laserWidth/2;
 				p.y+=laserHeight/2;
-				laser.addLaserDot(p, c);
+				laser.drawDot(p, c);
 				
 			}
 			
@@ -238,13 +227,13 @@ void ofApp :: showLaserEffect(int effectnum) {
 	//	// LASER CIRCLES
 	//
 	//	for(int i = 1; i<10; i++) {
-	//		laser.addLaserCircle(ofPoint(i*100, 500), 50, ofColor::white);
+	//		laser.drawCircle(ofPoint(i*100, 500), 50, ofColor::white);
 	//	}
 	//
 	
 	// LASER POLYLINES
 	for(int i = 0; i<polyLines.size(); i++) {
-		laser.addLaserPolyline(polyLines[i], ofColor::green);
+		laser.drawPoly(polyLines[i], ofColor::green);
 	}
 	
 
@@ -265,8 +254,9 @@ void ofApp::keyPressed(int key){
 	}
 	if(key=='r') {
 		
-		laser.dac.restart();
+		//laser.dac.restart();
 	}
+    if(key==OF_KEY_TAB) laser.nextProjector();
 
 }
 
@@ -301,8 +291,6 @@ void ofApp::mouseReleased(int x, int y, int button) {
 
 //--------------------------------------------------------------
 void ofApp::exit(){
-    laser.testPattern = 0; 
-	laserGui.saveToFile("laserSettings.xml");
-    laser.warp.saveSettings();
-
+    laser.saveSettings();
+    dac.close();
 }

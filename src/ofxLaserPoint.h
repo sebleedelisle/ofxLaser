@@ -35,7 +35,7 @@ public:
 		return ofColor(r, g, b);
 	}
 	
-	float r;
+	float r; //0-255
 	float g;
 	float b;
 	

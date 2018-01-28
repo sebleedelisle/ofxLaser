@@ -1,266 +1,119 @@
 //
-//  ofxLaser.h
+//  ofxLaserManager.hpp
+//  ofxLaserRewrite
 //
-//  Created by Seb Lee-Delisle on 13/08/2015.
+//  Created by Seb Lee-Delisle on 06/11/2017.
+//
 //
 
 #pragma once
-
-//#include "ofxEtherdream.h"
-#include "ofxGui.h"
-#include "ofxSVG.h"
+#include "ofMain.h"
+#include "ofxLaserZone.h"
 #include "ofxLaserShape.h"
-#include "ofxLaserPoint.h"
-#include "ofxLaserDot.h"
 #include "ofxLaserLine.h"
-#include "ofxLaserCircle.h"
 #include "ofxLaserPolyline.h"
-#include "ofxLaserSpiral.h"
-#include "ofxLaserQuadWarp.h"
-#include "ofxOpenCv.h"
-#include "EtherdreamDAC.h"
+#include "ofxLaserCircle.h"
+#include "ofxLaserProjector.h"
+#include "ofxLaserDacBase.h"
+#include "ofxGui.h"
+
+#define OFXLASER_PROFILE_FAST "FAST"
+#define OFXLASER_PROFILE_DEFAULT "DEFAULT"
+#define OFXLASER_PROFILE_DETAIL "DETAIL"
 
 
-namespace ofxLaser {
+enum ofxLaserZoneMode {
+	OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want
+	OFXLASER_ZONE_AUTOMATIC // non-overlapping zones assumed - shapes go in all zones that
+							// contain it
+	//OFXLASER_ZONE_OPTIMISE, // automatically puts it in the best zone
+	//OFXLASER_ZONE_OVERLAY // doubles up multiple lasers for improved brightness
 	
-	class Manager {
-        
-        
-     	
-		public:
-        
-        static Manager * instance();
-        static Manager * laserManager;
-        
-		
-		Manager();
-		
-		void setup(int width, int height);
-		void update();
-		void draw();
-		void drawShapes();
-		void renderPreview();
-		void renderLaserPath();
-        void renderLaserPath(const ofRectangle& previewRect);
-        void drawWarpPoints();
-        void drawWarpPoints(const ofRectangle& previewRect);
-		
-		void setupParameters();
-		void roundPPS(int& v);
-
-		
-		void drawTestPattern();
-
-		void addLaserDot(const ofPoint& pos, ofFloatColor colour, float intensity = 1, int maxpoints = -1);
-		void addLaserLine(const ofPoint&startpoint, const ofPoint&endpoint, ofFloatColor colour, float speed = -1, float acceleration = -1);
-		void addLaserRect(const ofRectangle&rect, ofColor colour, float speed = -1, float acceleration = -1);
-        void addLaserCircle(const ofPoint& pos, float radius, ofFloatColor colour, float speed = -1, float acceleration = -1, float overlap = -1);
-        void addLaserSpiral(const ofPoint& pos, float innerRadius, float outerRadius, ofColor colour, float speed = -1, float spacing = -1);
-        
-        void addLaserPolyline(const ofPolyline& line, ofColor col, ofPoint pos, float rotation = 0, ofPoint scale = ofPoint::one(), float speed = -1, float acceleration = -1, float cornerthreshold = -1);
-		void addLaserPolyline(const ofPolyline& line, ofColor col, float speed = -1, float acceleration = -1, float cornerthreshold = -1);
-
-        void addLaserSVG(ofxSVG &svg, ofPoint pos, ofPoint scale, ofPoint rotation, float brightness =1, float speed=-1, float acceleration=-1, float cornerthreshold=-1 );
-            
-
-		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
-
-
-		
-		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
-		void addPoint(ofxLaser::Point p);
-		void addPoints(vector<ofxLaser::Point>&points);
-
-		void processIldaPoints();
-		
-		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
-		
-		
-		void updateHomography();
-
-        void updateMaskRectangleParam(float& value);
-        void updateMaskRectangle();
-
-		
-        // converts openGL coords to screen coords //
-        static ofVec3f gLProject(ofVec3f p) {
-            return gLProject(p.x, p.y, p.z);
-            
-        }
-        static ofVec3f gLProject( float ax, float ay, float az ) {
-            
-  
-            
-            GLdouble model_view[16];
-            glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
-            
-            GLdouble projection[16];
-            glGetDoublev(GL_PROJECTION_MATRIX, projection);
-    
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-            
-            
-            
-            GLdouble X, Y, Z = 0;
-            gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
-   
-            // bit of a hack - if you're rendering into an Fbo then y is inverted
-            if(projection[5]<0) Y = ofGetHeight()-Y;
-            
-            return ofVec3f(X, Y, 0.0f);
-        }
-        
-        static float gLGetScaleForZ(float z) {
-            // CHECK this is a point in the top left - problem? 
-            return gLProject(1, 0, z).x ;
-        }
-
-        
-        
-		EtherdreamDAC dac;
-		//ofParameter<string> etherdreamStatus;
-		//bool shouldBeConnected;
-		
-		vector<ofxIlda::Point> ildaPoints;
-		vector<ofxLaser::Point> laserPoints;
-		
-		QuadWarp warp;
-		
-		ofParameterGroup parameters;
-		ofParameter<bool> laserArmed;
-		ofParameter<float> intensity;
-		ofParameter<int> pps;
-		
-		ofParameter<int> testPattern;
-		int numTestPatterns;
-		
-		ofParameter<bool> flipX;
-		ofParameter<bool> flipY;
-		ofParameter<bool> showWarpUI;
-        
-        ofParameter<float> maskMarginBottom;
-        ofParameter<float> maskMarginTop;
-        ofParameter<float> maskMarginLeft;
-        ofParameter<float> maskMarginRight;
-        ofParameter<bool> useMaskBitmap;
-		ofParameter<bool> showMaskBitmap;
-        
-		ofParameter<int> colourChangeDelay;
-		
-		ofParameter<int> shapePreBlank;
-		ofParameter<int> shapePostBlank;
-		
-		// the number of points for a dot
-		ofParameter<int> dotMaxPoints;
-		//ofParameter<int> use3D;
-		
-		// preview stuff
-		
-		ofParameter<bool> laserOnWhileMoving;
-		
-		// Preview parameters refer to the on-screen
-		// simulation of what the laser renders.
-		ofParameter<bool> renderLaserPathPreview;
-		ofParameter<bool> renderLaserPreview;
-		ofParameter<bool> showPostTransformPreview;
-		
-		
-		// Mesh used for previewing the laser path
-		ofMesh previewPathMesh;
-		
-		ofImage maskBitmap;
-		
-		
-		// probably sensible to move these settings into a laser setting
-		// object
-		// the speed for movement and acceleration
-		ofParameter<float> moveSpeed;
-		ofParameter<int>   movePointsPadding;
-
-		ofParameter<float> defaultLineSpeed;
-		ofParameter<float> defaultLineAcceleration;
-		
-		ofParameter<float> defaultCircleSpeed;
-		ofParameter<float> defaultCircleAcceleration;
-		ofParameter<float> defaultCircleOverlap;
-
-		ofParameter<float> defaultPolylineAcceleration;
-        ofParameter<float> defaultPolylineSpeed;
-        ofParameter<float> defaultPolylineCornerThreshold;
-
-        ofParameter<float> defaultSpiralSpeed;
-        ofParameter<float> defaultSpiralSpacing;
-
-		
-		// would probably be sensible to move these settings out into a colour
-		// calibration object.
-		ofParameter<float>red100;
-		ofParameter<float>red75;
-		ofParameter<float>red50;
-		ofParameter<float>red25;
-		ofParameter<float>red0;
-		
-		ofParameter<float>green100;
-		ofParameter<float>green75;
-		ofParameter<float>green50;
-		ofParameter<float>green25;
-		ofParameter<float>green0;
-		
-		ofParameter<float>blue100;
-		ofParameter<float>blue75;
-		ofParameter<float>blue50;
-		ofParameter<float>blue25;
-		ofParameter<float>blue0;
-
-		ofParameterGroup redParams, greenParams, blueParams;
-
-		// should probably be broken out into a zone object
-		cv::Mat homography;
-		
-        ofPolyline tmpPoly;
-		deque <ofxLaser::Shape*> shapes;
-		
-		float appWidth;
-		float appHeight;
-
-		ofPoint pmin;
-		ofPoint pmax;
-		int minPoints;
-		
-		ofPoint laserHomePosition;
-		
-		// masking system
-		ofRectangle maskRectangle;
-		bool offScreen;
-		ofxLaser::Point offScreenPoint;
-		//ofxLaser::Point lastClampedOffScreenPoint;
-
-	};
-}
-
-
-// Modified from Robert Penner's easing equations
-
-class Quint {
-	
-public:
-	
-	static float easeIn (float t,float b , float c, float d) {
-		t/=d;
-		return c*t*t*t*t*t + b;
-	}
-	static float easeOut(float t,float b , float c, float d) {
-		t=t/d-1;
-		return c*(t*t*t*t*t + 1) + b;
-	}
-	
-	static float easeInOut(float t,float b , float c, float d) {
-		t/=d/2;
-		if (t < 1) return c/2*t*t*t*t*t + b;
-		;t-=2;
-		return c/2*(t*t*t*t*t + 2) + b;
-	}
 	
 };
+
+namespace ofxLaser {
+
+	class Manager {
+
+		public :
+
+		// it's a Singleton so shouldn't ever have more than one.
+		static Manager * instance();
+		static Manager * laserManager;
+
+		Manager();
+		
+		void addProjector(DacBase& dac);
+		
+		void addZone(float x, float y, float w, float h);
+		void addZone(const ofRectangle& zoneRect);
+		
+		void addZoneToProjector(int zonenum, int projnum);
+		
+		void nextProjector();
+
+		void setup(int width, int height);
+		void update();
+		void drawUI(bool fullscreen = false);
+        void renderPreview(); 
+		void updateScreenSize(); 
+        void send();
+        void sendRawPoints(const vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
+        
+        int getProjectorPointRate(int projectornum = 0);
+        float getProjectorFrameRate(int projectornum); 
+
+        
+		void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
+		void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
+		void drawLine(const ofPoint& start, const ofPoint& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+		void drawDot(const ofPoint& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+		void drawCircle(const ofPoint & centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+
+        Projector& getProjector(int index = 0){
+            return *projectors.at(index);
+        };
+        
+		void initGui();
+        bool togglePreview(){
+            showPreview = !showPreview;
+            return showPreview;
+        };
+        
+		void saveSettings();
+		
+		Zone& getZone(int zonenum) { return *zones[zonenum-1]; }
+		
+		int width, height;
+		ofxPanel gui;
+		
+		// converts openGL coords to screen coords //
+		
+		ofPoint gLProject(ofPoint p);
+		ofPoint gLProject( float ax, float ay, float az ) ;
+		
+		int currentProjector;
+		
+        ofParameter<bool> showZones;
+        ofParameter<bool> showPreview;
+        
+		private:
+		int createDefaultZone();
+		
+		
+		vector<Zone*> zones;
+		vector<Projector*> projectors;
+		
+		deque <ofxLaser::Shape*> shapes;
+		ofParameter<int> testPattern;
+		
+		 
+		
+		ofPolyline tmpPoly; // to avoid generating polyline objects
+		int screenHeight;
+		
+		
+	};
+}
 

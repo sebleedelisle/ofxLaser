@@ -1,103 +1,33 @@
 //
-//  LaserCircle.h
+//  ofxLaserCircle.h
+//  ofxLaserRewrite
 //
-//  Created by Seb Lee-Delisle on 01/08/2013.
+//  Created by Seb Lee-Delisle on 16/11/2017.
 //
 //
 
 #pragma once
 
 #include "ofxLaserShape.h"
+#include "ofxLaserManager.h"
 
 namespace ofxLaser {
-class Circle : public Shape{
+	class Circle :public Shape {
 	
-	public :
-	
-	Circle(const ofPoint& circleCentre, float circleRadius, ofFloatColor circleColour,  float circleSpeed, float circleAcceleration, float overlap = 0){
-		reversable = true;
-		//set(position, colour, circleRadius, circleIntensity, overlap);
-	
-	
+		public:
 		
+		Circle(const ofPoint& center, const float radius, const ofColor& col, string profilelabel);
+		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile);
 		
-		pos = circleCentre;
-		radius = circleRadius;
-		colour = circleColour;
-		speed = circleSpeed;
-		acceleration = circleAcceleration;
+		virtual bool intersectsRect(ofRectangle & rect);
 		
-		if(overlap>0) {
-			
-			float circumference = PI*2*radius;
-			overlapDistance = overlap;
-			overlapAngle = overlap / circumference * 360;
-			
-			startPos.set(0,-radius);
-			endPos = startPos;
-			startPos.rotate(-overlapAngle/2, ofPoint(0,0,1));
-			startPos+=pos;
-			endPos.rotate(overlapAngle/2, ofPoint(0,0,1));
-			endPos+=pos;
-			
-			
-		} else {
-			
-			startPos = pos;
-			startPos.y-=radius;
-			
-			endPos = startPos;
-			
-		}
-				
-	
-	}
-	
-	void appendPointsToVector(vector<ofxLaser::Point>& points) {
+		void addPreviewToMesh(ofMesh& mesh);
+		protected:
 		
+		ofPolyline polyline; // to store the circle shape in once it's been projected
+
 		
-		float distanceTravelled = 2 * PI * radius + overlapDistance;
-		vector<float> unitDistances = getPointsAlongDistance(distanceTravelled, acceleration, speed);
-		
-		ofPoint p;
-		ofColor segmentColour;
-		
-		for(int i = 0; i<unitDistances.size(); i++) {
-			
-			float unitDistance = unitDistances[i];
-			float angle;
-			if(!reversed) angle = ofMap(unitDistance,0,1,-overlapAngle/2,360+(overlapAngle/2)) ;
-			else angle = ofMap(unitDistance,1,0,-overlapAngle/2,360+(overlapAngle/2)) ;
-			
-			segmentColour = colour;
-			
-			// an attempt to fade out the overlap. Not sure if it works.
-			// TODO check that it works!
-			if(overlapAngle>0) {
-				if(angle<overlapAngle/2) {
-					segmentColour*= ofMap(angle, -overlapAngle/2,overlapAngle/2, 0, 1);
-				} if(angle> 360 - overlapAngle/2) {
-					segmentColour *= ofMap(angle, 360 -overlapAngle/2,360 + overlapAngle/2, 1, 0);
-				}
-			}
-			p.set(pos);
-			p.x+=sin(ofDegToRad(angle))*radius;
-			p.y-=cos(ofDegToRad(angle))*radius;
-			
-			points.push_back(ofxLaser::Point(p, colour));
-		}
-		
-		
+		private:
+
 	};
-	
-	float overlapAngle = 0;
-	float overlapDistance = 0; 
-	ofFloatColor colour;
-	
-	ofPoint pos;
-	float radius;
-	float speed;
-	float acceleration;
-		
-};
 }

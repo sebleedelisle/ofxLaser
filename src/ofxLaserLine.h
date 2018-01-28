@@ -9,12 +9,13 @@
 
 #include "ofxLaserShape.h"
 
+
 namespace ofxLaser {
 class Line : public Shape{
 	
 	public :
 	
-	Line(const ofPoint& startpos, const ofPoint& endpos, ofFloatColor& col, float lineSpeed, float lineAcceleration){
+	Line(const ofPoint& startpos, const ofPoint& endpos, const ofColor& col, string profilelabel){
 	
 		reversable = true; 
 		colour = col;
@@ -23,25 +24,22 @@ class Line : public Shape{
 		endPos = endpos;
 		
 		tested = false;
-		
-		speed = lineSpeed;
-		acceleration = lineAcceleration;
-	//cout<<"LINE SET : " << startPos << " " << endPos << " " <<endl;
+		profileLabel = profilelabel;
 		
 	}
 	
 	
-	void appendPointsToVector(vector<ofxLaser::Point>& points) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
 		
+	
 		ofPoint& start = getStartPos();
 		ofPoint& end = getEndPos();
 		ofVec2f v = end-start;
 
 		float distanceTravelled = ofDist(start.x, start.y, end.x, end.y);
-		vector<float> unitDistances = getPointsAlongDistance(distanceTravelled, acceleration, speed);
+		vector<float> unitDistances = getPointsAlongDistance(distanceTravelled, profile.acceleration, profile.speed);
 		
 		ofPoint p;
-		ofColor segmentColour;
 		
 		for(int i = 0; i<unitDistances.size(); i++) {
 			
@@ -49,16 +47,26 @@ class Line : public Shape{
 			
 			points.push_back(ofxLaser::Point(start + (v*unitDistance), colour));
 		}
-		
-		
-		
-		
-		
 	};
 	
-	ofFloatColor colour;
-	float speed;
-	float acceleration;
+	void addPreviewToMesh(ofMesh& mesh){
+		mesh.addColor(ofColor::black);
+		mesh.addVertex(getStartPos());
+		
+		mesh.addColor(colour);
+		mesh.addVertex(getStartPos());
+		mesh.addColor(colour);
+		mesh.addVertex(getEndPos());
+		
+		mesh.addColor(ofColor::black);
+		mesh.addVertex(getEndPos());
+	}
+	
+	virtual bool intersectsRect(ofRectangle & rect) {
+		return rect.intersects(startPos, endPos);
+		
+	};
+
 		
 };
 }

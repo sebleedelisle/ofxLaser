@@ -8,6 +8,7 @@
 
 #pragma once
 #include "ofxLaserPoint.h"
+#include "ofxLaserRenderProfile.h"
 
 namespace ofxLaser {
 class Shape {
@@ -18,11 +19,11 @@ class Shape {
 	virtual ~Shape(){
 		//cout << "LASER SHAPE DESTROY!!!" << endl;
 	};
-	virtual void renderPreview(){};
+	virtual void addPreviewToMesh(ofMesh& mesh){};
 	
-	static vector<float> getPointsAlongDistance(float distance, float acceleration, float speed){
+	vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed){
 		
-		vector<float> unitDistances;
+		unitDistances.clear();
 		
 		float acceleratedistance = (speed*speed) / (2*acceleration);
 		float timetogettospeed = speed / acceleration;
@@ -78,6 +79,7 @@ class Shape {
 		
 	}
 
+	vector<float> unitDistances;
 	
 	bool tested = false;
 	bool reversed = false;
@@ -92,13 +94,24 @@ class Shape {
 		else return endPos;
 	};
 	
-	virtual void appendPointsToVector(vector<ofxLaser::Point>& points) {
+	virtual ofFloatColor& getColour() {
+		return colour;
+	}
+	virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
 		
 	};
+	virtual bool intersectsRect(ofRectangle & rect) {
+		
+		
+	};
+	
+	string profileLabel;
 	
 	protected :
 	ofPoint startPos;
 	ofPoint endPos;
+	ofFloatColor colour;
+	
 
 };
 }

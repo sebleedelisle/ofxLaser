@@ -14,32 +14,55 @@ class Dot : public Shape{
 	
 	public :
 	
-	Dot(const ofPoint& dotPosition, ofFloatColor& dotColour, float dotIntensity = 1, int dotMaxPoints = 5){
-		set(dotPosition, dotColour, dotIntensity);
-		maxPoints = dotMaxPoints;
-	}
-	
-	void set(const ofPoint& dotPosition, ofFloatColor& dotColour, float dotIntensity = 1) {
+	Dot(const ofPoint& dotPosition, const ofColor& dotColour, float dotIntensity, string profilelabel){
+		
 		colour = dotColour;
 		startPos.set(dotPosition);
 		endPos.set(dotPosition);
-		intensity = dotIntensity; 
+		intensity = dotIntensity;
 		tested = false;
-	}
-	
-	void appendPointsToVector(vector<ofxLaser::Point>& points) {
-		int particlecount = maxPoints * intensity;// ceil(dotMaxPoints* dot->intensity);
+		profileLabel = profilelabel;
 		
-		for(int i = 0; i<particlecount; i++) {
+	}
+	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+		int maxPoints = profile.dotMaxPoints; 
+		int pointcount = ceil(maxPoints * intensity);// ceil(dotMaxPoints* dot->intensity);
+		
+		for(int i = 0; i<pointcount; i++) {
 			//addIldaPoint(dot.getStartPos(), dot.colour);
 			points.push_back(ofxLaser::Point(getStartPos(), colour));
 		}
+	};
+	
+	
+	void addPreviewToMesh(ofMesh& mesh){
+		float radius = 1.5;
+		
+		ofVec3f v(0,-radius);
+		mesh.addColor(ofColor::black);
+		mesh.addVertex(v + getStartPos());
+		ofColor c(colour);
+		
+		for(int i = 0; i<=360; i+=30) {
+			v.set(0, -radius);
+			v.rotate(i, ofVec3f(0,0,1));
+			mesh.addColor(c);
+			mesh.addVertex(v+getStartPos());
+		}
+		
+		v.set(0, -radius);
+		mesh.addColor(ofColor::black);
+		mesh.addVertex(v+getStartPos());
+	}
+	
+	virtual bool intersectsRect(ofRectangle & rect) {
+		return rect.inside(startPos);
+		
 	};
 
 		
 	float intensity = 1;
 	int maxPoints = 5;
-	ofFloatColor colour;
 		
 };
 

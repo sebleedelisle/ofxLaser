@@ -30,11 +30,22 @@ class DragHandle : public ofPoint{
 	
 	};
 	
-	void draw() {
+	void draw(bool isOver = true) {
+		//bool isOver = hitTest(ofPoint(ofGetMouseX(), ofGetMouseY()));
 		ofPushStyle();
-		ofNoFill();
-		ofSetLineWidth(1);
-		ofDrawCircle(*this, radius);
+		if(isCircular) {
+			ofSetColor(isOver?overCol:col);
+			ofNoFill();
+			ofSetLineWidth(1);
+			ofDrawCircle(*this,radius);
+		} else {
+			
+			ofFill();
+			ofSetColor(isOver?overCol:col);
+			//ofSetLineWidth(1);
+			ofSetRectMode(OF_RECTMODE_CENTER);
+			ofDrawRectangle(*this,radius, radius);
+		}
 		ofPopStyle();
 	};
 	
@@ -54,8 +65,12 @@ class DragHandle : public ofPoint{
 		
 		if(isDragging) {
 			
-			if(xAxis) x = pos.x - clickOffset.x;
-			if(yAxis) y = pos.y - clickOffset.y;
+			if(xAxis){
+				x = startPos.x + (((pos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+			}
+			if(yAxis) {
+				y = startPos.y + (((pos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+			}
 			
 			if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
 				x = startPos.x;
@@ -88,6 +103,10 @@ class DragHandle : public ofPoint{
 	bool xAxis;
 	bool yAxis;
 	bool altKeyDisable;
+	bool isCircular = false;
+	
+	ofColor col = ofColor(60);
+	ofColor overCol = ofColor::white;
 	
 	
 };

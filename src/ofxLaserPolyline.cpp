@@ -1,101 +1,190 @@
 //
 //  ofxLaserPolyline.cpp
-//  LaserLightSynths2017c
+//  ofxLaserRewrite
 //
-//  Created by Seb Lee-Delisle on 12/02/2017.
+//  Created by Seb Lee-Delisle on 16/11/2017.
 //
 //
 
 #include "ofxLaserPolyline.h"
-
 using namespace ofxLaser;
 
-Polyline :: Polyline(const ofPolyline& sourcepoly, ofFloatColor polyColour, float polyAcceleration, float polySpeed, float polyCornerThresholdAngle, ofPoint pos = ofPoint::zero(), float rotation = 0, ofPoint scale = ofPoint::one()){
-    
-    // to do - implement reversibility!
-    reversable = false;
-    
-    //polyline.clear();
-    
-    transformPolyline(sourcepoly, polyline, pos, rotation, scale); // makes a copy
-    colour = polyColour;
-    
-    
-    startPos = polyline.getVertices().front();
-    // to avoid a bug in polyline in open polys
-    endPos = polyline.getVertices().back();
-    
-    acceleration = polyAcceleration;
-    speed = polySpeed;
-    //previewMesh.setMode(OF_PRIMITIVE_LINES);
-    cornerThresholdAngle = polyCornerThresholdAngle;
-    
+
+Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel){
+	
+	reversable = false;
+	colour = col;
+	cachedProfile = NULL;
+	multicoloured = false;
+	
+	tested = false;
+	profileLabel = profilelabel;
+	
+	
+	initPoly(poly);
+	
 }
 
-void Polyline::transformPolyline(const ofPolyline& source, ofPolyline& target, ofPoint pos, float rotation, ofPoint scale) {
-    
-    target = source;
-    for(int i = 0; i<target.size(); i++) {
-        ofPoint& p = target[i];
-        p*=scale;
-        p.rotate(rotation, ofPoint(0,0,1));
-        p+=pos;
-        p = ofxLaser::Manager::gLProject(p);
-    }
-    
+Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
+	
+	reversable = false;
+	cachedProfile = NULL;
+	
+	multicoloured = true;
+	colours = sourcecolours; // should copy
+	
+	tested = false;
+	profileLabel = profilelabel;
+	
+	
+	initPoly(poly);
+	
+
 }
 
-void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points) {
-    
-    ofPolyline& poly = polyline;
-    int startpoint = 0;
-    int endpoint = 0;
-    
-    while(endpoint<(int)poly.getVertices().size()-1) {
+
+
+void Polyline::initPoly(const ofPolyline& poly){
+    polyline.clear();
+    const vector<ofPoint>& vertices =poly.getVertices();
+    ofPoint p;
+    for(int i = 0; i<vertices.size(); i++) {
         
-        do {
-            endpoint++;
-        } while ((endpoint< (int)poly.getVertices().size()-1) && abs(poly.getAngleAtIndex(endpoint)) < cornerThresholdAngle);
-        
-        
-        float startdistance = poly.getLengthAtIndex(startpoint);
-        float enddistance = poly.getLengthAtIndex(endpoint);
-        
-        float length = enddistance - startdistance;
-        
-        ofPoint lastpoint;
-        
-        if(length>0) {
-            
-            vector<float> unitDistances = getPointsAlongDistance(length, acceleration, speed);
-            
-            ofColor pointcolour;
-            
-            for(int i = 0; i<unitDistances.size(); i++) {
-                ofPoint p = poly.getPointAtLength((unitDistances[i]*0.999* length) + startdistance);
-                
-                //pointcolour = laserpoly.getColourForPoint(unitDistances[i], p);
-                
-                //addIldaPoint(p, pointcolour, laserpoly.intensity);
-                points.push_back(ofxLaser::Point(p, colour));
-                // TODO reimplement preview mesh
-                //					if(i>0) {
-                //						laserpoly.previewMesh.addVertex(lastpoint);
-                //						laserpoly.previewMesh.addVertex(p);
-                //						laserpoly.previewMesh.addColor(pointcolour*laserpoly.intensity);
-                //						laserpoly.previewMesh.addColor(pointcolour*laserpoly.intensity);
-                //						//cout << lastpoint << " " << p << " " << pointcolour << endl;
-                //
-                //					}
-                
-                lastpoint = p;
-            }
-            
-        }
-        
-        startpoint=endpoint;
+        //p = ofxLaser::Manager::instance()->gLProject(vertices[i]);
+        p = vertices[i];
+        polyline.addVertex(p);
         
     }
-    
-    
+   // if(poly.isClosed()) polyline.addVertex(vertices[0]); 
+    polyline.setClosed(false);
+	startPos = polyline.getVertices().front();
+	// to avoid a bug in polyline in open polys
+	endPos = polyline.getVertices().back();
+   
+	
 }
+
+
+
+
+Polyline:: ~Polyline() {
+	// not sure if there's any point clearing the polyline - they should just get destroyed, right?
+	polyline.clear();
+}
+
+void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+	
+	if(&profile == cachedProfile) {
+		
+		points.insert(points.end(), cachedPoints.begin(), cachedPoints.end());
+		return;
+	}
+	
+	cachedProfile = &profile;
+	cachedPoints.clear();
+	
+	float acceleration = profile.acceleration;
+	float speed = profile.speed;
+	float cornerThresholdAngle = profile.cornerThreshold;
+
+	int startpoint = 0;
+	int endpoint = 0;
+	
+	int numVertices =(int)polyline.getVertices().size();
+	while(endpoint<numVertices-1) {
+		
+		do {
+			endpoint++;
+		} while ((endpoint< (int)polyline.getVertices().size()-1) && abs(polyline.getAngleAtIndex(endpoint)) < cornerThresholdAngle);
+		
+		
+		float startdistance = polyline.getLengthAtIndex(startpoint);
+		float enddistance = polyline.getLengthAtIndex(endpoint);
+		
+		float length = enddistance - startdistance;
+		
+		ofPoint lastpoint;
+		
+		if(length>0) {
+			
+			vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed);
+			
+			
+			for(int i = 0; i<unitDistances.size(); i++) {
+				
+				float distanceAlongPoly = (unitDistances[i]*0.999* length) + startdistance;
+				
+				ofPoint p = polyline.getPointAtLength(distanceAlongPoly);
+				
+				if(multicoloured) {
+					int colourindex = round(polyline.getIndexAtLength(distanceAlongPoly)); // TODO - interpolate?
+					colourindex = ofClamp(colourindex, 0,colours.size());
+					cachedPoints.push_back(ofxLaser::Point(p, colours[colourindex]));
+					
+				} else {
+					
+					cachedPoints.push_back(ofxLaser::Point(p, colour));
+				}
+				
+				lastpoint = p;
+			}
+			
+		}
+		
+		startpoint=endpoint;
+		
+	}
+	points.insert(points.end(), cachedPoints.begin(), cachedPoints.end());
+	
+}
+
+void Polyline :: addPreviewToMesh(ofMesh& mesh){
+	
+	
+	vector<ofPoint> & vertices = polyline.getVertices();
+	mesh.addColor(ofColor::black);
+	mesh.addVertex(vertices.front());
+	
+	for(int i = 0; i<vertices.size(); i++) {
+		
+		if(multicoloured) {
+			int colourindex = ofClamp(i, 0, colours.size()-1);
+			mesh.addColor(colours[colourindex]);
+		} else {
+			mesh.addColor(colour);
+		}
+		mesh.addVertex(vertices[i]);
+	}
+	
+	
+	mesh.addColor(ofColor::black);
+	mesh.addVertex(vertices.back());
+}
+
+
+bool Polyline:: intersectsRect(ofRectangle & rect){
+	
+	if(!rect.intersects(polyline.getBoundingBox())) return false;
+	vector<ofPoint>& vertices = polyline.getVertices();
+	for(int i = 1; i< vertices.size(); i++) {
+		if(rect.intersects(vertices[i-1],vertices[i])) return true;
+	}
+	return false;
+	
+}
+
+
+//
+//void Polyline::transformPolyline(const ofPolyline& source, ofPolyline& target, ofPoint pos, float rotation, ofPoint scale){
+//	
+//	target = source;
+//	for(int i = 0; i<target.size(); i++) {
+//		ofPoint& p = target[i];
+//		p*=scale;
+//		p.rotate(rotation, ofPoint(0,0,1));
+//		p+=pos;
+//		
+//	}
+//	
+//	
+//}
