@@ -39,7 +39,7 @@ class Dot : public Shape{
 		float radius = 1.5;
 		
 		ofVec3f v(0,-radius);
-		mesh.addColor(ofColor::black);
+		mesh.addColor(ofColor(0));
 		mesh.addVertex(v + getStartPos());
 		ofColor c(colour);
 		
@@ -51,7 +51,7 @@ class Dot : public Shape{
 		}
 		
 		v.set(0, -radius);
-		mesh.addColor(ofColor::black);
+		mesh.addColor(ofColor(0));
 		mesh.addVertex(v+getStartPos());
 	}
 	

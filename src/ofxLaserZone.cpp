@@ -86,7 +86,7 @@ ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer
 	
 	if(shapes.size()>0) {
 		
-		ofFloatColor c = ofColor::white;
+		ofFloatColor c = ofColor(255);
 		
 		// add a dummy shape to fix the start position
 		shapes.push_front(new ofxLaser::Dot(currentPosition, c, 1, ""));

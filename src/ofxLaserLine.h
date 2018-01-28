@@ -50,7 +50,7 @@ class Line : public Shape{
 	};
 	
 	void addPreviewToMesh(ofMesh& mesh){
-		mesh.addColor(ofColor::black);
+		mesh.addColor(ofColor(0));
 		mesh.addVertex(getStartPos());
 		
 		mesh.addColor(colour);
@@ -58,7 +58,7 @@ class Line : public Shape{
 		mesh.addColor(colour);
 		mesh.addVertex(getEndPos());
 		
-		mesh.addColor(ofColor::black);
+		mesh.addColor(ofColor(0));
 		mesh.addVertex(getEndPos());
 	}
 	

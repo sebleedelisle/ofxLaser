@@ -22,12 +22,13 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+    
 	float deltaTime = ofClamp(ofGetLastFrameTime(), 0, 0.2);
 	elapsedTime+=deltaTime;
+    
+    // prepares laser manager to receive new points
     laser.update();
 	
-	
-
 }
 
 
@@ -36,25 +37,23 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-
 	ofBackground(0);
     
-	
 	ofNoFill();
 	ofSetLineWidth(1);
 	ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 	int ypos = laserHeight+20;
-	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 20, ypos+=30);
-	
-	ofDrawBitmapString("Left and Right Arrows to change current effect", 20, ypos+=30);
-	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
-    
-   // ofSetupScreenPerspective(1280,1024,50);
+	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
+    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
+	ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
+	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 400, ypos+=30);
     
     showLaserEffect(currentLaserEffect);
 
+    // sends points to the DAC
     laser.send();
+
     laser.drawUI();
 
 }
@@ -83,10 +82,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 
 				float xpos =left + (width*progress);
 									
-				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
               
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
+                
 				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
 		
 			}
@@ -107,7 +107,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
-				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor::white);
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
@@ -130,7 +130,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress);
 				
-				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor::white);
+				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor(255));
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				
@@ -176,12 +176,10 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) ;
 				
-				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor::white);
+				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
 				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
-				
-				
 				
 			}
 			
@@ -203,6 +201,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				p.y = sin((elapsedTime-((float)i*spread)) *2.71f *speed) * 300;
 				p.x+=laserWidth/2;
 				p.y+=laserHeight/2;
+                
 				laser.drawDot(p, c);
 				
 			}
@@ -210,30 +209,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 			break;
 			
 		}
-
-			
 	}
-	// LASER PARTICLES ---------------------------------
-	
 
-
-
-	
-	
-	
-	// LASER SINE WAVE PARTICLES --------------------------------------
-	
-
-	//	// LASER CIRCLES
-	//
-	//	for(int i = 1; i<10; i++) {
-	//		laser.drawCircle(ofPoint(i*100, 500), 50, ofColor::white);
-	//	}
-	//
-	
 	// LASER POLYLINES
 	for(int i = 0; i<polyLines.size(); i++) {
-		laser.drawPoly(polyLines[i], ofColor::green);
+		laser.drawPoly(polyLines[i], ofColor(0,255,0));
 	}
 	
 
@@ -252,12 +232,12 @@ void ofApp::keyPressed(int key){
 		currentLaserEffect++;
 		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
 	}
-	if(key=='r') {
-		
-		//laser.dac.restart();
+	if(key=='f') {
+        ofToggleFullscreen();
 	}
-    if(key==OF_KEY_TAB) laser.nextProjector();
-
+    if(key==OF_KEY_TAB) {
+        laser.nextProjector();
+    }
 }
 
 //--------------------------------------------------------------

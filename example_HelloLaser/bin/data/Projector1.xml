@@ -1,46 +1,46 @@
 <Projector1>
 	<ARMED>0</ARMED>
-	<Intensity>1</Intensity>
+	<Intensity>0.1</Intensity>
 	<Test_Pattern>0</Test_Pattern>
 	<Projector_settings>
-		<Points_per_second>29700</Points_per_second>
-		<Colour_change_offset>-1.11429</Colour_change_offset>
+		<Points_per_second>30000</Points_per_second>
+		<Colour_change_offset>0</Colour_change_offset>
 		<Laser_on_while_moving>0</Laser_on_while_moving>
-		<Move_Speed>4.41796</Move_Speed>
+		<Move_Speed>5</Move_Speed>
 		<Blank_points_before>1</Blank_points_before>
 		<On_points_before>1</On_points_before>
 		<On_points_after>1</On_points_after>
 		<Blank_points_after>1</Blank_points_after>
 		<Flip_X>0</Flip_X>
 		<Flip_Y>0</Flip_Y>
-		<output_offset>0, 0</output_offset>
+		<Output_position_offset>0, 0</Output_position_offset>
 	</Projector_settings>
 	<Render_profiles>
 		<Default>
-			<speed>7.8384</speed>
-			<acceleration>1.4242</acceleration>
-			<corner_threshold>26.314</corner_threshold>
-			<dot_max_points>7</dot_max_points>
+			<speed>10</speed>
+			<acceleration>2</acceleration>
+			<corner_threshold>60</corner_threshold>
+			<dot_max_points>20</dot_max_points>
 		</Default>
 		<Fast>
-			<speed>2</speed>
-			<acceleration>1</acceleration>
+			<speed>20</speed>
+			<acceleration>4</acceleration>
 			<corner_threshold>90</corner_threshold>
-			<dot_max_points>2</dot_max_points>
+			<dot_max_points>10</dot_max_points>
 		</Fast>
 		<High_quality>
-			<speed>2</speed>
+			<speed>5</speed>
 			<acceleration>1</acceleration>
-			<corner_threshold>90</corner_threshold>
-			<dot_max_points>2</dot_max_points>
+			<corner_threshold>20</corner_threshold>
+			<dot_max_points>40</dot_max_points>
 		</High_quality>
 	</Render_profiles>
 	<Colour_calibration>
 		<red_100>1</red_100>
 		<red_75>0.75</red_75>
-		<red_50>0.595918</red_50>
-		<red_25>0.387755</red_25>
-		<red_0>0.110204</red_0>
+		<red_50>0.5</red_50>
+		<red_25>0.25</red_25>
+		<red_0>0</red_0>
 		<green_100>1</green_100>
 		<green_75>0.75</green_75>
 		<green_50>0.5</green_50>

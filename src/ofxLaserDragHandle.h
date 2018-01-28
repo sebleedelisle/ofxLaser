@@ -106,7 +106,7 @@ class DragHandle : public ofPoint{
 	bool isCircular = false;
 	
 	ofColor col = ofColor(60);
-	ofColor overCol = ofColor::white;
+	ofColor overCol = ofColor(255);
 	
 	
 };

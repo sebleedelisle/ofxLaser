@@ -150,6 +150,7 @@ namespace ofxLaser {
 		ofParameter<float>blue0;
 		
 		ofxPanel* gui;
+        bool guiIsVisible;
 
 	};
 

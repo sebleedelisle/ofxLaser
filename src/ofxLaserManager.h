@@ -43,7 +43,8 @@ namespace ofxLaser {
 		static Manager * laserManager;
 
 		Manager();
-		
+		~Manager();
+        
 		void addProjector(DacBase& dac);
 		
 		void addZone(float x, float y, float w, float h);
@@ -56,7 +57,9 @@ namespace ofxLaser {
 		void setup(int width, int height);
 		void update();
 		void drawUI(bool fullscreen = false);
-        void renderPreview(); 
+        void renderPreview();
+        
+        void updateScreenSize(ofResizeEventArgs &e);
 		void updateScreenSize(); 
         void send();
         void sendRawPoints(const vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
@@ -87,7 +90,8 @@ namespace ofxLaser {
 		
 		int width, height;
 		ofxPanel gui;
-		
+        bool guiIsVisible;
+        
 		// converts openGL coords to screen coords //
 		
 		ofPoint gLProject(ofPoint p);

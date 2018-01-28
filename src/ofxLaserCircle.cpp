@@ -61,7 +61,7 @@ void Circle::addPreviewToMesh(ofMesh& mesh){
 	
 	
 	vector<ofPoint> & vertices = polyline.getVertices();
-	mesh.addColor(ofColor::black);
+	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.front());
 	
 	for(int i = 0; i<vertices.size(); i++) {
@@ -71,7 +71,7 @@ void Circle::addPreviewToMesh(ofMesh& mesh){
 	}
 	
 	
-	mesh.addColor(ofColor::black);
+	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.back());
 }
 

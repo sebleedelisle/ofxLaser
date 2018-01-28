@@ -23,6 +23,7 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) : dac(laserdac){
 	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL,  ofToString("High quality"));
 	
 	numTestPatterns = 8;
+    guiIsVisible = true; 
 	
 };
 
@@ -57,8 +58,6 @@ void Projector :: initGui() {
 	
 	gui->add(projectorparams);
 	
-	
-	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
 	
@@ -70,7 +69,22 @@ void Projector :: initGui() {
 	renderparams.add(defaultProfile.params);
 	renderparams.add(fast.params);
 	renderparams.add(detail.params);
-	
+    
+    defaultProfile.speed = 10;
+    defaultProfile.acceleration = 2;
+    defaultProfile.cornerThreshold  = 60;
+    defaultProfile.dotMaxPoints = 20;
+    
+    fast.speed = 20;
+    fast.acceleration = 4;
+    fast.cornerThreshold  = 90;
+    fast.dotMaxPoints = 10;
+    
+    detail.speed = 5;
+    detail.acceleration = 1;
+    detail.cornerThreshold  = 20;
+    detail.dotMaxPoints = 40;
+    
 	gui->add(renderparams);
 	
 	
@@ -141,7 +155,7 @@ void Projector :: initGui() {
 	
 	minimiseGui();
 	
-	gui->load();
+	gui->loadFromFile(label+".xml");
 	armed = false;
 	testPattern = 0;
     for(int i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
@@ -162,6 +176,8 @@ void Projector :: minimiseGui() {
 	//	if(g) g->maximize();
 	g = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
 	if(g) g->maximize();
+    g = dynamic_cast <ofxGuiGroup *>(g->getControl("Output position offset"));
+    if(g) g->minimize();
 }
 
 Projector::~Projector() {
@@ -727,7 +743,7 @@ void Projector::send() {
 				addPointsForMoveTo(currentPosition, segmentpoints.getStart());
 			
 				for(int k = 0; k<shapePreBlank; k++) {
-					addPoint((ofPoint)segmentpoints.getStart(), ofColor::black);
+					addPoint((ofPoint)segmentpoints.getStart(), ofColor(0));
 				}
 				for(int k = 0;k<shapePreOn;k++) {
 					addPoint(segmentpoints.getStart());
@@ -751,7 +767,7 @@ void Projector::send() {
 						addPoint(segmentpoints.getEnd());
 					}
 					for(int k = 0; k<shapePostBlank; k++) {
-						addPoint((ofPoint)segmentpoints.getEnd(), ofColor::black);
+						addPoint((ofPoint)segmentpoints.getEnd(), ofColor(0));
 					}
 				}
 			}
@@ -791,7 +807,7 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 		
 		ofRectangle& rect = maskRectangle;
 		
-		ofColor col = ofColor::green;
+		ofColor col = ofColor(0,255,0);
 		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_DEFAULT));
 		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_DEFAULT));
 		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_DEFAULT));
@@ -807,17 +823,17 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 		for(float y = 0; y<=1.1; y+=0.333333333) {
 			
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor::white, OFXLASER_PROFILE_DEFAULT));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_DEFAULT));
 		}
 		
 		for(float x =0 ; x<=1.1; x+=0.3333333333) {
 			
 			
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor::red, OFXLASER_PROFILE_DEFAULT ));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_DEFAULT ));
 			
 		}
 		
-		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor::blue, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
 		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/6, ofFloatColor(0,1,0), OFXLASER_PROFILE_DEFAULT));
 		
 		
@@ -830,13 +846,13 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 		
 		for(float y = 0; y<=1.1; y+=0.333333333) {
 			
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		}
-		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 1.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getBottomLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 2.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getBottomLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getTopRight().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getTopRight().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopRight().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getTopRight().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
 		
 	} else if(testPattern==4) {
@@ -846,15 +862,15 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 		
 		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor::green, OFXLASER_PROFILE_DEFAULT ));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
 			
 		}
 		
-		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 1.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getTopRight(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 2.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopRight(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor::green, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
 		
 	} else if((testPattern>=5) && (testPattern<=8)) {
@@ -881,7 +897,7 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			
 			for(int i = 0; i<moveIterations; i++) {
 				points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
-				colours.push_back(ofColor::black);
+				colours.push_back(ofColor(0));
 				
 			}
 			currentPosition = right;
@@ -925,7 +941,7 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			int blanks = 5;
 			for(int i = 0; i< blanks; i++) {
 				points.push_back(left);
-				colours.push_back(ofColor::black);
+				colours.push_back(ofColor(0));
 			}
 			for(float x =left.x ; x<=right.x; x+=speed) {
 				points.push_back(ofPoint(x,y));
@@ -934,7 +950,7 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			
 			for(int i = 0; i< blanks; i++) {
 				points.push_back(right);
-				colours.push_back(ofColor::black);
+				colours.push_back(ofColor(0));
 			}
 			
 			
@@ -961,7 +977,7 @@ void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPo
 		float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
 		
 		ofPoint c = (v* t) + start;
-		points.emplace_back(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor::black);
+		points.emplace_back(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor(0));
 		
 	}
 	
@@ -980,7 +996,7 @@ void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPo
 		float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
 		
 		ofPoint c = (v* t) + start;
-		addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor::black);
+		addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor(0));
 		
 	}
 	
@@ -1146,7 +1162,7 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 
 void Projector::saveSettings(){
-	gui->save();
+	gui->saveToFile(label+".xml");
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		zoneWarps[i]->saveSettings();
 	}

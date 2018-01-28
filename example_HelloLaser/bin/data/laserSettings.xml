@@ -1,6 +1,5 @@
 <group>
-	<Show_Zones>1</Show_Zones>
-	<Show_Laser_Path>1</Show_Laser_Path>
+	<Show_Zones>0</Show_Zones>
+	<Show_Preview>1</Show_Preview>
 <group/>
-<Show_Preview>1</Show_Preview>
 </group>

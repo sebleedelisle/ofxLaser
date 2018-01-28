@@ -35,10 +35,15 @@ Manager :: Manager() {
 	showPreview = true;
 	showZones = false;
 	currentProjector = -1;
+    guiIsVisible = true;
+	
+    ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
 	
 	
-	
-	
+}
+Manager :: ~Manager() {
+    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
+    ofRemoveListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
 }
 
 void Manager :: setup(int w, int h){
@@ -261,8 +266,8 @@ void Manager:: drawUI(bool fullscreen){
  
     
     for(int i = 0; i<projectors.size(); i++) {
-		projectors[i]->gui->setVisible(gui.isVisible());
-		projectors[i]->gui->draw();
+		projectors[i]->guiIsVisible = guiIsVisible;
+		if(projectors[i]->guiIsVisible) projectors[i]->gui->draw();
 	}
     
     gui.draw();
@@ -307,6 +312,10 @@ void Manager :: renderPreview() {
     ofPopStyle();
     //----------------
     
+}
+void Manager ::updateScreenSize(ofResizeEventArgs &e){
+    
+    updateScreenSize();
 }
 
 void Manager :: updateScreenSize() {
@@ -387,11 +396,10 @@ void Manager::nextProjector() {
 
 void Manager::initGui() {
 	
-	
 	ofxGuiSetDefaultWidth(220);
 	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
 	gui.setup("Laser", "laserSettings.xml");
-	gui.add(showZones.set("Show Zones", true));
+	gui.add(showZones.set("Show Zones", false));
 	gui.add(showPreview.set("Show Preview", true));
 	
 //	
@@ -416,7 +424,7 @@ void Manager::initGui() {
 }
 
 void Manager::saveSettings() {
-	gui.save();
+	gui.saveToFile("laserSettings.xml");
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->saveSettings();
 		
