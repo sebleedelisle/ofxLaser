@@ -26,40 +26,33 @@ Manager * Manager::instance() {
 
 Manager :: Manager() {
     ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
-
+	if(laserManager == NULL) {
+		laserManager = this;
+	} else {
+		ofLog(OF_LOG_WARNING, "Multiple ofxLaser::Manager instances created");
+	}
+	
 }
 
 
 void Manager :: setup (int width, int height) {
 	    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager.setup");
 	
-	//ofSetFrameRate(20);
 	appWidth = width;
 	appHeight = height;
 	maskRectangle.set(0,0,width, height);
     showPostTransformPreview = false;
-	
-	//shouldBeConnected = false;
-	
-	
-	//restartCount = 0;
-	
-	//white.set(1,1,1);
-	//black.set(0,0,0);
-	
 	
 	pmin.set(0,0);
 	pmax.set(appWidth, appHeight);
 	
 	testPattern = 0;
 	numTestPatterns = 5;
-    //use3D = false;
-	
 	
 	setupParameters();
 
-	
-	laserHomePosition = maskRectangle.getCenter();
+    laserHomePosition = maskRectangle.getCenter();
+    
 	updateHomography();
 	
 	if(!maskBitmap.load("LaserMask.png")) {
@@ -67,18 +60,14 @@ void Manager :: setup (int width, int height) {
 		maskBitmap.save("LaserMask.png");
 	};
 	
-	
     dac.setup();
-    
 }
 
 void Manager :: update() {
 	
 	minPoints = pps / 50;
 
-	
 	if(warp.checkDirty()) updateHomography();
-	
 	
 	// clear all pre-existing points.
 	ildaPoints.clear();
@@ -87,16 +76,10 @@ void Manager :: update() {
 	// clear the previewPathMesh - the blue and white laser preview
 	previewPathMesh.clear();
 
-
-
-	
 }
 
 void Manager :: draw() {
-	
-    //ofSetupScreenPerspective(800,800);
-	//ofPoint startPosition(maskRectangle.getCenter());
-	
+		
 	if(testPattern>0) drawTestPattern();
 	
 	
@@ -154,7 +137,7 @@ void Manager :: draw() {
 	// delete all the shapes
 	
 //	if(delay==0) {
-		for(int i = 0; i<shapes.size(); i++) {
+	for(int i = 0; i<shapes.size(); i++) {
 			delete shapes[i];
 		}
 //	}
@@ -214,7 +197,6 @@ void Manager :: drawShapes() {
 		
 		float shortestDistance = INFINITY;
 		
-		
 		int numberSorted = 0;
 		
 		
@@ -227,7 +209,7 @@ void Manager :: drawShapes() {
 			ofxLaser::Shape& shape1 = *shapes[currentIndex];
 			
 			shape1.tested = true;
-			sortedShapes.push_back(&shape1);
+			if(currentIndex!=0) sortedShapes.push_back(&shape1);
 			shape1.reversed = reversed;
 			
 			shortestDistance = INFINITY;
@@ -782,16 +764,9 @@ void Manager :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool u
 
 
 void Manager :: addPoints(vector<ofxLaser::Point>&points) {
-	
-	
 	for(int i = 0; i<points.size();i++) {
-		
 		addPoint(points[i]);
-		
-		
-	}
-	
-	
+    }
 }
 
 void Manager :: addPoint(ofxLaser::Point p) {
@@ -813,14 +788,13 @@ void Manager :: addPoint(ofxLaser::Point p) {
           
 			laserPoints.push_back(offScreenPoint);
            
-			
 			if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
 		}
-		lastClampedOffScreenPoint = p;
+		//lastClampedOffScreenPoint = p;
 	} else {
 		// if we're currently offScreen we need to move between the last point and this one
-		// TODO - better intersection between last point and this one
-		if(offScreen) {
+		
+        if(offScreen) {
 			offScreen = false;
 			
 			ofPoint target = p;
@@ -843,7 +817,6 @@ void Manager :: addPoint(ofxLaser::Point p) {
 			
 		}
 		
-        
 		laserPoints.push_back(p);
 	
 		if(!showPostTransformPreview) previewPathMesh.addVertex(ofPoint(p.x, p.y));
@@ -855,15 +828,12 @@ void Manager :: addPoint(ofxLaser::Point p) {
 
 void  Manager :: processIldaPoints() {
 	
-	// TODO implement proper masking and clamping.
 	
 	for(int i = 0; i<laserPoints.size(); i++) {
 		
-		
 		ofxLaser::Point &p = laserPoints[i];
 
-		
-	
+    
 		p.x = ofClamp(p.x, 0, appWidth);
 		p.y = ofClamp(p.y, 0, appHeight);
 		
@@ -873,23 +843,13 @@ void  Manager :: processIldaPoints() {
 		if(useMaskBitmap) {
 			maskPixelColour = maskBitmap.getColor(p.x/appWidth* (float)maskBitmap.getWidth(), p.y/appHeight * (float)maskBitmap.getHeight());
 			
-			//cout << "brightness " << brightness << endl;
-			
 		}
 		
 		
 		pre.push_back(cv::Point2f(p.x, p.y));
 		post.push_back(cv::Point2f());
 		
-		//cout << "getWarpedPoint" << pre[0] << endl;
-		
 		cv::perspectiveTransform(pre, post, homography);
-		//cout << "warped" << post[0] << endl;
-		
-		
-		//	return ofxCv::toOf(pre[0]);
-		
-		//	return point;s
 		
 		p.x = post[0].x;
 		p.y = post[0].y;
@@ -900,10 +860,8 @@ void  Manager :: processIldaPoints() {
 		if(showPostTransformPreview){
 			ofPoint previewpoint(p.x, p.y);
 			previewPathMesh.addVertex(previewpoint);
-			
 		}
-		
-		
+
 		ofFloatColor c(p.r / 255.0f, p.g / 255.0f, p.b / 255.0f);
 		if(useMaskBitmap) {
 			c.r*=((float)maskPixelColour.r/255.0);
@@ -926,36 +884,17 @@ void  Manager :: processIldaPoints() {
 
 void Manager::updateHomography() {
 	
-	
 	vector<cv::Point2f> srcCVPoints, dstCVPoints;
 	
+    for(int i = 0; i<4; i++) {
+        float xpos = ((float)(i%2)/1.0f*appWidth)+0;
+        float ypos = (floor((float)(i/2))/1.0f*appHeight)+0;
+        srcCVPoints.push_back(cv::Point2f(xpos, ypos));
+        dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
+    }
 	
-//	for(int i  = 0;i<4; i++) {
-//		bool left = (i+1)%4 <2;
-//		bool top = i<2;
-//	
-//		srcCVPoints.push_back(cv::Point2f(left? 0 : appWidth, top ? 0 : appHeight));
-//		dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
-//		
-//	}
-        for(int i = 0; i<4; i++) {
-            float xpos = ((float)(i%2)/1.0f*appWidth)+0;
-            float ypos = (floor((float)(i/2))/1.0f*appHeight)+0;
-            srcCVPoints.push_back(cv::Point2f(xpos, ypos));
-            dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
-        }
-//    for(int i = 0; i<16; i++) {
-//        float xpos = ((float)(i%4)/3.0f*appWidth)+0;
-//        float ypos = (floor((float)(i/4))/3.0f*appHeight)+0;
-//        srcCVPoints.push_back(cv::Point2f(xpos, ypos));
-//        dstCVPoints.push_back(cv::Point2f(warp.handles[i].x, warp.handles[i].y));
-//    }
-//    
-	
-	
-	//cout << srcPoints[3] << " " << dstPoints[3] << endl;
 	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
-//	inverseHomography = homography.inv();
+
 }
 
 
@@ -1073,8 +1012,6 @@ void Manager :: setupParameters() {
 	parameters.add(useMaskBitmap.set("use mask bitmap", true));
 	parameters.add(showMaskBitmap.set("show mask bitmap", false));
 	
-	//parameters.add(showWarpPoints.set("show warp points", false));
-	
 	parameters.add(colourChangeDelay.set("colour change offset", -6, -15, 15));
 	
 	parameters.add(flipX.set("flip x", true));
@@ -1138,14 +1075,12 @@ void Manager :: setupParameters() {
     maskMarginLeft.addListener(this, &Manager::updateMaskRectangleParam);
     maskMarginRight.addListener(this, &Manager::updateMaskRectangleParam);
 	
-		
 }
 
 void Manager :: roundPPS(int& v) {
 	pps = round((float)pps/100.0f)* 100;
 
 }
-
 
 
 void Manager :: updateMaskRectangle() {

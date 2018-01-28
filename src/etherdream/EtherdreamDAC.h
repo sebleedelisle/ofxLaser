@@ -21,10 +21,17 @@ class EtherdreamDAC : public ofThread {
     
     void threadedFunction();
     void setPoints(const vector<ofxIlda::Point>& _points, int _pps);
-    
+	
+	void drawData(float x, float y);
+	
     void fill_circle(float phase, int mode);
     uint16_t colorsin(float pos);
 
+	inline struct etherdream* restartEtherdream(struct etherdream* d);
+	void updateEtherdreamState(struct etherdream* d);
+	
+	void restart();
+	
     struct etherdream_point pointsA[MAX_POINTS];
     struct etherdream_point pointsB[MAX_POINTS];
     struct etherdream_point* pointsToSend;
@@ -32,7 +39,10 @@ class EtherdreamDAC : public ofThread {
     int pps;
     int numPointsToSend;
     int numPointsInBuffer;
-    bool pointsChanged; 
-    
+    bool pointsChanged;
+	
+	bool doRestart = false;
+	string etherdreamState;
+    char dacstate[20];
     
 };

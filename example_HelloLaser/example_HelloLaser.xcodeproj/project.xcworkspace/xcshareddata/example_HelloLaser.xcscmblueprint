@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "8FFAA2B543A19AAA7F558EA274C7302DE93C2B90",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "A68B3FFF6C3D28E0A0B7C38EFBF145918B3F4CCB" : 9223372036854775807,
+    "8FFAA2B543A19AAA7F558EA274C7302DE93C2B90" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "7CDDE42E-4274-4ECE-BC53-62A834222EE8",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "A68B3FFF6C3D28E0A0B7C38EFBF145918B3F4CCB" : "ofxVectorFont\/",
+    "8FFAA2B543A19AAA7F558EA274C7302DE93C2B90" : "ofxLaser\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "example_HelloLaser",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "example_HelloLaser\/example_HelloLaser.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:sebleedelisle\/ofxLaser.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8FFAA2B543A19AAA7F558EA274C7302DE93C2B90"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:sebleedelisle\/ofxVectorFont.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A68B3FFF6C3D28E0A0B7C38EFBF145918B3F4CCB"
+    }
+  ]
+}

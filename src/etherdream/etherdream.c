@@ -604,7 +604,9 @@ static void *dac_loop(void *dv) {
 			cap = b_left;
 		if (cap > 80)
 			cap = 80;
-
+		// ADDED THIS - sometimes the DAC locks because we have a negative cap
+		//if(cap<0) d->state = ST_BROKEN;
+		
 		if (SHOULD_TRACE())
 			trace(d, "L: st %d om %d; b %d + %d - %d = %d"
 				" -> write %d\n",
@@ -972,4 +974,28 @@ struct etherdream *etherdream_get(unsigned long idx) {
 	}
 
 	return NULL;
+}
+
+
+void etherdream_state_as_string(struct etherdream *d, char * str) {
+		switch(d->state) {
+			case ST_DISCONNECTED :
+				strcpy(str, "Disconnected");
+				break;
+			case ST_READY :
+				strcpy(str, "Ready");
+				break;
+			case ST_RUNNING :
+				strcpy(str, "Running");
+				break;
+			case ST_BROKEN :
+				strcpy(str, "Broken");
+				break;
+			case ST_SHUTDOWN :
+				strcpy(str, "Shutdown");
+				break;
+	
+				
+		}
+	
 }

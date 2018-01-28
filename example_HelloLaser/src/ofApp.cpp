@@ -41,8 +41,9 @@ void ofApp::update(){
 
 
 
-//--------------------------------------------------------------
-void ofApp::draw() {€
+
+
+void ofApp::draw() {
 	
 
 	ofBackground(0);
@@ -60,7 +61,7 @@ void ofApp::draw() {€
 	ofDrawBitmapString("Left and Right Arrows to change current effect", 20, ypos+=30);
 	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 20, ypos+=30);
     
-    ofSetupScreenPerspective(1280,1024,50);
+   // ofSetupScreenPerspective(1280,1024,50);
     
     showLaserEffect(currentLaserEffect);
 
@@ -261,6 +262,10 @@ void ofApp::keyPressed(int key){
 	} else if (key == OF_KEY_RIGHT) {
 		currentLaserEffect++;
 		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
+	}
+	if(key=='r') {
+		
+		laser.dac.restart();
 	}
 
 }

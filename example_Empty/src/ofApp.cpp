@@ -45,6 +45,9 @@ void ofApp::draw() {
 	
 
 	ofBackground(0);
+	
+	// add laser drawing stuff here
+	
 	laser.draw();
 	laserGui.draw();
 	colourGui.draw();

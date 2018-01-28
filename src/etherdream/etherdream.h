@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-
+	
 struct etherdream_point {
 	int16_t x;
 	int16_t y;
@@ -111,6 +111,11 @@ int etherdream_stop(struct etherdream *d);
  */
 void etherdream_disconnect(struct etherdream *d);
 
+// returns the state as a string
+	
+void etherdream_state_as_string(struct etherdream *d, char* str);
+	
+	
 #ifdef __cplusplus
 } // extern "c"
 #endif

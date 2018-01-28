@@ -89,23 +89,25 @@ namespace ofxLaser {
         }
         static ofVec3f gLProject( float ax, float ay, float az ) {
             
-            //return ofVec3f(ax,ay,0);
+  
             
             GLdouble model_view[16];
             glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
             
             GLdouble projection[16];
             glGetDoublev(GL_PROJECTION_MATRIX, projection);
-            
+    
             GLint viewport[4];
             glGetIntegerv(GL_VIEWPORT, viewport);
             
+            
+            
             GLdouble X, Y, Z = 0;
             gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
-          
+   
+            // bit of a hack - if you're rendering into an Fbo then y is inverted
+            if(projection[5]<0) Y = ofGetHeight()-Y;
             
-            
-            //return ofVec3f(ax, ay,0);
             return ofVec3f(X, Y, 0.0f);
         }
         
@@ -232,7 +234,7 @@ namespace ofxLaser {
 		ofRectangle maskRectangle;
 		bool offScreen;
 		ofxLaser::Point offScreenPoint;
-		ofxLaser::Point lastClampedOffScreenPoint;
+		//ofxLaser::Point lastClampedOffScreenPoint;
 
 	};
 }

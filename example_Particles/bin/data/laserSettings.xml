@@ -107,7 +107,7 @@
 <show_warper_UI>0</show_warper_UI>
 <group>
 		<Laser_Manager>
-			<intensity>0.870748</intensity>
+			<intensity>0.1</intensity>
 			<test_pattern>0</test_pattern>
 			<points_per_second>23513</points_per_second>
 			<colour_change_offset>-4</colour_change_offset>
@@ -131,7 +131,7 @@
 			<polyline_corner_threshold>60.5442</polyline_corner_threshold>
 			<polyline_acceleration>0.485</polyline_acceleration>
 			<polyline_speed>7.42857</polyline_speed>
-		<Laser_Armed>1</Laser_Armed>
+		<Laser_Armed>0</Laser_Armed>
 			<mask_margin_top>0</mask_margin_top>
 			<mask_margin_bottom>0</mask_margin_bottom>
 			<mask_margin_left>0</mask_margin_left>

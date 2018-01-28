@@ -7,12 +7,12 @@
         <x>624.000000000</x>
         <y>209.000000000</y>
     </upperRight>
-    <lowerLeft>
-        <x>186.000000000</x>
-        <y>579.000000000</y>
-    </lowerLeft>
     <lowerRight>
         <x>652.000000000</x>
         <y>586.000000000</y>
     </lowerRight>
+    <lowerLeft>
+        <x>186.000000000</x>
+        <y>579.000000000</y>
+    </lowerLeft>
 </quad>

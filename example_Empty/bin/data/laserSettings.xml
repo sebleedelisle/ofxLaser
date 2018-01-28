@@ -1,8 +1,8 @@
 <group>
 	<Laser_Manager>
 		<intensity>0.132653</intensity>
-		<test_pattern>0</test_pattern>
-		<points_per_second>42000</points_per_second>
+		<test_pattern>1</test_pattern>
+		<points_per_second>85400</points_per_second>
 		<colour_change_offset>-6</colour_change_offset>
 		<flip_x>1</flip_x>
 		<flip_y>1</flip_y>
@@ -15,8 +15,8 @@
 		<shape_pre_blank_points>1</shape_pre_blank_points>
 		<shape_post_blank_points>1</shape_post_blank_points>
 		<dot_max_points>7</dot_max_points>
-		<line_acceleration>0.5</line_acceleration>
-		<line_speed>20</line_speed>
+		<line_acceleration>0.172857</line_acceleration>
+		<line_speed>4.19728</line_speed>
 		<circle_overlap>20</circle_overlap>
 		<circle_acceleration>0.5</circle_acceleration>
 		<circle_speed>20</circle_speed>
@@ -31,6 +31,8 @@
 		<mask_margin_right>0</mask_margin_right>
 		<spiral_speed>20</spiral_speed>
 		<spiral_spacing>10</spiral_spacing>
+	<use_mask_bitmap>1</use_mask_bitmap>
+		<show_mask_bitmap>0</show_mask_bitmap>
 	</Laser_Manager>
 	<Laser_red_calibration>
 		<red_100>1</red_100>

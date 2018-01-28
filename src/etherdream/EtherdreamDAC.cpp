@@ -12,6 +12,9 @@ void EtherdreamDAC :: setup(){
     pointsChanged = false;
     pointsBuffer = pointsA;
     pointsToSend = pointsB;
+	
+	etherdream_lib_start(); // returns -1 on failure - check!
+ 
     startThread();
 }
 
@@ -48,75 +51,144 @@ void EtherdreamDAC :: setPoints(const vector<ofxIlda::Point>& ildapoints, int _p
 
 void EtherdreamDAC :: threadedFunction(){
     
-    etherdream_lib_start();
-    
-    /* Sleep for a bit over a second, to ensure that we see broadcasts
-     * from all available DACs. */
-    usleep(1200000);
-    
-    int cc = etherdream_dac_count();
-    while (!cc) {
-        printf("No DACs found.\n");
-        usleep(2400000);
-        cc = etherdream_dac_count();
-    }
-    
+	
+	
+	while(1) {
+		/* Sleep for a bit over a second, to ensure that we see broadcasts
+		 * from all available DACs. */
+		usleep(1200000);
+		
+		int cc = etherdream_dac_count();
+		while (!cc) {
+			printf("No DACs found.\n");
+			usleep(2400000);
+			cc = etherdream_dac_count();
+		}
+		
 
-    
-    int i;
-    for (i = 0; i < cc; i++) {
-        printf("%d: Ether Dream %06lx\n", i,
-               etherdream_get_id(etherdream_get(i)));
-    }
-    
-    struct etherdream *d = etherdream_get(0);
-    
-    printf("Connecting...\n");
-    while (etherdream_connect(d) < 0){
-        usleep(2400000);
-    }
-        
-    
-    i = 0;
-    while (1) {
-       
-        if(pointsChanged) {
-            if(lock()) {
-                
-                struct etherdream_point* spare = pointsBuffer;
-                pointsBuffer = pointsToSend;
-                pointsToSend = spare;
-                numPointsToSend = numPointsInBuffer;
-                unlock();
-                pointsChanged = false;
-            }
-            
-        }
-        int res = etherdream_write(d, pointsToSend, numPointsToSend, pps, 1);
-        if (res != 0) {
-            printf("write %d\n", res);
-        }
-        
-        // TODO - make this a separate function
-        while(etherdream_wait_for_ready(d)==-1) {
-            printf("etherdream shut down!\n");
-            etherdream_stop(d);
-            etherdream_disconnect(d);
-            usleep(1200000);
-            d = etherdream_get(0);
-            printf("retrying...");
-            etherdream_connect(d);
-            usleep(1200000);
-        };
-        
-        i++;
-    }
-    
+		
+		int i;
+		for (i = 0; i < cc; i++) {
+			printf("%d: Ether Dream %06lx\n", i,
+				   etherdream_get_id(etherdream_get(i)));
+		}
+		
+		struct etherdream *d = etherdream_get(0);
+		
+		printf("Connecting...\n");
+		while (etherdream_connect(d) < 0){
+			usleep(2400000);
+		}
+			
+		
+	
+		while (1) {
+		   
+			if(pointsChanged) {
+				if(lock()) {
+					
+					struct etherdream_point* spare = pointsBuffer;
+					pointsBuffer = pointsToSend;
+					pointsToSend = spare;
+					numPointsToSend = numPointsInBuffer;
+					updateEtherdreamState(d);
+					unlock();
+					pointsChanged = false;
+				}
+				
+			}
+			int res = etherdream_write(d, pointsToSend, numPointsToSend, pps, 1);
+			if (res != 0) {
+				printf("write %d\n", res);
+			}
+			
+			if(doRestart) {
+				doRestart = false;
+				etherdream_stop(d);
+				etherdream_disconnect(d);
+				usleep(1000000); // one second
+				
+				printf("etherdream shut down!\n");
+				
+				break;
+			}
+			
+			// this blocks! 
+			while(etherdream_wait_for_ready(d)==-1) {
+				
+				etherdream_stop(d);
+				etherdream_disconnect(d);
+				usleep(2000000); // two seconds
+
+				printf("etherdream shut down!\n");
+				break; // d = restartEtherdream(d);
+			};
+			
+			
+		
+		}
+		printf("restarting etherdream\n"); 
+	}
     printf("done\n");
     return 0;
     
 }
 
+
+inline struct etherdream* EtherdreamDAC ::  restartEtherdream(struct etherdream* d) {
+	
+	printf("restart etherdream\n");
+	etherdream_stop(d);
+	etherdream_disconnect(d);
+	usleep(4800000);
+	d = etherdream_get(0);
+	printf("retrying...");
+	etherdream_connect(d);
+	usleep(4800000);
+	return d;
+}
+
+void EtherdreamDAC::drawData(float x, float y) {
+	ofPushMatrix();
+	ofPushStyle();
+	
+	ofDrawBitmapString(etherdreamState, x,y);
+	
+	ofPopStyle();
+	ofPopMatrix();
+	
+	
+}
+
+void EtherdreamDAC :: updateEtherdreamState(struct etherdream* d){
+	
+	
+	etherdream_state_as_string(d, &dacstate[0]);
+	etherdreamState = dacstate;
+//	switch(d->state) {
+//		case ST_DISCONNECTED :
+//			etherdreamState = "Disconnected";
+//			break;
+//		case ST_READY :
+//			etherdreamState = "Ready";
+//			break;
+//		case ST_RUNNING :
+//			etherdreamState = "Running";
+//			break;
+//		case ST_BROKEN :
+//			etherdreamState = "Broken";
+//			break;
+//		case ST_SHUTDOWN :
+//			etherdreamState = "Shutdown";
+//			break;
+//			
+//			
+//	}
+
+}
+void EtherdreamDAC :: restart() {
+	doRestart = true;
+}
 
 uint16_t EtherdreamDAC ::  colorsin(float pos) {
     int res = (sin(pos) + 1) * 32768 *0.2;
