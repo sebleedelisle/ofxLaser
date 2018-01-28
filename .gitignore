@@ -1,20 +1,16 @@
-#.gitignore is a file which makes git ignore files which should
-# not go into version control in the first place
-# Questions? See
-# http://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository#Ignoring-Files
-# http://git-scm.com/docs/gitignore
+#########################
+# general patterns
+#########################
 
-###########################
-# ignore generated binaries
-# but not the data folder
-###########################
+docs/html
+docs/tagfile.xml
 
+*/bin/*
+!*/bin/data/
+
+# for bin folder in root
 /bin/*
 !/bin/data/
-
-#########
-# general
-#########
 
 [Bb]uild/
 [Oo]bj/
@@ -22,15 +18,13 @@
 [Dd]ebug*/
 [Rr]elease*/
 *.mode*
-#*.app/
+*.app/
 *.pyc
 .svn/
-*.log
 
-########################
-# IDE files which should
-# be ignored
-########################
+#########################
+# IDE
+#########################
 
 # XCode
 *.pbxuser
@@ -38,9 +32,14 @@
 *.perspectivev3
 *.mode1v3
 *.mode2v3
-# XCode 4
-*.xccheckout
-xcuserdata/
+#XCode 4
+xcuserdata
+*.xcworkspace
+
+# Code::Blocks
+*.depend
+*.layout
+*.cbTemp
 
 # Visual Studio
 *.sdf
@@ -56,9 +55,14 @@ ipch/
 local.properties
 .externalToolBuilders
 
-##################
+# Codelite
+*.session
+*.tags
+*.workspace.*
+
+#########################
 # operating system
-##################
+#########################
 
 # Linux
 *~
@@ -74,11 +78,30 @@ local.properties
 ._*
 
 # Windows
-# Image file caches
+# Windows image file caches
 Thumbs.db
 # Folder config file
 Desktop.ini
 
-# Android
+#Android
 .csettings
-DerivedData
+
+#########################
+# packages
+#########################
+
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
