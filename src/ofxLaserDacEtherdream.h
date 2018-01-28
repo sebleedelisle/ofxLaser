@@ -108,11 +108,11 @@ namespace ofxLaser {
 		inline bool waitForAck(char command);
 		
 		
-		uint16_t bytesToUInt16(Byte* byteaddress);
-		uint32_t bytesToUInt32(Byte* byteaddress);
-		void writeUInt16ToBytes(uint16_t& n, Byte* byteaddress);
-		void writeInt16ToBytes(int16_t& n, Byte* byteaddress);
-		void writeUInt32ToBytes(uint32_t& n, Byte* byteaddress);
+		uint16_t bytesToUInt16(unsigned char* byteaddress);
+		uint32_t bytesToUInt32(unsigned char* byteaddress);
+		void writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress);
+		void writeInt16ToBytes(int16_t& n, unsigned char* byteaddress);
+		void writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress);
 
 		dac_point lastpoint;
 		

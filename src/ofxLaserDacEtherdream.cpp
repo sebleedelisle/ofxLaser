@@ -201,7 +201,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 	bool waiting = true;
 	while(waiting) {
 		yield();
-		usleep(100);
+		sleep(1);
 
 		if(lock()) {
 			if(socket.available())
@@ -218,7 +218,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 		if(!isThreadRunning()) return false;
 		n = socket.receiveBytes(buffer, 22);
 		yield();
-		usleep(10);
+		sleep(1);
 	}
 	// TODO - handle incomplete data
 	
@@ -448,23 +448,23 @@ void DacEtherdream :: sendClear(){
 	socket.sendBytes(&ping, 1);
 }
 
-uint16_t DacEtherdream :: bytesToUInt16(Byte* byteaddress) {
+uint16_t DacEtherdream :: bytesToUInt16(unsigned char* byteaddress) {
 	return (uint16_t)(*(byteaddress+1)<<8)|*byteaddress;
 	
 }
-uint32_t DacEtherdream :: bytesToUInt32(Byte* byteaddress){
+uint32_t DacEtherdream :: bytesToUInt32(unsigned char* byteaddress){
 	return (uint32_t)(*(byteaddress+3)<<24)|(*(byteaddress+2)<<16)|(*(byteaddress+1)<<8)|*byteaddress;
 	
 }
-void DacEtherdream :: writeUInt16ToBytes(uint16_t& n, Byte* byteaddress){
+void DacEtherdream :: writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress){
 	*(byteaddress+1) = n>>8;
 	*byteaddress = n&0xff;
 }
-void DacEtherdream :: writeInt16ToBytes(int16_t& n, Byte* byteaddress){
+void DacEtherdream :: writeInt16ToBytes(int16_t& n, unsigned char* byteaddress){
 	*(byteaddress+1) = n>>8;
 	*byteaddress = n&0xff;
 }
-void DacEtherdream :: writeUInt32ToBytes(uint32_t& n, Byte* byteaddress){
+void DacEtherdream :: writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress){
 	*(byteaddress+3) = (n>>24) & 0xff;
 	*(byteaddress+2) = (n>>16) & 0xff;
 	*(byteaddress+1) = (n>>8) & 0xff;
