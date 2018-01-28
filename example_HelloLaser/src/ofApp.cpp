@@ -10,6 +10,8 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 
     laser.addProjector(dac);
+    // replace this with the IP address of your etherdream (find it with the sitter diagnostic
+    // tool at https://ether-dream.com/downloads.html )
     
     string dacIP = "169.254.99.140";
     dac.setup(dacIP);
