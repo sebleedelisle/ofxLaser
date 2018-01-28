@@ -101,7 +101,7 @@ class Shape {
 		
 	};
 	virtual bool intersectsRect(ofRectangle & rect) {
-		
+		return true; 
 		
 	};
 	

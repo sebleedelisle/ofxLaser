@@ -15,9 +15,9 @@ namespace ofxLaser {
 	public:
 		DacBase() {};
 		
-		virtual bool sendFrame(const vector<Point>& points){};
-        virtual bool sendPoints(const vector<Point>& points){};
-		virtual bool setPointsPerSecond(uint32_t pps){};
+		virtual bool sendFrame(const vector<Point>& points) { return true; };
+		virtual bool sendPoints(const vector<Point>& points) { return true; };
+		virtual bool setPointsPerSecond(uint32_t pps) { return true; };
 
 	};
 

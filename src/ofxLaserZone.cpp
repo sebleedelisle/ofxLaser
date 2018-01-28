@@ -284,8 +284,10 @@ bool Zone :: mouseReleased(ofMouseEventArgs &e){
 
 bool Zone ::  load() {
 	
+	// TODO : a bit hacky - should probably store params as an object property
 	ofParameterGroup params;
-	ofParameter<ofPoint> points[handles.size()];
+	vector<ofParameter<ofPoint>> points;
+	points.resize(handles.size());
 	for(unsigned int i = 0; i<handles.size(); i++) {
 		params.add(points[i].set("point_"+ofToString(i),ofPoint()));
 		
@@ -312,8 +314,11 @@ bool Zone ::  load() {
 }
 
 bool Zone :: save() {
+	
 	ofParameterGroup params;
-	ofParameter<ofPoint> points[handles.size()];
+	vector<ofParameter<ofPoint>> points;
+	points.resize(handles.size());
+
 	for(unsigned int i = 0; i<handles.size(); i++) {
 		params.add(points[i].set("point_"+ofToString(i),handles[i]));
 		

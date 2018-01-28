@@ -179,8 +179,12 @@ void DacEtherdream :: threadedFunction(){
 bool DacEtherdream::setPointsPerSecond(uint32_t newpps){
 	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
 	newPPS = newpps;
-	if(!beginSent) pps = newPPS; // pps rate will get sent with begin anyway
-	
+	if (!beginSent) {
+		pps = newPPS; // pps rate will get sent with begin anyway
+		return true;
+	} else {
+		return false; 
+	}
 }
 
 

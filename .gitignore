@@ -111,3 +111,10 @@ Desktop.ini
 *.log
 *.sql
 *.sqlite
+*.sln
+*.db
+*.vcxproj
+*.opendb
+*.filters
+*.user
+*.rc
