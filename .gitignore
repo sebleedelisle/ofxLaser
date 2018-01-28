@@ -38,7 +38,8 @@ xcuserdata
 *.xcodeproj
 openFrameworks-Info.plist
 Makefile
-Project.xconfig
+Project.xcconfig
+config.make
 
 
 # Code::Blocks
