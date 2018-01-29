@@ -86,7 +86,11 @@ namespace ofxLaser {
         
 		void saveSettings();
 		
-		Zone& getZone(int zonenum) { return *zones[zonenum-1]; }
+		Zone& getZone(int zonenum) {
+            // TODO bounds check? 
+            return *zones[zonenum-1];
+            
+        }
 		
 		int width, height;
 		ofxPanel gui;
