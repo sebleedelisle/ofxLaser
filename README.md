@@ -11,7 +11,7 @@ Features
 ----------
 * Can draw any vector shape to the laser with a simple function calls
 * Shapes are sorted to find the optimal path for the laser
-* works with multiple lasers (limited only by CPU and network speed)
+* Can control multiple lasers (limited only by CPU and network speed)
 * Many calibration options for blanking - colour change offset, pre/post blanks, pre/post on points
 * Specify laser speed and acceleration for each shape using "render profiles" 
 * Output warping to compensate for perspective distortion
