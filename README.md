@@ -1,7 +1,7 @@
 ofxLaser
 =========
 
-An openFrameworks addon for rendering shapes with standard iLDA laser projectors. Currently works with the Etherdream laser controller, but more DACs to be added in the future.
+An openFrameworks addon for controlling one or more iLDA laser projectors, it's particularly good at rendering graphics. It currently works with the Etherdream controller, but more DACs to be added in the future.
 
 Safety Notice
 =============
