@@ -37,7 +37,7 @@ Manager :: Manager() {
 	currentProjector = -1;
     guiIsVisible = true;
 	
-    ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
+    ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize, OF_EVENT_ORDER_BEFORE_APP);
 	
 	
 }

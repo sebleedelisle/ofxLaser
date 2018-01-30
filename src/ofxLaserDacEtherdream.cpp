@@ -205,16 +205,19 @@ inline bool DacEtherdream::waitForAck(char command) {
 	bool waiting = true;
 	while(waiting) {
 		
-		//usleep(100);
-
+		
 		if(lock()) {
-			if(socket.available())
+            if(socket.available()){
 				waiting = false;
+            }
 			unlock();
 		}
 		if(!isThreadRunning()) return false;
-        yield();
-        //sleep(1);
+        
+        if(waiting) {
+            yield();
+            sleep(1);
+        }
 	}
 	
 	
@@ -222,8 +225,10 @@ inline bool DacEtherdream::waitForAck(char command) {
 	while (n==0) {
 		if(!isThreadRunning()) return false;
 		n = socket.receiveBytes(buffer, 22);
-		yield();
-		//usleep(10);
+        if(n==0) {
+            yield();
+		    sleep(1);
+        }
 	}
 	// TODO - handle incomplete data
 	
