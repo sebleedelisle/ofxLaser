@@ -218,7 +218,7 @@ inline bool DacEtherdream::waitForAck(char command) {
         
         if(waiting) {
             yield();
-            //sleep(1);
+            sleep(1);
         }
 	}
 	
