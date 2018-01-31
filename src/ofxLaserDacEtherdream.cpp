@@ -32,6 +32,7 @@ void DacEtherdream :: setup(string ip) {
 		prepareSent = false;
 		beginSent = false;
 		startThread();
+		getPocoThread().setPriority(Poco::Thread::PRIO_HIGHEST);
 	}
 }
 
@@ -212,11 +213,12 @@ inline bool DacEtherdream::waitForAck(char command) {
             }
 			unlock();
 		}
+
 		if(!isThreadRunning()) return false;
         
         if(waiting) {
             yield();
-            sleep(1);
+            //sleep(1);
         }
 	}
 	
@@ -325,6 +327,9 @@ inline bool DacEtherdream::waitForAck(char command) {
 		if(numPointsToSend<0) numPointsToSend = 0;
 		
 		if(command =='q') ofLog(OF_LOG_NOTICE,data);
+	}
+	else {
+		ofLog(OF_LOG_NOTICE, "data received from Etherdream not 22 bytes :" + ofToString(n));
 	}
 	return true;
 	
