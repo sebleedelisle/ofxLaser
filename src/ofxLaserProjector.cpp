@@ -404,32 +404,30 @@ void Projector :: initListeners() {
 
 bool Projector :: mousePressed(ofMouseEventArgs &e){
     
-    ofPoint mousePoint = e;
-    
-    for(int i = 0; i<zoneWarps.size(); i++) {
-        QuadWarp& warp = *zoneWarps[i];
-        warp.selected = false;
-       
-    }
-    int hitIndex = -1;
-    
-    for(int i = 0; i<zoneWarps.size(); i++) {
-        QuadWarp& warp = *zoneWarps[i];
-        if(warp.isVisible() && warp.hitTest(mousePoint)){
-            warp.selected = true;
-            hitIndex = i;
-			return true;
-        }
-    }
-    
-//    if(hitIndex==-1) {
-//        e.
+//    ofPoint mousePoint = e;
+//
+//    for(int i = 0; i<zoneWarps.size(); i++) {
+//        QuadWarp& warp = *zoneWarps[i];
+//        warp.selected = false;
 //
 //    }
+//    int hitIndex = -1;
+//
+//    for(int i = 0; i<zoneWarps.size(); i++) {
+//        QuadWarp& warp = *zoneWarps[i];
+//        if(warp.isVisible() && warp.hitTest(mousePoint)){
+//            warp.selected = true;
+//            hitIndex = i;
+//            return true;
+//        }
+//    }
+    
 	return false;
 }
 
 void Projector::update(bool updateZones) {
+	
+	// updateZones will be true if any of the zones source points have changed.
 	
 	// todo should prob do this on a param changed message...
 	float x = round(((ofPoint)outputOffset).x*10)/10.0f;
@@ -458,6 +456,8 @@ void Projector::update(bool updateZones) {
     
 	laserPoints.clear();
 	previewPathMesh.clear();
+	
+	// if any of the source rectangles have changed then update all the warps
 	if(updateZones) {
 		for(int i = 0; i<zoneWarps.size(); i++) {
 			QuadWarp& warp = *zoneWarps[i];
@@ -555,7 +555,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
 
                         
 
-void Projector::send() {
+void Projector::send(ofPixels* pixels) {
 
 	vector<SegmentPoints> allzonesegmentpoints;
 	vector<SegmentPoints*> sortedsegmentpoints;
@@ -665,6 +665,17 @@ void Projector::send() {
 		for(int j = 0; j<zonesegmentpoints.size(); j++) {
 			SegmentPoints& segmentpoints = zonesegmentpoints[j];
 			for(int k= 0; k<segmentpoints.size(); k++) {
+
+                // Possibly a good time to check against the mask image?
+                if(pixels!=NULL) {
+                    Point& p = segmentpoints[k];
+                    ofFloatColor c = pixels->getColor(p.x, p.y);
+                    float brightness = c.getBrightness();
+                    p.r*=brightness;
+                    p.g*=brightness;
+                    p.b*=brightness; 
+                }
+                
 				segmentpoints[k] = warp.getWarpedPoint(segmentpoints[k]);
 			}
 		}

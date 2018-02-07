@@ -8,10 +8,7 @@
 
 #include "ofxLaserManager.h"
 
-
-
 using namespace ofxLaser;
-
 
 Manager * Manager :: laserManager = NULL;
 
@@ -49,12 +46,12 @@ Manager :: ~Manager() {
 void Manager :: setup(int w, int h){
 	width = w;
 	height = h;
+    laserMask.init(w,h);
 }
 
 
 void Manager::addProjector(DacBase& dac) {
-	
-	
+
 	// create and add new projector object
 	
 	Projector* projector = new Projector("Projector"+ofToString(projectors.size()+1), dac);
@@ -193,22 +190,23 @@ void Manager::drawCircle(const ofPoint & centre, const float& radius, const ofCo
 
 void Manager:: update(){
 	
-	// previously :
-	// updated minpoints dependent on point speed
-	// checked whether homography needed updating and updated where necessary
-	// cleared all the points
-	// cleared the preview mesh
-
+    if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!
 	for(int i = 0; i<shapes.size(); i++) {
 		delete shapes[i];
 	}
 	shapes.clear();
+    
+    // updates all the zones. If zone->update returns true, then
+    // it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(int i = 0; i<zones.size(); i++) {
 		zones[i]->visible= (currentProjector==-1);
-		updateZoneRects = updateZoneRects | zones[i]->update();
+		updateZoneRects = updateZoneRects | zones[i]->update(); // is this dangerous? Optimisation may stop the function being called. 
 	}
+    
+    // update all the projectors which clears the points,
+    // and updates all the zone settings
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->update(updateZoneRects); // clears the points
 	}
@@ -238,6 +236,7 @@ void Manager:: drawUI(bool fullscreen){
         }
         
     }
+    laserMask.draw(showBitmapMask);
     
     ofPopMatrix();
     ofPopStyle();
@@ -261,6 +260,7 @@ void Manager:: drawUI(bool fullscreen){
             projectors[i]->drawUI();
             ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD) ;
             ofPopMatrix();
+            projectors[i]->hideGui();
         }
     }
  
@@ -292,6 +292,23 @@ void Manager :: renderPreview() {
     // Draw the preview laser graphics, with zones overlaid
     for(int i = 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
+    }
+    
+    if(useBitmapMask) {
+        vector<ofVec3f>& points = mesh.getVertices();
+        vector<ofFloatColor>& colours = mesh.getColors();
+        
+        for(int i = 0;i<points.size(); i++ ){
+ 
+            ofFloatColor& c = colours.at(i);
+            ofVec3f& p = points.at(i);
+            float brightness = laserMask.getBrightness(p.x, p.y);
+            
+            c.r*=brightness;
+            c.g*=brightness;
+            c.b*=brightness;
+
+        }
     }
     
     ofSetLineWidth(1.5);
@@ -361,12 +378,9 @@ void Manager::send(){
         
         Projector& p = *projectors[i];
         
-        p.send();
+        p.send(useBitmapMask?laserMask.getPixels():NULL);
         
     }
-    
-    
-    
 }
 
 int Manager :: getProjectorPointRate(int projectornum ){
@@ -399,18 +413,16 @@ void Manager::initGui() {
 	ofxGuiSetDefaultWidth(220);
 	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
 	gui.setup("Laser", "laserSettings.xml");
-	gui.add(showZones.set("Show Zones", false));
-	gui.add(showPreview.set("Show Preview", true));
-	
-//	
-//	gui.add(laser.redParams);
-//	gui.add(laser.greenParams);
-//	gui.add(laser.blueParams);
-//	
+	gui.add(showZones.set("Show zones", false));
+	gui.add(showPreview.set("Show preview", true));
+    gui.add(useBitmapMask.set("Use bitmap mask", false));
+    gui.add(showBitmapMask.set("Show bitmap mask", false));
+    
 	gui.loadFromFile("laserSettings.xml");
     showPreview = true;
 	gui.setPosition(width+10, 10);
 	
+    
 	// TODO - check font exists?
 	//gui.loadFont("fonts/Verdana.ttf", 8, false);
 	
@@ -430,7 +442,7 @@ void Manager::saveSettings() {
 		
 
 	}
-	
+    laserMask.saveSettings();
 	
 }
 

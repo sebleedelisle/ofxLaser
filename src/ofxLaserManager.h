@@ -16,6 +16,7 @@
 #include "ofxLaserProjector.h"
 #include "ofxLaserDacBase.h"
 #include "ofxGui.h"
+#include "ofxLaserMaskManager.h"
 
 #define OFXLASER_PROFILE_FAST "FAST"
 #define OFXLASER_PROFILE_DEFAULT "DEFAULT"
@@ -105,6 +106,10 @@ namespace ofxLaser {
 		
         ofParameter<bool> showZones;
         ofParameter<bool> showPreview;
+        ofParameter<bool> useBitmapMask;
+        ofParameter<bool> showBitmapMask; 
+        
+        MaskManager laserMask;
         
 		private:
 		int createDefaultZone();

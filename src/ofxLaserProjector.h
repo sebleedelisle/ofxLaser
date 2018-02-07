@@ -42,7 +42,7 @@ namespace ofxLaser {
         bool mousePressed(ofMouseEventArgs &e);
 		
 		void update(bool updateZones);
-		void send();
+		void send(ofPixels* pixels = NULL);
         void sendRawPoints(const vector<Point>& points, int zonenum = 0);
         int getPointRate() {
             return pps; 

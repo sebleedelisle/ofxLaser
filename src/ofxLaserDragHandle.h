@@ -18,7 +18,7 @@ class DragHandle : public ofPoint{
 	};
 	
 
-	void set(float xpos, float ypos, float r = 8) {
+	void set(float xpos, float ypos, float r = 5) {
 		
 		x = xpos;
 		y = ypos;
@@ -40,9 +40,10 @@ class DragHandle : public ofPoint{
 			ofDrawCircle(*this,radius);
 		} else {
 			
-			ofFill();
+			if(isFilled) ofFill();
+            else ofNoFill();
 			ofSetColor(isOver?overCol:col);
-			//ofSetLineWidth(1);
+			ofSetLineWidth(1);
 			ofSetRectMode(OF_RECTMODE_CENTER);
 			ofDrawRectangle(*this,radius, radius);
 		}
@@ -104,6 +105,7 @@ class DragHandle : public ofPoint{
 	bool yAxis;
 	bool altKeyDisable;
 	bool isCircular = false;
+    bool isFilled = false;
 	
 	ofColor col = ofColor(60);
 	ofColor overCol = ofColor(255);
