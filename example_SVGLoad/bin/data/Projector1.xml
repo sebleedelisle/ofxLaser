@@ -4,7 +4,6 @@
 	<Test_Pattern>0</Test_Pattern>
 	<Projector_settings>
 		<Points_per_second>30000</Points_per_second>
-		<Speed_Multiplier>1</Speed_Multiplier>
 		<Colour_change_offset>0</Colour_change_offset>
 		<Laser_on_while_moving>0</Laser_on_while_moving>
 		<Move_Speed>5</Move_Speed>

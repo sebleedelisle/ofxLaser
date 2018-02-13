@@ -37,7 +37,7 @@ namespace ofxLaser {
 		Projector(string projectorlabel, DacBase& dac);
 		~Projector();
 		
-		void initGui();
+        void initGui(bool showAdvanced = false);
         void initListeners();
         bool mousePressed(ofMouseEventArgs &e);
 		

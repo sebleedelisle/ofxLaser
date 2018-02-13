@@ -27,7 +27,7 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) : dac(laserdac){
 	
 };
 
-void Projector :: initGui() {
+void Projector :: initGui(bool showAdvanced) {
 	
 	gui = new ofxPanel();
 	
@@ -43,7 +43,10 @@ void Projector :: initGui() {
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
     
-    projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0,2));
+    if(showAdvanced) {
+        projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0,2));
+    }
+    else speedMultiplier = 1;
     
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-3,3));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));

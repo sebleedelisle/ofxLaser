@@ -79,7 +79,7 @@ namespace ofxLaser {
             return *projectors.at(index);
         };
         
-		void initGui();
+		void initGui(bool showAdvanced = false);
         bool togglePreview(){
             showPreview = !showPreview;
             return showPreview;

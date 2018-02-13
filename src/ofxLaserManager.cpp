@@ -408,7 +408,7 @@ void Manager::nextProjector() {
 	
 }
 
-void Manager::initGui() {
+void Manager::initGui(bool showAdvanced) {
 	
 	ofxGuiSetDefaultWidth(220);
 	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
@@ -428,7 +428,7 @@ void Manager::initGui() {
 	
 	
 	for(int i = 0; i<projectors.size(); i++) {
-		projectors[i]->initGui();
+		projectors[i]->initGui(showAdvanced);
 	}
 	
 	updateScreenSize();
