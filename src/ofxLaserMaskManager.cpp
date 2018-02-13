@@ -31,18 +31,21 @@ bool MaskManager::update() {
         dirty = quads[i]->checkDirty() | dirty;
         if(firstUpdate) {
             quads[i]->draw();
-            firstUpdate = false;
+			
         }
     }
-    
+    firstUpdate = false;
     if(dirty) {
         fbo.begin();
         ofBackground(255);
-        ofSetColor(0);
+       
         ofFill();
         
         for(int i = 0; i<quads.size(); i++) {
             QuadMask& quad = *quads[i];
+            
+            ofSetColor(255*(1.0f-quad.maskLevel));
+            
             ofBeginShape();
             
             ofVertex(quad.handles[0]);
@@ -82,9 +85,10 @@ bool MaskManager::draw(bool showBitmap) {
 //    }
 }
 
-QuadMask& MaskManager::addQuadMask() {
+QuadMask& MaskManager::addQuadMask(float level) {
     QuadMask* quad = new QuadMask();
     quads.push_back(quad);
+    quad->maskLevel= level;
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
     quad->setName("maskquad"+ofToString(quads.size()),ofToString(quads.size()));
     quad->loadSettings();

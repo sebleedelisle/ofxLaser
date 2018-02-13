@@ -42,7 +42,9 @@ void Projector :: initGui() {
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
-	
+    
+    projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0,2));
+    
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-3,3));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
 	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,15));
@@ -345,14 +347,16 @@ void Projector::drawUI(bool fullscreen) {
 	
 	
 	ofNoFill();
-	
+    ofEnableBlendMode(OF_BLENDMODE_ADD);
     ofPushMatrix();
     ofScale(warpscale, warpscale);
-	ofSetColor(255);
+	ofSetColor(100);
+    ofSetLineWidth(0.5);
+    
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
 	
-	ofSetLineWidth(1);
+
 
 	
 	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
@@ -590,7 +594,7 @@ void Projector::send(ofPixels* pixels) {
 			RenderProfile& renderProfile = getRenderProfile(shape.profileLabel);
 			
 			shapepoints.clear();
-			shape.appendPointsToVector(shapepoints, renderProfile);
+			shape.appendPointsToVector(shapepoints, renderProfile, speedMultiplier);
 			
 			bool offScreen = true;
 			
@@ -1000,7 +1004,7 @@ void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPo
 	
 	ofPoint v = target-start;
 	
-	float blanknum = v.length()/moveSpeed;// + movePointsPadding;
+	float blanknum = (v.length()/moveSpeed)/speedMultiplier;// + movePointsPadding;
 	
 	for(int j = 0; j<blanknum; j++) {
 		

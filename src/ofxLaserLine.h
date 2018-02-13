@@ -29,7 +29,7 @@ class Line : public Shape{
 	}
 	
 	
-	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		
 	
 		ofPoint& start = getStartPos();
@@ -37,7 +37,7 @@ class Line : public Shape{
 		ofVec2f v = end-start;
 
 		float distanceTravelled = ofDist(start.x, start.y, end.x, end.y);
-		vector<float> unitDistances = getPointsAlongDistance(distanceTravelled, profile.acceleration, profile.speed);
+		vector<float> unitDistances = getPointsAlongDistance(distanceTravelled, profile.acceleration, profile.speed, speedMultiplier);
 		
 		ofPoint p;
 		

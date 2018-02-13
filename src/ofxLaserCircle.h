@@ -17,7 +17,7 @@ namespace ofxLaser {
 		public:
 		
 		Circle(const ofPoint& center, const float radius, const ofColor& col, string profilelabel);
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile);
+		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
 		
 		virtual bool intersectsRect(ofRectangle & rect);
 		

@@ -72,7 +72,7 @@ Polyline:: ~Polyline() {
 	polyline.clear();
 }
 
-void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 	
 	if(&profile == cachedProfile) {
 		
@@ -107,7 +107,7 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 		
 		if(length>0) {
 			
-			vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed);
+			vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
 			
 			
 			for(int i = 0; i<unitDistances.size(); i++) {

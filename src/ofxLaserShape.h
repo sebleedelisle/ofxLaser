@@ -21,8 +21,10 @@ class Shape {
 	};
 	virtual void addPreviewToMesh(ofMesh& mesh){};
 	
-	vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed){
+	vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed, float speedMultiplier){
 		
+        speed*=speedMultiplier;
+        acceleration*=speedMultiplier;
 		unitDistances.clear();
 		
 		float acceleratedistance = (speed*speed) / (2*acceleration);
@@ -97,7 +99,7 @@ class Shape {
 	virtual ofFloatColor& getColour() {
 		return colour;
 	}
-	virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+	virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		
 	};
 	virtual bool intersectsRect(ofRectangle & rect) {

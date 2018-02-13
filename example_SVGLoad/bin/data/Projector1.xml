@@ -1,10 +1,11 @@
 <Projector1>
-	<ARMED>0</ARMED>
-	<Intensity>0.454545</Intensity>
-	<Test_Pattern>2</Test_Pattern>
+	<ARMED>1</ARMED>
+	<Intensity>0.1</Intensity>
+	<Test_Pattern>0</Test_Pattern>
 	<Projector_settings>
 		<Points_per_second>30000</Points_per_second>
-		<Colour_change_offset>-0.812616</Colour_change_offset>
+		<Speed_Multiplier>1</Speed_Multiplier>
+		<Colour_change_offset>0</Colour_change_offset>
 		<Laser_on_while_moving>0</Laser_on_while_moving>
 		<Move_Speed>5</Move_Speed>
 		<Blank_points_before>1</Blank_points_before>

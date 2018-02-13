@@ -24,7 +24,7 @@ class Dot : public Shape{
 		profileLabel = profilelabel;
 		
 	}
-	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile) {
+	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		int maxPoints = profile.dotMaxPoints; 
 		int pointcount = ceil(maxPoints * intensity);// ceil(dotMaxPoints* dot->intensity);
 		

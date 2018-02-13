@@ -20,7 +20,7 @@ namespace ofxLaser {
 		
 		~Polyline();
 		
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile);
+		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
 		
 		void addPreviewToMesh(ofMesh& mesh);
 		virtual bool intersectsRect(ofRectangle & rect);

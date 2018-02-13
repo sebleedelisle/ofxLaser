@@ -348,6 +348,7 @@ void QuadGui::saveSettings() {
 	xml.addValue("y", handles[3].y);
 	xml.popTag();
 
+    
 	xml.saveFile(filename);
 	
 	

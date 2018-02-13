@@ -40,13 +40,13 @@ Circle::Circle(const ofPoint& center, const float radius, const ofColor& col, st
 	
 }
 
-void Circle::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile){
+void Circle::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier){
 	
 	float acceleration = profile.acceleration;
 	float speed = profile.speed;
 	float length = polyline.getPerimeter();
 	
-	vector<float> unitDistances = getPointsAlongDistance(length, acceleration, speed);
+	vector<float> unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
 	
 	
 	for(int i = 0; i<unitDistances.size(); i++) {

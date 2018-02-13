@@ -27,7 +27,7 @@ public:
     bool loadSettings();
     bool saveSettings();
     
-    QuadMask& addQuadMask();
+    QuadMask& addQuadMask(float level=1);
     
     vector<QuadMask*> quads;
     
