@@ -293,7 +293,8 @@ void Manager :: renderPreview() {
     for(int i = 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
     }
-    
+	
+	ofRectangle laserRect(0,0,width, height);
     if(useBitmapMask) {
         vector<ofVec3f>& points = mesh.getVertices();
         vector<ofFloatColor>& colours = mesh.getColors();
@@ -302,8 +303,16 @@ void Manager :: renderPreview() {
  
             ofFloatColor& c = colours.at(i);
             ofVec3f& p = points.at(i);
-            float brightness = laserMask.getBrightness(p.x, p.y);
-            
+			
+			
+			float brightness;
+			
+			if(laserRect.inside(p)) {
+				brightness = laserMask.getBrightness(p.x, p.y);
+			} else {
+				brightness = 0;
+			}
+		
             c.r*=brightness;
             c.g*=brightness;
             c.b*=brightness;

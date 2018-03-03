@@ -26,11 +26,11 @@ namespace ofxLaser {
             setName(labelname, filename);
             
         }
-	void setSrc(const ofRectangle& rect);
-	void setSrc(float x, float y, float w, float h) ;
-	void setDst(const ofRectangle& rect);
-	void setDst(float x, float y, float w, float h) ;
-	
+		void setSrc(const ofRectangle& rect);
+		void setSrc(float x, float y, float w, float h) ;
+		void setDst(const ofRectangle& rect);
+		void setDst(float x, float y, float w, float h) ;
+		
 	void draw();
 	
 	cv::Mat homography;

@@ -32,7 +32,7 @@ class ManualShape : public Shape{
 		profileLabel = profilelabel;
 		
 	}
-	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile) {
+	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) {
 		
 		for(int i = 0; i<points.size(); i++) {
 			destpoints.push_back(ofxLaser::Point(points[i], colours[i],1, useCalibration));

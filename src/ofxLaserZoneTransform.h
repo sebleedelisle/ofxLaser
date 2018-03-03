@@ -13,6 +13,8 @@
 #include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "ofxGui.h"
+#include "ofxLaserWarper.h"
 
 namespace ofxLaser {
 	
@@ -20,7 +22,7 @@ class ZoneTransform {
 	
 	public :
 	
-	ZoneTransform();
+	ZoneTransform(string labelname, string filename);
 	~ZoneTransform();
 	
 	void initListeners();
@@ -33,6 +35,13 @@ class ZoneTransform {
 	//void setName(string labelname, string filename);
 	
 	void setDivisions(int xdivisions, int ydivisions);
+	void updateDivisions();
+	void updateHomography() {
+		updateQuads();
+	}
+	void updateQuads();
+	
+	void divisionsChanged(int& e);
 	
 	void setSrc(const ofRectangle& rect);
 	//void setSrc(float x, float y, float w, float h);
@@ -43,9 +52,15 @@ class ZoneTransform {
 	void update();
 	void draw();
 	
-//	bool loadSettings();
-//	void saveSettings();
-//	
+	bool hitTest(ofPoint mousePoint);
+	
+	void resetFromCorners();
+	vector<ofPoint> getCorners();
+	bool isCorner(int index);
+	
+	bool loadSettings();
+	void saveSettings();
+	
 	void setVisible(bool warpvisible);
 	bool checkDirty();
 
@@ -61,11 +76,17 @@ class ZoneTransform {
 	ofPoint getWarpedPoint(const ofPoint& p);
 	ofPoint getUnWarpedPoint(const ofPoint& p);
 	
+	ofParameterGroup params;
+	
+	ofParameter<bool>simpleMode;
+	ofParameter<int>xDivisionsNew;
+	ofParameter<int>yDivisionsNew;
 
 	
 	ofRectangle srcRect;
 	vector<ofPoint> srcPoints;
 	vector<DragHandle> dstHandles; // all handles for all points
+	vector<Warper> quadWarpers;
 	
 	DragHandle moveHandle;
 	
@@ -81,11 +102,11 @@ class ZoneTransform {
 	
 	bool selected;
 	bool visible;
+	bool isDirty;
 	
 	bool initialised = false;
-	
-	int xDivisions = 1;
-	int yDivisions = 1; 
+	int xDivisions;
+	int yDivisions;
 	
 
 	void drawDashedLine(ofPoint p1, ofPoint p2) {

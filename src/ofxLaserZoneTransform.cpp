@@ -11,25 +11,41 @@
 using namespace ofxLaser;
 
 
-ZoneTransform::ZoneTransform() {
+ZoneTransform::ZoneTransform(string labelname, string filename) {
 
+	saveLabel = filename;
+	displayLabel = labelname;
+
+	scale = 1;
+	offset.set(0,0);
 	initListeners();
 	visible = true;
-	//isDirty = true;
+	isDirty = true;
 	selected = true;
 	initialised = true;
 	
-	xDivisions = 1;
-	yDivisions = 1;
 	dstHandles.resize(4);
 	srcPoints.resize(4);
+	simpleMode = true;
 	
-	setDivisions(2,2);
+	params.setName("ZoneTransform");
+
+	params.add(xDivisionsNew.set("x divisions", 1,1,6));
+	params.add(yDivisionsNew.set("y divisions", 1,1,6));
+	params.add(simpleMode.set("simple mode", true));
+
+	xDivisions = 1;
+	yDivisions = 1;
 	setSrc(ofRectangle(0,0,100,100));
 	setDst(ofRectangle(100,100,200,200));
+    //setDivisions(3,3);
+	
+	loadSettings();
+	
+	xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
+	yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
+	
 
-	
-	
 }
 
 ZoneTransform::~ZoneTransform() {
@@ -38,32 +54,98 @@ ZoneTransform::~ZoneTransform() {
 
 
 void ZoneTransform::update(){
-//	for(int i = 0; i<dstHandles.size(); i++) {
-//		//dstHandles[i].update();
-//		
-//	}
+	if(isDirty) {
+		
+		updateQuads();
+	}
+	isDirty = false;
+
+}
+void ZoneTransform :: setVisible(bool warpvisible){
+	visible = warpvisible;
 }
 
 void ZoneTransform::draw() {
 	
+	ofPushMatrix();
+	ofTranslate(offset);
+	ofScale(scale, scale);
 	
 	for(int i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
 		int y = i/(xDivisions+1);
 		
+		
+		
+		ofColor edge = ofColor(255);
+		ofColor inside  = simpleMode?ofColor(0,0,255) : ofColor(100,100,255);
+		
 		if(x<xDivisions) {
+			if((y>0)&&(y<yDivisions)) {
+				ofSetColor(inside);
+			} else {
+				ofSetColor(edge);
+			}
 			drawDashedLine(dstHandles[i], dstHandles[i+1]);
 		}
-		if(y<xDivisions) {
+		if(y<yDivisions) {
+			if((x>0)&&(x<xDivisions)) {
+				ofSetColor(inside);
+			} else {
+				ofSetColor(edge);
+			}
 			drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1]);
 		}
 	}
 	
-	for(int i = 0; i<dstHandles.size(); i++) {
-		dstHandles[i].draw();
+	if(selected) {
+		for(int i = 0; i<dstHandles.size(); i++) {
+			if((!simpleMode) || (isCorner(i))) dstHandles[i].draw();
+		}
 	}
+	ofPopMatrix();
 }
 
+
+ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
+	ofPoint rp = p - srcRect.getTopLeft();
+	
+	int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
+	int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
+	
+	//ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
+	
+	x = ofClamp(x,0,xDivisions-1);
+	y = ofClamp(y,0,yDivisions-1);
+	
+	int quadnum = x + (y*xDivisions);
+	Warper & quad = quadWarpers[quadnum];
+	return quad.getWarpedPoint(p);
+	
+};
+
+ofxLaser::Point ZoneTransform::getWarpedPoint(const ofxLaser::Point& p){
+	ofxLaser::Point rp = p;
+	rp.x-=srcRect.getTopLeft().x;
+	rp.y-=srcRect.getTopLeft().y;
+	
+	int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
+	int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
+	
+	//ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
+	
+	x = ofClamp(x,0,xDivisions-1);
+	y = ofClamp(y,0,yDivisions-1);
+	
+	int quadnum = x + (y*xDivisions);
+	Warper & quad = quadWarpers[quadnum];
+	return quad.getWarpedPoint(p);
+	
+};
+//
+//Point getUnWarpedPoint(const Point& p){
+//	return p;
+//};
 void ZoneTransform::setSrc(const ofRectangle& rect) {
 	srcRect = rect;
 	// update source points?
@@ -78,7 +160,7 @@ void ZoneTransform::setSrc(const ofRectangle& rect) {
 		float x = ofMap(i%xpoints, 0, xDivisions, rect.getLeft(), rect.getRight());
 		float y = ofMap(i/xpoints, 0, yDivisions, rect.getTop(), rect.getBottom());
 		
-		ofLog(OF_LOG_NOTICE, ofToString(x) + " " +ofToString(y));
+		//ofLog(OF_LOG_NOTICE, ofToString(x) + " " +ofToString(y));
 		
 		srcPoints[i].set(x, y);
 		
@@ -128,18 +210,92 @@ void ZoneTransform :: setDstCorners(ofPoint topleft, ofPoint topright, ofPoint b
 	
 }
 
+void ZoneTransform::resetFromCorners() {
+	vector<ofPoint> corners = getCorners();
+	setDstCorners(corners[0],corners[1],corners[2],corners[3]);
 
-void ZoneTransform :: setDivisions(int xdivisions, int ydivisions) {
-	xDivisions = xdivisions;
-	yDivisions = ydivisions; 
-	// create source points from source rectangle
-	dstHandles.resize((xDivisions+1)*(yDivisions+1));
-	srcPoints.resize((xDivisions+1)*(yDivisions+1));
-	
-	// create dest points from dest quad
+}
+vector<ofPoint> ZoneTransform::getCorners(){
+	vector<ofPoint> corners;
+	corners.push_back(dstHandles[0]);
+	corners.push_back(dstHandles[xDivisions]);
+	corners.push_back(dstHandles[yDivisions*(xDivisions+1)]);
+	corners.push_back(dstHandles[((xDivisions+1)*(yDivisions+1))-1]);
+	return corners;
+}
+
+bool ZoneTransform :: isCorner(int i ) {
+	return (i==0) || (i == xDivisions) || (i == yDivisions*(xDivisions+1)) || (i==((xDivisions+1)*(yDivisions+1))-1);
 	
 }
 
+void ZoneTransform :: setDivisions(int xdivisions, int ydivisions) {
+	xDivisionsNew = xdivisions;
+	yDivisionsNew = ydivisions;
+	
+	
+	updateDivisions();
+	
+}
+
+void ZoneTransform:: divisionsChanged(int& e){
+	updateDivisions();
+}
+
+void ZoneTransform:: updateDivisions(){
+	//ofLog(OF_LOG_NOTICE, "divisionsChanged");
+	
+    vector<ofPoint> corners  = getCorners();
+    
+	xDivisions = xDivisionsNew;
+	yDivisions = yDivisionsNew;
+	dstHandles.resize((xDivisions+1)*(yDivisions+1));
+	srcPoints.resize((xDivisions+1)*(yDivisions+1));
+	
+	setSrc(srcRect);
+	
+	
+	setDstCorners(corners[0], corners[1], corners[2], corners[3]);
+	
+	updateQuads(); 
+	
+}
+
+
+void ZoneTransform::updateQuads() {
+	
+	int quadnum = xDivisions*yDivisions;
+	quadWarpers.resize(quadnum);
+	
+	for(int i = 0; i<quadnum; i++) {
+		
+		int x = i%xDivisions;
+		int y = i/xDivisions;
+		
+		int topleft = x+(y*(xDivisions+1));
+		int topright =x+1+(y*(xDivisions+1));
+		int bottomleft=x+((y+1)*(xDivisions+1));
+		int bottomright=x+1+((y+1)*(xDivisions+1));
+		
+		//cout << i<< " " <<x<< " " << y << " " << topleft<< " " << topright<< " " << bottomleft << " " << bottomright<< endl;
+		
+		Warper & quad = quadWarpers[i];
+		quad.updateHomography(srcPoints[topleft],
+							  srcPoints[topright],
+							  srcPoints[bottomleft],
+							  srcPoints[bottomright],
+							  dstHandles[topleft],
+							  dstHandles[topright],
+							  dstHandles[bottomleft],
+							  dstHandles[bottomright]
+							  );
+		
+	}
+	
+	
+
+	
+}
 
 
 void ZoneTransform::initListeners() {
@@ -163,8 +319,13 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	
 	if(!visible) return false;
+
+	ofPoint mousePoint = e;
+	mousePoint-=offset;
+	mousePoint/=scale;
 	
-	bool hit = false; //hitTest(e);
+	
+	bool hit = hitTest(mousePoint);
 	if((hit) &&(!selected)) {
 		selected = true;
 		return false;
@@ -174,56 +335,100 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	if(!selected) {
 		return false;
 	}
-	ofPoint mousePoint = e;
-	mousePoint-=offset;
-	mousePoint/=scale;
+	
+	
 	
 	
 	
 	bool handleHit = false;
 	
 	// this section of code if we click drag anywhere in the zone
-//	if(centreHandle.hitTest(mousePoint)) {
-//		
-//		centreHandle.startDrag(mousePoint);
-//		handleHit = true;
-//		for(int i = 0; i<numHandles; i++) {
-//			handles[i].startDrag(mousePoint);
-//		}
-//		
-//		
-//	} else {
+
 	
 	for(int i = 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].hitTest(mousePoint)) {
-			//startDragging(i, mousePoint);
+			
+			if(simpleMode && !isCorner(i)) continue;
+			
 			dstHandles[i].startDrag(mousePoint);
 			handleHit = true;
+			
+			if(simpleMode) {
+				
+				DragHandle& currentHandle = dstHandles[i];
+				
+				vector<DragHandle*> corners;
+				DragHandle& topLeft = dstHandles[0];
+				DragHandle& topRight = dstHandles[xDivisions+1-1];
+				DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
+				DragHandle& bottomRight = dstHandles.back();
+				
+				corners.push_back(&topLeft);
+				corners.push_back(&topRight);
+				corners.push_back(&bottomLeft);
+				corners.push_back(&bottomRight);
+			
+				int handleIndex;
+				if(currentHandle == topLeft) handleIndex = 0;
+				if(currentHandle == topRight) handleIndex = 1;
+				if(currentHandle == bottomLeft) handleIndex = 2;
+				if(currentHandle == bottomRight) handleIndex =3;
+				
+				int x = ((handleIndex%2)+1)%2;
+				int y = handleIndex/2;
+				
+				int xhandleindex = x+(y*2);
+				
+				x = handleIndex%2;
+				y = ((handleIndex/2)+1)%2;
+				int yhandleindex = x+(y*2);
+				
+				corners[xhandleindex]->startDrag(mousePoint, false,true, true);
+				corners[yhandleindex]->startDrag(mousePoint, true,false, true);
+				
+//				bottomLeft.startDrag(mousePoint, false,true, true);
+//				topRight.startDrag(mousePoint, true,false, true);
+				
+			}
 		}
 		
 	}
+	
+	// drag all the handles!
+	if(!handleHit && hit) {
 
+		//centreHandle.startDrag(mousePoint);
+		handleHit = true;
+		for(int i = 0; i<dstHandles.size(); i++) {
+			dstHandles[i].startDrag(mousePoint);
+		}
+
+
+	}
 	
 	if(!handleHit && !hit) {
 		selected = false;
 	}
-	return handleHit;
+	return handleHit || hit;
 	
 }
+
+
+
 
 bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
 	if(!visible) return false;
 	if(!selected) return false;
-	
+	e-=offset;
+	e/=scale;
 	ofPoint mousePoint = e;
-	mousePoint-=offset;
-	mousePoint/=scale;
+
 	
 	//ofRectangle bounds(centreHandle, 0, 0);
-	bool dragging = false;
+	int dragCount = 0;
 	for(int i = 0; i<dstHandles.size(); i++) {
-		if(dstHandles[i].updateDrag(mousePoint)) dragging = true;
+		if(dstHandles[i].updateDrag(mousePoint)) dragCount++;
 		//bounds.growToInclude(handles[i]);
 	}
 //	if(!dragging) {
@@ -233,10 +438,10 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 //		
 //	}
 	
-	//isDirty |= dragging;
+	isDirty |= (dragCount>0);
+	if((dragCount>0)&&(simpleMode)) resetFromCorners();
 	
-	
-	return dragging;
+	return dragCount>0;
 	
 	
 }
@@ -254,7 +459,96 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 		if(dstHandles[i].stopDrag()) wasDragging = true;
 	}
 	
-	//saveSettings();
+	saveSettings();
 	return wasDragging;
 	
+}
+
+bool ZoneTransform::hitTest(ofPoint mousePoint) {
+	
+	ofPolyline poly;
+	for(int i = 0; i<=xDivisions; i++) {
+		poly.addVertex(dstHandles[i]);
+		//ofLog(OF_LOG_NOTICE, ofToString(i));
+	}
+	//ofLog(OF_LOG_NOTICE, "---");
+	for(int i = 2; i<=yDivisions; i++) {
+		poly.addVertex(dstHandles[(i*(xDivisions+1))-1]);
+		//ofLog(OF_LOG_NOTICE, ofToString((i*(xDivisions+1))-1));
+	}
+	//ofLog(OF_LOG_NOTICE, "---");
+	for(int i = ((xDivisions+1)*(yDivisions+1))-1; i>=(xDivisions+1)*(yDivisions); i--) {
+		poly.addVertex(dstHandles[i]);
+		//ofLog(OF_LOG_NOTICE, ofToString(i));
+	}
+	//ofLog(OF_LOG_NOTICE, "---");
+	for(int i = yDivisions-1; i>=0; i--) {
+		poly.addVertex(dstHandles[(i*(xDivisions+1))]);
+		//ofLog(OF_LOG_NOTICE, ofToString((i*(xDivisions+1))));
+	}
+
+	return poly.inside(mousePoint);
+	
+}
+
+void ZoneTransform::saveSettings() {
+	ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
+	ofParameterGroup saveParams;
+	
+	saveParams.setName("handles");
+	for(int i = 0; i<dstHandles.size(); i++) {
+		ofParameter<ofPoint> p;
+		p = dstHandles[i];
+		p.setName("dstHandle"+ofToString(i));
+		
+		//ofLog(OF_LOG_NOTICE, "dstHandle"+ofToString(i));
+		saveParams.add(p);
+	}
+	
+	ofxPanel gui;
+	
+	gui.add(params);
+
+	gui.saveToFile(saveLabel+".xml");
+	ofxPanel gui2;
+	gui2.add(saveParams);
+	gui2.saveToFile(saveLabel+"-Points.xml");
+	
+
+}
+
+bool ZoneTransform::loadSettings() {
+	
+	ofParameterGroup loadParams;
+	ofxPanel gui;
+	gui.add(params);
+	
+	gui.loadFromFile(saveLabel+".xml");
+	
+	ofxPanel gui2;
+	
+	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
+	
+	dstHandles.resize(numhandles);
+	
+	for(int i = 0; i<numhandles; i++) {
+		ofParameter<ofPoint> p;
+		p = dstHandles[i];
+		p.setName("dstHandle"+ofToString(i));
+		loadParams.add(p);
+	}
+	loadParams.setName("handles");
+	gui2.add(loadParams);
+	
+	gui2.loadFromFile(saveLabel+"-Points.xml");
+	for(int i = 0; i<numhandles; i++) {
+		dstHandles[i].set(loadParams.getPoint("dstHandle"+ofToString(i)));
+		//ofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getPoint("dstHandle"+ofToString(i))));
+	}
+	
+	// shouldn't update all sections?
+	updateDivisions();
+	
+	//ofLog(OF_LOG_NOTICE, loadParams.toString());
+	return true;
 }

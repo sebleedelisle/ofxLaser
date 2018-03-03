@@ -155,6 +155,11 @@ void Projector :: initGui(bool showAdvanced) {
 		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
 		
 		gui->add(zonemaskgroup);
+		
+		ofParameterGroup zonewarpgroup;
+		zonewarpgroup.setName(zones[i]->label+"warp");
+		zonewarpgroup.add(zoneWarps[i]->params);
+		gui->add(zonewarpgroup);
 	
 	}
 	
@@ -209,14 +214,13 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	
 	zones.push_back(zone);
 	
-	zoneWarps.push_back(new QuadWarp("WarpProjector"+label+"Zone"+ofToString(zones.size()-1), zone->label.substr(4,4)));
-	QuadWarp& warp = *zoneWarps.back();
+	zoneWarps.push_back(new ZoneTransform(zone->label.substr(4,4), "WarpProjector"+label+"Zone"+ofToString(zones.size()-1)));
+	ZoneTransform& warp = *zoneWarps.back();
     
     zonesMuted.resize(zones.size());
     zonesSoloed.resize(zones.size());
     zonesEnabled.resize(zones.size());
 
-	
 	warp.setSrc(zone->rect);
 	ofRectangle destRect = zone->rect;
 	destRect.scale(800/srcwidth, 800/srcheight);
@@ -225,7 +229,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	warp.setDst(destRect);
 	warp.scale = 1;
 	warp.offset.set(0,0);
-	warp.updateHomography(); 
+	//warp.updateHomography();
 	
 	zoneMasks.emplace_back(zone->rect);
 	
@@ -240,6 +244,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 void Projector::zoneMaskChanged(ofAbstractParameter& e) {
 	updateZoneMasks();
 }
+
 void Projector::updateZoneMasks() {
 	
 	for(int i = 0; i<zoneMasks.size(); i++) {
@@ -291,7 +296,7 @@ void Projector::drawUI(bool fullscreen) {
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		
 		
-		QuadWarp& warp = *zoneWarps[i];
+		ZoneTransform& warp = *zoneWarps[i];
 		
 		warp.setVisible(zonesEnabled[i]);
         
@@ -342,7 +347,7 @@ void Projector::drawUI(bool fullscreen) {
 	
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		if(!zonesEnabled[i]) continue;
-		QuadWarp& warp = *zoneWarps[i];
+		ZoneTransform& warp = *zoneWarps[i];
 		//warp.offset = ofPoint(outputOffset)*warpscale;
         warp.scale = warpscale;
 		warp.draw();
@@ -358,9 +363,6 @@ void Projector::drawUI(bool fullscreen) {
     
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
-	
-
-
 	
 	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
 		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 255,0),0,255));
@@ -380,9 +382,8 @@ void Projector::drawUI(bool fullscreen) {
 		Point& lp =laserPoints[pointindex];
 		ofSetColor(lp.getColor()*255);
 		ofDrawCircle(p, 6);
-		
-		
 	}
+	
     ofPopMatrix();
 	ofDisableBlendMode();
 	ofPopStyle();
@@ -396,7 +397,7 @@ void Projector :: hideGui() {
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		
 		
-		QuadWarp& warp = *zoneWarps[i];
+		ZoneTransform& warp = *zoneWarps[i];
 		
 		warp.setVisible(false);
 		
@@ -463,11 +464,14 @@ void Projector::update(bool updateZones) {
     
 	laserPoints.clear();
 	previewPathMesh.clear();
+	for(int i = 0; i<zoneWarps.size(); i++) {
+		zoneWarps[i]->update();
+	}
 	
 	// if any of the source rectangles have changed then update all the warps
 	if(updateZones) {
 		for(int i = 0; i<zoneWarps.size(); i++) {
-			QuadWarp& warp = *zoneWarps[i];
+			ZoneTransform& warp = *zoneWarps[i];
 			warp.setSrc(zones[i]->rect);
 			warp.updateHomography();
 			updateZoneMasks();
@@ -483,7 +487,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     
     Zone& zone = *zones.at(zonenum);
     ofRectangle& maskRectangle = zoneMasks.at(zonenum);
-    QuadWarp& warp = *zoneWarps.at(zonenum);
+    ZoneTransform& warp = *zoneWarps.at(zonenum);
     bool offScreen = true;
     
     vector<Point>segmentpoints;
@@ -575,7 +579,7 @@ void Projector::send(ofPixels* pixels) {
 		
 		if(!zonesEnabled[i]) continue;
 		Zone& zone = *zones[i];
-		QuadWarp& warp = *zoneWarps[i];
+		ZoneTransform& warp = *zoneWarps[i];
 		ofRectangle& maskRectangle = zoneMasks[i];
 		zoneshapes = zone.shapes;
 		

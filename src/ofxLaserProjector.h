@@ -9,7 +9,7 @@
 
 #include "ofxLaserDacBase.h"
 #include "ofxLaserZone.h"
-#include "ofxLaserQuadWarp.h"
+#include "ofxLaserZoneTransform.h"
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 #include "ofxGui.h"
@@ -78,7 +78,7 @@ namespace ofxLaser {
 
 
 		vector<Zone*> zones;
-		vector<QuadWarp*> zoneWarps;
+		vector<ZoneTransform*> zoneWarps;
 		vector<ofRectangle> zoneMasks;
 		
 		vector<ofParameter<float>>leftEdges;
