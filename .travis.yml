@@ -51,7 +51,7 @@ matrix:
   - os: osx
     osx_image: xcode8
     compiler: clang
-    env: TARGET="osx" OF_BRANCH="master"
+    env: TARGET="osx" OF_BRANCH="master" OF_TAG="0.9.8"
 
 # OSX, OF stable:  Not supported yet
 #  - os: osx
@@ -189,6 +189,7 @@ matrix:
 install:
   - cd ~
   - git clone --depth=1 --branch=$OF_BRANCH https://github.com/openframeworks/openFrameworks
+  - git checkout tags/$OF_TAG
   - cd openFrameworks
   - scripts/ci/addons/install.sh
 
