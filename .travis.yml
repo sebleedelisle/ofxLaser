@@ -23,7 +23,7 @@ matrix:
   - os: linux
     dist: trusty
     sudo: required
-    env: TARGET="linux64" OF_BRANCH="master"
+    env: TARGET="linux64" OF_BRANCH="master" OF_TAG="0.9.8"
     addons:
       apt:
         sources:
