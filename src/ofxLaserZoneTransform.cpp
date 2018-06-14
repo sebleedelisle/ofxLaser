@@ -40,12 +40,31 @@ ZoneTransform::ZoneTransform(string labelname, string filename) {
 	setDst(ofRectangle(100,100,200,200));
     //setDivisions(3,3);
 	
-	loadSettings();
 	
+
+}
+
+void ZoneTransform::init(ofRectangle& srcRect) {
+	
+	if(!loadSettings() ) {
+		float srcwidth = srcRect.getWidth();
+		float srcheight = srcRect.getHeight();
+		
+		setSrc(srcRect);
+		ofRectangle destRect = srcRect;
+		destRect.scale(800/srcwidth, 800/srcheight);
+		destRect.x*=800/srcwidth;
+		destRect.y*=800/srcheight;
+		setDst(destRect);
+		
+		updateDivisions();
+		
+	} else {
+		setSrc(srcRect);
+	}
 	xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
 	yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
 	
-
 }
 
 ZoneTransform::~ZoneTransform() {
@@ -124,6 +143,24 @@ ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
 	
 };
 
+ofPoint ZoneTransform::getUnWarpedPoint(const ofPoint& p){
+	ofPoint rp = p - srcRect.getTopLeft();
+	
+	int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
+	int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
+	
+	//ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
+	
+	x = ofClamp(x,0,xDivisions-1);
+	y = ofClamp(y,0,yDivisions-1);
+	
+	int quadnum = x + (y*xDivisions);
+	Warper & quad = quadWarpers[quadnum];
+	return quad.getWarpedPoint(p);
+	
+};
+
+
 ofxLaser::Point ZoneTransform::getWarpedPoint(const ofxLaser::Point& p){
 	ofxLaser::Point rp = p;
 	rp.x-=srcRect.getTopLeft().x;
@@ -152,9 +189,12 @@ void ZoneTransform::setSrc(const ofRectangle& rect) {
 	int xpoints = xDivisions+1;
 	int ypoints = yDivisions+1;
 	
-	// srcPoints should already have enough
-	
 	int numpoints = xpoints*ypoints;
+	
+	// srcPoints should already have enough but let's check
+	if(srcPoints.size()!= numpoints) {
+		srcPoints.resize(numpoints);
+	}
 	
 	for(int i= 0; i<numpoints; i++) {
 		float x = ofMap(i%xpoints, 0, xDivisions, rect.getLeft(), rect.getRight());
@@ -239,7 +279,8 @@ void ZoneTransform :: setDivisions(int xdivisions, int ydivisions) {
 }
 
 void ZoneTransform:: divisionsChanged(int& e){
-	updateDivisions();
+	if((xDivisionsNew!=xDivisions) || (yDivisionsNew!=yDivisions))
+		updateDivisions();
 }
 
 void ZoneTransform:: updateDivisions(){
@@ -519,6 +560,9 @@ void ZoneTransform::saveSettings() {
 
 bool ZoneTransform::loadSettings() {
 	
+	ofFile file(saveLabel+".xml");
+	if(!file.exists()) return false;
+	
 	ofParameterGroup loadParams;
 	ofxPanel gui;
 	gui.add(params);
@@ -526,10 +570,15 @@ bool ZoneTransform::loadSettings() {
 	gui.loadFromFile(saveLabel+".xml");
 	
 	ofxPanel gui2;
-	
+	ofLog(OF_LOG_NOTICE, saveLabel+ " " +ofToString(xDivisionsNew)+ " " +ofToString(yDivisionsNew));
 	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
+	xDivisions = xDivisionsNew;
+	yDivisions = yDivisionsNew;
 	
 	dstHandles.resize(numhandles);
+	//srcPoints.resize(numhandles);
+	//updateDivisions();
+	
 	
 	for(int i = 0; i<numhandles; i++) {
 		ofParameter<ofPoint> p;
@@ -543,11 +592,12 @@ bool ZoneTransform::loadSettings() {
 	gui2.loadFromFile(saveLabel+"-Points.xml");
 	for(int i = 0; i<numhandles; i++) {
 		dstHandles[i].set(loadParams.getPoint("dstHandle"+ofToString(i)));
-		//ofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getPoint("dstHandle"+ofToString(i))));
+		ofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getPoint("dstHandle"+ofToString(i))));
 	}
 	
 	// shouldn't update all sections?
-	updateDivisions();
+	//if(simpleMode)
+	//updateDivisions();
 	
 	//ofLog(OF_LOG_NOTICE, loadParams.toString());
 	return true;

@@ -38,6 +38,9 @@ bool MaskManager::update() {
     if(dirty) {
         fbo.begin();
         ofBackground(255);
+		if(maskBitmap.isAllocated()) {
+			maskBitmap.draw(0,0,width, height);
+		}
        
         ofFill();
         
@@ -95,8 +98,14 @@ QuadMask& MaskManager::addQuadMask(float level) {
     return *quad;
 }
 
-void MaskManager::init(int width, int height){
-    
+void MaskManager::init(int w, int h){
+	width = w;
+	height = h; 
+	maskBitmap.load("LaserMask.png");
+//	if(!maskBitmap.loadImage("img/LaserMask.png")) {
+//		maskBitmap.allocate(width, height, OF_IMAGE_COLOR);
+//	};
+	
     if(fbo.isAllocated()) {
         fbo.clear();
     }
@@ -105,6 +114,9 @@ void MaskManager::init(int width, int height){
     
     fbo.begin();
     ofBackground(255);
+	if(maskBitmap.isAllocated()) {
+		maskBitmap.draw(0,0,w,h);
+	} 
     fbo.end();
     fbo.readToPixels(pixels);
     

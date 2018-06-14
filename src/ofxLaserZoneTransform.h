@@ -25,6 +25,7 @@ class ZoneTransform {
 	ZoneTransform(string labelname, string filename);
 	~ZoneTransform();
 	
+	void init(ofRectangle& srcRect);
 	void initListeners();
 	void removeListeners();
 	

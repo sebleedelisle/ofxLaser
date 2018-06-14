@@ -13,9 +13,6 @@
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketStream.h"
 #include "Poco/Net/StreamSocket.h"
-//#include <unistd.h>
-//#include <stdio.h>
-//#include <stdlib.h>
 
 #define Byte unsigned char
 
@@ -94,7 +91,6 @@ namespace ofxLaser {
 		void close();
 		
 	private:
-		// some of these should probably be private
 		void threadedFunction();
 
 		inline void sendBegin();

@@ -19,8 +19,8 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) : dac(laserdac){
 	//maskRectangle.set(0,0,800,800);
 	
 	renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast"));
-	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT,  ofToString("Default"));
-	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL,  ofToString("High quality"));
+	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT, ofToString("Default"));
+	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High quality"));
 	
 	numTestPatterns = 8;
     guiIsVisible = true; 
@@ -44,7 +44,7 @@ void Projector :: initGui(bool showAdvanced) {
 	pps.addListener(this, &Projector::ppsChanged);
     
     if(showAdvanced) {
-        projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0,2));
+        projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0.01,2));
     }
     else speedMultiplier = 1;
     
@@ -221,14 +221,16 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
     zonesSoloed.resize(zones.size());
     zonesEnabled.resize(zones.size());
 
-	warp.setSrc(zone->rect);
-	ofRectangle destRect = zone->rect;
-	destRect.scale(800/srcwidth, 800/srcheight);
-	destRect.x*=800/srcwidth;
-	destRect.y*=800/srcheight;
-	warp.setDst(destRect);
-	warp.scale = 1;
-	warp.offset.set(0,0);
+	warp.init(zone->rect); 
+//	warp.setSrc(zone->rect);
+//	ofRectangle destRect = zone->rect;
+//	destRect.scale(800/srcwidth, 800/srcheight);
+//	destRect.x*=800/srcwidth;
+//	destRect.y*=800/srcheight;
+//	warp.setDst(destRect);
+//	warp.scale = 1;
+//	warp.offset.set(0,0);
+	
 	//warp.updateHomography();
 	
 	zoneMasks.emplace_back(zone->rect);
@@ -238,7 +240,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	topEdges.push_back(0);
 	bottomEdges.push_back(0);
 	
-	warp.loadSettings();
+	//warp.loadSettings();
 }
 
 void Projector::zoneMaskChanged(ofAbstractParameter& e) {
@@ -411,24 +413,6 @@ void Projector :: initListeners() {
 }
 
 bool Projector :: mousePressed(ofMouseEventArgs &e){
-    
-//    ofPoint mousePoint = e;
-//
-//    for(int i = 0; i<zoneWarps.size(); i++) {
-//        QuadWarp& warp = *zoneWarps[i];
-//        warp.selected = false;
-//
-//    }
-//    int hitIndex = -1;
-//
-//    for(int i = 0; i<zoneWarps.size(); i++) {
-//        QuadWarp& warp = *zoneWarps[i];
-//        if(warp.isVisible() && warp.hitTest(mousePoint)){
-//            warp.selected = true;
-//            hitIndex = i;
-//            return true;
-//        }
-//    }
     
 	return false;
 }

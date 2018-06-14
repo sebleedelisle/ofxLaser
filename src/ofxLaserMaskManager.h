@@ -33,6 +33,8 @@ public:
     
     ofFbo fbo;
     ofPixels pixels;
+	ofImage maskBitmap;
+	int width, height; 
     
     protected :
     bool dirty;

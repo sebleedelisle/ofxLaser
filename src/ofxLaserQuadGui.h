@@ -49,7 +49,6 @@ class QuadGui {
 	
 	bool isVisible() { return visible; };
 	
-
 	string saveLabel;
 	string displayLabel;
 	

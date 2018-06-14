@@ -31,7 +31,7 @@ void DacEtherdream :: setup(string ip) {
 	if(connected) {
 		prepareSent = false;
 		beginSent = false;
-		startThread();
+		startThread(true); // blocking is true
 		getPocoThread().setPriority(Poco::Thread::PRIO_HIGHEST);
 	}
 }
@@ -51,13 +51,16 @@ void DacEtherdream :: close() {
 
 
 bool DacEtherdream:: sendFrame(const vector<Point>& points){
-	
-	
+
 	int maxBufferSize = 1000;
+	
+	// if we already have too many points then it means that
+	// we need to skip this frame
+	
 	if(bufferedPoints.size()<maxBufferSize) {
-		vector<dac_point> sendpoints(points.size());
+		vector<dac_point> pointsToSend(points.size());
 		for(int i = 0; i<points.size(); i++) {
-			dac_point& p1 = sendpoints[i];
+			dac_point& p1 = pointsToSend[i];
 			Point p2 = points[i];
 			p1.x = ofMap(p2.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
 			p1.y = ofMap(p2.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP in ilda specs
@@ -68,7 +71,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 			p1.u1 = 0;
 			p1.u2 = 0;
 		}
-		addPoints(sendpoints);
+		addPoints(pointsToSend);
 		return true;
 	} else {
 		return false;
@@ -102,6 +105,7 @@ bool DacEtherdream:: sendPoints(const vector<Point>& points){
 bool DacEtherdream :: addPoints(const vector<dac_point> &points ){
 	
 	if(response.status.playback_state!=PLAYBACK_IDLE) {
+		// because we are blocking this should wait
 		if(lock()) {
 			for(int i = 0; i<points.size(); i++) {
 				bufferedPoints.push_back(points[i]);
