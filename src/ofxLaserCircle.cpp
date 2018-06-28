@@ -60,7 +60,7 @@ void Circle::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderP
 void Circle::addPreviewToMesh(ofMesh& mesh){
 	
 	
-	vector<ofPoint> & vertices = polyline.getVertices();
+	auto & vertices = polyline.getVertices();
 	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.front());
 	

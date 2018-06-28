@@ -854,11 +854,11 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			
 			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		}
-		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getBottomLeft(),rect.getTopLeft().getInterpolated(rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getBottomLeft(), glm::mix(rect.getTopLeft(), rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getTopRight().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getTopRight().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line( glm::mix(rect.getTopRight(), rect.getBottomRight(), 1.0f/3.0f), mix(rect.getTopRight(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
 		
 	} else if(testPattern==4) {
@@ -872,11 +872,11 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			
 		}
 		
-		shapes.push_back(new Line(rect.getTopLeft(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopLeft(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getTopRight(),rect.getTopLeft().getInterpolated(rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopRight(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
-		shapes.push_back(new Line(rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 1.0f/3.0f),rect.getBottomLeft().getInterpolated(rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 1.0f/3.0f), glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 		
 		
 	} else if((testPattern>=5) && (testPattern<=8)) {

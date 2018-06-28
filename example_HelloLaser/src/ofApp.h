@@ -29,11 +29,11 @@ public:
 	int laserWidth;
 	int laserHeight;
     
-    
-	
-	vector<ofPolyline> polyLines;
+	std::vector<ofPolyline> polyLines;
 		
 	float elapsedTime; 
 
+    ofxPanel cgui;
+    ofParameter<ofColor> color;
 };
 

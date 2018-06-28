@@ -80,6 +80,7 @@ bool MaskManager::draw(bool showBitmap) {
             quads[i]->draw();
         }
     }
+    return true;
 
 //    if(dirty) {
 //        ofSetColor(255,0,0);

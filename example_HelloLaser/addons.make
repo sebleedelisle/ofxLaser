@@ -2,3 +2,4 @@ ofxGui
 ofxLaser
 ofxOpenCv
 ofxXmlSettings
+ofxPoco
