@@ -3,3 +3,4 @@ ofxLaser
 ofxOpenCv
 ofxSvg
 ofxXmlSettings
+ofxPoco

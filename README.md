@@ -44,10 +44,11 @@ Dependencies
 ofxXmlSettings (comes with oF)
 ofxGui (comes with oF)
 ofxOpenCv (comes with oF)
+ofxPoco (comes with oF)
 
 Compatibility
 ------------
-openFrameworks 0098 - currently tested with 0098
+openFrameworks 0.10 - currently tested with 0.10
 
 
 Known issues

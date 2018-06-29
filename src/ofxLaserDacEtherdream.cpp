@@ -10,7 +10,9 @@
 
 using namespace ofxLaser;
 
-
+#ifdef _MSC_VER
+#include <Windows.h>
+#endif
 
 void DacEtherdream :: setup(string ip) {
 	
@@ -34,13 +36,16 @@ void DacEtherdream :: setup(string ip) {
 		startThread(true); // blocking is true
         
         auto & thread = getNativeThread();
-
+        
+#ifndef _MSC_VER        
         // only linux and osx        
         struct sched_param param;
         param.sched_priority = 89;
         pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
-        
-		//ofThread::getPocoThread().setPriority(Poco::Thread::PRIO_HIGHEST);
+#else    
+        // windows implementation
+        SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+#endif
 	}
 }
 

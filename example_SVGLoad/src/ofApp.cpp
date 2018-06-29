@@ -84,11 +84,11 @@ void ofApp::draw() {
     
     ofPushMatrix();
 
-    ofVec2f pos(400,400);
+    ofPoint pos( 400, 400, 0);
     if(svgs.size()>currentSVG) {
         ofxSVG & svg = svgs[currentSVG];
         
-       ofVec3f centrePoint = ofVec3f(svg.getWidth()/2, svg.getHeight()/2);
+       ofPoint centrePoint = ofPoint(svg.getWidth()/2, svg.getHeight()/2);
         
         for(int i=0; i<svg.getNumPath(); i++ ) {
             ofPath& path = svg.getPathAt(i);
@@ -103,9 +103,9 @@ void ofApp::draw() {
             for(int j=0; j<lines.size(); j++) {
                 ofPolyline line = lines[j];
                 
-                vector<ofVec3f>& vertices = line.getVertices();
+                auto & vertices = line.getVertices();
                 for(int i = 0; i<vertices.size(); i++) {
-                    ofVec3f& v = vertices[i];
+                    auto & v = vertices[i];
                     v-=centrePoint;
                     v*=scale;
                     v+=pos;
