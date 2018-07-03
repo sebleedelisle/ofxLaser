@@ -119,3 +119,11 @@ Desktop.ini
 *.user
 *.rc
 /example_SVGLoad/bin/data/svgs/fake_love_heart_original.svg
+/example_SVGLoad/bin/data/laserSettings.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/Projector1.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/laserSettings.xml
+/example_HelloLaser/bin/data/Zone1.xml
+/example_SVGLoad/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/dacIP.txt
