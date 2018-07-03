@@ -130,3 +130,10 @@ Desktop.ini
 /example_HelloLaser/bin/data/Projector1.xml
 /example_SVGLoad/bin/data/LaserMask.png
 /example_SVGLoad/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/Projector1.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0.xml
+/example_IDNTest/bin/data/laserSettings.xml
+/example_HelloLaser/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_HelloLaser/bin/data/Zone1.xml

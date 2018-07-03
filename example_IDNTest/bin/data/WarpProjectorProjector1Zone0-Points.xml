@@ -1,9 +1,0 @@
-<group>
-	<handles>
-		<dstHandle0>-4.92278e-14, -3.93823e-13, 0</dstHandle0>
-		<dstHandle1>800, -3.54102e-13, 0</dstHandle1>
-		<dstHandle2>-7.66741e-14, 800, 0</dstHandle2>
-		<dstHandle3>800, 800, 0</dstHandle3>
-	</handles>
-<group/>
-</group>
