@@ -119,6 +119,7 @@ Desktop.ini
 *.user
 *.rc
 /example_SVGLoad/bin/data/svgs/fake_love_heart_original.svg
+<<<<<<< HEAD
 /example_SVGLoad/bin/data/laserSettings.xml
 /example_SVGLoad/bin/data/WarpProjectorProjector1Zone0.xml
 /example_HelloLaser/bin/data/Projector1.xml
@@ -127,3 +128,23 @@ Desktop.ini
 /example_HelloLaser/bin/data/Zone1.xml
 /example_SVGLoad/bin/data/Projector1.xml
 /example_SVGLoad/bin/data/dacIP.txt
+=======
+/example_SVGLoad/bin/data/dacIP.txt
+/example_SVGLoad/bin/data/Zone1.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_HelloLaser/bin/data/_1
+/example_HelloLaser/bin/data/1
+/example_HelloLaser/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/LaserMask.png
+/example_SVGLoad/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/Projector1.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0.xml
+/example_IDNTest/bin/data/laserSettings.xml
+/example_HelloLaser/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_HelloLaser/bin/data/Zone1.xml
+>>>>>>> e29d3c15d7cde8a71e3e3d860f1cec479481a2aa

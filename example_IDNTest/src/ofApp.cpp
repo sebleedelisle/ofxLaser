@@ -10,10 +10,9 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 
     laser.addProjector(dac);
-    // replace this with the IP address of your etherdream (find it with the sitter diagnostic
-    // tool at https://ether-dream.com/downloads.html )
+    // replace this with the IP address of your IDN dac
     
-    string dacIP = "10.0.1.59";
+    string dacIP = "10.0.1.38";
     dac.setup(dacIP);
 	
     laser.initGui();
@@ -170,7 +169,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 5: {
 			
 			// LASER PARTICLES
-			int numParticles = 20;
+			int numParticles = 10;
 			
 			for(int i = 0; i<numParticles; i++) {
 				

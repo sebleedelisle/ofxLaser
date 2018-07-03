@@ -111,7 +111,7 @@ void ofApp::draw() {
                     v+=pos;
                 }
 
-                laser.drawPoly(line,col);
+                laser.drawPoly(line,col,OFXLASER_PROFILE_DEFAULT);
             }
         }
         
