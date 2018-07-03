@@ -1,6 +1,8 @@
 #include "ofApp.h"
 
-
+// This example is the same as HelloLaser but uses the IDN Dac. IDN is the
+// digital protocol standard from ILDA, currently tested with the Dexlogic
+// StageMate ISP http://www.dexlogic.com/work/4108-isp/StageMate-ISP-en.html
 
 //--------------------------------------------------------------
 void ofApp::setup(){
