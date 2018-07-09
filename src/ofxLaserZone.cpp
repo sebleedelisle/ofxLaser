@@ -295,7 +295,9 @@ bool Zone ::  load() {
 	
 	ofXml settings;
 	if(settings.load(label+".xml")){
-		settings.deserialize(params);
+        
+        ofDeserialize( settings, params );
+
 		for(unsigned int i = 0; i<handles.size(); i++) {
 			handles[i].set(points[i]);
 		}
@@ -325,7 +327,9 @@ bool Zone :: save() {
 	}
 	
 	ofXml settings;
-	settings.serialize(params);
+    
+    ofSerialize( settings, params );
+    
 	return settings.save(label+".xml");
 	
 }

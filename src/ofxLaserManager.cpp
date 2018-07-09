@@ -159,7 +159,7 @@ void Manager::drawPoly(const ofPolyline & poly, const ofColor& col, string profi
 	
 }
 
-void Manager::drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName){
+void Manager::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName){
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -296,13 +296,13 @@ void Manager :: renderPreview() {
 	
 	ofRectangle laserRect(0,0,width, height);
     if(useBitmapMask) {
-        vector<ofVec3f>& points = mesh.getVertices();
-        vector<ofFloatColor>& colours = mesh.getColors();
+        auto & points = mesh.getVertices();
+        std::vector<ofFloatColor>& colours = mesh.getColors();
         
         for(int i = 0;i<points.size(); i++ ){
  
             ofFloatColor& c = colours.at(i);
-            ofVec3f& p = points.at(i);
+            auto& p = points.at(i);
 			
 			
 			float brightness;
@@ -323,7 +323,7 @@ void Manager :: renderPreview() {
     ofSetLineWidth(1.5);
     mesh.draw();
     
-    vector<ofFloatColor>& colours = mesh.getColors();
+    std::vector<ofFloatColor>& colours = mesh.getColors();
     
     for(int i = 0; i<colours.size(); i++) {
         colours[i].r*=0.4;
@@ -403,7 +403,7 @@ float Manager :: getProjectorFrameRate(int projectornum ){
     return projectors.at(projectornum)->getFrameRate();
     
 }
-void Manager::sendRawPoints(const vector<ofxLaser::Point>& points, int projectornum, int zonenum){
+void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum, int zonenum){
    // ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size())); 
     Projector* proj = projectors.at(projectornum);
     proj->sendRawPoints(points, zonenum);

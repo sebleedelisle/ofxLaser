@@ -29,8 +29,8 @@ namespace ofxLaser {
 		void initPoly(const ofPolyline& poly);
 		ofPolyline polyline;
 		const RenderProfile* cachedProfile;
-		vector<ofxLaser::Point> cachedPoints;
-		vector<ofColor> colours;
+		std::vector<ofxLaser::Point> cachedPoints;
+		std::vector<ofColor> colours;
 		bool multicoloured; 
 	};
 }

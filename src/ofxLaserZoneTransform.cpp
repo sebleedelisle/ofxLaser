@@ -461,10 +461,12 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
 	if(!visible) return false;
 	if(!selected) return false;
-	e-=offset;
-	e/=scale;
-	ofPoint mousePoint = e;
 
+	ofPoint mousePoint;
+    mousePoint.x = e.x;
+    mousePoint.y = e.y;
+	mousePoint-=offset;
+	mousePoint/=scale;
 	
 	//ofRectangle bounds(centreHandle, 0, 0);
 	int dragCount = 0;

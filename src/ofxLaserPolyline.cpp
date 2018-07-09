@@ -46,9 +46,9 @@ Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours,
 
 void Polyline::initPoly(const ofPolyline& poly){
     polyline.clear();
-    const vector<ofPoint>& vertices =poly.getVertices();
+    auto & vertices =poly.getVertices();
     ofPoint p;
-    for(int i = 0; i<vertices.size(); i++) {
+    for(size_t i = 0; i<vertices.size(); i++) {
         
         //p = ofxLaser::Manager::instance()->gLProject(vertices[i]);
         p = vertices[i];
@@ -141,11 +141,11 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 void Polyline :: addPreviewToMesh(ofMesh& mesh){
 	
 	
-	vector<ofPoint> & vertices = polyline.getVertices();
+	auto & vertices = polyline.getVertices();
 	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.front());
 	
-	for(int i = 0; i<vertices.size(); i++) {
+	for(size_t i = 0; i<vertices.size(); i++) {
 		
 		if(multicoloured) {
 			int colourindex = ofClamp(i, 0, colours.size()-1);
@@ -165,8 +165,8 @@ void Polyline :: addPreviewToMesh(ofMesh& mesh){
 bool Polyline:: intersectsRect(ofRectangle & rect){
 	
 	if(!rect.intersects(polyline.getBoundingBox())) return false;
-	vector<ofPoint>& vertices = polyline.getVertices();
-	for(int i = 1; i< vertices.size(); i++) {
+	auto & vertices = polyline.getVertices();
+	for(size_t i = 1; i< vertices.size(); i++) {
 		if(rect.intersects(vertices[i-1],vertices[i])) return true;
 	}
 	return false;

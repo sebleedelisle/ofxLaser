@@ -63,7 +63,7 @@ namespace ofxLaser {
         void updateScreenSize(ofResizeEventArgs &e);
 		void updateScreenSize(); 
         void send();
-        void sendRawPoints(const vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
+        void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
         
         int getProjectorPointRate(int projectornum = 0);
         float getProjectorFrameRate(int projectornum); 
@@ -115,10 +115,10 @@ namespace ofxLaser {
 		int createDefaultZone();
 		
 		
-		vector<Zone*> zones;
-		vector<Projector*> projectors;
+		std::vector<Zone*> zones;
+		std::vector<Projector*> projectors;
 		
-		deque <ofxLaser::Shape*> shapes;
+		std::deque <ofxLaser::Shape*> shapes;
 		ofParameter<int> testPattern;
 		
 		 

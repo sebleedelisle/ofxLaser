@@ -4,3 +4,4 @@ ofxNetwork
 ofxOpenCv
 ofxSvg
 ofxXmlSettings
+ofxPoco
