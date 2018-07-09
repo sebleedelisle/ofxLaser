@@ -42,8 +42,8 @@ Installation
 
 First, pick the branch that matches your version of openFrameworks:
 
-* OF [stable](https://github.com/openframeworks/openFrameworks/tree/stable) (0.9.8): use [ofxCv/stable](https://github.com/sebleedelisle/ofxLaser/tree/stable)
-* OF [master](https://github.com/openframeworks/openFrameworks) (0.10.0): use [ofxCv/master](https://github.com/sebleedelisle/ofxLaser/)
+* OF [stable](https://github.com/openframeworks/openFrameworks/tree/stable) (0.9.8): use [ofxLaser/stable](https://github.com/sebleedelisle/ofxLaser/tree/stable)
+* OF [master](https://github.com/openframeworks/openFrameworks) (0.10.0): use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/)
 
 Either clone out the source code using git:
 
