@@ -13,7 +13,7 @@ using namespace ofxLaser;
 
 
 
-void Warper::updateHomography(ofPoint src1, ofPoint src2, ofPoint src3, ofPoint src4, ofPoint dst1, ofPoint dst2, ofPoint dst3, ofPoint dst4) {
+void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, glm::vec3 src4, glm::vec3 dst1, glm::vec3 dst2, glm::vec3 dst3, glm::vec3 dst4) {
 	
 	// the source points are the zone points in screen space
 	// the dest points are points in the projector space
@@ -33,7 +33,7 @@ void Warper::updateHomography(ofPoint src1, ofPoint src2, ofPoint src3, ofPoint 
 }
 
 
-ofPoint Warper::getWarpedPoint(const ofPoint& p){
+glm::vec3 Warper::getWarpedPoint(const glm::vec3& p){
 	
 	if(post.size()<1) pre.resize(1);
 	if(post.size()<1) pre.resize(1);
@@ -54,7 +54,7 @@ ofPoint Warper::getWarpedPoint(const ofPoint& p){
 }
 
 
-ofPoint Warper::getUnWarpedPoint(const ofPoint& p){
+glm::vec3 Warper::getUnWarpedPoint(const glm::vec3& p){
 	if(post.size()<1) pre.resize(1);
 	if(post.size()<1) pre.resize(1);
 	pre[0].x = p.x;
@@ -87,8 +87,6 @@ ofxLaser::Point Warper::getWarpedPoint(const ofxLaser::Point& p){
 	point.y = post[0].y;
 	
 	return point;
-	
-	
 	
 }
 

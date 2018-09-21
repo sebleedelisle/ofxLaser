@@ -38,7 +38,17 @@ void DacIDN :: setup(string ip) {
 	if(connected) {
 		
 		startThread();
-		getPocoThread().setPriority(Poco::Thread::PRIO_HIGHEST);
+        auto & thread = getNativeThread();
+        
+#ifndef _MSC_VER
+        // only linux and osx
+        struct sched_param param;
+        param.sched_priority = 89;
+        pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+#else
+        // windows implementation
+        SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+#endif 
 	}
 }
 

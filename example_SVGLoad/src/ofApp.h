@@ -5,6 +5,7 @@
 #include "ofxLaserDacEtherdream.h"
 #include "ofxGui.h"
 #include "ofxSvg.h"
+#include "ofxLaserGraphic.h"
 
 class ofApp : public ofBaseApp{
 	
@@ -19,7 +20,7 @@ public:
     ofParameter<int> currentSVG;
     ofParameter<float> scale;
     
-    vector<ofxSVG> svgs;
+	vector<ofxLaser::Graphic> laserGraphics;
     vector<string> fileNames; 
 	
 	ofxLaser::Manager laser;

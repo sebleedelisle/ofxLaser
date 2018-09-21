@@ -29,7 +29,9 @@ void DacEtherdream :: setup(string ip) {
 		connected = true;
 	} catch(...) {
 		ofLog(OF_LOG_ERROR, "DacEtherdream setup failed");
-	} 
+	}
+		
+
 	if(connected) {
 		prepareSent = false;
 		beginSent = false;
@@ -162,9 +164,11 @@ void DacEtherdream :: threadedFunction(){
 		// if we're playing and we have a new point rate, send it!
 		if((response.status.playback_state==PLAYBACK_PLAYING) && (newPPS!=pps)) {
 			pps = newPPS;
+			
 			sendPointRate(pps);
 			waitForAck('q');
 			queuedPPSChangeMessages++;
+			
 		}
 		
 		// if state is prepared or playing, and we have points in the buffer, then send the points
@@ -196,11 +200,14 @@ void DacEtherdream :: threadedFunction(){
 
 bool DacEtherdream::setPointsPerSecond(uint32_t newpps){
 	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
+	while(!lock());
 	newPPS = newpps;
 	if (!beginSent) {
 		pps = newPPS; // pps rate will get sent with begin anyway
+		unlock();
 		return true;
 	} else {
+		unlock();
 		return false; 
 	}
 }

@@ -9,7 +9,7 @@
 #include "ofMain.h"
 
 namespace ofxLaser {
-class DragHandle : public ofPoint{
+	class DragHandle : public glm::vec3{
 	
 	
 	public :
@@ -25,11 +25,20 @@ class DragHandle : public ofPoint{
 		radius = r;
 	};
 	
-	void set(ofPoint pos) {
-		ofPoint::set(pos);
-	
+	void set(glm::vec3 pos) {
+		x = pos.x;
+		y = pos.y;
+		z = pos.z;
+		
+		//ofLog(OF_LOG_NOTICE, "DragHandle::set " + ofToString(pos) + " " +ofToString(x) + " " + ofToString(y));
+		
 	};
-	
+	void set(glm::vec2 pos) {
+		x = pos.x;
+		y = pos.y;
+		z = 0; 
+		
+	};
 	void draw(bool isOver = true) {
 		//bool isOver = hitTest(ofPoint(ofGetMouseX(), ofGetMouseY()));
 		ofPushStyle();
@@ -50,7 +59,7 @@ class DragHandle : public ofPoint{
 		ofPopStyle();
 	};
 	
-	void startDrag(ofPoint clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) {
+	void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) {
 		clickOffset = clickPos - *this;
 		isDragging = true;
 		xAxis = dragXAxis;
@@ -61,7 +70,7 @@ class DragHandle : public ofPoint{
 		
 	};
 	
-	bool updateDrag(ofPoint pos) {
+	bool updateDrag(glm::vec3 pos) {
 		
 		
 		if(isDragging) {
@@ -93,8 +102,8 @@ class DragHandle : public ofPoint{
 		}
 	};
 	
-	bool hitTest(ofPoint hitpoint) {
-		return(distance(hitpoint)<radius);
+	bool hitTest(glm::vec3 hitpoint) {
+		return(glm::distance(*this,hitpoint)<radius);
 	}
 	
 	ofPoint clickOffset, startPos;

@@ -49,6 +49,7 @@ void QuadGui::set(float x, float y, float w, float h) {
     
     
 }
+
 void QuadGui :: initListeners() {
     
     ofAddListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
@@ -84,8 +85,8 @@ void QuadGui :: draw() {
 		ofSetColor(ofColor::red);
 	}
     
-    ofPoint p1 = handles[0].getInterpolated(handles[1], 0.1);
-    ofPoint p2 = handles[0].getInterpolated(handles[2], 0.1);
+	glm::vec3 p1 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[1], 0.1);
+	glm::vec3 p2 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[2], 0.1);
     
     if(selected) {
         drawDashedLine(handles[1], handles[3]);
@@ -136,13 +137,12 @@ bool QuadGui::checkDirty() {
 }
 
 
-void QuadGui :: startDragging(int handleIndex, ofPoint clickPos) {
+void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
 	
 	handles[handleIndex].startDrag(clickPos);
     
     int x = ((handleIndex%2)+1)%2;
     int y = handleIndex/2;
-    
     
     int xhandleindex = x+(y*2);
     
@@ -161,8 +161,8 @@ bool QuadGui :: hitTest(ofPoint mousePoint) {
     mousePoint/=scale;
     
     ofPolyline poly;
-   
-    poly.addVertex(handles[0]);
+
+	poly.addVertex(handles[0]);
     poly.addVertex(handles[1]);
     poly.addVertex(handles[3]);
     poly.addVertex(handles[2]);
@@ -276,7 +276,7 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 void QuadGui::updateCentreHandle() {
 	centreHandle.set(0,0);
 	for(int i = 0; i<4; i++) {
-		centreHandle+=handles[i];
+		centreHandle+=(glm::vec3)handles[i];
 	}
 	centreHandle/=4;
 	//	centreHandle.set(bounds.getCenter());

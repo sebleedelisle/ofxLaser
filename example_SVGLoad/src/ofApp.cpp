@@ -15,15 +15,22 @@ void ofApp::setup(){
     
     // and load them all
     const vector<ofFile>& files = dir.getFiles();
-    svgs.resize(files.size());
-    fileNames.resize(files.size());
+    //laserGraphics.resize(files.size());
+    //fileNames.resize(files.size());
     
     for(int i = 0; i<files.size();i++) {
         const ofFile & file = files.at(i);
-        svgs[i].load(file.getAbsolutePath());
-        ofLog(OF_LOG_NOTICE,file.getAbsolutePath());
-        fileNames[i] = file.getFileName();
-        
+		ofxSVG svg;
+        svg.load(file.getAbsolutePath());
+		laserGraphics.push_back(ofxLaser::Graphic());
+		laserGraphics.back().addSvg(svg);
+		laserGraphics.back().connectLineSegments();
+		laserGraphics.back().autoCentre();
+		
+		ofLog(OF_LOG_NOTICE,file.getAbsolutePath());
+		fileNames.push_back(file.getFileName());
+		
+		
     }
     
     // set up the laser manager
@@ -37,6 +44,7 @@ void ofApp::setup(){
     // load the IP address of the Etherdream
     ofBuffer buffer = ofBufferFromFile("dacIP.txt");
     string dacIp = buffer.getText();
+	// if there's no file, then use the default IP address :
     if(dacIp=="") dacIp ="169.254.70.201";
     dac.setup(dacIp);
 	
@@ -46,9 +54,7 @@ void ofApp::setup(){
     params.add(scale.set("SVG scale", 2, 0.1,6));
     laser.gui.add(params);
     currentSVG = 0;
-    
-    
-  
+	
 	 
 }
 
@@ -63,7 +69,7 @@ void ofApp::draw() {
 
 	ofBackground(0);
     
-    ofxSVG& svg = svgs[currentSVG];
+	ofxLaser::Graphic& laserGraphic = laserGraphics[currentSVG];
 	
 	ofNoFill();
 	ofSetLineWidth(1);
@@ -80,47 +86,21 @@ void ofApp::draw() {
     
    
     int laserframerate = laser.getProjectorFrameRate(0); 
-    ofDrawBitmapString("Laser framerate : " + ofToString(laserframerate), 20, 20);
-    
+    ofDrawBitmapString("Laser framerate  : " + ofToString(laserframerate), 20, 20);
+	ofDrawBitmapString("Render framerate : " + ofToString(ofGetFrameRate()), 20, 35);
+	
     ofPushMatrix();
 
-    ofPoint pos( 400, 400, 0);
-    if(svgs.size()>currentSVG) {
-        ofxSVG & svg = svgs[currentSVG];
-        
-       ofPoint centrePoint = ofPoint(svg.getWidth()/2, svg.getHeight()/2);
-        
-        for(int i=0; i<svg.getNumPath(); i++ ) {
-            ofPath& path = svg.getPathAt(i);
-            
-            const vector<ofPolyline>& lines = path.getOutline();
-           
-            ofColor col = path.getStrokeColor();
-            
-            // if there are black lines, change them to white
-            if(col.getBrightness()<30) col = ofColor::white;
-            
-            for(int j=0; j<lines.size(); j++) {
-                ofPolyline line = lines[j];
-                
-                auto & vertices = line.getVertices();
-                for(int i = 0; i<vertices.size(); i++) {
-                    auto & v = vertices[i];
-                    v-=centrePoint;
-                    v*=scale;
-                    v+=pos;
-                }
-
-                laser.drawPoly(line,col,OFXLASER_PROFILE_DEFAULT);
-            }
-        }
-        
-
+    ofTranslate(400, 400);
+	ofScale(scale, scale); 
+    if(laserGraphics.size()>currentSVG) {
+		laserGraphics[currentSVG].renderToLaser(laser, 1, OFXLASER_PROFILE_DEFAULT);
     }
     ofPopMatrix();
     laser.send();
     laser.drawUI();
-    
+	
+	
 
 }
 
@@ -133,10 +113,10 @@ void ofApp::keyPressed(int key){
         ofToggleFullscreen();
     } else if (key == OF_KEY_LEFT) {
 		currentSVG--;
-		if(currentSVG<0) currentSVG = svgs.size()-1;
+		if(currentSVG<0) currentSVG = laserGraphics.size()-1;
 	} else if (key == OF_KEY_RIGHT) {
 		currentSVG++;
-		if(currentSVG>=svgs.size()) currentSVG = 0;
+		if(currentSVG>=laserGraphics.size()) currentSVG = 0;
 	}
     
     if(key==OF_KEY_TAB) laser.nextProjector();

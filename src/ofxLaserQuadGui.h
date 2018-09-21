@@ -37,7 +37,7 @@ class QuadGui {
 	
     bool hitTest(ofPoint mousepoint);
 
-	void startDragging(int handleIndex, ofPoint clickPos);
+	void startDragging(int handleIndex, glm::vec3 clickPos);
 	
 	void updateCentreHandle(); 
 	

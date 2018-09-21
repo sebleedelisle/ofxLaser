@@ -95,7 +95,7 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 		
 		do {
 			endpoint++;
-		} while ((endpoint< (int)polyline.getVertices().size()-1) && abs(polyline.getAngleAtIndex(endpoint)) < cornerThresholdAngle);
+		} while ((endpoint< (int)polyline.getVertices().size()-1) && abs(polyline.getDegreesAtIndex(endpoint)) < cornerThresholdAngle);
 		
 		
 		float startdistance = polyline.getLengthAtIndex(startpoint);

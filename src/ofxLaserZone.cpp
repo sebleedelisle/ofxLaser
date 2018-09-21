@@ -286,7 +286,7 @@ bool Zone ::  load() {
 	
 	// TODO : a bit hacky - should probably store params as an object property
 	ofParameterGroup params;
-	vector<ofParameter<ofPoint>> points;
+	vector<ofParameter<glm::vec3>> points;
 	points.resize(handles.size());
 	for(unsigned int i = 0; i<handles.size(); i++) {
 		params.add(points[i].set("point_"+ofToString(i),ofPoint()));

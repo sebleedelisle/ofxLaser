@@ -28,7 +28,9 @@ enum ofxLaserZoneMode {
 	OFXLASER_ZONE_AUTOMATIC // non-overlapping zones assumed - shapes go in all zones that
 							// contain it
 	//OFXLASER_ZONE_OPTIMISE, // automatically puts it in the best zone
-	//OFXLASER_ZONE_OVERLAY // doubles up multiple lasers for improved brightness
+	
+	//OFXLASER_ZONE_OVERLAY // doubles up multiple lasers for improved brightness - actually not required cos
+							// AUTOMATIC does the same thing
 	
 	
 };
@@ -93,6 +95,20 @@ namespace ofxLaser {
             
         }
 		
+		bool setTargetZone(int zone){  // only for OFX_ZONE_MANUAL
+			if(zone>=zones.size()) return false;
+			else if(zone<0) return false;
+			else {
+				targetZone = zone;
+				return true;
+			}
+		}
+		
+		bool setZoneMode(ofxLaserZoneMode newmode) {
+			zoneMode = newmode;
+		}
+		
+		
 		int width, height;
 		ofxPanel gui;
         bool guiIsVisible;
@@ -114,6 +130,8 @@ namespace ofxLaser {
 		private:
 		int createDefaultZone();
 		
+		ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
+		int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
 		
 		std::vector<Zone*> zones;
 		std::vector<Projector*> projectors;

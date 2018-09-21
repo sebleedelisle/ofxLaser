@@ -107,12 +107,20 @@ class Shape {
 		
 	};
 	
+	void setTargetZone(int zonenumber) {
+		targetZoneNumber = zonenumber;
+	}
+	
+	int getTargetZone() {
+		return targetZoneNumber;
+	}
 	string profileLabel;
 	
 	protected :
 	ofPoint startPos;
 	ofPoint endPos;
 	ofFloatColor colour;
+	int targetZoneNumber = 0;
 	
 
 };

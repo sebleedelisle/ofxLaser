@@ -202,7 +202,7 @@ void ZoneTransform::setSrc(const ofRectangle& rect) {
 		
 		//ofLog(OF_LOG_NOTICE, ofToString(x) + " " +ofToString(y));
 		
-		srcPoints[i].set(x, y);
+		srcPoints[i] = glm::vec3(x, y,0);
 		
 	}
 	
@@ -212,10 +212,10 @@ void ZoneTransform::setDst(const ofRectangle& rect) {
 	
 }
 
-void ZoneTransform :: setDstCorners(ofPoint topleft, ofPoint topright, ofPoint bottomleft, ofPoint bottomright) {
+void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright) {
 	// interpolate dst handle points?
 	
-	
+	// ofLog(OF_LOG_NOTICE, "ZoneTransform::setDstCorners "+displayLabel);
 	vector<cv::Point2f> srcCVPoints, dstCVPoints;
 	srcCVPoints.resize(4);
 	dstCVPoints.resize(4);
@@ -244,6 +244,7 @@ void ZoneTransform :: setDstCorners(ofPoint topleft, ofPoint topright, ofPoint b
 	
 	for(int i = 0; i<dstHandles.size(); i++) {
 		dstHandles[i].set(toOf(dstCVPoints[i]));
+	//	ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
 		
 	}
 	
@@ -540,7 +541,7 @@ void ZoneTransform::saveSettings() {
 	
 	saveParams.setName("handles");
 	for(int i = 0; i<dstHandles.size(); i++) {
-		ofParameter<ofPoint> p;
+		ofParameter<glm::vec3> p;
 		p = dstHandles[i];
 		p.setName("dstHandle"+ofToString(i));
 		
@@ -583,7 +584,7 @@ bool ZoneTransform::loadSettings() {
 	
 	
 	for(int i = 0; i<numhandles; i++) {
-		ofParameter<ofPoint> p;
+		ofParameter<glm::vec2> p;
 		p = dstHandles[i];
 		p.setName("dstHandle"+ofToString(i));
 		loadParams.add(p);
@@ -593,8 +594,8 @@ bool ZoneTransform::loadSettings() {
 	
 	gui2.loadFromFile(saveLabel+"-Points.xml");
 	for(int i = 0; i<numhandles; i++) {
-		dstHandles[i].set(loadParams.getPoint("dstHandle"+ofToString(i)));
-		ofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getPoint("dstHandle"+ofToString(i))));
+		dstHandles[i].set(loadParams.getVec2f("dstHandle"+ofToString(i)));
+		//inteofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getVec2f("dstHandle"+ofToString(i))));
 	}
 	
 	// shouldn't update all sections?

@@ -58,7 +58,7 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
-	projectorparams.add(outputOffset.set("Output position offset", ofVec2f(0,0), ofVec2f(-20,-20),ofVec2f(20,20)));
+	projectorparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	
 	
 	gui->add(projectorparams);

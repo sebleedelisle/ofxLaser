@@ -125,7 +125,7 @@ namespace ofxLaser {
 
 		ofParameter<bool> laserOnWhileMoving = false;
 		
-		ofParameter<ofVec2f> outputOffset;
+		ofParameter<glm::vec2> outputOffset;
 		
 		map<string, RenderProfile> renderProfiles;
 

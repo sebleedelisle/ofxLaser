@@ -114,6 +114,7 @@ void Manager::drawLine(const ofPoint& start, const ofPoint& end, const ofColor& 
 	
 	//Line l = new Line(gLProject(start), gLProject(end), ofFloatColor(col), 1, 1);
 	Line* l = new Line(gLProject(start), gLProject(end), col, profileLabel);
+	l->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(l);
 	
 	
@@ -130,6 +131,7 @@ void Manager::drawDot(const ofPoint& p, const ofColor& col, float intensity, str
 	
 	//Line l = new Line(gLProject(start), gLProject(end), ofFloatColor(col), 1, 1);
 	Dot* d = new Dot(gLProject(p), col, intensity, profileLabel);
+	d->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(d);
 	
 	
@@ -153,9 +155,10 @@ void Manager::drawPoly(const ofPolyline & poly, const ofColor& col, string profi
 	}
     
     polyline.setClosed(poly.isClosed());
-    
-	shapes.push_back(
-					 new ofxLaser::Polyline(polyline, col, profileName) );
+	
+	Polyline* p =new ofxLaser::Polyline(polyline, col, profileName);
+    p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+	shapes.push_back(p);
 	
 }
 
@@ -175,16 +178,18 @@ void Manager::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, s
 		polyline.addVertex(gLProject(poly.getVertices()[i]));
 	}
 	
-	shapes.push_back(
-					 new ofxLaser::Polyline(polyline, colours, profileName) );
+	ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
+	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+	shapes.push_back(p);
+	
+
 	
 }
 
 void Manager::drawCircle(const ofPoint & centre, const float& radius, const ofColor& col,string profileName){
-	
-	
-	shapes.push_back(
-					 new ofxLaser::Circle(centre,radius, col, profileName) );
+	ofxLaser::Circle* c = new ofxLaser::Circle(centre,radius, col, profileName);
+	c->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+	shapes.push_back(c);
 	
 }
 
@@ -212,16 +217,58 @@ void Manager:: update(){
 	}
 	
 }
+
+
+void Manager::send(){
+	
+	// here's where the magic happens.
+	// 1 :
+	// figure out which zones to send the shapes to
+	// and send them. When the zones get the shape, they transform them
+	// into local zone space.
+	for(int j = 0; j<zones.size(); j++) {
+		Zone& z = *zones[j];
+		z.shapes.clear();
+		
+		for(int i = 0; i<shapes.size(); i++) {
+			Shape* s = shapes[i];
+			// if (zone should have shape) then
+			// TODO zone intersect shape test
+			if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
+				z.addShape(s);
+			} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
+				if(s->getTargetZone() == j) z.addShape(s);
+			}
+		}
+	}
+	
+	// 2 :
+	// The projectors go through each of their zones, and pull out each shape
+	// it'd need to be in zone space, then as each shape is converted to points, that's
+	// when we'd do the warp for the projector space.
+	
+	// So - the shapes need to be sorted in projector space but their points need to be
+	// calculated at zone space. Otherwise the perspective distortion won't look right in
+	// terms of brightness distribution.
+	for(int i = 0; i<projectors.size(); i++) {
+		
+		Projector& p = *projectors[i];
+		
+		p.send(useBitmapMask?laserMask.getPixels():NULL);
+		
+	}
+}
+
 void Manager:: drawUI(bool fullscreen){
     
     ofPushStyle();
     ofNoFill();
     ofPushMatrix();
     if(currentProjector>=0) {
-        ofTranslate(10,810);
+        ofTranslate(8,height+16);
         ofScale(0.3,0.3);
     } else {
-        ofTranslate(0,0);
+        ofTranslate(8,8);
     }
     
     if(showPreview) {
@@ -241,7 +288,7 @@ void Manager:: drawUI(bool fullscreen){
     ofPopMatrix();
     ofPopStyle();
     
-    
+    // if one of the projectors is showing then draw that and hide the others
     if(currentProjector>-1) {
         for(int i = 0; i<projectors.size(); i++) {
             if(i==currentProjector)
@@ -250,14 +297,17 @@ void Manager:: drawUI(bool fullscreen){
                 projectors[i]->hideGui();
 
         }
-        
+	
+	// otherwise draw all the projectors
     } else {
         for(int i = 0; i<projectors.size(); i++) {
             ofPushMatrix();
-            ofTranslate(310*i+10,height+10);
+            ofTranslate(310*i+8,height+8);
             ofScale(3.0f/8.0f,3.0f/8.0f);
             ofSetDrawBitmapMode(OF_BITMAPMODE_SIMPLE) ;
+			
             projectors[i]->drawUI();
+			
             ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD) ;
             ofPopMatrix();
             projectors[i]->hideGui();
@@ -354,42 +404,6 @@ void Manager :: updateScreenSize() {
 									
 	gui.setPosition(ofGetWidth()-(spacing * (projectors.size()+1)),10);
 	
-}
-
-void Manager::send(){
-    
-    // here's where the magic happens.
-    // 1 :
-    // figure out which zones to send the shapes to
-    // and send them. When the zones get the shape, they transform them
-    // into local zone space.
-    for(int j = 0; j<zones.size(); j++) {
-        Zone& z = *zones[j];
-        z.shapes.clear();
-        
-        for(int i = 0; i<shapes.size(); i++) {
-            Shape* s = shapes[i];
-            // if (zone should have shape) then
-            // TODO zone intersect shape test
-            z.addShape(s);
-        }
-    }
-    
-    // 2 :
-    // The projectors go through each of their zones, and pull out each shape
-    // it'd need to be in zone space, then as each shape is converted to points, that's
-    // when we'd do the warp for the projector space.
-    
-    // So - the shapes need to be sorted in projector space but their points need to be
-    // calculated at zone space. Otherwise the perspective distortion won't look right in
-    // terms of brightness distribution.
-    for(int i = 0; i<projectors.size(); i++) {
-        
-        Projector& p = *projectors[i];
-        
-        p.send(useBitmapMask?laserMask.getPixels():NULL);
-        
-    }
 }
 
 int Manager :: getProjectorPointRate(int projectornum ){

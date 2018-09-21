@@ -48,7 +48,7 @@ class ZoneTransform {
 	//void setSrc(float x, float y, float w, float h);
 	void setDst(const ofRectangle& rect);
 	
-	void setDstCorners(ofPoint topleft, ofPoint topright, ofPoint bottomleft, ofPoint bottomright);
+	void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
 	
 	void update();
 	void draw();
@@ -65,11 +65,11 @@ class ZoneTransform {
 	void setVisible(bool warpvisible);
 	bool checkDirty();
 
-	cv::Point2f toCv(ofPoint p) {
+	cv::Point2f toCv(glm::vec3 p) {
 		return cv::Point2f(p.x, p.y);
 	}
-	ofPoint toOf(cv::Point2f p) {
-		return ofPoint(p.x, p.y);
+	glm::vec3 toOf(cv::Point2f p) {
+		return glm::vec3(p.x, p.y,0);
 	}
 	
 	Point getWarpedPoint(const Point& p);
@@ -85,7 +85,7 @@ class ZoneTransform {
 
 	
 	ofRectangle srcRect;
-	vector<ofPoint> srcPoints;
+	vector<glm::vec3> srcPoints;
 	vector<DragHandle> dstHandles; // all handles for all points
 	vector<Warper> quadWarpers;
 	
