@@ -110,18 +110,18 @@ namespace ofxLaser {
         ofParameter<bool> showBitmapMask; 
         
         MaskManager laserMask;
-        
+		vector<Projector*> projectors;
+		
 		private:
 		int createDefaultZone();
 		
 		
 		vector<Zone*> zones;
-		vector<Projector*> projectors;
 		
 		deque <ofxLaser::Shape*> shapes;
 		ofParameter<int> testPattern;
 		
-		 
+		vector<ofxLaser::Point> rawPoints;
 		
 		ofPolyline tmpPoly; // to avoid generating polyline objects
 		int screenHeight;

@@ -40,7 +40,7 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
-	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
+	projectorparams.add(pps.set("Points per second", 30000,3000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
     
     if(showAdvanced) {
@@ -473,6 +473,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     ofRectangle& maskRectangle = zoneMasks.at(zonenum);
     ZoneTransform& warp = *zoneWarps.at(zonenum);
     bool offScreen = true;
+	
     
     vector<Point>segmentpoints;
     
@@ -480,9 +481,9 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     for(int k = 0; k<points.size(); k++) {
         
         Point p = points[k];
-//        previewPathMesh.addVertex(p);
-//        ofColor c = p.getColor();
-//        previewPathMesh.addColor(c);
+        //previewPathMesh.addVertex(p);
+        //ofColor c = p.getColor();
+        //previewPathMesh.addColor(c);
         // mask the points
         
         // are we outside the mask? NB can't use inside because I want points on the edge
@@ -1137,6 +1138,8 @@ void  Projector :: processPoints() {
 			p.b = calculateCalibratedBrightness(p.b, intensity, blue100, blue75, blue50, blue25, blue0);
 		}
 		
+		//p.r = std::__1::max(p.r, std::__1::max(p.g, p.b));
+		
 		if(!armed) {
 			p.r = 0;
 			p.g = 0;
@@ -1145,6 +1148,16 @@ void  Projector :: processPoints() {
 	//	ildaPoints.push_back(ofxIlda::Point(p, c, pmin, pmax));
 		
 	}
+//	int minPoints = 200;
+//	while(ildaPoints.size()<minPoints) {
+//		ofxLaser::Circle blank(laserHomePosition + ofPoint(0,10), 10, ofFloatColor(0), 2,2,0);
+//		shapepoints.clear();
+//
+//		blank.appendPointsToVector(shapepoints);
+//		addPoints(shapepoints);
+//
+//
+//	}
 	
 }
 

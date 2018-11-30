@@ -19,7 +19,6 @@ Manager * Manager::instance() {
 	return laserManager;
 }
 
-
 Manager :: Manager() {
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
 	if(laserManager == NULL) {
@@ -272,7 +271,7 @@ void Manager:: drawUI(bool fullscreen){
     
     gui.draw();
     
-	
+	rawPoints.clear();
 }
 
 void Manager :: renderPreview() {
@@ -293,6 +292,22 @@ void Manager :: renderPreview() {
     for(int i = 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
     }
+	
+	for(int i = 0; i<rawPoints.size(); i++) {
+		ofxLaser::Point& p = rawPoints[i];
+		// hack to show a dot if there's only one position
+		if(i==0) {
+			mesh.addVertex(p+ofPoint(1,0));
+			mesh.addColor(p.getColor());
+		}
+		mesh.addVertex(p);
+		mesh.addColor(p.getColor());
+		if(i==0) {
+			mesh.addVertex(p+ofPoint(0,1));
+			mesh.addColor(p.getColor());
+		}
+		
+	}
 	
 	ofRectangle laserRect(0,0,width, height);
     if(useBitmapMask) {
@@ -407,7 +422,8 @@ void Manager::sendRawPoints(const vector<ofxLaser::Point>& points, int projector
    // ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size())); 
     Projector* proj = projectors.at(projectornum);
     proj->sendRawPoints(points, zonenum);
-
+	
+	rawPoints.insert(rawPoints.end(), points.begin(), points.end());
 }
 
 
