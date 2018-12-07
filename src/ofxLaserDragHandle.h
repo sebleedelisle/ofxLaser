@@ -103,7 +103,7 @@ namespace ofxLaser {
 	};
 	
 	bool hitTest(glm::vec3 hitpoint) {
-		return(glm::distance(*this,hitpoint)<radius);
+		return( glm::distance( (glm::vec3) *this, hitpoint ) < radius );
 	}
 	
 	ofPoint clickOffset, startPos;
