@@ -106,6 +106,7 @@ namespace ofxLaser {
 		
 		bool setZoneMode(ofxLaserZoneMode newmode) {
 			zoneMode = newmode;
+            return true;
 		}
 		
 		
@@ -147,4 +148,3 @@ namespace ofxLaser {
 		
 	};
 }
-
