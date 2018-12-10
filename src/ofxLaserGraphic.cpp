@@ -37,13 +37,8 @@ void Graphic :: addSvg(ofxSVG& svg, bool optimise) {
 		ofPath path = paths[i];
 		path.setPolyWindingMode(OF_POLY_WINDING_ODD);
 		if(path.isFilled()){
-			subtractPathFromPolylines(path, newpolylines, colours);
 			
-			//			for(const ofPolyline& line:path.getOutline()) {
-//
-//				subtractShapeFromPolylines(line, newpolylines, colours);
-//
-//			}
+			subtractPathFromPolylines(path, newpolylines, colours);
 			
 		}
 		if(path.hasOutline()){

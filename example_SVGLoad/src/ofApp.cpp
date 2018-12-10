@@ -24,7 +24,7 @@ void ofApp::setup(){
         svg.load(file.getAbsolutePath());
 		laserGraphics.push_back(ofxLaser::Graphic());
 		laserGraphics.back().addSvg(svg);
-		laserGraphics.back().connectLineSegments();
+		//laserGraphics.back().connectLineSegments();
 		laserGraphics.back().autoCentre();
 		
 		ofLog(OF_LOG_NOTICE,file.getAbsolutePath());
@@ -45,7 +45,7 @@ void ofApp::setup(){
     ofBuffer buffer = ofBufferFromFile("dacIP.txt");
     string dacIp = buffer.getText();
 	// if there's no file, then use the default IP address :
-    if(dacIp=="") dacIp ="169.254.70.201";
+    if(dacIp=="") dacIp ="10.0.1.12";
     dac.setup(dacIp);
 	
     laser.initGui();
