@@ -109,7 +109,12 @@ namespace ofxLaser {
 		
 		ofParameter<bool> armed;
 		ofParameter<int> pps;
-        ofParameter<float> speedMultiplier; 
+        ofParameter<float> speedMultiplier;
+		
+		ofParameter<float>targetFramerate;
+		ofParameter<bool>syncToTargetFramerate;
+
+		
 		ofParameter<float>intensity;
 		ofParameter<float> colourChangeOffset;
 		ofParameter<int> testPattern;

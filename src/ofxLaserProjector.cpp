@@ -42,9 +42,13 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,3000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
-    
+	
+	
     if(showAdvanced) {
         projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0.01,2));
+		projectorparams.add(targetFramerate.set("Target framerate", 25, 1, 100));
+		projectorparams.add(syncToTargetFramerate.set("Sync to Target framerate", false));
+		
     }
     else speedMultiplier = 1;
     
@@ -540,8 +544,8 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
         addPoint(warp.getWarpedPoint(segmentpoints[k]));
     }
     
-    
-    
+	
+	
     processPoints();
     dac.sendPoints(laserPoints);
     
@@ -784,6 +788,19 @@ void Projector::send(ofPixels* pixels) {
 		addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
+	
+	
+	if (syncToTargetFramerate) {
+		targetFramerate = round(targetFramerate * 100) / 100.0f;
+		float targetNumPoints = (float)pps / targetFramerate;
+		// TODO make this a proper system!
+		if (ofGetKeyPressed(OF_KEY_LEFT)) targetNumPoints -= 10;
+		if (ofGetKeyPressed(OF_KEY_RIGHT)) targetNumPoints += 10;
+		while (laserPoints.size() < targetNumPoints) {
+			addPoint(laserHomePosition, ofColor::black);
+		}
+	}
+	
 	
 	processPoints();
 	dac.sendFrame(laserPoints);
