@@ -36,7 +36,7 @@ class Dot : public Shape{
 	
 	
 	void addPreviewToMesh(ofMesh& mesh){
-		float radius = 2*intensity;
+		float radius = intensity;
 		
 		ofVec3f v(0,-radius);
 		mesh.addColor(ofColor(0));

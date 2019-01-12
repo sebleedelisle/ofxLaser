@@ -11,13 +11,11 @@
 namespace ofxLaser {
 	class DragHandle : public glm::vec3{
 	
-	
 	public :
 	DragHandle() {
 		set(0,0);
 	};
 	
-
 	void set(float xpos, float ypos, float r = 5) {
 		
 		x = xpos;
@@ -86,6 +84,10 @@ namespace ofxLaser {
 				x = startPos.x;
 				y = startPos.y;
 			}
+			if(snapToPixels) {
+				x = round(x);
+				y = round(y);
+			}
 			
 			return true;
 		} else {
@@ -115,6 +117,8 @@ namespace ofxLaser {
 	bool altKeyDisable;
 	bool isCircular = false;
     bool isFilled = false;
+		
+	bool snapToPixels = false;
 	
 	ofColor col = ofColor(60);
 	ofColor overCol = ofColor(255);

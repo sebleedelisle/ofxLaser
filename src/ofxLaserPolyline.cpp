@@ -55,7 +55,7 @@ void Polyline::initPoly(const ofPolyline& poly){
         polyline.addVertex(p);
         
     }
-   // if(poly.isClosed()) polyline.addVertex(vertices[0]); 
+    if(poly.isClosed()) polyline.addVertex(vertices[0]); 
     polyline.setClosed(false);
 	startPos = polyline.getVertices().front();
 	// to avoid a bug in polyline in open polys
