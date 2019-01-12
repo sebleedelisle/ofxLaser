@@ -127,7 +127,7 @@ void DacIDN :: sendFrameToDac() {
 	
 	int fragmentsToSend = ceil((float)numPointsToSend/(float)maxPointsPerFragment);
 	
-	ofLog(OF_LOG_NOTICE, "FRAGMENTS TO SEND : " + ofToString(fragmentsToSend));
+	if(verbose) ofLog(OF_LOG_NOTICE, "FRAGMENTS TO SEND : " + ofToString(fragmentsToSend));
 	
 	uint64_t time = ofGetElapsedTimeMicros();
 	
@@ -245,28 +245,29 @@ void DacIDN :: sendFrameToDac() {
 		int messagesize = output.size()-4;
 		output[4] = (uint8_t)(messagesize>>8);
 		output[5] = (uint8_t)messagesize;
-		ofLog(OF_LOG_NOTICE, ofToString(messagesize));
+		if(verbose) {
+			ofLog(OF_LOG_NOTICE, ofToString(messagesize));
 		
-		
-		//cout << hex << ((int)(counter>>8 ))  << " " << ((int)(uint8)(counter &0xff ))  << endl;
-		
-		
-		
-		//for (int i = 0; i<output.size() ; i++) {
-		for (int j = 0; j<12 ; j++) {
+			
+			//cout << hex << ((int)(counter>>8 ))  << " " << ((int)(uint8)(counter &0xff ))  << endl;
+			
+			
+			
+			//for (int i = 0; i<output.size() ; i++) {
+			for (int j = 0; j<12 ; j++) {
 
-			cout << hex << setfill('0') << setw(2) << (int)(uint8_t)(output[j]) << " ";
-			if((j<36) && (j%4==3)) cout <<endl;
-			else if((j>=36) && ((j-36)%7==6)) cout <<endl;
+				cout << hex << setfill('0') << setw(2) << (int)(uint8_t)(output[j]) << " ";
+				if((j<36) && (j%4==3)) cout <<endl;
+				else if((j>=36) && ((j-36)%7==6)) cout <<endl;
+			}
+		//		//cout << hex <<  ntohs(hello) << endl;
 		}
-	//		//cout << hex <<  ntohs(hello) << endl;
-
 		counter ++;
 		
 		udpConnection.Send(output.c_str(),output.length());
 		
-		ofLog(OF_LOG_NOTICE, ofToString(output.length()));
-		cout <<endl;
+		if(verbose) ofLog(OF_LOG_NOTICE, ofToString(output.length()));
+		if(verbose) cout <<endl;
 		
 		
 	}

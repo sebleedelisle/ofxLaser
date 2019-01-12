@@ -56,6 +56,7 @@ namespace ofxLaser {
 		void addZoneToProjector(int zonenum, int projnum);
 		
 		void nextProjector();
+		void previousProjector();
 
 		void setup(int width, int height);
 		void update();
@@ -70,49 +71,35 @@ namespace ofxLaser {
         int getProjectorPointRate(int projectornum = 0);
         float getProjectorFrameRate(int projectornum); 
 
-        
+		void armAllProjectors();
+		void disarmAllProjectors();
+		void testPatternAllProjectors(int& pattern);
+		
 		void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawLine(const ofPoint& start, const ofPoint& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawDot(const ofPoint& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawCircle(const ofPoint & centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
 
-        Projector& getProjector(int index = 0){
-            return *projectors.at(index);
-        };
-        
+		Projector& getProjector(int index = 0);
 		void initGui(bool showAdvanced = false);
-        bool togglePreview(){
-            showPreview = !showPreview;
-            return showPreview;
-        };
-        
+		bool togglePreview();
 		void saveSettings();
 		
-		Zone& getZone(int zonenum) {
-            // TODO bounds check? 
-            return *zones[zonenum-1];
-            
-        }
+		Zone& getZone(int zonenum);
+		bool setTargetZone(int zone);
+		bool setZoneMode(ofxLaserZoneMode newmode);
 		
-		bool setTargetZone(int zone){  // only for OFX_ZONE_MANUAL
-			if(zone>=zones.size()) return false;
-			else if(zone<0) return false;
-			else {
-				targetZone = zone;
-				return true;
-			}
-		}
-		
-		bool setZoneMode(ofxLaserZoneMode newmode) {
-			zoneMode = newmode;
-            return true;
-		}
+		// should be called before initGui
+		bool setGuideImage(string filename);
+	
 		
 		
 		int width, height;
 		ofxPanel gui;
         bool guiIsVisible;
+		ofxButton armAllButton;
+		ofxButton disarmAllButton;
         
 		// converts openGL coords to screen coords //
 		
@@ -121,13 +108,24 @@ namespace ofxLaser {
 		
 		int currentProjector;
 		
+		ofParameter<int> testPattern;
+		
         ofParameter<bool> showZones;
         ofParameter<bool> showPreview;
+		ofParameter<bool> showPathPreviews;
         ofParameter<bool> useBitmapMask;
-        ofParameter<bool> showBitmapMask; 
-        
+        ofParameter<bool> showBitmapMask;
+		
+		
+		ofParameter<bool>showGuide;
+		ofParameter<int>guideBrightness;
+		ofImage guideImage;
+		
         MaskManager laserMask;
-        
+		
+		ofPoint previewOffset;
+		float previewScale;
+	    
 		private:
 		int createDefaultZone();
 		
@@ -138,9 +136,9 @@ namespace ofxLaser {
 		std::vector<Projector*> projectors;
 		
 		std::deque <ofxLaser::Shape*> shapes;
-		ofParameter<int> testPattern;
+		//ofParameter<int> testPattern;
 		
-		 
+	
 		
 		ofPolyline tmpPoly; // to avoid generating polyline objects
 		int screenHeight;

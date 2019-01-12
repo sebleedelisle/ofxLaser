@@ -23,7 +23,9 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) : dac(laserdac){
 	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High quality"));
 	
 	numTestPatterns = 8;
-    guiIsVisible = true; 
+    //guiIsVisible = true;
+	
+	guiInitialised = false;
 	
 };
 
@@ -172,7 +174,7 @@ void Projector :: initGui(bool showAdvanced) {
     
     initListeners();
     
-
+	guiInitialised = true;
 
 	
 }
@@ -222,14 +224,14 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
     zonesEnabled.resize(zones.size());
 
 	warp.init(zone->rect); 
-//	warp.setSrc(zone->rect);
-//	ofRectangle destRect = zone->rect;
-//	destRect.scale(800/srcwidth, 800/srcheight);
-//	destRect.x*=800/srcwidth;
-//	destRect.y*=800/srcheight;
-//	warp.setDst(destRect);
-//	warp.scale = 1;
-//	warp.offset.set(0,0);
+	warp.setSrc(zone->rect);
+	ofRectangle destRect = zone->rect;
+	destRect.scale(800/srcwidth, 800/srcheight);
+	destRect.x*=800/srcwidth;
+	destRect.y*=800/srcheight;
+	warp.setDst(destRect);
+	warp.scale = 1;
+	warp.offset.set(0,0);
 	
 	//warp.updateHomography();
 	
@@ -267,108 +269,207 @@ void Projector::updateZoneMasks() {
 	
 }
 
-
-void Projector::drawUI(bool fullscreen) {
+void Projector::renderStatusBox(float x, float y, float w, float h) {
+	ofPushStyle();
+	ofPushMatrix();
+	
+	ofTranslate(x,y);
+	ofFill();
+	ofSetColor(50);
+	ofDrawRectangle(0,0,w,h);
+	ofSetColor(100);
+	ofDrawRectangle(0,0,w,18);
+	
+	// draw name of projector
+	//ofSetText
+	ofSetColor(20);
+	ofDrawBitmapString(label + " "+dac.getLabel(), 8, 13);
+	
+	ofSetColor(dac.getStatusColour());
+	ofDrawRectangle(w-18+4,4,10,10); 
+	//ofNoFill();
+	//ofSetColor(255);
+	//ofDrawRectangle(0,0,w,h);
+	ofTranslate(0,24);
+	const vector<ofParameter<int>*>& displaydata = dac.getDisplayData();
+	for(int i = 0; i<displaydata.size(); i++) {
+		const ofParameter<int>& dataelement = *(displaydata[i]);
+		ofSetColor(0);
+		ofDrawRectangle(8,i*16,w-16,10);
+		ofSetColor(150);
+		float size = ofMap(dataelement.get(), dataelement.getMin(), dataelement.getMax(), 0,w-16, true);
+		ofDrawRectangle(8, i*16, size,10);
+		
+	}
+	
+	
+	
+	ofPopMatrix();
+	ofPopStyle();
+	
+}
+void Projector::drawWarpUI(float x, float y, float w, float h) {
 	
 	ofPushStyle();
 	ofNoFill();
-    
-    float warpscale = fullscreen ? (float)ofGetHeight()/800.0f : 1;
-    ofPushMatrix();
-    ofScale(warpscale,warpscale);
-	ofDrawRectangle(0,0,800,800);
-	ofPoint p;
-    
-    ofPoint mousepoint (ofGetMouseX(), ofGetMouseY());
-	
-	//ofDisableBlendMode();
-	
-//	for(int i = 0; i<zoneWarps.size(); i++) {
-//		
-//		if(zonesEnabled[i]) continue;
-//		
-//		ofSetColor(zonesEnabled[i]? 255: 50);
-//		QuadWarp& warp = *zoneWarps[i];
-//		warp.draw();
-//		
-//		
-//	}
-	
-    
-	for(int i = 0; i<zoneWarps.size(); i++) {
-		
-		
-		ZoneTransform& warp = *zoneWarps[i];
-		
-		warp.setVisible(zonesEnabled[i]);
-        
-        
-                         
-		if(!zonesEnabled[i]) continue;
-		ofRectangle& mask = zoneMasks[i];
-		
-		ofPushMatrix();
-		ofTranslate(ofPoint(outputOffset)*warpscale);
-		ofFill();
-		ofSetColor(0,0,255,40);
 
-		ofBeginShape();
-		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-		ofVertex(p);
-		ofEndShape(true);
-		
-		ofNoFill();
-		ofSetColor(0,0,255,200);
-		
-		ofBeginShape();
-		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-		ofVertex(p);
-		ofEndShape(true);
-		
-		
-		ofPopMatrix();
-
-	}
-    
-    ofPopMatrix();
-    
-	ofNoFill();
-	ofSetColor(255);
+    float warpscale = w/800.0f ;
+//    ofPushMatrix();
+//	ofTranslate(x,y);
+//    ofScale(warpscale,warpscale);
+//
+//    ofPopMatrix();
+//
 	
+
+	// draw the handles for all the warp UIs
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		if(!zonesEnabled[i]) continue;
 		ZoneTransform& warp = *zoneWarps[i];
-		//warp.offset = ofPoint(outputOffset)*warpscale;
-        warp.scale = warpscale;
+		warp.offset = ofPoint(x,y) + (ofPoint(outputOffset)*warpscale);
+		warp.scale = warpscale;
 		warp.draw();
 	}
 	
+	ofPushMatrix();
+	ofTranslate(x,y);
+	ofScale(warpscale,warpscale);
+	ofTranslate(outputOffset);
 	
-	ofNoFill();
-    ofEnableBlendMode(OF_BLENDMODE_ADD);
-    ofPushMatrix();
-    ofScale(warpscale, warpscale);
+	// go through and draw blue rectangles around the warper
+	ofPoint p;
+	for(int i = 0; i<zoneWarps.size(); i++) {
+
+		ZoneTransform& warp = *zoneWarps[i];
+		
+		warp.setVisible(zonesEnabled[i]);
+		
+		if(!zonesEnabled[i]) continue;
+		
+		ofRectangle& mask = zoneMasks[i];
+		
+		//ofPushMatrix();
+		//ofTranslate();
+		ofFill();
+		ofSetColor(0,0,255,30);
+		
+		ofBeginShape();
+		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
+		ofVertex(p);
+		ofEndShape(true);
+		
+//		ofNoFill();
+//		ofSetColor(0,0,255,200);
+//
+//		ofBeginShape();
+//		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
+//		ofVertex(p);
+//		ofEndShape(true);
+		
+		
+		//ofPopMatrix();
+		
+	}
+	
+	ofPopMatrix();
+	ofPopStyle();
+	
+	//drawLaserPath(0,0,warpscale*800,warpscale*800);
+	
+}
+
+void Projector :: drawLaserPath(float x, float y, float w, float h) {
+	ofPushStyle();
+	
+//	ofNoFill();
+//	ofSetColor(255);
+//	ofDrawRectangle(x,y,w,h);
 	ofSetColor(100);
-    ofSetLineWidth(0.5);
-    
+	//ofSet
+	ofDrawBitmapString(label.back(), x+w-20, y+20);
+	
+	ofEnableBlendMode(OF_BLENDMODE_ADD);
+	ofPushMatrix();
+	ofTranslate(x,y);
+	ofScale(w/800, h/800);
+	
+//	ofNoFill();
+//	ofSetColor(255);
+//	ofDrawRectangle(0,0,800,800);
+	
+	ofTranslate(outputOffset);
+
+	ofPoint p;
+
+	for(int i = 0; i<zoneWarps.size(); i++) {
+		ZoneTransform& warp = *zoneWarps[i];
+
+		warp.setVisible(zonesEnabled[i]);
+
+		if(!zonesEnabled[i]) continue;
+
+		ofRectangle& mask = zoneMasks[i];
+
+		//ofPushMatrix();
+		//ofTranslate();
+//		ofFill();
+//		ofSetColor(0,0,255,40);
+//
+//		ofBeginShape();
+//		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
+//		ofVertex(p);
+//		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
+//		ofVertex(p);
+//		ofEndShape(true);
+
+		ofNoFill();
+		ofSetColor(50,50,255,150);
+
+		ofBeginShape();
+		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
+		ofVertex(p);
+		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
+		ofVertex(p);
+		ofEndShape(true);
+
+
+		//ofPopMatrix();
+
+	}
+
+
+	ofNoFill();
+	//ofSetColor(255);
+	ofSetColor(100);
+	ofSetLineWidth(0.5);
+	
+	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
+		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 255,20),0,255));
+	}
+
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
 	
-	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 255,0),0,255));
-	}
 	
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
@@ -386,15 +487,37 @@ void Projector::drawUI(bool fullscreen) {
 		ofDrawCircle(p, 6);
 	}
 	
-    ofPopMatrix();
+
 	ofDisableBlendMode();
 	ofPopStyle();
 	
 	
+	ofPopMatrix();
+	
+//	ofNoFill();
+//	ofSetColor(255,0,0);
+//	ofDrawRectangle(x,y,w,h);
+//
 	
 }
 
 void Projector :: hideGui() {
+	
+	// disable warps
+	for(int i = 0; i<zoneWarps.size(); i++) {
+		
+		
+		ZoneTransform& warp = *zoneWarps[i];
+		
+		warp.setVisible(false);
+		
+	}
+	
+	// move ui panel out the way
+	gui->setPosition(ofGetWidth(), 8);
+	
+}
+void Projector :: showGui() {
 	
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		
@@ -404,6 +527,9 @@ void Projector :: hideGui() {
 		warp.setVisible(false);
 		
 	}
+	
+	// move ui panel back into view
+	gui->setPosition(ofGetWidth()-330, 8);
 	
 }
 
@@ -552,6 +678,11 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
 
 void Projector::send(ofPixels* pixels) {
 
+	if(!guiInitialised) {
+		ofLog(OF_LOG_ERROR, "Error, ofxLaser::projector not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
+		return;
+	}
+	
 	vector<SegmentPoints> allzonesegmentpoints;
 	vector<SegmentPoints*> sortedsegmentpoints;
 	vector<SegmentPoints> zonesegmentpoints;
@@ -1041,7 +1172,7 @@ void  Projector :: processPoints() {
 	// To avoid creating a whole new vector, we're storing the overlap in a buffer of
 	// colours.
 	// I'm sure there must be some slicker C++ way of doing this...
-	
+	//ofLog(OF_LOG_NOTICE, ofToString(colourChangeOffset));
 	int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeOffset ;
 	
 
@@ -1118,6 +1249,18 @@ void  Projector :: processPoints() {
 		
 		if(flipY) p.y= 800-p.y;
 		if(flipX) p.x= 800-p.x;
+		
+		// bounds check
+		if(p.x<0) p.x = p.r = p.g = p.b = 0;
+		else if(p.x>800) {
+			p.x = 800;
+			p.r = p.g = p.b = 0;
+		}
+		if(p.y<0) p.y = p.r = p.g = p.b = 0;
+		else if(p.y>800) {
+			p.y = 800;
+			p.r = p.g = p.b = 0;
+		}
 		
 //		if(showPostTransformPreview){
 //			ofPoint previewpoint(p.x, p.y);

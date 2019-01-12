@@ -13,7 +13,7 @@ void ofApp::setup(){
     
     // replace this with the IP address of your etherdream (find it with the sitter diagnostic
     // tool at https://ether-dream.com/downloads.html ) 
-    string dacIP = "10.0.1.3";
+    string dacIP = "10.0.1.10";
 
     dac.setup(dacIP);
 	
@@ -39,11 +39,11 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-	ofBackground(0);
+	ofBackground(40);
     
-	ofNoFill();
-	ofSetLineWidth(1);
-	ofDrawRectangle(0,0,laserWidth, laserHeight);
+	//ofNoFill();
+	//ofSetLineWidth(1);
+	//ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 	int ypos = laserHeight+20;
 	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);

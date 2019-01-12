@@ -56,6 +56,15 @@ struct begin_command {
 
 
 struct dac_point {
+//	public:
+//	dac_point() {
+//		dac_point::createCount++;
+//	}
+//	~dac_point() {
+//		destroyCount++;
+//	}
+	
+	
 	uint16_t control;
 	int16_t x;
 	int16_t y;
@@ -65,12 +74,10 @@ struct dac_point {
 	uint16_t i;
 	uint16_t u1;
 	uint16_t u2;
-};
 
-struct data_command {
-	uint8_t command; /* ‚Äòd‚Äô (0x64) */
-	uint16_t npoints;
-	struct dac_point data[];
+//	static int createCount;
+//	static int destroyCount;
+	
 };
 
 
@@ -82,38 +89,64 @@ namespace ofxLaser {
 	class DacEtherdream : public DacBase, ofThread {
 	
 	public:
-		void setup(string ip);
+		DacEtherdream();
+		~DacEtherdream();
+		
+		// DacBase functions
 		bool sendFrame(const vector<Point>& points);
         bool sendPoints(const vector<Point>& points);
 		bool setPointsPerSecond(uint32_t newpps);
-		bool addPoints(const vector<dac_point> &points );
+		string getLabel();
+		ofColor getStatusColour();
+		const vector<ofParameter<int>*>& getDisplayData();
+		
+		void setup(string ip);
+		//bool addPoints(const vector<dac_point> &points );
 		bool addPoint(const dac_point &point );
 		void close();
+        
+        //output the data that we just sent
+        void logData();
+		
+		// simple object pooling system
+		dac_point* getDacPoint();
+		
+		ofParameter<int> pointBufferDisplay;
+		ofParameter<int> latencyDisplay;
+		ofParameter<int> reconnectCount;
+		
+        
+		
 		
 	private:
 		void threadedFunction();
 
-		inline void sendBegin();
-		inline void sendPrepare();
-		inline void sendData();
-		inline void sendPing();
-		void sendEStop();
-		void sendStop();
-		void sendClear();
-		inline void sendPointRate(uint32_t rate);
+		inline bool sendBegin();
+		inline bool sendPrepare();
+		inline bool sendData();
+		inline bool sendPing();
+		bool sendEStop();
+		bool sendStop();
+		bool sendClear();
+		inline bool sendPointRate(uint32_t rate);
 		inline bool waitForAck(char command);
+		bool sendBytes(const void* buffer, int length);
 		
 		
-		uint16_t bytesToUInt16(unsigned char* byteaddress);
-		uint32_t bytesToUInt32(unsigned char* byteaddress);
-		void writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress);
-		void writeInt16ToBytes(int16_t& n, unsigned char* byteaddress);
-		void writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress);
+        inline uint16_t bytesToUInt16(unsigned char* byteaddress);
+        inline uint16_t bytesToInt16(unsigned char* byteaddress);
+        inline uint32_t bytesToUInt32(unsigned char* byteaddress);
+		inline void writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress);
+		inline void writeInt16ToBytes(int16_t& n, unsigned char* byteaddress);
+		inline void writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress);
 
 		dac_point lastpoint;
+		dac_point sendpoint;
 		
+        
 		Byte buffer[1024];
 		Byte outbuffer[100000];
+        int numBytesSent;
 		
 		Poco::Net::StreamSocket socket;
 		
@@ -121,15 +154,29 @@ namespace ofxLaser {
 		string playback_states[3] = {"idle", "prepared", "playing"};
 		
 		dac_response response;
-		bool prepareSent;
+		int latencyMicros = 0;
+		int prepareSendCount = 0;
+        uint64_t startTime; // to measure latency
 		bool beginSent;
 		
-		deque<dac_point> bufferedPoints;
+		deque<dac_point*> bufferedPoints;
+		vector<dac_point*> sparePoints;
+		vector<dac_point> framePoints;
 		int numPointsToSend;
 		uint32_t pps, newPPS;
 		int queuedPPSChangeMessages;
 		bool connected; 
-		
+		bool replayFrames = true;
+		bool frameMode = true;
+		bool verbose = false;
+        
+        // the maximum number of points the etherdream can hold.
+        // in etherdream v1 it's 1799, but you may want it to be lower
+        // for lower latency
+        int maxBufferedPoints;
+        // the minimum number of points in the buffer before the etherdream
+        // starts playing.
+        int minBufferedPoints;
 
 	};
 

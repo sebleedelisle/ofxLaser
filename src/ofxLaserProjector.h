@@ -51,10 +51,14 @@ namespace ofxLaser {
             if(numPoints>0) return (float)pps/(float)numPoints;
             else return pps;
         }
-        
+		
+		void renderStatusBox(float x=0, float y=0, float w=300, float h=100);
+		
 		void addZone(Zone* zone, float srcwidth, float srcheight);
-		void drawUI(bool fullscreen = false);
+		void drawLaserPath(float x=0, float y=0, float w=800, float h=800);
+		void drawWarpUI(float x=0, float y=0, float w=800, float h=800);
 		void hideGui();
+		void showGui();
 
 		void addPoint(ofxLaser::Point p);
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
@@ -151,7 +155,8 @@ namespace ofxLaser {
 		ofParameter<float>blue0;
 		
 		ofxPanel* gui;
-        bool guiIsVisible;
+        //bool guiIsVisible;
+		bool guiInitialised = false; 
 
 	};
 

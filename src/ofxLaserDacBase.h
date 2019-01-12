@@ -18,6 +18,16 @@ namespace ofxLaser {
 		virtual bool sendFrame(const vector<Point>& points) { return true; };
 		virtual bool sendPoints(const vector<Point>& points) { return true; };
 		virtual bool setPointsPerSecond(uint32_t pps) { return true; };
+		virtual string getLabel(){return "";};
+		
+		virtual ofColor getStatusColour(){return ofColor::white; };
+	
+		virtual const vector<ofParameter<int>*>& getDisplayData() { return displayData;};
+		virtual void resetDisplayData(){};
+		
+	protected :
+	
+		vector<ofParameter<int>*> displayData;
 
 	};
 

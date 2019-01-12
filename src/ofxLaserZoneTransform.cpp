@@ -21,7 +21,7 @@ ZoneTransform::ZoneTransform(string labelname, string filename) {
 	initListeners();
 	visible = true;
 	isDirty = true;
-	selected = true;
+	selected = false;
 	initialised = true;
 	
 	dstHandles.resize(4);

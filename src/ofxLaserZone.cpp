@@ -51,6 +51,11 @@ void Zone::addShape(Shape* s){
 
 void Zone::draw() {
 	
+	if(!visible) return;
+	
+	ofPushMatrix();
+	ofTranslate(offset);
+	ofScale(scale, scale);
 	ofPushStyle();
 	ofSetColor(255,0,255); 
 	ofNoFill();
@@ -71,9 +76,11 @@ void Zone::draw() {
 //	ofDrawLine(rect.getTopRight(), rect.getBottomLeft());
 //	//ofDrawBitmapString(rect.getCenter(), label);
 	ofPopStyle();
+	
 	handles[0].draw();
 	handles[1].draw();
 	
+	ofPopMatrix();
 	
 }
 
@@ -185,7 +192,8 @@ void Zone :: removeListeners(){
 }
 
 void Zone :: startDragging(int handleIndex, ofPoint clickPos) {
-	
+	if(!active) return;
+	handles[handleIndex].snapToPixels = snapToPixels; 
 	handles[handleIndex].startDrag(clickPos);
 	
 	//	int x = ((handleIndex%2)+1)%2;
@@ -207,7 +215,7 @@ void Zone :: startDragging(int handleIndex, ofPoint clickPos) {
 bool Zone :: mousePressed(ofMouseEventArgs &e){
 	
 	
-	if(!visible) return false;
+	if(!active) return false;
 	
 	bool handleHit = false;
 	
@@ -241,7 +249,7 @@ bool Zone :: mousePressed(ofMouseEventArgs &e){
 }
 
 bool Zone :: mouseDragged(ofMouseEventArgs &e){
-	
+	if(!active) return false;
 	ofPoint mousePoint = e;
 	mousePoint-=offset;
 	mousePoint/=scale;

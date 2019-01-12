@@ -47,8 +47,9 @@ namespace ofxLaser {
 		ofPoint offset;
 		float scale = 1;
 		bool visible = true;
+		bool active = true; 
 		bool isDirty = true;
-		
+		bool snapToPixels = true; 
 		
 		
 	};

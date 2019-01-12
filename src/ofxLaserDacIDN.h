@@ -51,6 +51,14 @@ class DacIDN : public DacBase, ofThread {
 	bool sendPoints(const vector<Point>& points);
 	bool setPointsPerSecond(uint32_t pps);
 	
+	string getLabel(){
+		return "IDN";
+	}
+	
+	ofColor getStatusColour(){
+		return ofColor::green;
+	}
+	
 	void close();
 	
 	protected:
@@ -73,6 +81,7 @@ class DacIDN : public DacBase, ofThread {
 	deque<IDN_point> bufferedPoints;
 	uint16_t counter ;
 
+	const bool verbose = false; 
 
 };
 
