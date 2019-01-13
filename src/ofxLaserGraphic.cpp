@@ -7,28 +7,17 @@
 
 #include "ofxLaserGraphic.h"
 using namespace ofxLaser;
+//
+//const vector<int> Graphic::something = list_of(3)(5);
+
+// static class members
+vector<ofPolyline*> Graphic::polylinePool;
+vector<ofPolyline*> Graphic::polylineSpares;
+int Graphic::numGraphicsInMemory = 0;
 
 void Graphic :: addSvg(ofxSVG& svg, bool optimise) {
 	
-//	// TODO - this should be the actual centre of the SVG!
-//	glm::vec3 centrePoint = centre? glm::vec3(svg.getWidth()/2, svg.getHeight()/2) : glm::vec3(0,0,0);
-
-//	for(int i=0; i<svg.getNumPath(); i++ ) {
-//		ofPath& path = svg.getPathAt(i);
-//
-//		const vector<ofPolyline>& lines = path.getOutline();
-//
-//		ofColor col = path.getStrokeColor();
-//
-//		// delete black lines?
-//		//if(col.getBrightness()<30) col = ofColor::white;
-//
-//		for(int j=0; j<lines.size(); j++) {
-//			addPolyline(lines[j], col);
-//		}
-//	}
-//
-	vector<ofPolyline> newpolylines;
+	vector<ofPolyline*> newpolylines;
 	vector<ofColor> colours;
 	
 	const vector <ofPath> & paths = svg.getPaths();
@@ -46,7 +35,9 @@ void Graphic :: addSvg(ofxSVG& svg, bool optimise) {
 			const vector<ofPolyline> & outlines = path.getOutline();
 			ofColor col(path.getStrokeColor());
 			for(const ofPolyline& line:outlines) {
-				newpolylines.push_back(line);
+				ofPolyline* newline = Graphic::getPolyline(&line);
+			
+				newpolylines.push_back(newline);
 				colours.push_back(col);
 			}
 			
@@ -54,42 +45,46 @@ void Graphic :: addSvg(ofxSVG& svg, bool optimise) {
 		
 	}
 	for(int i = 0; i<newpolylines.size(); i++) {
-		addPolyline(newpolylines[i], colours[i]);
+		addPolyline(*newpolylines[i], colours[i], false);
 	
 	}
+
+	for(ofPolyline* poly : newpolylines) {
+
+		Graphic::releasePolyline(poly);
+
+	}
+	
 	if(optimise) {
 		for(int i = 0; i<polylines.size(); i++) {
-			polylines[i].simplify();
+			polylines[i]->simplify();
 		}
 		connectLineSegments();
 	}
 	
-
+	
 }
 
-
-void Graphic::subtractPathFromPolylines(ofPath sourcepath, vector<ofPolyline>& targetpolys, vector<ofColor>& colours) {
-	//polys.push_back(shape);
-	//colours.push_back(ofColor::green);
-	//if(!sourceshape.isClosed()) sourceshape.close();
+void Graphic::subtractPathFromPolylines(ofPath& sourcepath, vector<ofPolyline*>& targetpolys, vector<ofColor>& colours) {
 	
-	vector<ofPolyline> allNewPolys;
+	// Can we just call the polyline version on all shapes in the path?
+	// - answer - no because ofPaths have compound shapes inside!
+	
+	
+	vector<ofPolyline*> allNewPolys;
 	vector<ofColor> allNewColours;
 	
-	for(vector<ofPolyline>::iterator polyit = targetpolys.begin(); polyit != targetpolys.end();) {
+	for(vector<ofPolyline*>::iterator polyit = targetpolys.begin(); polyit != targetpolys.end();) {
 		
-		//for(int i = 0;i<polys.size(); i++) {
+		ofPolyline& targetpoly = **polyit; // polys[i];
 		
-		ofPolyline& targetpoly = *polyit; // polys[i];
-		
-		vector<ofPolyline> polysToAdd;
+		vector<ofPolyline*> polysToAdd;
 		bool overlaps = false;
-		
 		
 		// TODO fast out for overlap between path and shape
 		
-		// resample target shape
-		ofPolyline resampledPoly = targetpoly.getResampledBySpacing(1);
+		// resample target shape - this clones ofPolyline - nothing we can do about that :/
+		ofPolyline resampledPoly = targetpoly;//.getResampledBySpacing(1);
 		vector<glm::vec3>& points = resampledPoly.getVertices();
 		
 		bool inside = false;
@@ -102,33 +97,43 @@ void Graphic::subtractPathFromPolylines(ofPath sourcepath, vector<ofPolyline>& t
 				inside = false;
 			} else {
 				if(!inside) {
-					polysToAdd.push_back(ofPolyline());
+					polysToAdd.push_back(Graphic::getPolyline());
 					inside = true;
 				}
-				polysToAdd.back().addVertex(*it);
+				polysToAdd.back()->addVertex(*it);
 				++it;
 			}
 			
 		}
 		
-
-		
+		// if the shape overlaps then we have to deal with it,
 		if(overlaps) {
+			// firstly by deleting the colours and the shape completely...
 			vector<ofColor>::iterator colouriterator = colours.begin() + (polyit-targetpolys.begin());
+			ofPolyline* polyToErase = *polyit;
 			polyit = targetpolys.erase(polyit);
+			// this assumes that the polyline was made by this app...
+			// which isn't a good assumption the way that this function is written.
+			Graphic::releasePolyline(polyToErase);
 			
 			ofColor newPolyColour = *colouriterator;
 			colouriterator = colours.erase(colouriterator);
 			//
-			for(ofPolyline polyToAdd : polysToAdd ) {
+			for(ofPolyline* polyToAdd : polysToAdd ) {
 				allNewPolys.push_back(polyToAdd);
 				allNewColours.push_back(newPolyColour);
 			}
 			//
 			
 		} else {
+			// We should have one copy of the shape in the new polys list, let's delete it!
+			if(polysToAdd.size()!=1) {
+				ofLog(OF_LOG_WARNING, "Graphic::subtractPathFromPolylines");
+			}
+			for(ofPolyline* poly:polysToAdd) Graphic::releasePolyline(poly);
 			polyit ++;
 		}
+		
 		
 	}
 	
@@ -154,26 +159,41 @@ bool Graphic:: pointInsidePath(glm::vec3 point, ofPath& path) {
 }
 
 
-void Graphic::subtractShapeFromPolylines(ofPolyline sourceshape, vector<ofPolyline>& targetpolys, vector<ofColor>& colours) {
-	//polys.push_back(shape);
-	//colours.push_back(ofColor::green);
-	if(!sourceshape.isClosed()) sourceshape.close();
+bool Graphic:: pointInsidePolylines(glm::vec3 point, const vector<ofPolyline*>& polys) {
 	
-	vector<ofPolyline> allNewPolys;
+	for(ofPolyline* poly : polys) {
+		if(poly->inside(point)) {
+			return true;
+		}
+		
+	}
+	return false;
+	
+}
+
+
+void Graphic::subtractShapeFromPolylines(const ofPolyline& polyToSubtract, vector<ofPolyline*>& targetpolys, vector<ofColor>& colours) {
+	
+	//ofPolyline& polyToSubtract = sourceshape;
+
+	// do we need this?
+//	if(!polyToSubtract.isClosed()) {
+//		polyToSubtract.close();
+//	}
+	vector<ofPolyline*> allNewPolys;
 	vector<ofColor> allNewColours;
 	
-	for(vector<ofPolyline>::iterator polyit = targetpolys.begin(); polyit != targetpolys.end();) {
+	for(vector<ofPolyline*>::iterator polyit = targetpolys.begin(); polyit != targetpolys.end();) {
 		
-	//for(int i = 0;i<polys.size(); i++) {
+		ofPolyline& targetpoly = **polyit; // polys[i];
 		
-		ofPolyline& targetpoly = *polyit; // polys[i];
-		
-		vector<ofPolyline> polysToAdd;
+		vector<ofPolyline*> polysToAdd;
 		bool overlaps = false;
 		
-		if(sourceshape.getBoundingBox().intersects(targetpoly.getBoundingBox())) {
+		if(polyToSubtract.getBoundingBox().intersects(targetpoly.getBoundingBox())) {
 			
 			// resample target shape
+			// TODO make this work with lines, not points...
 			ofPolyline resampledPoly = targetpoly.getResampledBySpacing(1);
 			vector<glm::vec3>& points = resampledPoly.getVertices();
 			
@@ -181,7 +201,7 @@ void Graphic::subtractShapeFromPolylines(ofPolyline sourceshape, vector<ofPolyli
 			for(vector<glm::vec3>::iterator it = points.begin(); it != points.end();)
 			{
 				
-				if(sourceshape.inside(*it))
+				if(polyToSubtract.inside(*it))
 				{
 					it = points.erase(it);
 					overlaps = true;
@@ -190,42 +210,35 @@ void Graphic::subtractShapeFromPolylines(ofPolyline sourceshape, vector<ofPolyli
 				else
 				{
 					if(!inside) {
-						polysToAdd.push_back(ofPolyline());
+						polysToAdd.push_back(Graphic::getPolyline());
 						inside = true;
 					}
-					polysToAdd.back().addVertex(*it);
+					polysToAdd.back()->addVertex(*it);
 					++it;
 				}
 				
 			}
 			
-			
-//
-//			for(int j = 0; j<points.size(); j++) {
-//				if(shape.inside(points[j])) {
-//					points.erase
-//
-//				}
-//
-//			}
-			// iterate through the points
-			
-			//colours[i] = ofColor::purple;
-			
 		}
 		
 		if(overlaps) {
 			vector<ofColor>::iterator colouriterator = colours.begin() + (polyit-targetpolys.begin());
+			
+			
+			ofPolyline* polyToErase = *polyit;
 			polyit = targetpolys.erase(polyit);
+			Graphic::releasePolyline(polyToErase);
 			
+			
+			
+			ofColor newPolyColour = *colouriterator;
 			colouriterator = colours.erase(colouriterator);
-//
-			for(ofPolyline polyToAdd : polysToAdd ) {
-				allNewPolys.push_back(polyToAdd);
-				allNewColours.push_back(ofColor::green);
-			}
-//
 			
+			for(ofPolyline* polyToAdd : polysToAdd ) {
+				allNewPolys.push_back(polyToAdd);
+				allNewColours.push_back(newPolyColour);
+			}
+
 		} else {
 			polyit ++;
 		}
@@ -240,12 +253,85 @@ void Graphic::subtractShapeFromPolylines(ofPolyline sourceshape, vector<ofPolyli
 }
 
 
+void Graphic::subtractShapesFromPolylines(const vector<ofPolyline*>& polysToSubtract, vector<ofPolyline*>& targetpolys, vector<ofColor>& colours) {
+	
+	//ofPolyline& polyToSubtract = sourceshape;
+	
+	// do we need this?
+	//	if(!polyToSubtract.isClosed()) {
+	//		polyToSubtract.close();
+	//	}
+	vector<ofPolyline*> allNewPolys;
+	vector<ofColor> allNewColours;
+	
+	for(vector<ofPolyline*>::iterator polyit = targetpolys.begin(); polyit != targetpolys.end();) {
+		
+		ofPolyline& targetpoly = **polyit; // polys[i];
+		
+		vector<ofPolyline*> polysToAdd;
+		bool overlaps = false;
+		
+	
+		// resample target shape
+		ofPolyline resampledPoly = targetpoly.getResampledBySpacing(1);
+		vector<glm::vec3>& points = resampledPoly.getVertices();
+		
+		bool inside = false;
+		for(vector<glm::vec3>::iterator it = points.begin(); it != points.end();)
+		{
+			
+			if( pointInsidePolylines( *it, polysToSubtract)) {
+			
+				it = points.erase(it);
+				overlaps = true;
+				inside = false;
+			} else {
+				if(!inside) {
+					polysToAdd.push_back(Graphic::getPolyline());
+					inside = true;
+				}
+				polysToAdd.back()->addVertex(*it);
+				++it;
+			}
+			
+		}
+		
+	
+		
+		if(overlaps) {
+			vector<ofColor>::iterator colouriterator = colours.begin() + (polyit-targetpolys.begin());
+			ofPolyline* polyToErase = *polyit;
+			polyit = targetpolys.erase(polyit);
+			// this assumes that the polyline was made by this app...
+			// which isn't a good assumption the way that this function is written.
+			Graphic::releasePolyline(polyToErase);
+			
+			ofColor newPolyColour = *colouriterator;
+			colouriterator = colours.erase(colouriterator);
+			
+			for(ofPolyline* polyToAdd : polysToAdd ) {
+				allNewPolys.push_back(polyToAdd);
+				allNewColours.push_back(newPolyColour);
+			}
+			
+		} else {
+			polyit ++;
+		}
+		
+	}
+	
+	if(allNewPolys.size()>0) {
+		targetpolys.insert( targetpolys.end(), allNewPolys.begin(), allNewPolys.end() );
+		colours.insert(colours.end(), allNewColours.begin(), allNewColours.end());
+	}
+	
+}
 
 void Graphic :: translate(glm::vec3 offset) {
 	
 	for(int i = 0; i<polylines.size(); i++) {
 		
-		ofPolyline& poly =polylines[i];
+		ofPolyline& poly =*polylines[i];
 		poly.translate(offset);
 		
 	}
@@ -258,7 +344,7 @@ void Graphic :: autoCentre() {
 	
 	for(int i = 0; i<polylines.size(); i++) {
 		
-		ofPolyline& poly =polylines[i];
+		ofPolyline& poly =*polylines[i];
 		
 		if(i==0) {
 			boundingBox = poly.getBoundingBox();
@@ -271,7 +357,7 @@ void Graphic :: autoCentre() {
 	translate(-boundingBox.getCenter());
 }
 
-void Graphic :: addPolyline(const ofPolyline& poly, ofColor& colour, glm::vec3 offset) {
+void Graphic :: addPolyline(const ofPolyline& poly, ofColor& colour, bool useTransform) {
 	
 	// we don't need no one point vertices!
 	if(poly.getVertices().size()<2) {
@@ -282,25 +368,86 @@ void Graphic :: addPolyline(const ofPolyline& poly, ofColor& colour, glm::vec3 o
 		//ofLog(OF_LOG_NOTICE, "deleting empty line");
 		return;
 	}
-	ofPolyline newPoly = poly; // make a copy;
 	
-	auto& newPolyVerts = newPoly.getVertices();
-	
-	for(int i = 0; i<newPolyVerts.size(); i++) {
-		auto& v = newPolyVerts[i];
-		v-=offset;
+	ofPolyline* newPoly = Graphic::getPolyline(&poly); // make a copy;
+
+	if(useTransform) {
+		transformPolyline(*newPoly);
 	}
-	
 	polylines.push_back(newPoly);
 	colours.push_back(colour);
 	
 	
 }
 
+void Graphic :: transformPolyline(ofPolyline& poly) {
+	vector<glm::vec3>& newPolyVerts = poly.getVertices();
+
+	for(int i = 0; i<newPolyVerts.size(); i++) {
+		newPolyVerts[i]=gLProject(newPolyVerts[i]);
+	}
+	
+}
+
+void Graphic :: addPolylineUnder(const ofPolyline& poly, ofColor& colour, bool useTransform) {
+	
+	ofPolyline* newpoly = Graphic::getPolyline(&poly);
+	// make a vector of polylines containing this new poly
+	if(useTransform) {
+		transformPolyline(*newpoly);
+	}
+	vector<ofPolyline*> newpolys;
+	vector<ofColor>newcolours;
+	newpolys.push_back(newpoly);
+	newcolours.push_back(colour);
+	
+	// go through every polyline
+
+	// subtract it from our original, and store the pieces in the vector
+	subtractShapesFromPolylines(polylines, newpolys, newcolours);
+		
+
+	// now add the pieces to our graphic!
+	for(int i = 0; i<newpolys.size(); i++) {
+		addPolyline(*newpolys[i], newcolours[i], false);
+		
+	}
+	for(ofPolyline* poly : newpolys) {
+		Graphic::releasePolyline(poly);
+	}
+	
+	
+}
+
+glm::vec3 Graphic::gLProject(glm::vec3& v) {
+	
+	float ax = v.x;
+	float ay = v.y;
+	float az = v.z;
+	
+	GLdouble model_view[16];
+	glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
+	
+	GLdouble projection[16];
+	glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	
+	GLint viewport[4];
+	glGetIntegerv(GL_VIEWPORT, viewport);
+	
+	GLdouble X, Y, Z = 0;
+	gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
+	
+	// bit of a hack - if you're rendering into an Fbo then y is inverted
+	if(projection[5]<0) Y = ofGetHeight()-Y;
+	// return(ofPoint(ax, ay));
+	return glm::vec3(X, Y, 0.0f);
+	
+}
+
 void Graphic ::  connectLineSegments() {
 	
 	for(int i = 0; i<polylines.size(); i++) {
-		ofPolyline& poly1 = polylines[i];
+		ofPolyline* poly1 = polylines[i];
 		
 		float smallestAngle = 360;
 		int closestIndex = -1;
@@ -309,13 +456,13 @@ void Graphic ::  connectLineSegments() {
 			
 			if(colours[i]!=colours[j]) continue; // check close?
 			
-			ofPolyline& poly2 = polylines[j];
+			ofPolyline* poly2 = polylines[j];
 			
 			// if polys are the same colour and
 			// they are touching, this returns the angle
 			// between them, otherwise it returns 360
 			
-			float angle = comparePolylines(poly1, poly2);
+			float angle = comparePolylines(*poly1, *poly2);
 			
 			if(angle<smallestAngle) {
 				smallestAngle = angle;
@@ -326,10 +473,10 @@ void Graphic ::  connectLineSegments() {
 			
 		}
 		if(closestIndex>=0) {
-			ofPolyline& poly2 = polylines[closestIndex];
+			ofPolyline* poly2 = polylines[closestIndex];
 			//ofLog(OF_LOG_NOTICE, "found touching lines");
 			//ofLog(OF_LOG_NOTICE, ofToString(ofRadToDeg(comparePolylines(poly1, poly2))));
-			if(joinPolylines(poly1, polylines[closestIndex])){
+			if(joinPolylines(*poly1, *polylines[closestIndex])){
 				
 //				colours[i] = ofColor::cyan;
 //				colours[closestIndex] = ofColor::red;
@@ -337,9 +484,10 @@ void Graphic ::  connectLineSegments() {
 				
 				
 				// if we erase poly2 is that OK? It'll definitely be>i, right?
-				
+				ofPolyline* polyToErase = *(polylines.begin() + closestIndex);
 				polylines.erase(polylines.begin() + closestIndex);
 				colours.erase(colours.begin() + closestIndex);
+				Graphic::releasePolyline(polyToErase);
 				
 				// so we test the newly joined poly again
 				i--;
@@ -591,8 +739,8 @@ float Graphic :: comparePolylines(ofPolyline& poly1, ofPolyline &poly2) {
 		float angle = getAngleBetweenPoints(p1, p2, p3);
 		if(angle<returnAngle) returnAngle =angle;
 	}
+	
 	if(glm::distance(start1, end2)<tolerance) {
-		
 		
 		p1 = vertices1[1];
 		p2 = vertices1[0];
@@ -623,7 +771,7 @@ void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string
 	for(int i = 0; i<polylines.size(); i++) {
 		ofColor col = colours[i];
 		col*=brightness;
-		laser.drawPoly(polylines[i],col, renderProfile);
+		laser.drawPoly(*polylines[i],col, renderProfile);
 		
 	}
 	

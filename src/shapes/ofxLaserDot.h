@@ -36,12 +36,13 @@ class Dot : public Shape{
 	
 	
 	void addPreviewToMesh(ofMesh& mesh){
-		float radius = intensity;
+		float radius = ofMap(intensity, 0, 1,0.5,1);
+		ofColor c(colour);
+		c.setBrightness(ofMap(intensity,0,0.5,20,255,true));
 		
 		ofVec3f v(0,-radius);
 		mesh.addColor(ofColor(0));
 		mesh.addVertex(v + getStartPos());
-		ofColor c(colour);
 		
 		for(int i = 0; i<=360; i+=30) {
 			v.set(0, -radius);
