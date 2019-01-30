@@ -16,11 +16,12 @@ namespace ofxLaser {
 		set(0,0);
 	};
 	
-	void set(float xpos, float ypos, float r = 5) {
+	void set(float xpos, float ypos, float r = 2.5) {
 		
 		x = xpos;
 		y = ypos;
 		radius = r;
+		//ofLog(OF_LOG_NOTICE, "Radius : "+ofToString(radius));
 	};
 	
 	void set(glm::vec3 pos) {
@@ -37,22 +38,23 @@ namespace ofxLaser {
 		z = 0; 
 		
 	};
-	void draw(bool isOver = true) {
+	void draw(bool isOver = true, float scale = 1) {
+		if(!active) return; 
 		//bool isOver = hitTest(ofPoint(ofGetMouseX(), ofGetMouseY()));
 		ofPushStyle();
-		if(isCircular) {
-			ofSetColor(isOver?overCol:col);
+		
+		if(isFilled) ofFill();
+		else {
 			ofNoFill();
 			ofSetLineWidth(1);
-			ofDrawCircle(*this,radius);
+		}
+		ofSetColor(isOver?overCol:col);
+		
+		if(isCircular) {
+			ofDrawCircle(*this,radius*scale);
 		} else {
-			
-			if(isFilled) ofFill();
-            else ofNoFill();
-			ofSetColor(isOver?overCol:col);
-			ofSetLineWidth(1);
 			ofSetRectMode(OF_RECTMODE_CENTER);
-			ofDrawRectangle(*this,radius, radius);
+			ofDrawRectangle(*this,radius*2*scale, radius*2*scale);
 		}
 		ofPopStyle();
 	};
@@ -65,7 +67,6 @@ namespace ofxLaser {
 		altKeyDisable = dontMoveWhenAltPressed;
 		startPos = *this;
 		
-		
 	};
 	
 	bool updateDrag(glm::vec3 pos) {
@@ -73,10 +74,10 @@ namespace ofxLaser {
 		
 		if(isDragging) {
 			
-			if(xAxis){
+			if(xAxis && !xLocked){
 				x = startPos.x + (((pos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
 			}
-			if(yAxis) {
+			if(yAxis && !yLocked) {
 				y = startPos.y + (((pos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
 			}
 			
@@ -84,9 +85,9 @@ namespace ofxLaser {
 				x = startPos.x;
 				y = startPos.y;
 			}
-			if(snapToPixels) {
-				x = round(x);
-				y = round(y);
+			if(snapToGrid) {
+				x = round(x*(1/gridSize))*gridSize;
+				y = round(y*(1/gridSize))*gridSize;
 			}
 			
 			return true;
@@ -105,20 +106,29 @@ namespace ofxLaser {
 	};
 	
 	bool hitTest(glm::vec3 hitpoint) {
-		return( glm::distance( (glm::vec3) *this, hitpoint ) < radius );
+		return(active && glm::distance( (glm::vec3) *this, hitpoint ) < radius );
 	}
 	
 	ofPoint clickOffset, startPos;
 	bool isDragging = false;
-	
-	float radius = 5;
+	bool active = true;
+	float radius = 2.5;
 	bool xAxis;
 	bool yAxis;
+	
+	bool xLocked = false;
+	bool yLocked = false;
+	
 	bool altKeyDisable;
 	bool isCircular = false;
     bool isFilled = false;
 		
-	bool snapToPixels = false;
+	bool snapToGrid = false;
+	float gridSize = 1;
+		
+	vector<DragHandle*>connectedHandlesX;
+	vector<DragHandle*>connectedHandlesY;
+		
 	
 	ofColor col = ofColor(60);
 	ofColor overCol = ofColor(255);

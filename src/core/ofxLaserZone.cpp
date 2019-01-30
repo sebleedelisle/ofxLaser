@@ -15,10 +15,12 @@ Zone::Zone() {
 	editable = false;
 }
 
-Zone::Zone(string zonelabel, float x, float y, float w, float h) {
+Zone::Zone(int _index, float x, float y, float w, float h) {
 	//ofLog(OF_LOG_NOTICE, "Zone(x, y, w, h) constructor") ;
+	index = _index;
+	
 	rect.set(x,y,w,h);
-	label = zonelabel;
+	label = "Zone"+ofToString(index+1);
 	editable = false;
 	handles.resize(2);
 	handles[0].set(rect.getTopLeft());
@@ -42,9 +44,14 @@ bool Zone::update() {
 	return false;
 }
 
-void Zone::addShape(Shape* s){
+bool Zone::addShape(Shape* s){
 	
-	if(s->intersectsRect(rect)) shapes.push_back(s);
+	if(s->intersectsRect(rect)){
+		shapes.push_back(s);
+		return true;
+	} else {
+		return false;
+	}
 	//ofLog(OF_LOG_NOTICE, "Zone.addShape size : " + ofToString(shapes.size()));
 	
 }
@@ -193,7 +200,10 @@ void Zone :: removeListeners(){
 
 void Zone :: startDragging(int handleIndex, ofPoint clickPos) {
 	if(!active) return;
-	handles[handleIndex].snapToPixels = snapToPixels; 
+	
+	handles[handleIndex].snapToGrid = snapToPixels;
+	handles[handleIndex].gridSize = 1;
+	
 	handles[handleIndex].startDrag(clickPos);
 	
 	//	int x = ((handleIndex%2)+1)%2;

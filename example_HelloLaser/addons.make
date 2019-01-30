@@ -1,3 +1,4 @@
+ofxClipper
 ofxGui
 ofxLaser
 ofxNetwork

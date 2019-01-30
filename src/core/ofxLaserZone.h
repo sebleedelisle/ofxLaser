@@ -19,11 +19,11 @@ namespace ofxLaser {
 		public :
 		
 		Zone();
-		Zone(string zonelabel, float x, float y, float w, float h);
+		Zone(int index, float x, float y, float w, float h);
 		~Zone();
 
 		bool update();
-		void addShape(Shape* s);
+		bool addShape(Shape* s);
 		void draw();
 		
 		ofPoint& addSortedShapesToVector(vector<Shape*>& shapes, ofPoint& currentPosition);
@@ -49,7 +49,9 @@ namespace ofxLaser {
 		bool visible = true;
 		bool active = true; 
 		bool isDirty = true;
-		bool snapToPixels = true; 
+		bool snapToPixels = true;
+		
+		int index = 0;
 		
 		
 	};

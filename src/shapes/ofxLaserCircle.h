@@ -15,7 +15,7 @@ namespace ofxLaser {
 	class Circle :public Shape {
 	
 		public:
-		
+		Circle(){};
 		Circle(const ofPoint& center, const float radius, const ofColor& col, string profilelabel);
 		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
 		

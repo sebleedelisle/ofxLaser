@@ -40,7 +40,7 @@ void QuadGui::set(float x, float y, float w, float h) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
         
-        handles[i].set(xpos, ypos);
+        handles[i].set(xpos, ypos,5);
         allHandles.push_back(&handles[i]);
     }
     

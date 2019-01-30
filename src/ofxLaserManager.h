@@ -125,14 +125,16 @@ namespace ofxLaser {
 		
 		ofPoint previewOffset;
 		float previewScale;
-	    
+		
+		bool zonesChanged; 
+		std::vector<Zone*> zones;
+		
 		private:
 		int createDefaultZone();
 		
 		ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
 		int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
 		
-		std::vector<Zone*> zones;
 		std::vector<Projector*> projectors;
 		
 		std::deque <ofxLaser::Shape*> shapes;

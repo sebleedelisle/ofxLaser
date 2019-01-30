@@ -104,6 +104,8 @@ namespace ofxLaser {
 		//bool addPoints(const vector<dac_point> &points );
 		bool addPoint(const dac_point &point );
 		void close();
+		
+		void reset(); 
         
         //output the data that we just sent
         void logData();
@@ -132,7 +134,6 @@ namespace ofxLaser {
 		inline bool waitForAck(char command);
 		bool sendBytes(const void* buffer, int length);
 		
-		
         inline uint16_t bytesToUInt16(unsigned char* byteaddress);
         inline uint16_t bytesToInt16(unsigned char* byteaddress);
         inline uint32_t bytesToUInt32(unsigned char* byteaddress);
@@ -143,7 +144,6 @@ namespace ofxLaser {
 		dac_point lastpoint;
 		dac_point sendpoint;
 		
-        
 		Byte buffer[1024];
 		Byte outbuffer[100000];
         int numBytesSent;
@@ -159,6 +159,8 @@ namespace ofxLaser {
         uint64_t startTime; // to measure latency
 		bool beginSent;
 		
+		string ipaddress; 
+		
 		deque<dac_point*> bufferedPoints;
 		vector<dac_point*> sparePoints;
 		vector<dac_point> framePoints;
@@ -167,6 +169,7 @@ namespace ofxLaser {
 		int queuedPPSChangeMessages;
 		bool connected; 
 		bool replayFrames = true;
+		bool isReplaying = false;
 		bool frameMode = true;
 		bool verbose = false;
         

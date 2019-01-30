@@ -31,8 +31,13 @@ DacEtherdream :: DacEtherdream(){
     //TODO
     // this should really be dependent on network latency
     // and also we should have the option of lower latency on better networks
-    maxBufferedPoints = 1200;
-    minBufferedPoints = 1000;
+	// also make this adjustable
+	// also maxBufferedPoints should be higher on etherdream 2
+	//
+    maxBufferedPoints = 1200; 	// the maximum points to fill the buffer with
+    minBufferedPoints = 1000; 	// the minimum number of points to buffer before
+								// we tell the ED to start playing
+								// TODO - these should be time based!
 
 }
 const vector<ofParameter<int>*>& DacEtherdream :: getDisplayData() {
@@ -69,51 +74,64 @@ void DacEtherdream :: setup(string ip) {
 	pps = newPPS = 30000; // this is always sent on begin
 	queuedPPSChangeMessages = 0;
 	connected = false;
+	ipaddress = ip;
 	
-	Poco::Timespan timeout(1 * 1000000); // five seconds timeout
+	Poco::Timespan timeout(1 * 250000); // 1/4 seconds timeout
 	
 	try {
 		
-		ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
+		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
 		socket.connect(sa, timeout);
+		socket.setSendTimeout(timeout);
+		socket.setReceiveTimeout(timeout);
+		
 		connected = true;
 	} catch (Poco::Exception& exc) {
 		//Handle your network errors.
 		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " + exc.displayText());
+		connected = false;
 
 	}catch (Poco::TimeoutException& exc) {
 		//Handle your network errors.
 		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Timeout error: " + exc.displayText());
+		connected = false;
 		
 	}
 	catch(...){
 		ofLog(OF_LOG_ERROR, "DacEtherdream setup failed - unknown error");
 		//std::rethrow_exception(current_exception);
+		connected = false;
 	}
 		
 
 	if(connected) {
-		socket.setSendTimeout(timeout);
-		socket.setReceiveTimeout(timeout);
-		
 		//prepareSent = false;
 		beginSent = false;
 		startThread(); // blocking is true by default I think?
 		
-        auto & thread = getNativeThread();
-        
-#ifndef _MSC_VER        
-        // only linux and osx        
-        struct sched_param param;
-        param.sched_priority = 89;
-        pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
-#else    
-        // windows implementation
-        SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+		auto & thread = getNativeThread();
+		
+#ifndef _MSC_VER
+		// only linux and osx
+		struct sched_param param;
+		param.sched_priority = 89;
+		pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+#else
+		// windows implementation
+		SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
 #endif
+	
+
 	}
 }
 
+void DacEtherdream :: reset() {
+	if(lock()) {
+		resetFlag = true;
+		unlock();
+	}
+	
+}
 void DacEtherdream :: close() {
 	if(!connected) return;
 	while(!lock());
@@ -141,7 +159,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 	// if we already have too many points in the buffer,
 	// then it means that we need to skip this frame
 	
-	if(bufferedPoints.size()<maxBufferSize) {
+	if(isReplaying || (bufferedPoints.size()<maxBufferSize)) {
 
 		framePoints.resize(points.size());
 
@@ -162,6 +180,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 				// TODO make frame replay an option
 				framePoints[i] = p1;
 			}
+			isReplaying = false;
 			unlock();
 		}
 		return true;
@@ -242,6 +261,25 @@ void DacEtherdream :: threadedFunction(){
 //		if((response.status.light_engine_state == LIGHT_ENGINE_READY) && (!prepareSent)) {
 //			needToSendPrepare = true;
 //		}
+		
+		if(resetFlag) {
+			
+			resetFlag = false;
+			
+			// clear the socket of data
+			try {
+				int n = socket.receiveBytes(buffer, 1000);
+			} catch(...) {
+				// doesn't matter
+			}
+			sendPing();
+			waitForAck('?');
+			if(response.status.light_engine_state == LIGHT_ENGINE_ESTOP) {
+				sendClear();
+				waitForAck('c');
+			}
+			
+		}
 
 		if((response.status.playback_state == PLAYBACK_IDLE) && (response.status.light_engine_state == LIGHT_ENGINE_READY)) {
 			needToSendPrepare = true;
@@ -271,7 +309,8 @@ void DacEtherdream :: threadedFunction(){
 		// if state is prepared or playing, and we have points in the buffer, then send the points
 		if(response.status.playback_state!=PLAYBACK_IDLE) {
 			
-			if(numPointsToSend>80){
+			// min points might as well be small, to keep topping up huh?
+			if(numPointsToSend>20){
 				//check buffer and send the next points
 				while(!lock()) {}
 				sendData();
@@ -413,13 +452,17 @@ inline bool DacEtherdream::waitForAck(char command) {
 		response.status.point_rate = bytesToUInt32(&buffer[14]);
 		response.status.point_count = bytesToUInt32(&buffer[18]);
 		
-		
 		//memcpy(&response, &buffer, sizeof(response));
        
         if((response.response == 'a') && (response.status.playback_state!= PLAYBACK_IDLE )) {
             numPointsToSend = maxBufferedPoints - response.status.buffer_fullness;
             if(numPointsToSend<0) numPointsToSend = 0;
-            
+			
+//			// numpointstosend should be
+//			if((bufferedPoints.size()>minBuffer) && (numPointsToSend>bufferedPoints.size())) {
+//				numPointsToSend
+//			}
+			
         }
 		if(verbose || (response.response!='a')) {
             ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
@@ -598,25 +641,45 @@ inline bool DacEtherdream :: sendData(){
 	
 	//data_command d;
 	uint8_t command = 'd';
-	// TODO - send more than 80 bytes if we can?
-	//uint16_t npoints = 80;
-	//if(numPointsToSend<npoints) npoints = numPointsToSend;
+
+	// numPointsToSend is automatically calculated when we get data back from the DAC
+	// not sure why I'm subtracting 10 here... TODO try taking it out
     uint16_t npoints = numPointsToSend-10;
     
     // this is to stop sending too many points into the future
-    float bufferTime = 0.5f; // was 0.1f
+    float bufferTime = 0.5f; // was 0.1f - TODO make this a param!
 	if(npoints>pps*bufferTime) npoints = pps*bufferTime;
 	
     if(npoints<=0) npoints = 1;
-	numPointsToSend-=npoints;
+	// i'm not sure there's any point in doing this... because
+	// we wait to hear back from the DAC anyway...
+	//numPointsToSend-=npoints;
+	
+	// TODO make these params
+	float minBufferTime = 0.01; // (30 frames at 30k)
+	int minBuffer = pps*minBufferTime;
 	
 	// system for resending existing frames... probably can be optimised
-	if(frameMode && replayFrames && (bufferedPoints.size()< npoints)) {
-		for(int i = 0; i<framePoints.size(); i++) {
-			addPoint(framePoints[i]);
+	// if we're in frame mode and we're replaying frames
+	if(frameMode && replayFrames) {
+		// if we have fewer points in the buffer than we're gonna send
+		if(bufferedPoints.size()< npoints) {
+
+			// then set the number of points to be the buffered points size
+			// (the rest of the frame)
+
+			if(bufferedPoints.size()>=minBuffer) {
+				npoints = bufferedPoints.size();
+				
+			} else {
+				
+				// otherwise, let's replay the frame!
+				for(int i = 0; i<framePoints.size(); i++) {
+					addPoint(framePoints[i]);
+				}
+				isReplaying = true;
+			}
 		}
-			
-		
 	}
 	
 	outbuffer[0]= command;
@@ -741,6 +804,7 @@ bool DacEtherdream :: sendClear(){
 bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 	int numBytesSent = 0;
 	bool failed = false;
+	bool networkerror = false;
     startTime = ofGetElapsedTimeMicros();//  count = 0;
 
 	try {
@@ -749,7 +813,7 @@ bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 	catch (Poco::Exception& exc) {
 		//Handle your network errors.
 		cerr << "sendBytes : Network error: " << exc.displayText() << endl;
-	//	isOpen = false;
+		networkerror = true;
 		failed = true;
 	}
 	catch (Poco::TimeoutException& exc) {
@@ -769,6 +833,10 @@ bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 	}
 	
 	if(failed) {
+		if(networkerror) {
+			close();
+			setup(ipaddress);
+		}
 		beginSent = false;
 		//prepareSent = false;
 		return false;

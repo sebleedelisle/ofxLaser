@@ -13,7 +13,7 @@ void ofApp::setup(){
     
     // replace this with the IP address of your etherdream (find it with the sitter diagnostic
     // tool at https://ether-dream.com/downloads.html ) 
-    string dacIP = "10.0.1.10";
+    string dacIP = "10.0.1.12";
 
     dac.setup(dacIP);
 	

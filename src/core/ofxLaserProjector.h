@@ -103,7 +103,7 @@ namespace ofxLaser {
 		
 		ofPoint laserHomePosition;
 		string label;
-		
+		float smoothedFrameRate = 0; 
 		vector<Point> laserPoints;
         int numPoints;
 		ofMesh previewPathMesh;
@@ -115,6 +115,8 @@ namespace ofxLaser {
 		ofParameter<int> pps;
         ofParameter<float> speedMultiplier; 
 		ofParameter<float>intensity;
+		ofParameter<bool> resetDac;
+		
 		ofParameter<float> colourChangeOffset;
 		ofParameter<int> testPattern;
 		int numTestPatterns; 

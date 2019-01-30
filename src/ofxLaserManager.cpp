@@ -75,7 +75,7 @@ void Manager::addZone(const ofRectangle& rect) {
 }
 
 void Manager :: addZone(float x, float y, float w, float h) {
-	zones.push_back(new Zone("Zone"+ofToString(zones.size()+1),x, y, w, h));
+	zones.push_back(new Zone(zones.size(), x, y, w, h));
 	zones.back()->load();
 	
 }
@@ -142,18 +142,16 @@ void Manager::drawPoly(const ofPolyline & poly, const ofColor& col, string profi
 	// (useful for dynamically generated lines, or empty lines
 	// that are often found in poorly compiled SVG files)
 	
-	if((poly.getVertices().size()==0)||(poly.getPerimeter()<0.1)) return;
+	if((poly.size()==0)||(poly.getPerimeter()<0.01)) return;
 	
-	//***
-	// convert to 2D TODO -
 	ofPolyline& polyline = tmpPoly;
-	polyline.clear();
+	polyline = poly;
 
-	for(int i = 0; i<poly.getVertices().size(); i++) {
-		polyline.addVertex(gLProject(poly.getVertices()[i]));
+	for(glm::vec3& v : polyline.getVertices()) {
+		v = gLProject(v);
 	}
-    
-    polyline.setClosed(poly.isClosed());
+	
+
 	
 	Polyline* p =new ofxLaser::Polyline(polyline, col, profileName);
     p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
@@ -167,14 +165,14 @@ void Manager::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, s
 	// (useful for dynamically generated lines, or empty lines
 	// that are often found in poorly compiled SVG files)
 	
-	if((poly.getVertices().size()==0)||(poly.getPerimeter()<0.1)) return;
+	if((poly.size()==0)||(poly.getPerimeter()<0.1)) return;
 	
 
 	ofPolyline& polyline = tmpPoly;
-	polyline.clear();
+	polyline = poly;
 	
-	for(int i = 0; i<poly.getVertices().size(); i++) {
-		polyline.addVertex(gLProject(poly.getVertices()[i]));
+	for(glm::vec3& v : polyline.getVertices()) {
+		v = gLProject(v);
 	}
 	
 	ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
@@ -193,6 +191,8 @@ void Manager::drawCircle(const ofPoint & centre, const float& radius, const ofCo
 }
 
 void Manager:: update(){
+	
+	zonesChanged = false;
 	
     if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!
@@ -214,6 +214,7 @@ void Manager:: update(){
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->update(updateZoneRects); // clears the points
 	}
+	zonesChanged = updateZoneRects;
 	
 }
 
@@ -234,7 +235,7 @@ void Manager::send(){
 			// if (zone should have shape) then
 			// TODO zone intersect shape test
 			if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
-				z.addShape(s);
+				bool shapeAdded = z.addShape(s);
 			} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
 				if(s->getTargetZone() == j) z.addShape(s);
 			}
@@ -386,8 +387,11 @@ void Manager :: renderPreview() {
 	
 	
     // draw outline of laser output area
-    ofSetColor(0);
-    ofFill();
+	ofSetColor(0);
+	ofFill();
+	ofDrawRectangle(0,0,width,height);
+	ofSetColor(50);
+    ofNoFill();
     ofDrawRectangle(0,0,width,height);
 	
 	// render guide if we have one
@@ -425,13 +429,13 @@ void Manager :: renderPreview() {
 	
 	ofRectangle laserRect(0,0,width, height);
     if(useBitmapMask) {
-        auto & points = mesh.getVertices();
+		const vector<glm::vec3>& points = mesh.getVertices();
         std::vector<ofFloatColor>& colours = mesh.getColors();
         
         for(int i = 0;i<points.size(); i++ ){
  
             ofFloatColor& c = colours.at(i);
-            auto& p = points.at(i);
+			const glm::vec3& p = points[i];
 			
 			
 			float brightness;

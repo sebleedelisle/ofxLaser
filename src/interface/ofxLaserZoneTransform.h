@@ -22,7 +22,7 @@ class ZoneTransform {
 	
 	public :
 	
-	ZoneTransform(string labelname, string filename);
+	ZoneTransform(int index, string filename);
 	~ZoneTransform();
 	
 	void init(ofRectangle& srcRect);
@@ -77,6 +77,8 @@ class ZoneTransform {
 	ofPoint getWarpedPoint(const ofPoint& p);
 	ofPoint getUnWarpedPoint(const ofPoint& p);
 	
+	ofPoint getCentre(); 
+	
 	ofParameterGroup params;
 	
 	ofParameter<bool>simpleMode;
@@ -93,6 +95,7 @@ class ZoneTransform {
 	
 	string saveLabel;
 	string displayLabel;
+	int index; 
 	
 	
 	ofPoint offset;

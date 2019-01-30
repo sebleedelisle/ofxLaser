@@ -39,6 +39,7 @@ void Projector :: initGui(bool showAdvanced) {
 	gui->add(armed.set("ARMED", false));
 	gui->add(intensity.set("Intensity", 0.1,0,1));
 	gui->add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+	gui->add(resetDac.set("Reset DAC", false));
 	
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
@@ -216,7 +217,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	
 	zones.push_back(zone);
 	
-	zoneWarps.push_back(new ZoneTransform(zone->label.substr(4,4), "WarpProjector"+label+"Zone"+ofToString(zones.size()-1)));
+	zoneWarps.push_back(new ZoneTransform(zone->index, "Warp"+label+"Zone"+ofToString(zone->index+1)));
 	ZoneTransform& warp = *zoneWarps.back();
     
     zonesMuted.resize(zones.size());
@@ -242,7 +243,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	topEdges.push_back(0);
 	bottomEdges.push_back(0);
 	
-	//warp.loadSettings();
+	warp.loadSettings();
 }
 
 void Projector::zoneMaskChanged(ofAbstractParameter& e) {
@@ -264,9 +265,7 @@ void Projector::updateZoneMasks() {
 		zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
 		zoneMask.setWidth(zone.rect.getWidth()*(1-leftEdge-rightEdge));
 		zoneMask.setHeight(zone.rect.getHeight()*(1-topEdge-bottomEdge));
-
 	}
-	
 }
 
 void Projector::renderStatusBox(float x, float y, float w, float h) {
@@ -284,7 +283,8 @@ void Projector::renderStatusBox(float x, float y, float w, float h) {
 	//ofSetText
 	ofSetColor(20);
 	ofDrawBitmapString(label + " "+dac.getLabel(), 8, 13);
-	
+	string framerate = ofToString(round(smoothedFrameRate));
+	ofDrawBitmapString(framerate, w-(framerate.size()*8)- 18,13);
 	ofSetColor(dac.getStatusColour());
 	ofDrawRectangle(w-18+4,4,10,10); 
 	//ofNoFill();
@@ -393,21 +393,15 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	ofPushStyle();
 	
-//	ofNoFill();
-//	ofSetColor(255);
-//	ofDrawRectangle(x,y,w,h);
-	ofSetColor(100);
-	//ofSet
+	ofSetColor(255);
+
 	ofDrawBitmapString(label.back(), x+w-20, y+20);
-	
+	ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
 	ofTranslate(x,y);
 	ofScale(w/800, h/800);
-	
-//	ofNoFill();
-//	ofSetColor(255);
-//	ofDrawRectangle(0,0,800,800);
+
 	
 	ofTranslate(outputOffset);
 
@@ -422,21 +416,6 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 		ofRectangle& mask = zoneMasks[i];
 
-		//ofPushMatrix();
-		//ofTranslate();
-//		ofFill();
-//		ofSetColor(0,0,255,40);
-//
-//		ofBeginShape();
-//		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-//		ofVertex(p);
-//		ofEndShape(true);
 
 		ofNoFill();
 		ofSetColor(50,50,255,150);
@@ -452,8 +431,6 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 		ofVertex(p);
 		ofEndShape(true);
 
-
-		//ofPopMatrix();
 
 	}
 
@@ -474,11 +451,11 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
 	
-	if(previewPathMesh.getVertices().size()>0) {
+	if(previewPathMesh.getNumVertices()>0) {
 		
-		float time = previewPathMesh.getVertices().size()/50.0f;
-		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getVertices().size());
-		ofPoint p = previewPathMesh.getVertices().at(pointindex);
+		float time = previewPathMesh.getNumVertices()/50.0f;
+		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
+		ofPoint p = previewPathMesh.getVertex(pointindex);
 		ofSetColor(255);
 		ofDrawCircle(p, 6);
 		ofFill();
@@ -552,7 +529,10 @@ void Projector::update(bool updateZones) {
 	float y = round(((ofPoint)outputOffset).y*10)/10.0f;
 	outputOffset = ofVec2f(x,y);
 
-	
+	if(resetDac) {
+		resetDac = false; 
+		dac.reset();
+	}
     bool soloMode = false;
     for(int i = 0; i<zonesSoloed.size(); i++) {
         if(zonesSoloed[i]) {
@@ -587,6 +567,8 @@ void Projector::update(bool updateZones) {
 			updateZoneMasks();
 		}
 	}
+	
+	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.05;
 
 }
 
@@ -1312,9 +1294,10 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 void Projector::saveSettings(){
 	gui->saveToFile(label+".xml");
-	for(int i = 0; i<zoneWarps.size(); i++) {
-		zoneWarps[i]->saveSettings();
-	}
+	// not sure this is needed cos we save if we edit...
+//	for(int i = 0; i<zoneWarps.size(); i++) {
+//		zoneWarps[i]->saveSettings();
+//	}
 	
 }
 

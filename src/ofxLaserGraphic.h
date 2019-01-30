@@ -9,6 +9,11 @@
 #include "ofMain.h"
 #include "ofxLaserManager.h"
 #include "ofxSvg.h"
+#include "ofxClipper.h"
+#include "ofxLaserFactory.h"
+
+// for Clipper to work with open paths
+//#define use_lines
 
 namespace ofxLaser {
 
@@ -20,14 +25,14 @@ class Graphic {
 	public:
 	Graphic() {
 		Graphic::numGraphicsInMemory ++;
-		ofLog(OF_LOG_NOTICE, "numGraphicsInMemory : " + ofToString(Graphic::numGraphicsInMemory));
+		//ofLog(OF_LOG_NOTICE, "numGraphicsInMemory : " + ofToString(Graphic::numGraphicsInMemory));
 	}
 	
 	~Graphic() {
 		Graphic::numGraphicsInMemory --;
 		
 		for(ofPolyline* poly : polylines) {
-			Graphic::releasePolyline(poly);
+			Factory::releasePolyline(poly);
 		}
 	}
 	// copy constructor
@@ -35,17 +40,33 @@ class Graphic {
 		Graphic::numGraphicsInMemory ++;
 		colours = g.colours;
 		for(ofPolyline* poly : g.polylines) {
-			polylines.push_back(Graphic::getPolyline(poly));
+			polylines.push_back(Factory::getPolyline(poly));
 		}
 		
 	}
 
 	
-	void addSvg(ofxSVG& svg, bool optimise = true);
+	void addSvg(ofxSVG& svg, bool optimise = true, bool subtractFills = true);
 	
-	void addPolyline(const ofPolyline& poly, ofColor& colour, bool useTransform = true);
-	void addPolylineUnder(const ofPolyline& poly, ofColor& colour, bool useTransform=true);
+	void addPolyline(const ofPolyline* poly, ofColor& colour, bool filled = true, bool useTransform = true){
+		addPolyline(*poly, colour, filled, useTransform);
+	}
+	void addPolyline(const ofPolyline& poly, ofColor& colour, bool filled = true, bool useTransform = true);
+	void addPath(const ofPath& path, bool useTransform = true, bool subtractFills = true);
+
+	// subtract polyline shape from everything underneath
+	void subtractPolyline(ofPolyline* polyToSubtract);
 	
+	void intersectRect(ofRectangle& rect);
+	void intersectPaths(vector<ofPath>& paths);
+
+	
+	// ensures a tiny gap in a closed poly so that line subtraction
+	// works properly
+	void breakPolyline(ofPolyline* poly);
+	
+	void replacePolylines(vector<ofPolyline*>& newpolys, vector<ofColor>&newcolours);
+
 	void renderToLaser(ofxLaser::Manager& laser, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
 	
     void clear();
@@ -62,16 +83,17 @@ class Graphic {
 	// returns false if lines aren't touching
 	bool joinPolylines(ofPolyline& poly1, ofPolyline& poly2);
 	
-	// a boolean subtract operation
-	void subtractShapeFromPolylines(const ofPolyline& polyToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
-	void subtractShapesFromPolylines(const vector<ofPolyline*>& polysToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
+	// a boolean subtract operation - affects all polys
+	//void subtractShapeFromPolylines(const ofPolyline& polyToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
+	//void subtractShapesFromPolylines(const vector<ofPolyline*>& polysToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
 
-	void subtractPathFromPolylines(ofPath& sourcepath, vector<ofPolyline*>& targetpolys, vector<ofColor>& colours);
+	void subtractPathFromPolylines(ofPath& sourcepath);
 	bool pointInsidePath(glm::vec3 point, ofPath& path);
 	
 	bool pointInsidePolylines(glm::vec3 point, const vector<ofPolyline*>& polys);
 
 	void transformPolyline(ofPolyline& poly);
+	ofPath transformPath(ofPath& path);
 	
 	glm::vec3 gLProject(glm::vec3& v);
 
@@ -83,48 +105,15 @@ class Graphic {
 	vector<ofPolyline*> polylines;
 	vector<ofColor> colours;
 	
-	// for avoiding making and destroying polylines
-	ofPolyline tempPoly;
+	// a shape that represents all of the filled shapes - the "alpha channel"
+	vector<ofPolyline> polylineMask;
 	
+	ofx::Clipper clipper;
 	
-	
-	static vector<ofPolyline*> polylinePool;
-	static vector<ofPolyline*> polylineSpares;
+	//object factory for ofPolylines!
+
 	static int numGraphicsInMemory;
-	
-	static bool releasePolyline(ofPolyline* polyToRelease) {
-		//ofLog(OF_LOG_NOTICE, "polylinePool.size() : " + ofToString(polylinePool.size())+ " polylineSpares.size() : " + ofToString(polylineSpares.size()));
-		vector<ofPolyline*>::iterator it = std::find( polylinePool.begin(), polylinePool.end(),polyToRelease);
-		if(it==polylinePool.end()){
-			ofLog(OF_LOG_WARNING, "ofxLaser::Graphic::releasePolyline - poly not found in pool!");
-			return false;
-		} else {
-			ofPolyline* poly = *it;
-			polylinePool.erase(it);
-			polylineSpares.push_back(poly);
-			return true;
-		}
-			
-	}
-	static ofPolyline* getPolyline(const ofPolyline* polyToClone = NULL) {
-		ofLog(OF_LOG_NOTICE, "polylinePool.size() : " + ofToString(polylinePool.size())+ " polylineSpares.size() : " + ofToString(polylineSpares.size()));
-		
-		ofPolyline* poly;
-		if(polylineSpares.size()>0) {
-			poly = polylineSpares.back();
-			polylineSpares.pop_back();
-			poly->clear();
-			
-		} else {
-			poly = new ofPolyline();
-		}
-		polylinePool.push_back(poly);
-		if(polyToClone!=NULL) {
-			*poly = *polyToClone;
-		}
-		
-		return poly;
-	}
+
 
 	protected:
 

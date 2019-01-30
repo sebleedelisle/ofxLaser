@@ -31,9 +31,11 @@ Circle::Circle(const ofPoint& center, const float radius, const ofColor& col, st
 		polyline.addVertex(p);
 	}
 	
-	startPos = polyline.getVertices().front();
-	// to avoid a bug in polyline in open polys
-	endPos = polyline.getVertices().back();
+	const vector<glm::vec3>& vertices = polyline.getVertices();
+	
+	startPos = vertices.front();
+	
+	endPos = vertices.back();
 	
 	tested = false;
 	profileLabel = profilelabel;

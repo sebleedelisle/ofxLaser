@@ -10,7 +10,30 @@
 using namespace ofxLaser;
 
 
+Polyline::Polyline() {
+	
+	reversable = false;
+	colour = ofColor::white;
+	cachedProfile = NULL;
+	multicoloured = false;
+	
+	tested = false;
+	profileLabel = "";
+
+}
+
 Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel){
+	init(poly, col, profilelabel);
+	
+}
+
+Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
+	
+	init(poly, sourcecolours, profilelabel);
+
+}
+
+void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilelabel){
 	
 	reversable = false;
 	colour = col;
@@ -20,12 +43,11 @@ Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelab
 	tested = false;
 	profileLabel = profilelabel;
 	
-	
 	initPoly(poly);
 	
 }
 
-Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
+void Polyline::init(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
 	
 	reversable = false;
 	cachedProfile = NULL;
@@ -39,27 +61,40 @@ Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours,
 	
 	initPoly(poly);
 	
-
+	
 }
 
 
-
 void Polyline::initPoly(const ofPolyline& poly){
-    polyline.clear();
-    auto & vertices =poly.getVertices();
-    ofPoint p;
-    for(size_t i = 0; i<vertices.size(); i++) {
-        
-        //p = ofxLaser::Manager::instance()->gLProject(vertices[i]);
-        p = vertices[i];
-        polyline.addVertex(p);
-        
-    }
-    if(poly.isClosed()) polyline.addVertex(vertices[0]); 
-    polyline.setClosed(false);
-	startPos = polyline.getVertices().front();
+	
+	if(polylinePointer==NULL) {
+		polylinePointer = ofxLaser::Factory::getPolyline();
+	} else {
+    	polylinePointer->clear();
+	}
+	
+	*polylinePointer = poly;  // makes a copy, hopefully
+//    auto & vertices =poly.getVertices();
+//    ofPoint p;
+//    for(size_t i = 0; i<vertices.size(); i++) {
+//
+//        //p = ofxLaser::Manager::instance()->gLProject(vertices[i]);
+//        p = vertices[i];
+//        polyline.addVertex(p);
+//
+//    }
+	
+	ofPolyline& polyline = *polylinePointer;
+	if(poly.isClosed()) {
+		polyline.addVertex(polyline.getVertices().front());
+    	polyline.setClosed(false);
+	}
+	const vector<glm::vec3>& vertices = polyline.getVertices();
+	
+	startPos = vertices.front();
 	// to avoid a bug in polyline in open polys
-	endPos = polyline.getVertices().back();
+	endPos = vertices.back();
+	boundingBox = polyline.getBoundingBox();
    
 	
 }
@@ -69,17 +104,22 @@ void Polyline::initPoly(const ofPolyline& poly){
 
 Polyline:: ~Polyline() {
 	// not sure if there's any point clearing the polyline - they should just get destroyed, right?
-	polyline.clear();
+	//polyline.clear();
+	if(polylinePointer!=NULL) {
+		ofxLaser::Factory::releasePolyline(polylinePointer);
+	}
 }
 
 void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 	
+	// TODO - take into account the speed multiplier!
+	ofPolyline& polyline = *polylinePointer;
 	if(&profile == cachedProfile) {
-		
+//		ofLog(OF_LOG_NOTICE, "cached points used");
 		points.insert(points.end(), cachedPoints.begin(), cachedPoints.end());
 		return;
 	}
-	
+
 	cachedProfile = &profile;
 	cachedPoints.clear();
 	
@@ -90,12 +130,12 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 	int startpoint = 0;
 	int endpoint = 0;
 	
-	int numVertices =(int)polyline.getVertices().size();
+	int numVertices =(int)polyline.size();
 	while(endpoint<numVertices-1) {
 		
 		do {
 			endpoint++;
-		} while ((endpoint< (int)polyline.getVertices().size()-1) && abs(polyline.getDegreesAtIndex(endpoint)) < cornerThresholdAngle);
+		} while ((endpoint< (int)polyline.size()-1) && abs(polyline.getDegreesAtIndex(endpoint)) < cornerThresholdAngle);
 		
 		
 		float startdistance = polyline.getLengthAtIndex(startpoint);
@@ -140,8 +180,8 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 
 void Polyline :: addPreviewToMesh(ofMesh& mesh){
 	
-	
-	auto & vertices = polyline.getVertices();
+	ofPolyline& polyline = *polylinePointer;
+	const vector<glm::vec3>& vertices = polyline.getVertices();
 	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.front());
 	
@@ -163,9 +203,9 @@ void Polyline :: addPreviewToMesh(ofMesh& mesh){
 
 
 bool Polyline:: intersectsRect(ofRectangle & rect){
-	
-	if(!rect.intersects(polyline.getBoundingBox())) return false;
-	auto & vertices = polyline.getVertices();
+	ofPolyline& polyline = *polylinePointer;
+	if(!rect.intersects(boundingBox)) return false;
+	const vector<glm::vec3> & vertices = polyline.getVertices();
 	for(size_t i = 1; i< vertices.size(); i++) {
 		if(rect.intersects(vertices[i-1],vertices[i])) return true;
 	}

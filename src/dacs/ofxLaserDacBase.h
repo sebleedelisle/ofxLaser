@@ -24,10 +24,12 @@ namespace ofxLaser {
 	
 		virtual const vector<ofParameter<int>*>& getDisplayData() { return displayData;};
 		virtual void resetDisplayData(){};
+		virtual void reset() {};
 		
 	protected :
 	
 		vector<ofParameter<int>*> displayData;
+		bool resetFlag = false;
 
 	};
 

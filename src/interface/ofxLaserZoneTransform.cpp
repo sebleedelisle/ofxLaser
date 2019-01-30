@@ -11,10 +11,11 @@
 using namespace ofxLaser;
 
 
-ZoneTransform::ZoneTransform(string labelname, string filename) {
+ZoneTransform::ZoneTransform(int _index, string filename) {
 
 	saveLabel = filename;
-	displayLabel = labelname;
+	//displayLabel = labelname;
+	index = _index;
 
 	scale = 1;
 	offset.set(0,0);
@@ -89,6 +90,9 @@ void ZoneTransform::draw() {
 	ofPushMatrix();
 	ofTranslate(offset);
 	ofScale(scale, scale);
+	string label =ofToString(index+1);
+	ofSetColor(150,150,255);
+	ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
 	
 	for(int i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
@@ -125,7 +129,12 @@ void ZoneTransform::draw() {
 	ofPopMatrix();
 }
 
-
+ofPoint ZoneTransform::getCentre() {
+	ofPoint centre = srcRect.getCenter();
+	return getWarpedPoint(centre);
+	
+	
+}
 ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
 	ofPoint rp = p - srcRect.getTopLeft();
 	
