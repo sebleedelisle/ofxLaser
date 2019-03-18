@@ -23,11 +23,13 @@ class Warper {
 //	void setDst(float x, float y, float w, float h) ;
 //	
 	void updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, glm::vec3 src4, glm::vec3 dst1, glm::vec3 dst2, glm::vec3 dst3, glm::vec3 dst4);
-	
-	Point getWarpedPoint(const Point& p);
-	Point getUnWarpedPoint(const Point& p);
-	glm::vec3 getWarpedPoint(const glm::vec3& p);
-	glm::vec3 getUnWarpedPoint(const glm::vec3& p);
+
+	glm::vec3 getWarpedPoint(const glm::vec3& p, bool useHomography = true);
+	Point getWarpedPoint(const Point& p, bool useHomography = true);
+	cv::Point2f getWarpedPoint(float x, float y, bool useHomography = true);
+
+	Point getUnWarpedPoint(const Point& p, bool useHomography = true);
+	glm::vec3 getUnWarpedPoint(const glm::vec3& p, bool useHomography = true);
 	
 	cv::Point2f toCv(glm::vec3 p) {
 		return cv::Point2f(p.x, p.y);
@@ -43,7 +45,8 @@ class Warper {
 	protected:
 	
 	vector<cv::Point2f> pre, post;
-	
+	vector<cv::Point2f> srcCVPoints, dstCVPoints;
+
 private:
 
 };

@@ -48,14 +48,14 @@ class Graphic {
 	
 	void addSvg(ofxSVG& svg, bool optimise = true, bool subtractFills = true);
 	
-	void addPolyline(const ofPolyline* poly, ofColor& colour, bool filled = true, bool useTransform = true){
+	void addPolyline(const ofPolyline* poly, ofColor colour, bool filled = true, bool useTransform = true){
 		addPolyline(*poly, colour, filled, useTransform);
 	}
-	void addPolyline(const ofPolyline& poly, ofColor& colour, bool filled = true, bool useTransform = true);
+	void addPolyline(const ofPolyline& poly, ofColor colour, bool filled = true, bool useTransform = true);
 	void addPath(const ofPath& path, bool useTransform = true, bool subtractFills = true);
 
 	// subtract polyline shape from everything underneath
-	void subtractPolyline(ofPolyline* polyToSubtract);
+	void subtractPolyline(ofPolyline* polyToSubtract, bool useTransform = false);
 	
 	void intersectRect(ofRectangle& rect);
 	void intersectPaths(vector<ofPath>& paths);

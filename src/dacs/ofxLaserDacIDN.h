@@ -55,6 +55,7 @@ class DacIDN : public DacBase, ofThread {
 		return "IDN";
 	}
 	
+	// TODO return relevant colour 
 	ofColor getStatusColour(){
 		return ofColor::green;
 	}

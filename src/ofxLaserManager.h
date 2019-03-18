@@ -25,9 +25,9 @@
 
 enum ofxLaserZoneMode {
 	OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want
-	OFXLASER_ZONE_AUTOMATIC // non-overlapping zones assumed - shapes go in all zones that
+	OFXLASER_ZONE_AUTOMATIC, // non-overlapping zones assumed - shapes go in all zones that
 							// contain it
-	//OFXLASER_ZONE_OPTIMISE, // automatically puts it in the best zone
+	OFXLASER_ZONE_OPTIMISE // automatically puts it in the best zone
 	
 	//OFXLASER_ZONE_OVERLAY // doubles up multiple lasers for improved brightness - actually not required cos
 							// AUTOMATIC does the same thing
@@ -50,7 +50,7 @@ namespace ofxLaser {
         
 		void addProjector(DacBase& dac);
 		
-		void addZone(float x, float y, float w, float h);
+		void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
 		void addZone(const ofRectangle& zoneRect);
 		
 		void addZoneToProjector(int zonenum, int projnum);
@@ -92,9 +92,8 @@ namespace ofxLaser {
 		
 		// should be called before initGui
 		bool setGuideImage(string filename);
+		bool isProjectorArmed(int i); 
 	
-		
-		
 		int width, height;
 		ofxPanel gui;
         bool guiIsVisible;
@@ -139,8 +138,6 @@ namespace ofxLaser {
 		
 		std::deque <ofxLaser::Shape*> shapes;
 		//ofParameter<int> testPattern;
-		
-	
 		
 		ofPolyline tmpPoly; // to avoid generating polyline objects
 		int screenHeight;

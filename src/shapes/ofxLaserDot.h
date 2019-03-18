@@ -26,7 +26,7 @@ class Dot : public Shape{
 	}
 	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		int maxPoints = profile.dotMaxPoints; 
-		int pointcount = ceil(maxPoints * intensity);// ceil(dotMaxPoints* dot->intensity);
+		int pointcount = ceil(maxPoints * intensity)/speedMultiplier;// ceil(dotMaxPoints* dot->intensity);
 		
 		for(int i = 0; i<pointcount; i++) {
 			//addIldaPoint(dot.getStartPos(), dot.colour);

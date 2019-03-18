@@ -10,33 +10,22 @@ using namespace ofxLaser;
 
 
 
-// TODO :
-// NOT DONE, changed my mind : get rid of polyline pointers - probably premature optimisation X
-// DONE except for SVG paths : Tidy up all subtraction functions - use Clipper!
-// DONE automatically close / open shapes.
-//
-//
-//// static class members
+
+// static class members
+
 int Graphic::numGraphicsInMemory = 0;
 
 void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
 	
-	//vector<ofPolyline*> newpolylines;
-	//vector<ofColor> colours;
-	
 	const vector <ofPath> & paths = svg.getPaths();
 //
 	 for (ofPath path : svg.getPaths()){
-		//shape : svg.getPaths()){
-		//ofLog(OF_LOG_NOTICE, "pathcount : "+ofToString(paths.size()));
 		addPath(path, false, subtractFills);
-
-
 	}
 
 
 	if(optimise) {
-		//connectLineSegments();
+		connectLineSegments();
 		for(int i = 0; i<polylines.size(); i++) {
 			polylines[i]->simplify(0.2);
 		}
@@ -259,7 +248,7 @@ void Graphic :: addPath(const ofPath& path, bool useTransform, bool subtractFill
 	
 }
 
-void Graphic :: addPolyline(const ofPolyline& poly, ofColor& colour, bool filled, bool useTransform) {
+void Graphic :: addPolyline(const ofPolyline& poly, ofColor colour, bool filled, bool useTransform) {
 	
 	// we don't need no one point vertices!
 	if(poly.size()<2) {
@@ -337,15 +326,22 @@ void Graphic::breakPolyline(ofPolyline* newPoly) {
 	
 }
 
-void Graphic::subtractPolyline(ofPolyline* polyToSubtract) {
+void Graphic::subtractPolyline(ofPolyline* polyToSubtract, bool useTransform) {
 
 	
 	vector <ofPolyline*> newPolylines;
 	vector <ofColor> newColours;
-	
+
+	ofPolyline* newPoly = Factory::getPolyline(polyToSubtract); // make a copy;
+
+	if(useTransform) {
+		transformPolyline(*newPoly);
+	}
+
 	for(int i = 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
+
 		
 		ofPolyline& target = *polylines[i];
 		
@@ -357,7 +353,7 @@ void Graphic::subtractPolyline(ofPolyline* polyToSubtract) {
 			return;
 		}
 		// add the clipper masks (i.e. the things that will do the clipping).
-		clipper.addPolyline(*polyToSubtract, ClipperLib::ptClip, true); // third param autocloses
+		clipper.addPolyline(*newPoly, ClipperLib::ptClip, true); // third param autocloses
 
 		// Execute the clipping operation based on the current clipping type.
 		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ClipperLib::ctDifference);
@@ -371,6 +367,7 @@ void Graphic::subtractPolyline(ofPolyline* polyToSubtract) {
 	
 	
 	replacePolylines(newPolylines, newColours);
+	Factory::releasePolyline(newPoly);
 
 }
 
@@ -521,6 +518,7 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 			startClosest1 = true;
 			startClosest2 = true;
 		}
+		
 	}
 	if(glm::distance(end1,end2)<tolerance) {
 		
@@ -535,6 +533,7 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 			startClosest1 = false;
 			startClosest2 = false;
 		}
+		
 	}
 	if(glm::distance(start1,end2)<tolerance) {
 		
@@ -558,8 +557,8 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 		return false;
 	} else {
 		
-		auto& poly1Vertices = poly1.getVertices();
-		auto& poly2Vertices = poly2.getVertices();
+		vector<glm::vec3>& poly1Vertices = poly1.getVertices();
+		const vector<glm::vec3>& poly2Vertices = poly2.getVertices();
 		
 		if(!startClosest1 && startClosest2) {
 			// connect new line to end of existing line
@@ -578,18 +577,22 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 
 			// new line end connected to existing line end
 		} else if(!startClosest1 && !startClosest2) {
+			
 			//ofLog(OF_LOG_NOTICE, "connecting new end to existing end");
-			for(int j=poly2Vertices.size()-1; j<=0; j--) {
+			for(int j=poly2Vertices.size()-1; j>=0; j--) {
 				poly1.addVertex(poly2Vertices[j]);
 			}
 
-			// new line end compared to existing line start
+
+
+		// new line end compared to existing line start
 		} else if(startClosest1 && !startClosest2) {
 			//ofLog(OF_LOG_NOTICE, "connecting new end to existing start");
 			for(int j=poly2Vertices.size()-1; j>=0; j--) {
 				//ofLog(OF_LOG_NOTICE, " - inserting element "+ofToString(j)+" into poly1 : " + ofToString(poly2Vertices[j]));
 				poly1.insertVertex(poly2Vertices[j], 0);
 			}
+
 		
 		}
 

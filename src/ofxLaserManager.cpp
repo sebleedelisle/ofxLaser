@@ -75,6 +75,8 @@ void Manager::addZone(const ofRectangle& rect) {
 }
 
 void Manager :: addZone(float x, float y, float w, float h) {
+	if(w<=0) w = width;
+	if(h<=0) h = height;
 	zones.push_back(new Zone(zones.size(), x, y, w, h));
 	zones.back()->load();
 	
@@ -226,20 +228,46 @@ void Manager::send(){
 	// figure out which zones to send the shapes to
 	// and send them. When the zones get the shape, they transform them
 	// into local zone space.
-	for(int j = 0; j<zones.size(); j++) {
-		Zone& z = *zones[j];
-		z.shapes.clear();
+	
+	if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
+		for(int j = 0; j<zones.size(); j++) {
+			Zone& z = *zones[j];
+			z.shapes.clear();
 		
-		for(int i = 0; i<shapes.size(); i++) {
-			Shape* s = shapes[i];
-			// if (zone should have shape) then
-			// TODO zone intersect shape test
-			if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
-				bool shapeAdded = z.addShape(s);
-			} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
-				if(s->getTargetZone() == j) z.addShape(s);
+			for(int i = 0; i<shapes.size(); i++) {
+				Shape* s = shapes[i];
+				// if (zone should have shape) then
+				// TODO zone intersect shape test
+				if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
+					bool shapeAdded = z.addShape(s);
+				} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
+					if(s->getTargetZone() == j) z.addShape(s);
+				}
 			}
 		}
+	} else {
+		// OPTIMISE ALGORITHM GOES HERE
+		// figure out which shapes are in each zone
+		// if a shape is entirely enclosed in a zone, then
+		// mark the shape as such
+		// if a shape is partially enclosed in a zone then
+		// mark it as such
+		
+		// LOGIC IS AS FOLLOWS :
+		// if a shape is entirely in one or more zones, then :
+		// put it in the zone with the nearest other shape
+		// UNLESS that zone already has too many shapes (greater than half
+		// if we're dealing with two zones)
+		// IF the shape is only in that zone, and it is already full, have
+		// a look through the other shapes in the zone
+		// 		IF the shape is in another zone
+		// 			FIND the zone that
+		//				a) has the nearest other shape
+		//				b) AND isn't too full
+		
+		
+		
+		
 	}
 	
 	// 2 :
@@ -395,7 +423,7 @@ void Manager :: renderPreview() {
     ofDrawRectangle(0,0,width,height);
 	
 	// render guide if we have one
-	if(showGuide){
+	if((showGuide) && (guideImage.isAllocated())){
 		
 		ofPushMatrix();
 		
@@ -500,9 +528,9 @@ int Manager :: getProjectorPointRate(int projectornum ){
 }
 
 float Manager :: getProjectorFrameRate(int projectornum ){
-    
-    return projectors.at(projectornum)->getFrameRate();
-    
+	if((projectornum>=0) && (projectornum<projectors.size())) {
+    	return projectors.at(projectornum)->getFrameRate();
+	} else return 0;
 }
 void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum, int zonenum){
    // ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size())); 
@@ -679,4 +707,13 @@ bool Manager::setTargetZone(int zone){  // only for OFX_ZONE_MANUAL
 bool Manager::setZoneMode(ofxLaserZoneMode newmode) {
 	zoneMode = newmode;
 	return true;
+}
+
+bool Manager::isProjectorArmed(int i){
+	if((i<0) || (i>=projectors.size())){
+		return false;
+	} else {
+		return projectors[i]->armed; 
+	}
+	
 }
