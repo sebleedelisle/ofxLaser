@@ -5,7 +5,7 @@
 //
 //
 
-#include "ofxLaserDacLaserDock.h"
+#include "ofxLaserDacLaserdock.h"
 
 typedef bool (LaserdockDevice::*ReadMethodPtr)(uint32_t *);
 
@@ -24,16 +24,21 @@ void print_uint32(string name, LaserdockDevice *d, ReadMethodPtr method){
 
 using namespace ofxLaser;
 
-DacLaserDock:: ~DacLaserDock() {
+DacLaserdock:: ~DacLaserdock() {
 	stopThread();
 	waitForThread(); 
 	
 }
 
 
-void DacLaserDock::setup() {
+void DacLaserdock::setup() {
 	
 	device =  lddmanager.get_next_available_device();
+	if(device==NULL) {
+		return;
+	}
+	
+	connected = true;
 
 	cout << "Device Status:" << device->status() << endl;
 	print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
@@ -92,7 +97,8 @@ void DacLaserDock::setup() {
 
 }
 
-bool DacLaserDock:: sendFrame(const vector<Point>& points){
+bool DacLaserdock:: sendFrame(const vector<Point>& points){
+	if(!connected) return false;
 	
 	//	ofLog(OF_LOG_NOTICE, "point create count  : " + ofToString(dac_point::createCount));
 	//	ofLog(OF_LOG_NOTICE, "point destroy count : " + ofToString(dac_point::destroyCount));
@@ -129,7 +135,7 @@ bool DacLaserDock:: sendFrame(const vector<Point>& points){
 	}
 }
 
-inline bool DacLaserDock :: addPoint(const LaserdockSample &point ){
+inline bool DacLaserdock :: addPoint(const LaserdockSample &point ){
 	LaserdockSample* p = getLaserdockSample();
 	*p = point; // copy assignment hopefully!
 	bufferedPoints.push_back(p);
@@ -137,14 +143,13 @@ inline bool DacLaserDock :: addPoint(const LaserdockSample &point ){
 }
 
 
-LaserdockSample*  DacLaserDock :: getLaserdockSample() {
+LaserdockSample*  DacLaserdock :: getLaserdockSample() {
 	LaserdockSample* p;
 	if(sparePoints.size()==0) {
 		p= new LaserdockSample();
 	} else {
 		p = sparePoints.back();
 		sparePoints.pop_back();
-		
 	}
 	
 	p->x =
@@ -156,16 +161,39 @@ LaserdockSample*  DacLaserDock :: getLaserdockSample() {
 }
 
 
-bool DacLaserDock::sendPoints(const vector<Point>& points) {
+bool DacLaserdock::sendPoints(const vector<Point>& points) {
+	if(bufferedPoints.size()>pps*0.5) {
+		return false;
+	}
+
+	LaserdockSample p1;
+	if(lock()) {
+		frameMode = false;
+
+		for(int i = 0; i<points.size(); i++) {
+			const Point& p2 = points[i];
+			p1.x = ofMap(p2.x,0,800, LASERDOCK_MIN, LASERDOCK_MAX);
+			p1.y = ofMap(p2.y,800,0, LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP in ilda specs
+			p1.rg = (int)roundf(p2.r) | ((int)roundf(p2.g)<<8);
+			p1.b = roundf(p2.b);
+			addPoint(p1);
+		}
+		unlock();
+	}
 	return true;
 };
 
-bool DacLaserDock::setPointsPerSecond(uint32_t pps) {
+bool DacLaserdock::setPointsPerSecond(uint32_t newpps) {
+	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
+	while(!lock());
+	newPPS = newpps;
+	unlock();
 	return true;
+	
 	
 };
 
-void DacLaserDock :: threadedFunction(){
+void DacLaserdock :: threadedFunction(){
 	
 	const uint32_t samples_per_packet = 64;
 	const uint32_t circle_steps = 300;
@@ -177,22 +205,14 @@ void DacLaserDock :: threadedFunction(){
 	while(isThreadRunning()) {
 	
 		int count = samples_per_packet;
-//		uint16_t x, y, rg, b;
-//		rg = 0xFFFF;
-//		b = 0xFFFF;
-//
-//		for(int i = 0; i < count; i++){
-//			_index++;
-//
-//			x = ofMap(cosf(2*PI/circle_steps*_index),-1,1,0,4095);
-//			y = ofMap(sinf(2*PI/circle_steps*_index),-1,1,0,4095);
-//
-//			samples[i].x = x;
-//			samples[i].y = y;
-//			samples[i].rg = rg;
-//			samples[i].b = b;
-//		}
+
+		if(newPPS!=pps) {
+			pps = newPPS;
+			device->set_dac_rate(pps);
+		}
+		
 		while(!lock()){}
+		
 		LaserdockSample& p = sendpoint;
 		for(int i = 0; i<samples_per_packet; i++) {
 			if(bufferedPoints.size()>0) {
@@ -207,6 +227,7 @@ void DacLaserDock :: threadedFunction(){
 			}
 			samples[i] = p;
 		}
+		
 		unlock();
 		if(!device->send_samples(samples,samples_per_packet)){
 			ofLog(OF_LOG_NOTICE, "send_samples failed");
