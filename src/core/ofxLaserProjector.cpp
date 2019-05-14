@@ -61,6 +61,7 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
+	projectorparams.add(rotation.set("rotation",0,-90,90));
 	projectorparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	
 	
@@ -390,6 +391,9 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 	
 }
 
+void Projector :: drawLaserPath(ofRectangle rect) {
+	drawLaserPath(rect.x, rect.y, rect.width, rect.height); 
+}
 void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	ofPushStyle();
 	
@@ -482,7 +486,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 }
 
-void Projector :: hideGui() {
+void Projector :: hideWarpGui() {
 	
 	// disable warps
 	for(int i = 0; i<zoneWarps.size(); i++) {
@@ -495,10 +499,10 @@ void Projector :: hideGui() {
 	}
 	
 	// move ui panel out the way
-	gui->setPosition(ofGetWidth(), 8);
+	//gui->setPosition(ofGetWidth(), 8);
 	
 }
-void Projector :: showGui() {
+void Projector :: showWarpGui() {
 	
 	for(int i = 0; i<zoneWarps.size(); i++) {
 		
@@ -510,7 +514,7 @@ void Projector :: showGui() {
 	}
 	
 	// move ui panel back into view
-	gui->setPosition(ofGetWidth()-330, 8);
+	//gui->setPosition(ofGetWidth()-330, 8);
 	
 }
 
@@ -577,7 +581,7 @@ void Projector::update(bool updateZones) {
 }
 
 
-void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum ){
+void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum, float masterIntensity ){
     
      //ofLog(OF_LOG_NOTICE, "ofxLaser::Projector::sendRawPoints(...) point count : "+ofToString(points.size()));
     
@@ -653,7 +657,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     
     
     
-    processPoints();
+    processPoints(masterIntensity);
     dac.sendPoints(laserPoints);
     
    
@@ -662,7 +666,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
 
                         
 
-void Projector::send(ofPixels* pixels) {
+void Projector::send(ofPixels* pixels, float masterIntensity) {
 
 	if(!guiInitialised) {
 		ofLog(OF_LOG_ERROR, "Error, ofxLaser::projector not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
@@ -901,7 +905,7 @@ void Projector::send(ofPixels* pixels) {
 		
 	}
 	
-	processPoints();
+	processPoints(masterIntensity);
 	dac.sendFrame(laserPoints);
     numPoints = laserPoints.size();
 	
@@ -1149,7 +1153,7 @@ void Projector :: addPoint(ofxLaser::Point p) {
 
 
 
-void  Projector :: processPoints() {
+void  Projector :: processPoints(float masterIntensity) {
 			
 	// Some lasers change colour too early/late, so the colourChangeOffset system
 	// mitigates against that by shifting the colours for the points.
@@ -1235,6 +1239,21 @@ void  Projector :: processPoints() {
 		
 		if(flipY) p.y= 800-p.y;
 		if(flipX) p.x= 800-p.x;
+		if(abs(rotation)>0.5) {
+			p.x-=400;
+			p.y-=400;
+//			glm::vec3 v(p.x, p.y, 0);
+//			glm::vec3 axis(0.0f,0.0f,1.0f);
+//			v = glm::rotate(v,1.0f, axis);
+			auto vec = glm::vec3(p.x,p.y,0.0f);
+			float angle = ofDegToRad(rotation); // since glm version 0.9.6, rotations are in radians, not in degrees
+			
+			//cout << vec << endl;
+			auto rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			p.x=rotatedVec.x+400;
+			p.y=rotatedVec.y+400;
+
+		}
 		
 		// bounds check
 		if(p.x<0) p.x = p.r = p.g = p.b = 0;
@@ -1261,9 +1280,9 @@ void  Projector :: processPoints() {
 //		}
 		
 		if(p.useCalibration) {
-			p.r = calculateCalibratedBrightness(p.r, intensity, red100, red75, red50, red25, red0);
-			p.g = calculateCalibratedBrightness(p.g, intensity, green100, green75, green50, green25, green0);
-			p.b = calculateCalibratedBrightness(p.b, intensity, blue100, blue75, blue50, blue25, blue0);
+			p.r = calculateCalibratedBrightness(p.r, intensity*masterIntensity, red100, red75, red50, red25, red0);
+			p.g = calculateCalibratedBrightness(p.g, intensity*masterIntensity, green100, green75, green50, green25, green0);
+			p.b = calculateCalibratedBrightness(p.b, intensity*masterIntensity, blue100, blue75, blue50, blue25, blue0);
 		}
 		
 		if(!armed) {

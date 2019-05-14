@@ -34,6 +34,11 @@ DacLaserdock:: ~DacLaserdock() {
 void DacLaserdock::setup() {
 	
 	device =  lddmanager.get_next_available_device();
+	if(device==NULL) {
+		return;
+	}
+	
+	connected = true;
 
 	cout << "Device Status:" << device->status() << endl;
 	print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
@@ -93,6 +98,7 @@ void DacLaserdock::setup() {
 }
 
 bool DacLaserdock:: sendFrame(const vector<Point>& points){
+	if(!connected) return false;
 	
 	//	ofLog(OF_LOG_NOTICE, "point create count  : " + ofToString(dac_point::createCount));
 	//	ofLog(OF_LOG_NOTICE, "point destroy count : " + ofToString(dac_point::destroyCount));

@@ -42,8 +42,8 @@ namespace ofxLaser {
         bool mousePressed(ofMouseEventArgs &e);
 		
 		void update(bool updateZones);
-		void send(ofPixels* pixels = NULL);
-        void sendRawPoints(const vector<Point>& points, int zonenum = 0);
+		void send(ofPixels* pixels = NULL, float masterIntensity = 1);
+        void sendRawPoints(const vector<Point>& points, int zonenum = 0, float masterIntensity =1);
         int getPointRate() {
             return pps; 
         };
@@ -55,10 +55,11 @@ namespace ofxLaser {
 		void renderStatusBox(float x=0, float y=0, float w=300, float h=100);
 		
 		void addZone(Zone* zone, float srcwidth, float srcheight);
+		void drawLaserPath(ofRectangle rect);
 		void drawLaserPath(float x=0, float y=0, float w=800, float h=800);
 		void drawWarpUI(float x=0, float y=0, float w=800, float h=800);
-		void hideGui();
-		void showGui();
+		void hideWarpGui();
+		void showWarpGui();
 
 		void addPoint(ofxLaser::Point p);
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
@@ -66,7 +67,7 @@ namespace ofxLaser {
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>& points);
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
-		void processPoints();
+		void processPoints(float masterIntensity);
 		void saveSettings();
 		
 		RenderProfile& getRenderProfile(string profilelabel);
@@ -122,6 +123,7 @@ namespace ofxLaser {
 		int numTestPatterns; 
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
+		ofParameter<float> rotation;
 		
 		ofParameter<float> moveSpeed = 5;
 		ofParameter<int> shapePreBlank = 0;

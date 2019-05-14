@@ -60,6 +60,7 @@ class DacLaserdock : public DacBase, ofThread{
 	bool frameMode = true; 
 	bool replayFrames = true;
 	bool isReplaying = false;
+	bool connected = false; 
 
 };
 

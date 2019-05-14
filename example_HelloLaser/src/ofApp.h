@@ -33,7 +33,6 @@ public:
 		
 	float elapsedTime; 
 
-    ofxPanel cgui;
     ofParameter<ofColor> color;
 };
 

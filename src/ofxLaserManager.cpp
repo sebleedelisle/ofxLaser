@@ -29,13 +29,15 @@ Manager :: Manager() {
 	}
 	width = 800;
 	height = 800;
+	guiProjectorPanelWidth = 320;
+	guiSpacing = 8;
+	dacStatusBoxHeight = 88; 
 	showPreview = true;
 	showZones = false;
 	currentProjector = -1;
     guiIsVisible = true;
 	
     ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize, OF_EVENT_ORDER_BEFORE_APP);
-	
 	
 }
 Manager :: ~Manager() {
@@ -282,27 +284,39 @@ void Manager::send(){
 		
 		Projector& p = *projectors[i];
 		
-		p.send(useBitmapMask?laserMask.getPixels():NULL);
+		p.send(useBitmapMask?laserMask.getPixels():NULL, masterIntensity);
 		
 	}
 }
 
-void Manager:: drawUI(bool fullscreen){
+void Manager:: drawUI(bool expandPreview){
 	
-    if(showPreview) {
+	// if expandPreview is true, then we expand the preview area to the
+	// maximum space that we have available.
+	
+	
+	int smallPreviewHeight = 310;
+	
+	
+	// showPreview determines whether we show the preview
+	// laser graphics on screen or not.
+	if(showPreview) {
 
-		//ofPushMatrix();
-		
 		ofPushStyle();
 		
+		// work out the scale for the preview...
+		// default scale is 1 with an 8 pixel margin
 		previewScale = 1;
-		previewOffset.set(8,8);
+		previewOffset.set(guiSpacing,guiSpacing);
 		
+		// but if we're viewing a projector warp ui
+		// then shrink the preview down and move it underneath
 		if(currentProjector>=0) {
-			previewOffset.set(8,816);
-			previewScale = 0.3;
-			
-		} else if(fullscreen) {
+			previewOffset.set(guiSpacing,800+16);
+			previewScale = (float)smallPreviewHeight/(float)height;
+		// but if we're expanding the preview, then work out the scale
+		// to fill the whole screen
+		} else if(expandPreview) {
 			previewOffset.set(0,0); 
 			previewScale = (float)ofGetWidth()/(float)width;
 			if(height*previewScale>ofGetHeight()) {
@@ -313,8 +327,6 @@ void Manager:: drawUI(bool fullscreen){
 		renderPreview();
 		
 		// this renders the zones in the graphics source space
-
-	
 		for(int i = 0; i<zones.size(); i++) {
 			zones[i]->visible = showZones;
 			zones[i]->active = showZones && (currentProjector<0);
@@ -324,75 +336,80 @@ void Manager:: drawUI(bool fullscreen){
 			
 			zones[i]->draw();
 		}
-	
-		
 		
 		laserMask.draw(showBitmapMask);
 
-	
 		ofPopStyle();
-
-		//ofPopMatrix();
 
 	}
 	
 
 	ofPushStyle();
 	
-    // if one of the projectors is showing then draw that and hide the others
-    if(currentProjector>-1) {
+    // if one of the projectors is selected then draw that and hide the others
+	if(currentProjector==-1) {
+		ofPushMatrix();
+		float scale = 1 ;
+		if((smallPreviewHeight+guiSpacing)*projectors.size()>ofGetWidth()-(guiSpacing*2)) {
+			scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(smallPreviewHeight+guiSpacing)*(float)projectors.size());
+			//ofScale(scale, scale);
+		}
+		
+		ofTranslate(guiSpacing,height+(guiSpacing*2));
+		
+		for(int i = 0; i<projectors.size(); i++) {
+			if((!expandPreview)&&(showPathPreviews)) {
+				ofFill();
+				ofSetColor(0);
+				ofRectangle projectorPreviewRect(((smallPreviewHeight*scale) +guiSpacing)*i,0,smallPreviewHeight*scale,smallPreviewHeight*scale);
+				ofDrawRectangle(projectorPreviewRect);
+				projectors[i]->drawLaserPath(projectorPreviewRect);
+			}
+			// disables the warp interfaces
+			projectors[i]->hideWarpGui();
+		}
+		
+		ofPopMatrix();
+		
+		if(!expandPreview) {
+			if(projectors.size()>2) {
+				for(int i = 0; i<projectors.size(); i++) {
+					int x = projectors[i]->gui->getPosition().x;
+					projectors[i]->renderStatusBox(x, i*dacStatusBoxHeight+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
+				}
+			} else {
+				for(int i = 0; i<projectors.size(); i++) {
+					int x = projectors[i]->gui->getPosition().x;
+					int y = projectors[i]->gui->getPosition().y;
+					int w = projectors[i]->gui->getWidth();
+					projectors[i]->renderStatusBox(x, y-guiSpacing-dacStatusBoxHeight, guiProjectorPanelWidth,dacStatusBoxHeight);
+					projectors[i]->showWarpGui();
+					projectors[i]->gui->draw();
+				}
+			}
+		}
+		
+	} else  {
+		
         for(int i = 0; i<projectors.size(); i++) {
 			if(i==currentProjector) {
 				
 				ofFill();
 				ofSetColor(0);
-				float size = fullscreen ? (float)ofGetHeight()-16 : 800;
+				float size = expandPreview ? (float)ofGetHeight()-(guiSpacing*2) : 800;
 				
-				ofDrawRectangle(8,8,size,size);
-				projectors[i]->showGui();
-                projectors[i]->drawWarpUI(8,8,size,size);
-				projectors[i]->drawLaserPath(8,8,size,size);
+				ofDrawRectangle(guiSpacing,guiSpacing,size,size);
+				projectors[i]->showWarpGui();
+                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
+				projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
 				if(guiIsVisible) projectors[i]->gui->draw();
 
-			}
-			
-			else {
-				projectors[i]->hideGui();
+			} else {
+				projectors[i]->hideWarpGui();
 			}
         }
 	
-	// otherwise draw all the projectors
-    } else {
-		ofPushMatrix();
-		float scale = 1 ;
-		if(310*projectors.size()>ofGetWidth()-16) {
-			 scale = ((float)ofGetWidth()-16.0f)/(310.0f*(float)projectors.size());
-			//ofScale(scale, scale);
-		}
-
-		ofTranslate(8,ofGetHeight()-8-(300*scale));
-
-		for(int i = 0; i<projectors.size(); i++) {
-			if((!fullscreen)&&(showPathPreviews)) {
-				//ofSetDrawBitmapMode(OF_BITMAPMODE_SIMPLE) ;
-				ofFill();
-				ofSetColor(0);
-				ofDrawRectangle(310*i*scale,0,300*scale,300*scale);
-				projectors[i]->drawLaserPath(310*i*scale,0,300*scale,300*scale);
-				//ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD) ;
-			}
-			// disables the warp interfaces
-			projectors[i]->hideGui();
-        }
-		
-		ofPopMatrix();
-		
-		if(!fullscreen) {
-			for(int i = 0; i<projectors.size(); i++) {
-				float x = ofGetWidth()-320;
-				projectors[i]->renderStatusBox(x, i*88+10, 300,80);
-			}
-		}
+	
     }
  
     
@@ -401,7 +418,7 @@ void Manager:: drawUI(bool fullscreen){
 //		if(guiIsVisible && projectors[i]->guiIsVisible) projectors[i]->gui->draw();
 //	}
 	ofPopStyle();
-    if(!fullscreen) gui.draw();
+    if(!expandPreview) gui.draw();
     
 	
 }
@@ -509,18 +526,35 @@ void Manager ::updateScreenSize(ofResizeEventArgs &e){
 
 void Manager :: updateScreenSize() {
 	screenHeight = ofGetHeight();
-	int spacing = 340;
-	for(int i = 0; i<projectors.size(); i++) {
-		int x = ofGetWidth()-(spacing);//ofMap(i, 0, projectors.size(),ofGetWidth()-(spacing*projectors.size()), ofGetWidth());
-		projectors[i]->gui->setPosition(x, 10);
-		//projectors[i]->gui->setSize(332,200);
-//		projectors[i]->gui
-	}
-									
-	gui.setPosition(ofGetWidth()-(spacing) - 220,10);
+	updateGuiPositions();
 	
 }
 
+void Manager :: updateGuiPositions() {
+
+	
+
+	for(int i = 0; i<projectors.size(); i++) {
+		int x = ofGetWidth()-(guiProjectorPanelWidth-guiSpacing);
+		if(projectors.size()<=2){
+			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
+		}
+		
+		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
+		projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
+
+	}
+	
+	if(projectors.size()>2) {
+		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
+	} else {
+		int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
+		gui.setPosition(x, guiSpacing);
+	}
+}
+ofxPanel& Manager ::getGui(){
+	return gui;
+}
 int Manager :: getProjectorPointRate(int projectornum ){
     
     return projectors.at(projectornum)->getPointRate();
@@ -535,14 +569,15 @@ float Manager :: getProjectorFrameRate(int projectornum ){
 void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum, int zonenum){
    // ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size())); 
     Projector* proj = projectors.at(projectornum);
-    proj->sendRawPoints(points, zonenum);
+    proj->sendRawPoints(points, zonenum, masterIntensity);
 
 }
 
 
 void Manager::nextProjector() {
 	currentProjector++;
-	if(currentProjector>=projectors.size()) currentProjector=-1; 
+	if(currentProjector>=projectors.size()) currentProjector=-1;
+	updateGuiPositions();
 	
 }
 
@@ -550,27 +585,25 @@ void Manager::nextProjector() {
 void Manager::previousProjector() {
 	currentProjector--;
 	if(currentProjector<-1) currentProjector=projectors.size()-1;
+	updateGuiPositions();
 	
 }
 
 void Manager::initGui(bool showAdvanced) {
 	
+	// TODO - warn if called more than once.
+	
 	ofxGuiSetDefaultWidth(220);
 	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
 	gui.setup("Laser", "laserSettings.xml");
 	
-//	armAll.setName("ARM ALL");
-//	disarmAll.setName("DISARM ALL");
 	
 	gui.setDefaultHeight(40);
-	
-	//ofxPanel panel;
-	
-	
+
 	gui.add(armAllButton.setup("ARM ALL"));
 	gui.add(disarmAllButton.setup("DISARM ALL"));
-	//gui.add(panel);
-	
+	gui.add(masterIntensity.set("Master Intensity", 1,0,1));
+
 	gui.setDefaultHeight(20);
 
 	armAllButton.addListener(this, &ofxLaser::Manager::armAllProjectors);
@@ -585,7 +618,7 @@ void Manager::initGui(bool showAdvanced) {
 	
 	gui.add(testPattern.set("Test Pattern", 0,0,8));
 	
-	ofParameterGroup params;
+	//ofParameterGroup params;
 	params.setName("Interface");
 	params.add(showZones.set("Show zones", false));
 	params.add(showPreview.set("Show preview", true));
@@ -599,17 +632,21 @@ void Manager::initGui(bool showAdvanced) {
 	}
 	
 	gui.add(params);
+	if(customParams.size()>0) {
+		customParams.setName("Custom");
+		gui.add(customParams);
+	}
     
 	gui.loadFromFile("laserSettings.xml");
     showPreview = true;
 	showPathPreviews = true;
-	gui.setPosition(width+10, 8);
+	//gui.setPosition(width+10, 8);
 	
     
 	// TODO - check font exists?
 	//gui.loadFont("fonts/Verdana.ttf", 8, false);
 	
-	ofxGuiSetDefaultWidth(320);
+	ofxGuiSetDefaultWidth(guiProjectorPanelWidth);
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->initGui(showAdvanced);
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
@@ -617,7 +654,15 @@ void Manager::initGui(bool showAdvanced) {
 	
 	updateScreenSize();
 
+	ofxGuiSetDefaultWidth(220);
+	
 }
+
+void Manager::addCustomParameter(ofAbstractParameter& param){
+	customParams.add(param);
+	
+}
+
 void Manager::armAllProjectors() {
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->armed = true;
