@@ -9,20 +9,21 @@ void ofApp::setup(){
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
 
-    laser.addProjector(dac);
-    
-    // replace this with the IP address of your etherdream (find it with the sitter diagnostic
-    // tool at https://ether-dream.com/downloads.html ) 
-    string dacIP = "10.0.1.12";
-
+	laser.addProjector(dac);
+	//laser.addProjector(dac);
+	
+    // replace this with the IP address of your etherdream
+	// (find it with the sitter diagnostic tool
+	// at https://ether-dream.com/downloads.html )
+    string dacIP = "10.1.1.11";
     dac.setup(dacIP);
 	
+	laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
     laser.initGui();
     currentLaserEffect = 0;
     numLaserEffects = 8;
 	 
-    cgui.setup("color panel", "colors.xml", ofGetWidth()-240, 700 );
-    cgui.add(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
+	
 }
 
 //--------------------------------------------------------------
@@ -57,8 +58,7 @@ void ofApp::draw() {
     laser.send();
 
     laser.drawUI();
-    
-    cgui.draw();
+
 
 }
 

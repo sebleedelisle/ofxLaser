@@ -64,7 +64,9 @@ namespace ofxLaser {
         void renderPreview();
         
         void updateScreenSize(ofResizeEventArgs &e);
-		void updateScreenSize(); 
+		void updateScreenSize();
+		void updateGuiPositions();
+
         void send();
         void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
         
@@ -83,6 +85,8 @@ namespace ofxLaser {
 
 		Projector& getProjector(int index = 0);
 		void initGui(bool showAdvanced = false);
+		void addCustomParameter(ofAbstractParameter& param);
+		ofxPanel& getGui();
 		bool togglePreview();
 		void saveSettings();
 		
@@ -95,11 +99,9 @@ namespace ofxLaser {
 		bool isProjectorArmed(int i); 
 	
 		int width, height;
-		ofxPanel gui;
-        bool guiIsVisible;
-		ofxButton armAllButton;
-		ofxButton disarmAllButton;
-        
+		int guiProjectorPanelWidth;
+		int dacStatusBoxHeight; 
+		int guiSpacing; 
 		// converts openGL coords to screen coords //
 		
 		ofPoint gLProject(ofPoint p);
@@ -115,7 +117,7 @@ namespace ofxLaser {
         ofParameter<bool> useBitmapMask;
         ofParameter<bool> showBitmapMask;
 		
-		
+		ofParameter<float>masterIntensity; 
 		ofParameter<bool>showGuide;
 		ofParameter<int>guideBrightness;
 		ofImage guideImage;
@@ -127,6 +129,15 @@ namespace ofxLaser {
 		
 		bool zonesChanged; 
 		std::vector<Zone*> zones;
+		
+		protected :
+		
+		ofxPanel gui;
+		ofParameterGroup params;
+		ofParameterGroup customParams;
+		bool guiIsVisible;
+		ofxButton armAllButton;
+		ofxButton disarmAllButton;
 		
 		private:
 		int createDefaultZone();

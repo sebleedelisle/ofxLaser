@@ -201,7 +201,7 @@ bool DacEtherdream:: sendPoints(const vector<Point>& points){
     dac_point p1;
 	if(lock()) {
 		frameMode = false;
-		//vector<dac_point> sendpoints(points.size());
+		
 		for(int i = 0; i<points.size(); i++) {
 			
 			const Point& p2 = points[i];
