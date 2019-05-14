@@ -437,19 +437,23 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 	ofNoFill();
 	//ofSetColor(255);
-	ofSetColor(100);
-	ofSetLineWidth(0.5);
+	ofSetColor(MIN(255 * w / 800.0f, 255));
+	ofSetLineWidth(1);
 	
-	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 255,20),0,255));
-	}
-
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
 	
+	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
+		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 200,20),0,200));
+	}
+
 	
+	
+	ofSetLineWidth(0.5);
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
+	
+	// draws the laser path
 	
 	if(previewPathMesh.getNumVertices()>0) {
 		
@@ -457,11 +461,11 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
 		ofPoint p = previewPathMesh.getVertex(pointindex);
 		ofSetColor(255);
-		ofDrawCircle(p, 6);
+		ofDrawCircle(p, 3);
 		ofFill();
 		Point& lp =laserPoints[pointindex];
 		ofSetColor(lp.getColor()*255);
-		ofDrawCircle(p, 6);
+		ofDrawCircle(p, 3);
 	}
 	
 

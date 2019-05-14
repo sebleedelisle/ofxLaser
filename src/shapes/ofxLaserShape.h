@@ -19,7 +19,7 @@ class Shape {
 	virtual ~Shape(){
 		//cout << "LASER SHAPE DESTROY!!!" << endl;
 	};
-	virtual void addPreviewToMesh(ofMesh& mesh){};
+	virtual void addPreviewToMesh(ofMesh& mesh) =0;
 	
 	vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed, float speedMultiplier){
 		

@@ -61,6 +61,8 @@ class Factory {
 		poly = polylineObjectPool.borrowObject();
 		if(polyToClone!=NULL) {
 			*poly = *polyToClone;
+		} else {
+			poly->clear();
 		}
 		
 		return poly;

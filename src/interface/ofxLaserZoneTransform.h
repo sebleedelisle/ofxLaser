@@ -82,6 +82,7 @@ class ZoneTransform {
 	ofParameterGroup params;
 	
 	ofParameter<bool>simpleMode;
+	ofParameter<bool>useHomography;
 	ofParameter<int>xDivisionsNew;
 	ofParameter<int>yDivisionsNew;
 

@@ -34,6 +34,7 @@ ZoneTransform::ZoneTransform(int _index, string filename) {
 	params.add(xDivisionsNew.set("x divisions", 1,1,6));
 	params.add(yDivisionsNew.set("y divisions", 1,1,6));
 	params.add(simpleMode.set("simple mode", true));
+	params.add(useHomography.set("perspective", true));
 
 	xDivisions = 1;
 	yDivisions = 1;
@@ -148,7 +149,7 @@ ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
 	
 	int quadnum = x + (y*xDivisions);
 	Warper & quad = quadWarpers[quadnum];
-	return quad.getWarpedPoint(p);
+	return quad.getWarpedPoint(p, useHomography);
 	
 };
 
@@ -165,7 +166,7 @@ ofPoint ZoneTransform::getUnWarpedPoint(const ofPoint& p){
 	
 	int quadnum = x + (y*xDivisions);
 	Warper & quad = quadWarpers[quadnum];
-	return quad.getWarpedPoint(p);
+	return quad.getUnWarpedPoint(p);
 	
 };
 
@@ -185,7 +186,7 @@ ofxLaser::Point ZoneTransform::getWarpedPoint(const ofxLaser::Point& p){
 	
 	int quadnum = x + (y*xDivisions);
 	Warper & quad = quadWarpers[quadnum];
-	return quad.getWarpedPoint(p);
+	return quad.getWarpedPoint(p, useHomography);
 	
 };
 //

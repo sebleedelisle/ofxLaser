@@ -18,80 +18,104 @@ void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, gl
 	// the source points are the zone points in screen space
 	// the dest points are points in the projector space
 	
-	vector<cv::Point2f> srcCVPoints, dstCVPoints;
-	srcCVPoints.push_back(toCv(src1));
-	srcCVPoints.push_back(toCv(src2));
-	srcCVPoints.push_back(toCv(src3));
-	srcCVPoints.push_back(toCv(src4));
-	dstCVPoints.push_back(toCv(dst1));
-	dstCVPoints.push_back(toCv(dst2));
-	dstCVPoints.push_back(toCv(dst3));
-	dstCVPoints.push_back(toCv(dst4));
+	srcCVPoints.resize(4);
+	dstCVPoints.resize(4);
+	srcCVPoints[0] = toCv(src1);
+	srcCVPoints[1] = toCv(src2);
+	srcCVPoints[2] = toCv(src3);
+	srcCVPoints[3] = toCv(src4);
+	dstCVPoints[0] = toCv(dst1);
+	dstCVPoints[1] = toCv(dst2);
+	dstCVPoints[2] = toCv(dst3);
+	dstCVPoints[3] = toCv(dst4);
+
+
 	
 	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
 	inverseHomography = homography.inv();
 }
 
 
-glm::vec3 Warper::getWarpedPoint(const glm::vec3& p){
-	
-	if(post.size()<1) pre.resize(1);
-	if(post.size()<1) pre.resize(1);
-	pre[0].x = p.x;
-	pre[0].y = p.y;
-	
-	
-	// TODO
-	cv::perspectiveTransform(pre, post, homography);
-	ofPoint point =p;
-	point.x = post[0].x;
-	point.y = post[0].y;
-	
-	return point;
-	
-	
-	
+glm::vec3 Warper::getWarpedPoint(const glm::vec3& p, bool useHomography){
+
+
+	cv::Point2f cvp = getWarpedPoint(p.x, p.y, useHomography);
+	return glm::vec3(cvp.x, cvp.y, 0);
+
+
+
 }
 
 
-glm::vec3 Warper::getUnWarpedPoint(const glm::vec3& p){
-	if(post.size()<1) pre.resize(1);
-	if(post.size()<1) pre.resize(1);
+
+ofxLaser::Point Warper::getWarpedPoint(const ofxLaser::Point& p, bool useHomography){
+
+	cv::Point2f cvp = getWarpedPoint(p.x, p.y, useHomography);
+	ofxLaser::Point lp = p;
+	lp.x = cvp.x;
+	lp.y = cvp.y;
+	return lp;
+
+}
+cv::Point2f Warper :: getWarpedPoint(float x, float y, bool useHomography) {
+
+
+	if(useHomography) {
+		if (post.size() < 1) pre.resize(1);
+		if (post.size() < 1) pre.resize(1);
+		pre[0].x = x;
+		pre[0].y = y;
+
+		cv::perspectiveTransform(pre, post, homography);
+
+		return post[0];
+	} else {
+
+
+//		P is the linear interpolation of A and B in u: P = A + (B-A)·u
+//		Q is the linear interpolation of D and C in u: Q = D + (C-D)·u
+//		X is the linear interpolation of P and Q in v: X = P + (Q-P)·v
+//
+//				therefore
+//
+//		X(u,v) = A + (B-A)·u + (D-A)·v + (A-B+C-D)·u·v
+
+
+		cv::Point2f d = srcCVPoints[3] - srcCVPoints[0];
+		float u = (x-(srcCVPoints[0].x))/d.x;
+		float v = (y-(srcCVPoints[0].y))/d.y;
+		cv::Point2f& A = dstCVPoints[0];
+		cv::Point2f& B = dstCVPoints[1];
+		cv::Point2f& C = dstCVPoints[3];
+		cv::Point2f& D = dstCVPoints[2];
+
+		return A + (B-A)*u + (D-A)*v + (A-B+C-D)*u*v;
+
+	}
+}
+
+
+glm::vec3 Warper::getUnWarpedPoint(const glm::vec3& p, bool useHomography){
+
+
+
+	if (post.size() < 1) pre.resize(1);
+	if (post.size() < 1) pre.resize(1);
 	pre[0].x = p.x;
 	pre[0].y = p.y;
-	
+
 	cv::perspectiveTransform(pre, post, inverseHomography);
-	ofPoint point =p;
+	ofPoint point = p;
 	point.x = post[0].x;
 	point.y = post[0].y;
-	
+
 	return point;
-	
-	
+
 	
 }
 
 
-ofxLaser::Point Warper::getWarpedPoint(const ofxLaser::Point& p){
-	
-	if(post.size()<1) pre.resize(1);
-	if(post.size()<1) pre.resize(1);
-	pre[0].x = p.x;
-	pre[0].y = p.y;
-	
-	
-    //cv::
-	cv::perspectiveTransform(pre, post, homography);
-	ofxLaser::Point point =p;
-	point.x = post[0].x;
-	point.y = post[0].y;
-	
-	return point;
-	
-}
-
-
-ofxLaser::Point Warper::getUnWarpedPoint(const ofxLaser::Point& p){
+ofxLaser::Point Warper::getUnWarpedPoint(const ofxLaser::Point& p, bool useHomography){
 	if(post.size()<1) pre.resize(1);
 	if(post.size()<1) pre.resize(1);
 	pre[0].x = p.x;

@@ -274,7 +274,6 @@ void DacIDN :: sendFrameToDac() {
 	
 }
 
-
 void DacIDN :: close() {
 	udpConnection.Close();
 }

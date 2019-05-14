@@ -132,6 +132,7 @@ void DacEtherdream :: reset() {
 	}
 	
 }
+
 void DacEtherdream :: close() {
 	if(!connected) return;
 	while(!lock());
@@ -644,7 +645,7 @@ inline bool DacEtherdream :: sendData(){
 
 	// numPointsToSend is automatically calculated when we get data back from the DAC
 	// not sure why I'm subtracting 10 here... TODO try taking it out
-    uint16_t npoints = numPointsToSend-10;
+    uint16_t npoints = numPointsToSend;
     
     // this is to stop sending too many points into the future
     float bufferTime = 0.5f; // was 0.1f - TODO make this a param!
