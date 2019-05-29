@@ -138,6 +138,7 @@ void DacEtherdream :: reset() {
 	}
 	
 }
+
 void DacEtherdream :: close() {
 	if(!connected) return;
 	while(!lock());
