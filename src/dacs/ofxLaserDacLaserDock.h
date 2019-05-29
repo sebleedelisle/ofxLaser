@@ -36,7 +36,7 @@ class DacLaserdock : public DacBase, ofThread{
 	
 	// TODO return relevant colour
 	ofColor getStatusColour(){
-		return ofColor::green;
+		return connected ? ofColor::green :  ofColor::red;
 	}
 	
 	bool addPoint(const LaserdockSample &point );
