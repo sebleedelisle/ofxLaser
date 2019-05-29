@@ -1,4 +1,4 @@
-//
+ //
 //  ofxLaserManager.hpp
 //  ofxLaserRewrite
 //
@@ -7,6 +7,9 @@
 //
 
 #pragma once
+#ifndef OFXLASERMANAGER_H
+#define OFXLASERMANAGER_H
+
 #include "ofMain.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserShape.h"
@@ -156,3 +159,5 @@ namespace ofxLaser {
 		
 	};
 }
+
+#endif

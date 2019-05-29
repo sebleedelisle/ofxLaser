@@ -346,7 +346,7 @@ void Manager:: drawUI(bool expandPreview){
 
 	ofPushStyle();
 	
-    // if one of the projectors is selected then draw that and hide the others
+    // if none of the projectors are selected then draw as many as we can on screen
 	if(currentProjector==-1) {
 		ofPushMatrix();
 		float scale = 1 ;
@@ -371,11 +371,13 @@ void Manager:: drawUI(bool expandPreview){
 		
 		ofPopMatrix();
 		
+		// if we're not filling the preview to fit the screen, draw the projector
+		// gui elements
 		if(!expandPreview) {
 			if(projectors.size()>2) {
 				for(int i = 0; i<projectors.size(); i++) {
 					int x = projectors[i]->gui->getPosition().x;
-					projectors[i]->renderStatusBox(x, i*dacStatusBoxHeight+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
+					projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
 				}
 			} else {
 				for(int i = 0; i<projectors.size(); i++) {
@@ -390,6 +392,8 @@ void Manager:: drawUI(bool expandPreview){
 		}
 		
 	} else  {
+		// ELSE we have a currently selected projector, so draw the various UI elements
+		// for that...
 		
         for(int i = 0; i<projectors.size(); i++) {
 			if(i==currentProjector) {
@@ -402,10 +406,21 @@ void Manager:: drawUI(bool expandPreview){
 				projectors[i]->showWarpGui();
                 projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
 				projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
-				if(guiIsVisible) projectors[i]->gui->draw();
+				
 
 			} else {
 				projectors[i]->hideWarpGui();
+			}
+			
+			// if this is the current projector or we have 2 or fewer projectors, then render the gui
+			if(guiIsVisible && ((i==currentProjector) || (projectors.size()<=2))) {
+				if(guiIsVisible) {
+					int x = projectors[i]->gui->getPosition().x;
+					int y = guiSpacing;
+					projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
+					projectors[i]->gui->draw();
+					
+				}
 			}
         }
 	
@@ -535,13 +550,13 @@ void Manager :: updateGuiPositions() {
 	
 
 	for(int i = 0; i<projectors.size(); i++) {
-		int x = ofGetWidth()-(guiProjectorPanelWidth-guiSpacing);
+		int x = ofGetWidth()-(guiProjectorPanelWidth+guiSpacing);
 		if(projectors.size()<=2){
 			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
 		}
 		
-		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
-		projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
+		projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
+		//projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
 
 	}
 	

@@ -13,8 +13,7 @@
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketStream.h"
 #include "Poco/Net/StreamSocket.h"
-
-#define Byte unsigned char
+#include "Poco/Net/NetException.h"
 
 #define LIGHT_ENGINE_READY    0
 #define LIGHT_ENGINE_WARMUP	  1

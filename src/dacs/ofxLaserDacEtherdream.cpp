@@ -67,9 +67,9 @@ DacEtherdream :: ~DacEtherdream(){
 }
 
 void DacEtherdream :: setup(string ip) {
+	// TODO - this can return a Poco::Net::HostNotFoundException - add try / catch
+
 	
-	// Etherdreams always talk on port 7765
-	Poco::Net::SocketAddress sa(ip, 7765);
 	pps = 0;
 	pps = newPPS = 30000; // this is always sent on begin
 	queuedPPSChangeMessages = 0;
@@ -79,7 +79,8 @@ void DacEtherdream :: setup(string ip) {
 	Poco::Timespan timeout(1 * 250000); // 1/4 seconds timeout
 	
 	try {
-		
+		// Etherdreams always talk on port 7765
+		Poco::Net::SocketAddress sa(ip, 7765);
 		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
 		socket.connect(sa, timeout);
 		socket.setSendTimeout(timeout);
@@ -91,6 +92,11 @@ void DacEtherdream :: setup(string ip) {
 		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " + exc.displayText());
 		connected = false;
 
+	}catch (Poco::Net::HostNotFoundException& exc) {
+		//Handle your network errors.
+		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - host not found: " + exc.displayText());
+		connected = false;
+		
 	}catch (Poco::TimeoutException& exc) {
 		//Handle your network errors.
 		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Timeout error: " + exc.displayText());
