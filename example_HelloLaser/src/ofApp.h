@@ -3,6 +3,9 @@
 #include "ofMain.h"
 #include "ofxLaserManager.h"
 #include "ofxLaserDacEtherdream.h"
+#include "ofxLaserDacLaserdock.h"
+#include "ofxLaserDacIDN.h"
+
 #include "ofxGui.h"
 
 class ofApp : public ofBaseApp{
@@ -24,7 +27,11 @@ public:
 	int numLaserEffects; 
 	
 	ofxLaser::Manager laser;
-    ofxLaser::DacEtherdream dac;
+	
+    ofxLaser::DacEtherdream dacEtherdream;
+	ofxLaser::DacLaserdock dacLaserdock;
+	ofxLaser::DacIDN dacIDN;
+	
 	bool drawingShape = false;
 	int laserWidth;
 	int laserHeight;

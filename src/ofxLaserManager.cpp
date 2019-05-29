@@ -562,18 +562,20 @@ void Manager :: updateGuiPositions() {
 	
 	if(projectors.size()>2) {
 		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
-	} else {
+	} else if(projectors.size()>0){
 		int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
 		gui.setPosition(x, guiSpacing);
+	} else {
+		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
+		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
 	}
 }
 ofxPanel& Manager ::getGui(){
 	return gui;
 }
+
 int Manager :: getProjectorPointRate(int projectornum ){
-    
     return projectors.at(projectornum)->getPointRate();
-    
 }
 
 float Manager :: getProjectorFrameRate(int projectornum ){
