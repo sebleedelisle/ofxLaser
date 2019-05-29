@@ -47,7 +47,8 @@ void Projector :: initGui(bool showAdvanced) {
 	pps.addListener(this, &Projector::ppsChanged);
     
     if(showAdvanced) {
-        projectorparams.add(speedMultiplier.set("Speed Multiplier", 1,0.01,2));
+        projectorparams.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
+		projectorparams.add(smoothHomePosition.set("Smooth home position", true));
     }
     else speedMultiplier = 1;
     
@@ -782,7 +783,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 			SegmentPoints& segmentpoints = zonesegmentpoints[j];
 			for(int k= 0; k<segmentpoints.size(); k++) {
 
-                // Possibly a good time to check against the mask image?
+                // Check against the mask image
                 if(pixels!=NULL) {
                     Point& p = segmentpoints[k];
                     ofFloatColor c = pixels->getColor(p.x, p.y);
@@ -909,7 +910,13 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 	dac.sendFrame(laserPoints);
     numPoints = laserPoints.size();
 	
-	if(sortedsegmentpoints.size()>0) laserHomePosition += (sortedsegmentpoints.front()->getStart()-laserHomePosition)*0.02;
+	if(sortedsegmentpoints.size()>0) {
+		if(smoothHomePosition) {
+			laserHomePosition += (sortedsegmentpoints.front()->getStart()-laserHomePosition)*0.06;
+		} else {
+			laserHomePosition = sortedsegmentpoints.back()->getEnd();
+		}
+	}
 }
 
 RenderProfile& Projector::getRenderProfile(string profilelabel) {

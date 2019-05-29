@@ -130,6 +130,8 @@ namespace ofxLaser {
 		ofParameter<int> shapePostBlank = 0;
 		ofParameter<int> shapePreOn = 0;
 		ofParameter<int> shapePostOn = 0;
+		
+		ofParameter<bool> smoothHomePosition; 
 
 		ofParameter<bool> laserOnWhileMoving = false;
 		
