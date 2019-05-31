@@ -712,9 +712,9 @@ ofPoint Manager::gLProject(ofPoint p) {
 	
 }
 ofPoint Manager::gLProject( float ax, float ay, float az ) {
-	
-	//return ofPoint(ax, ay, 0);
-	
+#ifdef _MSC_VER	
+	return ofPoint(ax, ay, 0);
+#else	
 	GLdouble model_view[16];
 	glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
 	
@@ -731,7 +731,7 @@ ofPoint Manager::gLProject( float ax, float ay, float az ) {
 	if(projection[5]<0) Y = screenHeight-Y;//ofGetHeight()-Y;
    // return(ofPoint(ax, ay));
 	return ofPoint(X, Y, 0.0f);
-	
+#endif
 }
 
 

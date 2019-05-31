@@ -388,7 +388,10 @@ ofPath Graphic :: transformPath(ofPath& path) {
 	
 }
 glm::vec3 Graphic::gLProject(glm::vec3& v) {
-	
+#ifdef _MSC_VER 
+	//TODO implement 3D projection for windows
+	return glm::vec3(v.x, v.y, 0);
+#else
 	float ax = v.x;
 	float ay = v.y;
 	float az = v.z;
@@ -409,7 +412,7 @@ glm::vec3 Graphic::gLProject(glm::vec3& v) {
 	if(projection[5]<0) Y = ofGetHeight()-Y;
 	// return(ofPoint(ax, ay));
 	return glm::vec3(X, Y, 0.0f);
-	
+#endif
 }
 
 void Graphic ::  connectLineSegments() {

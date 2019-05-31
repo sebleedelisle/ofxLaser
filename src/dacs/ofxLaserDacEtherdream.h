@@ -15,6 +15,11 @@
 #include "Poco/Net/StreamSocket.h"
 #include "Poco/Net/NetException.h"
 
+#ifdef _MSC_VER
+#include <Windows.h>
+#define Byte BYTE
+#endif
+
 #define LIGHT_ENGINE_READY    0
 #define LIGHT_ENGINE_WARMUP	  1
 #define LIGHT_ENGINE_COOLDOWN 2

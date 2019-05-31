@@ -23,7 +23,7 @@ class Factory {
 	static Poco::ObjectPool<ofPolyline> polylineObjectPool;
 	
 	
-	static bool releasePolyline(ofPolyline* polyToRelease) {
+	static void releasePolyline(ofPolyline* polyToRelease) {
 
 		polylineObjectPool.returnObject( polyToRelease);
 		
