@@ -9,23 +9,19 @@ void ofApp::setup(){
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
 
+	laser.addProjector(dac);
+
+#ifdef USE_LASERDOCK
+	dac.setup();
+#else
+	// load the IP address of the Etherdream / IDN DAC
+	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
+	string dacIp = buffer.getText();
+	// if there's no file, then use the default IP address :
+	if(dacIp=="") dacIp ="10.0.1.12";
+	dac.setup(dacIp);
+#endif
 	
-	// ETHERDREAM DAC
-	// replace this with the IP address of your etherdream
-	// (find it with the sitter diagnostic tool
-	// at https://ether-dream.com/downloads.html )
-//	string dacIP = "10.1.1.11";
-//	dacEtherdream.setup(dacIP);
-//	laser.addProjector(dacEtherdream);
-	
-// 	IDN DAC
-	//	 string dacIP2 = "10.1.1.11"; // replace with IP address of your IDN DAC
-	//	 dacIDN.setup(dacIP2);
-	//	 laser.addProjector(dacIDN);
-	
-// 	LASERDOCK DAC
-	dacLaserdock.setup();
-	laser.addProjector(dacLaserdock);
 	
 	// if you don't want to manage your own GUI for your app you can add extra
 	// params to the laser GUI
@@ -276,8 +272,9 @@ void ofApp::mouseReleased(int x, int y, int button) {
 
 //--------------------------------------------------------------
 void ofApp::exit(){
-    laser.saveSettings();
-    //dacEtherdream.close();
-	//dacIDN.close();
-	
+	laser.saveSettings();
+#ifndef USE_LASERDOCK
+	dac.close();
+#endif
 }
+
