@@ -7,7 +7,7 @@ Safety Notice
 =============
 **LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK. NEVER LOOK INTO THE BEAM.** Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Check the exposure area for reflective surfaces. Take laser safety training and get licenced to use high power lasers in your location. In the UK I can recommend [this one](https://www.lvroptical.com/display.html). 
 
-Seriously, don't fuck around with this stuff. You can really damage your eyes. You've been warned. 
+Seriously, don't mess around with this stuff. You can really damage your eyes. You've been warned. 
 
 Features
 ----------
@@ -30,7 +30,6 @@ Roadmap
 * Automatic discovery of Etherdreams (currently requires the DAC IP address)
 * Automatic discovery of IDN DACs (currently requires the DAC IP address)
 * Masking in laser space, not source space
-* Optimisation of point generation and sending to DACs
 
 Licence
 -------
@@ -43,7 +42,7 @@ Installation
 First, pick the branch that matches your version of openFrameworks:
 
 * OF [stable](https://github.com/openframeworks/openFrameworks/tree/stable) (0.9.8): use [ofxLaser/stable](https://github.com/sebleedelisle/ofxLaser/tree/stable)
-* OF [master](https://github.com/openframeworks/openFrameworks) (0.10.0): use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/)
+* OF [master](https://github.com/openframeworks/openFrameworks) (0.10.1): use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/)
 
 Either clone out the source code using git:
 
@@ -57,19 +56,20 @@ To run the examples, import them into the project generator, create a new projec
 
 Dependencies
 ------------
-ofxXmlSettings (comes with oF)
-ofxGui (comes with oF)
-ofxOpenCv (comes with oF)
-ofxNetwork (comes with oF)
-ofxPoco (comes with oF)
-ofxSvg (comes with oF)
+ofxXmlSettings (comes with oF)  
+ofxGui (comes with oF)  
+ofxOpenCv (comes with oF)  
+ofxNetwork (comes with oF)  
+ofxPoco (comes with oF)  
+ofxSvg (comes with oF)  
 
 Compatibility
 ------------
-openFrameworks 0.10 - currently tested with 0.10
+openFrameworks 0.10.1 - currently tested with 0.10.1
 
 Known issues
 ------------
+I can't seem to get it to compile on VS2017 but I have very little experience on this platform. Let me know if you get it to work. 
 
 Version history
 ------------
