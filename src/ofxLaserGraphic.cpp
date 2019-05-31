@@ -8,30 +8,23 @@
 #include "ofxLaserGraphic.h"
 using namespace ofxLaser;
 
-
-
-
 // static class members
-
 int Graphic::numGraphicsInMemory = 0;
 
-void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
+void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
 	
 	const vector <ofPath> & paths = svg.getPaths();
-//
-	 for (ofPath path : svg.getPaths()){
+
+	for (ofPath path : svg.getPaths()){
 		addPath(path, false, subtractFills);
 	}
-
 
 	if(optimise) {
 		connectLineSegments();
 		for(int i = 0; i<polylines.size(); i++) {
 			polylines[i]->simplify(0.2);
 		}
-
 	}
-	
 	
 }
 
@@ -234,6 +227,7 @@ void Graphic :: addPath(const ofPath& path, bool useTransform, bool subtractFill
 		
 		subtractPathFromPolylines(newpath);
 	}
+
 	if(newpath.hasOutline()){
 		
 		const vector<ofPolyline> & outlines = newpath.getOutline();
@@ -692,7 +686,6 @@ void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string
 	
 	//////// union test
 
-	
 //	for(ofPolyline& poly:polylineMask) {
 //		laser.drawPoly(poly, ofColor::white);
 //	}

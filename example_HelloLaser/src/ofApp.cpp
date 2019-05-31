@@ -14,9 +14,9 @@ void ofApp::setup(){
 	// replace this with the IP address of your etherdream
 	// (find it with the sitter diagnostic tool
 	// at https://ether-dream.com/downloads.html )
-	string dacIP = "10.1.1.11";
-	dacEtherdream.setup(dacIP);
-	laser.addProjector(dacEtherdream);
+//	string dacIP = "10.1.1.11";
+//	dacEtherdream.setup(dacIP);
+//	laser.addProjector(dacEtherdream);
 	
 // 	IDN DAC
 	//	 string dacIP2 = "10.1.1.11"; // replace with IP address of your IDN DAC
@@ -24,8 +24,8 @@ void ofApp::setup(){
 	//	 laser.addProjector(dacIDN);
 	
 // 	LASERDOCK DAC
-	//dacLaserdock.setup();
-	//laser.addProjector(dacLaserdock);
+	dacLaserdock.setup();
+	laser.addProjector(dacLaserdock);
 	
 	// if you don't want to manage your own GUI for your app you can add extra
 	// params to the laser GUI
@@ -52,10 +52,6 @@ void ofApp::update(){
 void ofApp::draw() {
 	
 	ofBackground(40);
-    
-	//ofNoFill();
-	//ofSetLineWidth(1);
-	//ofDrawRectangle(0,0,laserWidth, laserHeight);
 	
 	int ypos = laserHeight+20;
 	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
@@ -258,12 +254,8 @@ void ofApp::mouseDragged(int x, int y, int button){
 	if(!drawingShape) return;
 	
 	ofPolyline &poly = polyLines.back();
-	//if(poly.getofVec3f end =poly.getVertices().back();
-	//if(ofDist(x, y, end.x, end.y) > 5) {
-		//poly.simplify();
 	poly.addVertex(x, y);
-	
-	//}
+
 }
 
 //--------------------------------------------------------------

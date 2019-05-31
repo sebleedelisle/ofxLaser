@@ -1,6 +1,0 @@
-ofxGui
-ofxLaser
-ofxNetwork
-ofxOpenCv
-ofxXmlSettings
-ofxSvg

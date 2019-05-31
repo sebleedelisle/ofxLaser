@@ -8,6 +8,10 @@
 
 #include "ofxGui.h"
 
+#define USE_ETHERDREAM
+//#define USE_IDN
+//#define USE_LASERDOCK
+
 class ofApp : public ofBaseApp{
 	
 public:
@@ -28,9 +32,15 @@ public:
 	
 	ofxLaser::Manager laser;
 	
-    ofxLaser::DacEtherdream dacEtherdream;
-	ofxLaser::DacLaserdock dacLaserdock;
-	ofxLaser::DacIDN dacIDN;
+#ifdef USE_ETHERDREAM
+	ofxLaser::DacEtherdream dac;
+#endif
+#ifdef USE_IDN
+	ofxLaser::DacIDN dac;
+#endif
+#ifdef USE_LASERDOCK
+	ofxLaser::DacLaserdock dac;
+#endif
 	
 	bool drawingShape = false;
 	int laserWidth;

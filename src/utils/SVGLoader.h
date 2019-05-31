@@ -6,7 +6,7 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxSvg.h"
+#include "ofxSvgExtra.h"
 #include "ofxLaserGraphic.h"
 
 class SVGLoader : public ofThread{
@@ -64,7 +64,7 @@ class SVGLoader : public ofThread{
 	ofxLaser::Graphic empty;
 	string svgData;
 	
-	ofxSVG svg;
+	ofxSVGExtra svg;
 
 	int loadCount;
 	

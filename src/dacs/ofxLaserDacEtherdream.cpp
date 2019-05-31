@@ -176,7 +176,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 				
 				const Point& p2 = points[i];
 				p1.x = ofMap(p2.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
-				p1.y = ofMap(p2.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP in ilda specs
+				p1.y = ofMap(p2.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
 				p1.r = p2.r/255.0f*65535;
 				p1.g = p2.g/255.0f*65535;
 				p1.b = p2.b/255.0f*65535;
@@ -184,7 +184,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 				p1.u1 = 0;
 				p1.u2 = 0;
 				addPoint(p1);
-				// TODO make frame replay an option
+				
 				framePoints[i] = p1;
 			}
 			isReplaying = false;

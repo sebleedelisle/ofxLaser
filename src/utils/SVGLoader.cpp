@@ -91,24 +91,11 @@ void SVGLoader::threadedFunction() {
 
 			svgData = data1;
 			
-//			replaceAll(svgData, "fill=\"#000000\"","fill=\"none\"");
-//			replaceAll(svgData, "<defs>", "");
-//			replaceAll(svgData, "</defs>", "");
-//			
-
-			
-			// should clear the paths
-			svg.clear();
-		
-			//try {
-				svg.loadFromData(svgData);
-			//} catch (const std::exception& e) {
-			//	ofLog(OF_LOG_ERROR, e.what());
-			//}
-			
-			
-			//bool joinlines = (file.getAbsolutePath().find("NO JOIN")!=string::npos);
-			
+			try {
+				svg.loadFromString(svgData);
+			} catch (const std::exception& e) {
+				ofLog(OF_LOG_ERROR, ofToString(e.what()));
+			}
 			
 			while(!lock()){
 				sleep(1);

@@ -112,7 +112,7 @@ namespace ofxLaser {
 	ofPoint clickOffset, startPos;
 	bool isDragging = false;
 	bool active = true;
-	float radius = 2.5;
+	float radius = 4;
 	bool xAxis;
 	bool yAxis;
 	
@@ -120,7 +120,7 @@ namespace ofxLaser {
 	bool yLocked = false;
 	
 	bool altKeyDisable;
-	bool isCircular = false;
+	bool isCircular = true;
     bool isFilled = false;
 		
 	bool snapToGrid = false;

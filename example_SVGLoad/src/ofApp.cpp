@@ -15,21 +15,38 @@ void ofApp::setup(){
     
     // and load them all
     const vector<ofFile>& files = dir.getFiles();
-    //laserGraphics.resize(files.size());
-    //fileNames.resize(files.size());
-    
-    for(int i = 0; i<files.size();i++) {
+
+	svgs.resize(files.size());
+	
+	for(int i = 0; i<files.size();i++) {
         const ofFile & file = files.at(i);
-		ofxSVG svg;
+		
+		// note that we are using ofxSvgExtra rather than the basic
+		// ofxSVG - I have added some functionality to the SVG object
+		// and put in a pull request to oF, but in the meantime,
+		// we can use this surrogate custom SVG class.
+		
+		ofxSVGExtra& svg = svgs[i];
+		
         svg.load(file.getAbsolutePath());
 		laserGraphics.push_back(ofxLaser::Graphic());
-		laserGraphics.back().addSvg(svg);
-		//laserGraphics.back().connectLineSegments();
+		
+		// the ofxLaser::Graphic object is a way to manage a bunch
+		// of shapes for laser rendering, and it can load SVGs.
+		
+		// addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills)
+		// optimise : if true, will join similar line segments into conjoined paths
+		// (way faster to laser)
+		// subtractFills : if true, will subtract filled areas from shapes underneath
+		// this is important because otherwise, all our objects will appear transparent.
+	
+		laserGraphics.back().addSvg(svg, true, true);
+		
+		// this centres all the graphics
 		laserGraphics.back().autoCentre();
 		
 		ofLog(OF_LOG_NOTICE,file.getAbsolutePath());
 		fileNames.push_back(file.getFileName());
-		
 		
     }
     
@@ -40,19 +57,22 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 
     laser.addProjector(dac);
-    
-    // load the IP address of the Etherdream
+	
+#ifdef USE_LASERDOCK
+	dac.setup();
+#else
+    // load the IP address of the Etherdream / IDN DAC
     ofBuffer buffer = ofBufferFromFile("dacIP.txt");
     string dacIp = buffer.getText();
 	// if there's no file, then use the default IP address :
     if(dacIp=="") dacIp ="10.0.1.12";
     dac.setup(dacIp);
+#endif
 	
+	laser.addCustomParameter(scale.set("SVG scale", 2, 0.1,6));
     laser.initGui();
     
-    ofParameterGroup params;
-    params.add(scale.set("SVG scale", 2, 0.1,6));
-    laser.gui.add(params);
+	
     currentSVG = 0;
 	
 	 
@@ -95,6 +115,7 @@ void ofApp::draw() {
 	ofScale(scale, scale); 
     if(laserGraphics.size()>currentSVG) {
 		laserGraphics[currentSVG].renderToLaser(laser, 1, OFXLASER_PROFILE_DEFAULT);
+	//	svgs[currentSVG].draw();
     }
     ofPopMatrix();
     laser.send();
@@ -126,5 +147,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::exit(){
     laser.saveSettings();
+#ifndef USE_LASERDOCK
     dac.close();
+#endif
 }

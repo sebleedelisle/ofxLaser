@@ -888,21 +888,24 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 			
 			currentPosition = segmentpoints.getEnd();
 			
+			SegmentPoints* nextsegment = nullptr;
+			
 			if(j<sortedsegmentpoints.size()-1) {
-				SegmentPoints& nextsegment = *sortedsegmentpoints[j+1];
-				if(currentPosition.distance(nextsegment.getStart())>2){
-					for(int k = 0;k<shapePostOn;k++) {
-						addPoint(segmentpoints.getEnd());
-					}
-					for(int k = 0; k<shapePostBlank; k++) {
-						addPoint((ofPoint)segmentpoints.getEnd(), ofColor(0));
-					}
+				nextsegment = sortedsegmentpoints[j+1];
+			}
+			if((nextsegment==nullptr) || (currentPosition.distance(nextsegment->getStart())>2)){
+				for(int k = 0;k<shapePostOn;k++) {
+					addPoint(segmentpoints.getEnd());
+				}
+				for(int k = 0; k<shapePostBlank; k++) {
+					addPoint((ofPoint)segmentpoints.getEnd(), ofColor(0));
 				}
 			}
+		
 			
 			
 		}
-		addPointsForMoveTo(currentPosition, laserHomePosition);
+		//addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
 	
