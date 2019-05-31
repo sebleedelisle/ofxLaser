@@ -118,11 +118,11 @@ bool DacLaserdock:: sendFrame(const vector<Point>& points){
 				
 				const Point& p2 = points[i];
 				p1.x = ofMap(p2.x,0,800, LASERDOCK_MIN, LASERDOCK_MAX);
-				p1.y = ofMap(p2.y,800,0, LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP in ilda specs
+				p1.y = ofMap(p2.y,800,0, LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP
 				p1.rg = (int)roundf(p2.r) | ((int)roundf(p2.g)<<8);
 				p1.b = roundf(p2.b);
 				addPoint(p1);
-				// TODO make frame replay an option
+				
 				framePoints[i] = p1;
 			}
 			isReplaying = false;
@@ -198,8 +198,7 @@ void DacLaserdock :: threadedFunction(){
 	const uint32_t samples_per_packet = 64;
 	const uint32_t circle_steps = 300;
 	LaserdockSample * samples = (LaserdockSample *)calloc(sizeof(LaserdockSample), samples_per_packet);
-	
-	
+		
 	int _index = 0;
 	
 	while(isThreadRunning()) {
@@ -211,10 +210,21 @@ void DacLaserdock :: threadedFunction(){
 			device->set_dac_rate(pps);
 		}
 		
-		while(!lock()){}
+		while(!lock()){};
+
+		// if we're out of points, let's replay the frame!
+		if(bufferedPoints.size()<samples_per_packet) {
+			if(frameMode && replayFrames) {
+				for(int i = 0; i<framePoints.size(); i++) {
+					addPoint(framePoints[i]);
+				}
+				isReplaying = true;
+			}
+		}
 		
 		LaserdockSample& p = sendpoint;
 		for(int i = 0; i<samples_per_packet; i++) {
+
 			if(bufferedPoints.size()>0) {
 				p = *bufferedPoints[0];
 				sparePoints.push_back(bufferedPoints[0]);
@@ -232,5 +242,8 @@ void DacLaserdock :: threadedFunction(){
 		if(!device->send_samples(samples,samples_per_packet)){
 			ofLog(OF_LOG_NOTICE, "send_samples failed");
 		}
+		
 	}
+	
+	free(samples);
 }
