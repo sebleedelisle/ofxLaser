@@ -9,6 +9,7 @@
 #include "ofMain.h"
 #include "ofxLaserManager.h"
 #include "ofxSvgExtra.h"
+#include "ofxSvg.h"
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
 
@@ -47,6 +48,7 @@ class Graphic {
 
 	
 	void addSvg(ofxSVGExtra& svg, bool optimise = true, bool subtractFills = true);
+	void addSvg(ofxSVG& svg, bool optimise = true, bool subtractFills = true);
 	
 	void addPolyline(const ofPolyline* poly, ofColor colour, bool filled = true, bool useTransform = true){
 		addPolyline(*poly, colour, filled, useTransform);
