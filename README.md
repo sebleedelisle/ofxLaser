@@ -25,6 +25,12 @@ Features
 * Should work with 3D coordinates but needs further testing
 * Cross platform - mostly tested on OSX, but should work on Windows and Linux
 
+Supported Laser interfaces
+--------------------------
+* Etherdream
+* Laserdock / Lasercube
+* IDN (Ilda Digital Network standard)
+
 Roadmap
 -----------
 * Automatic discovery of Etherdreams (currently requires the DAC IP address)
@@ -70,7 +76,6 @@ openFrameworks 0.10.1 - currently tested with 0.10.1
 
 Known issues
 ------------
-I can't seem to get it to compile on VS2017 but I have very little experience on this platform. Let me know if you get it to work. 
 
 Version history
 ------------
