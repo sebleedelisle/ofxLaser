@@ -23,7 +23,7 @@
 // =============================================================================
 
 
-#include "ofx/Clipper.h"
+#include "ofxClipper.h"
 
 
 namespace ofx {

@@ -12,9 +12,6 @@
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
 
-// for Clipper to work with open paths
-//#define use_lines
-
 namespace ofxLaser {
 
 // contains vector of polylines and colours
