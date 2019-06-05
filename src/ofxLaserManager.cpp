@@ -711,27 +711,29 @@ ofPoint Manager::gLProject(ofPoint p) {
 	return gLProject(p.x, p.y, p.z);
 	
 }
-ofPoint Manager::gLProject( float ax, float ay, float az ) {
-#ifdef _MSC_VER	
-	return ofPoint(ax, ay, 0);
-#else	
-	GLdouble model_view[16];
-	glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
+ofPoint Manager::gLProject( float x, float y, float z ) {
 	
-	GLdouble projection[16];
-	glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	ofRectangle rViewport = ofGetCurrentViewport();
 	
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
+	glm::mat4 modelview, projection;
+	glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelview));
+	glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projection));
+	glm::mat4 mat = ofGetCurrentOrientationMatrix();
+	mat = glm::inverse(mat);
+	mat *=projection * modelview;
+	glm::vec4 dScreen4 = mat * glm::vec4(x,y,z,1.0);
+	glm::vec3 dScreen = glm::vec3(dScreen4) / dScreen4.w;
+	dScreen += glm::vec3(1.0) ;
+	dScreen *= 0.5;
+	
+	dScreen.x *= rViewport.width;
+	dScreen.x += rViewport.x;
+	
+	dScreen.y *= rViewport.height;
+	dScreen.y += rViewport.y;
+	
+	return ofPoint(dScreen.x, dScreen.y, 0.0f);
 
-	GLdouble X, Y, Z = 0;
-	gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
-	
-	// bit of a hack - if you're rendering into an Fbo then y is inverted
-	if(projection[5]<0) Y = screenHeight-Y;//ofGetHeight()-Y;
-   // return(ofPoint(ax, ay));
-	return ofPoint(X, Y, 0.0f);
-#endif
 }
 
 
