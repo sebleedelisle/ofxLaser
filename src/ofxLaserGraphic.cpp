@@ -404,31 +404,27 @@ ofPath Graphic :: transformPath(ofPath& path) {
 	
 }
 glm::vec3 Graphic::gLProject(glm::vec3& v) {
-#ifdef _MSC_VER 
-	//TODO implement 3D projection for windows
-	return glm::vec3(v.x, v.y, 0);
-#else
-	float ax = v.x;
-	float ay = v.y;
-	float az = v.z;
+
+	ofRectangle rViewport = ofGetCurrentViewport();
 	
-	GLdouble model_view[16];
-	glGetDoublev(GL_MODELVIEW_MATRIX, model_view);
+	glm::mat4 modelview, projection;
+	glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelview));
+	glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projection));
+	glm::mat4 mat = ofGetCurrentOrientationMatrix();
+	mat = glm::inverse(mat);
+	mat *=projection * modelview;
+	glm::vec4 dScreen4 = mat * glm::vec4(v.x,v.y,v.z,1.0);
+	glm::vec3 dScreen = glm::vec3(dScreen4) / dScreen4.w;
+	dScreen += glm::vec3(1.0) ;
+	dScreen *= 0.5;
 	
-	GLdouble projection[16];
-	glGetDoublev(GL_PROJECTION_MATRIX, projection);
+	dScreen.x *= rViewport.width;
+	dScreen.x += rViewport.x;
 	
-	GLint viewport[4];
-	glGetIntegerv(GL_VIEWPORT, viewport);
+	dScreen.y *= rViewport.height;
+	dScreen.y += rViewport.y;
 	
-	GLdouble X, Y, Z = 0;
-	gluProject( ax, ay, az, model_view, projection, viewport, &X, &Y, &Z);
-	
-	// bit of a hack - if you're rendering into an Fbo then y is inverted
-	if(projection[5]<0) Y = ofGetHeight()-Y;
-	// return(ofPoint(ax, ay));
-	return glm::vec3(X, Y, 0.0f);
-#endif
+	return ofPoint(dScreen.x, dScreen.y, 0.0f);
 }
 
 void Graphic ::  connectLineSegments() {
