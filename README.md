@@ -7,7 +7,7 @@ Safety Notice
 =============
 **LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK. NEVER LOOK INTO THE BEAM.** Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Check the exposure area for reflective surfaces. Take laser safety training and get licenced to use high power lasers in your location. In the UK I can recommend [this one](https://www.lvroptical.com/display.html). 
 
-Seriously, don't fuck around with this stuff. You can really damage your eyes. You've been warned. 
+Seriously, don't mess around with this stuff. You can really damage your eyes. You've been warned. 
 
 Features
 ----------
@@ -42,8 +42,9 @@ Installation
 
 First, pick the branch that matches your version of openFrameworks:
 
-* OF [stable](https://github.com/openframeworks/openFrameworks/tree/stable) (0.9.8): use [ofxLaser/stable](https://github.com/sebleedelisle/ofxLaser/tree/stable)
-* OF [master](https://github.com/openframeworks/openFrameworks) (0.10.0): use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/)
+* Latest stable OF [stable](https://github.com/openframeworks/openFrameworks/tree/stable) : use [ofxLaser/stable](https://github.com/sebleedelisle/ofxLaser/tree/stable)
+* Latest master OF [master](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/)
+* OF 0.9.8 : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
 Either clone out the source code using git:
 
