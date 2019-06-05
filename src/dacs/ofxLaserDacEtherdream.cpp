@@ -34,16 +34,21 @@ DacEtherdream :: DacEtherdream(){
 	// also make this adjustable
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
-    maxBufferedPoints = 1200; 	// the maximum points to fill the buffer with
-    minBufferedPoints = 1000; 	// the minimum number of points to buffer before
-								// we tell the ED to start playing
-								// TODO - these should be time based!
+    dacBufferSize = 1200; 				// the maximum points to fill the buffer with
+    pointsToSendBeforePlaying = 100; 	// the minimum number of points to buffer before
+										// we tell the ED to start playing
+										// TODO - these should be time based!
 
 }
 const vector<ofParameter<int>*>& DacEtherdream :: getDisplayData() {
 	if(lock()) {
 	
-		pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*0.1;
+		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
+		
+		int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
+		
+		pointBufferDisplay = response.status.buffer_fullness-pointssincelastmessage;
+																 
 		latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
 		reconnectCount = prepareSendCount;
 	
@@ -64,6 +69,7 @@ DacEtherdream :: ~DacEtherdream(){
 		// and deallocates *tmp[i]
 	}
 	bufferedPoints.clear();
+	close(); 
 }
 
 void DacEtherdream :: setup(string ip) {
@@ -159,19 +165,19 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 
 //	ofLog(OF_LOG_NOTICE, "point create count  : " + ofToString(dac_point::createCount));
 //	ofLog(OF_LOG_NOTICE, "point destroy count : " + ofToString(dac_point::destroyCount));
-	
-	int maxBufferSize = 1000;
+	//int maxBufferSize = 1000;
 	dac_point& p1 = sendpoint;
 	
 	// if we already have too many points in the buffer,
 	// then it means that we need to skip this frame
 	
-	if(isReplaying || (bufferedPoints.size()<maxBufferSize)) {
+	//if(isReplaying || (bufferedPoints.size()<pointsToSendBeforePlaying)) {
 
-		framePoints.resize(points.size());
-
+	
 		if(lock()) {
 			frameMode = true;
+			framePoints.resize(points.size());
+
 			for(int i = 0; i<points.size(); i++) {
 				
 				const Point& p2 = points[i];
@@ -183,22 +189,140 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 				p1.i = 0;
 				p1.u1 = 0;
 				p1.u2 = 0;
-				addPoint(p1);
+				//addPoint(p1);
 				
 				framePoints[i] = p1;
 			}
-			isReplaying = false;
+			newFrame = true;
 			unlock();
 		}
 		return true;
-	} else {
+	//} else {
 		// we've skipped this frame... TODO - dropped frame count?
-		return false;
-	}
+	//	return false;
+	//}
 }
+
+
+inline bool DacEtherdream :: sendData(){
+	
+	//data_command d;
+	uint8_t command = 'd';
+	
+	// numPointsToSend is automatically calculated when we get data back from the DAC
+	uint16_t npointstosend = numPointsToSend;
+	
+	// this is to stop sending too many points into the future
+	//float bufferTime = 0.5f; // was 0.1f - TODO make this a param!
+	//if(npoints>pps*bufferTime) npoints = pps*bufferTime;
+	
+	if(npointstosend<=0) npointstosend = 0;
+	// i'm not sure there's any point in doing this... because
+	// we wait to hear back from the DAC anyway...
+	//numPointsToSend-=npoints;
+	
+	// TODO make these params
+	//float minBufferTime = 0.01; // (30 frames at 30k)
+	int minBuffer = pointsToSendBeforePlaying; // pps*minBufferTime;
+	
+	// system for resending existing frames... probably can be optimised
+	// if we're in frame mode and we're replaying frames
+	if(frameMode) {
+		
+		// send as many points as we can,
+		npointstosend = MIN(bufferedPoints.size(), numPointsToSend);
+		
+		// now calculate the min points before we send the new frame...
+		// if we have a new frame, then send it as long as we have spare points
+		int minpointcount;
+		if(newFrame) {
+			minpointcount = numPointsToSend;
+		} else { // otherwise just send it if we're at the absolute minimum
+			minpointcount = MAX(minBuffer - response.status.buffer_fullness,0);
+		}
+		
+		if(npointstosend<minpointcount) {
+			// send the frame!
+			for(int i = 0; i<framePoints.size(); i++) {
+				addPoint(framePoints[i]);
+			}
+			newFrame = false;
+			npointstosend = MIN(bufferedPoints.size(), numPointsToSend);
+		
+		}
+		
+		
+	}
+		outbuffer[0]= command;
+	writeUInt16ToBytes(npointstosend, &outbuffer[1]);
+	int pos = 3;
+	
+	dac_point& p = sendpoint;
+	
+	for(int i = 0; i<npointstosend; i++) {
+		
+		if(bufferedPoints.size()>0) {
+			p = *bufferedPoints[0]; // copy assignment
+			sparePoints.push_back(bufferedPoints[0]); // recycling system
+			bufferedPoints.pop_front(); // no longer destroys point
+			lastpoint = p; //
+		} else  {
+			// just send some blank points in the same position as the
+			// last point
+			// TODO count the blanks!
+			
+			p = lastpoint;
+			
+			p.i = 0;
+			p.r = 0;
+			p.g = 0;
+			p.b = 0;
+			p.u1 = 0;
+			p.u2 = 0;
+		}
+		
+		if(queuedPPSChangeMessages>0) {
+			// bit 15 is a flag to tell the DAC about a new point rate
+			p.control = 0b1000000000000000;
+			queuedPPSChangeMessages--;
+		}
+		
+		writeUInt16ToBytes(p.control, &outbuffer[pos]);
+		pos+=2;
+		writeInt16ToBytes(p.x, &outbuffer[pos]);
+		pos+=2;
+		writeInt16ToBytes(p.y, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.r, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.g, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.b, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.i, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.u1, &outbuffer[pos]);
+		pos+=2;
+		writeUInt16ToBytes(p.u2, &outbuffer[pos]);
+		pos+=2;
+		
+	}
+	
+	numBytesSent = pos;
+	if(numBytesSent>=100000) {
+		
+		ofLog(OF_LOG_ERROR, "ofxLaser::DacEtherdream - too many bytes to send! - " + ofToString(numBytesSent));
+	}
+	return sendBytes(&outbuffer, numBytesSent);
+	//cout << "sent " << n << " bytes" << endl;
+	//cout << "numPointsToSend " << numPointsToSend << endl;
+}
+
+
 
 bool DacEtherdream:: sendPoints(const vector<Point>& points){
     // max half second buffer
+	//cout << "DacEtherdream::sendPoints -------------------------" << endl;
     if(bufferedPoints.size()>pps*0.5) {
         return false;
     }
@@ -285,7 +409,7 @@ void DacEtherdream :: threadedFunction(){
 				sendClear();
 				waitForAck('c');
 			}
-			
+			prepareSendCount = 0;
 		}
 
 		if((response.status.playback_state == PLAYBACK_IDLE) && (response.status.light_engine_state == LIGHT_ENGINE_READY)) {
@@ -316,8 +440,8 @@ void DacEtherdream :: threadedFunction(){
 		// if state is prepared or playing, and we have points in the buffer, then send the points
 		if(response.status.playback_state!=PLAYBACK_IDLE) {
 			
-			// min points might as well be small, to keep topping up huh?
-			if(numPointsToSend>20){
+			// min buffer amount
+			if(numPointsToSend>pointsToSendBeforePlaying){
 				//check buffer and send the next points
 				while(!lock()) {}
 				sendData();
@@ -332,7 +456,7 @@ void DacEtherdream :: threadedFunction(){
 			
 		}
 		// if state is prepared and we have sent enough points and we haven't already, send begin
-		if((response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=minBufferedPoints)) {
+		if((response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=pointsToSendBeforePlaying)) {
 			sendBegin();
 			beginSent = waitForAck('b');
 
@@ -409,7 +533,8 @@ inline bool DacEtherdream::waitForAck(char command) {
 		
 		try {
 			n = socket.receiveBytes(buffer, 22);
-			latencyMicros = ofGetElapsedTimeMicros() - startTime;
+			lastMessageTimeMicros = ofGetElapsedTimeMicros();
+			latencyMicros = lastMessageTimeMicros - startTime;
 		} catch (Poco::Exception& exc) {
 			//Handle your network errors.
 			ofLog(OF_LOG_ERROR,  "Network error: " + exc.displayText());
@@ -445,6 +570,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 	//cout << "received " << n << "bytes" <<endl;
 	
 	if(n==22) {
+		
 		connected = true;
 		response.response = buffer[0];
 		response.command = buffer[1];
@@ -459,10 +585,8 @@ inline bool DacEtherdream::waitForAck(char command) {
 		response.status.point_rate = bytesToUInt32(&buffer[14]);
 		response.status.point_count = bytesToUInt32(&buffer[18]);
 		
-		//memcpy(&response, &buffer, sizeof(response));
-       
         if((response.response == 'a') && (response.status.playback_state!= PLAYBACK_IDLE )) {
-            numPointsToSend = maxBufferedPoints - response.status.buffer_fullness;
+            numPointsToSend = dacBufferSize - response.status.buffer_fullness;
             if(numPointsToSend<0) numPointsToSend = 0;
 			
 //			// numpointstosend should be
@@ -574,13 +698,13 @@ inline bool DacEtherdream::waitForAck(char command) {
 	}
 	else {
 		ofLog(OF_LOG_NOTICE, "data received from Etherdream not 22 bytes :" + ofToString(n));
-		//return false;
+		// what do we do now?
+		
 	}
 	
 	if(failed) {
 		beginSent = false;
 		connected = false;
-		//prepareSent = false;
 		
 		return false;
 	} else {
@@ -642,116 +766,6 @@ inline bool DacEtherdream :: sendPointRate(uint32_t rate){
 	writeUInt32ToBytes(rate, &outbuffer[1]);
 	return sendBytes(&outbuffer, 5);
 	
-}
-
-inline bool DacEtherdream :: sendData(){
-	
-	//data_command d;
-	uint8_t command = 'd';
-
-	// numPointsToSend is automatically calculated when we get data back from the DAC
-	// not sure why I'm subtracting 10 here... TODO try taking it out
-    uint16_t npoints = numPointsToSend;
-    
-    // this is to stop sending too many points into the future
-    float bufferTime = 0.5f; // was 0.1f - TODO make this a param!
-	if(npoints>pps*bufferTime) npoints = pps*bufferTime;
-	
-    if(npoints<=0) npoints = 1;
-	// i'm not sure there's any point in doing this... because
-	// we wait to hear back from the DAC anyway...
-	//numPointsToSend-=npoints;
-	
-	// TODO make these params
-	float minBufferTime = 0.01; // (30 frames at 30k)
-	int minBuffer = pps*minBufferTime;
-	
-	// system for resending existing frames... probably can be optimised
-	// if we're in frame mode and we're replaying frames
-	if(frameMode && replayFrames) {
-		// if we have fewer points in the buffer than we're gonna send
-		if(bufferedPoints.size()< npoints) {
-
-			// then set the number of points to be the buffered points size
-			// (the rest of the frame)
-
-			if(bufferedPoints.size()>=minBuffer) {
-				npoints = bufferedPoints.size();
-				
-			} else {
-				
-				// otherwise, let's replay the frame!
-				for(int i = 0; i<framePoints.size(); i++) {
-					addPoint(framePoints[i]);
-				}
-				isReplaying = true;
-			}
-		}
-	}
-	
-	outbuffer[0]= command;
-	writeUInt16ToBytes(npoints, &outbuffer[1]);
-	int pos = 3;
-	
-	dac_point& p = sendpoint;
-	
-	for(int i = 0; i<npoints; i++) {
-		
-		if(bufferedPoints.size()>0) {
-			p = *bufferedPoints[0]; // copy assignment
-			sparePoints.push_back(bufferedPoints[0]); // recycling system
-			bufferedPoints.pop_front(); // no longer destroys point
-			lastpoint = p; //
-		} else  {
-			// just send some blank points in the same position as the
-			// last point
-			// TODO count the blanks!
-			
-			p = lastpoint;
-			
-			p.i = 0;
-			p.r = 0;
-			p.g = 0;
-			p.b = 0;
-			p.u1 = 0;
-			p.u2 = 0;
-		}
-		
-		if(queuedPPSChangeMessages>0) {
-			// bit 15 is a flag to tell the DAC about a new point rate
-			p.control = 0b1000000000000000;
-			queuedPPSChangeMessages--;
-		}
-		
-		writeUInt16ToBytes(p.control, &outbuffer[pos]);
-		pos+=2;
-		writeInt16ToBytes(p.x, &outbuffer[pos]);
-		pos+=2;
-		writeInt16ToBytes(p.y, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.r, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.g, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.b, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.i, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.u1, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.u2, &outbuffer[pos]);
-		pos+=2;
-		
-	}
-	
-    numBytesSent = pos;
-    if(numBytesSent>=100000) {
-        
-        ofLog(OF_LOG_ERROR, "ofxLaser::DacEtherdream - too many bytes to send! - " + ofToString(numBytesSent));
-    }
-	return sendBytes(&outbuffer, numBytesSent);
-	//cout << "sent " << n << " bytes" << endl;
-	//cout << "numPointsToSend " << numPointsToSend << endl;
 }
 
 void DacEtherdream :: logData() {
@@ -865,37 +879,6 @@ bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 //		//	isOpen = false;
 //	}
 //}
-
-inline uint16_t DacEtherdream :: bytesToUInt16(unsigned char* byteaddress) {
-	return (uint16_t)(*(byteaddress+1)<<8)|*byteaddress;
-	
-}
-inline uint16_t DacEtherdream :: bytesToInt16(unsigned char* byteaddress) {
-    uint16_t i = *(signed char *)(byteaddress);
-    i *= 1 << CHAR_BIT;
-    i |= (*byteaddress+1);
-    return i;
-    
-}
-inline uint32_t DacEtherdream :: bytesToUInt32(unsigned char* byteaddress){
-	return (uint32_t)(*(byteaddress+3)<<24)|(*(byteaddress+2)<<16)|(*(byteaddress+1)<<8)|*byteaddress;
-	
-}
-inline void DacEtherdream :: writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress){
-	*(byteaddress+1) = n>>8;
-	*byteaddress = n&0xff;
-}
-inline void DacEtherdream :: writeInt16ToBytes(int16_t& n, unsigned char* byteaddress){
-	*(byteaddress+1) = n>>8;
-	*byteaddress = n&0xff;
-}
-inline void DacEtherdream :: writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress){
-	*(byteaddress+3) = (n>>24) & 0xff;
-	*(byteaddress+2) = (n>>16) & 0xff;
-	*(byteaddress+1) = (n>>8) & 0xff;
-	*byteaddress = n&0xff;
-	
-}
 
 dac_point*  DacEtherdream :: getDacPoint() {
 	dac_point* p;

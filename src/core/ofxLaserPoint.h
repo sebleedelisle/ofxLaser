@@ -31,8 +31,18 @@ public:
 		intensity = pointIntensity;
 	}
 	
-	ofColor getColor() {
+	ofColor getColour() {
 		return ofColor(r, g, b);
+	}
+	void copyColourFromPoint(Point& pointToCopyFrom) {
+		r = pointToCopyFrom.r;
+		g = pointToCopyFrom.g;
+		b = pointToCopyFrom.b;
+	}
+	void setColour(int pr, int pg, int pb) {
+		r = pr;
+		g = pg;
+		b = pb;
 	}
 	
 	float r; //0-255

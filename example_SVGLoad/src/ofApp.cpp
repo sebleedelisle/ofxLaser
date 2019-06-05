@@ -69,7 +69,7 @@ void ofApp::setup(){
     dac.setup(dacIp);
 #endif
 	
-	laser.addCustomParameter(scale.set("SVG scale", 2, 0.1,6));
+	laser.addCustomParameter(scale.set("SVG scale", 1.3, 0.1,6));
     laser.initGui();
     
 	
