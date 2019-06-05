@@ -8,6 +8,7 @@ void ofApp::setup(){
 	laserWidth = 800;
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
+	
 
 	laser.addProjector(dac);
 
@@ -26,7 +27,7 @@ void ofApp::setup(){
 	// if you don't want to manage your own GUI for your app you can add extra
 	// params to the laser GUI
 	laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
-    laser.initGui();
+    laser.initGui(true);
     currentLaserEffect = 0;
     numLaserEffects = 8;
 	 

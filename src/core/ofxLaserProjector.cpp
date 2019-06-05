@@ -911,6 +911,9 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		
 	}
 	
+	if (laserPoints.size() == 0) {
+		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
+	}
 	processPoints(masterIntensity);
 	dac.sendFrame(laserPoints);
     numPoints = laserPoints.size();
