@@ -120,9 +120,18 @@ namespace ofxLaser {
 		ofParameter<int> pointBufferDisplay;
 		ofParameter<int> latencyDisplay;
 		ofParameter<int> reconnectCount;
+		uint64_t lastMessageTimeMicros;
 		
         
-		
+		// the maximum number of points the etherdream can hold.
+		// in etherdream v1 it's 1799, but you may want it to be lower
+		// for lower latency
+		int dacBufferSize;
+		// the minimum number of points in the buffer before the etherdream
+		// starts playing.
+		int pointsToSendBeforePlaying;
+
+		vector<dac_point> framePoints;
 		
 	private:
 		void threadedFunction();
@@ -138,13 +147,6 @@ namespace ofxLaser {
 		inline bool waitForAck(char command);
 		bool sendBytes(const void* buffer, int length);
 		
-        inline uint16_t bytesToUInt16(unsigned char* byteaddress);
-        inline uint16_t bytesToInt16(unsigned char* byteaddress);
-        inline uint32_t bytesToUInt32(unsigned char* byteaddress);
-		inline void writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress);
-		inline void writeInt16ToBytes(int16_t& n, unsigned char* byteaddress);
-		inline void writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress);
-
 		dac_point lastpoint;
 		dac_point sendpoint;
 		
@@ -167,24 +169,17 @@ namespace ofxLaser {
 		
 		deque<dac_point*> bufferedPoints;
 		vector<dac_point*> sparePoints;
-		vector<dac_point> framePoints;
 		int numPointsToSend;
 		uint32_t pps, newPPS;
 		int queuedPPSChangeMessages;
 		bool connected; 
-		bool replayFrames = true;
-		bool isReplaying = false;
+		//bool replayFrames = true;
+		//bool isReplaying = false;
+		bool newFrame = false; 
 		bool frameMode = true;
 		bool verbose = false;
-        
-        // the maximum number of points the etherdream can hold.
-        // in etherdream v1 it's 1799, but you may want it to be lower
-        // for lower latency
-        int maxBufferedPoints;
-        // the minimum number of points in the buffer before the etherdream
-        // starts playing.
-        int minBufferedPoints;
-
+		  
+		
 	};
 
 }

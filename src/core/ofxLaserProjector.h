@@ -67,7 +67,7 @@ namespace ofxLaser {
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>& points);
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
-		void processPoints(float masterIntensity);
+		void processPoints(float masterIntensity, bool offsetColours = true);
 		void saveSettings();
 		
 		RenderProfile& getRenderProfile(string profilelabel);

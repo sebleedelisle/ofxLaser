@@ -1,4 +1,4 @@
-#include "ofxSVGExtra.h"
+#include "ofxSvgExtra.h"
 #include "ofConstants.h"
 
 using namespace std;

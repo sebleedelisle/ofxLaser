@@ -52,7 +52,7 @@ void Projector :: initGui(bool showAdvanced) {
     }
     else speedMultiplier = 1;
     
-	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-3,3));
+	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-4,4));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
 	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,15));
 	projectorparams.add(shapePreBlank.set("Blank points before", 1,0,8));
@@ -301,6 +301,8 @@ void Projector::renderStatusBox(float x, float y, float w, float h) {
 		ofSetColor(150);
 		float size = ofMap(dataelement.get(), dataelement.getMin(), dataelement.getMax(), 0,w-16, true);
 		ofDrawRectangle(8, i*16, size,10);
+		ofSetColor(100);
+		ofDrawBitmapString(dataelement.getName(),8,i*16+10); 
 		
 	}
 	
@@ -469,7 +471,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 		ofDrawCircle(p, 3);
 		ofFill();
 		Point& lp =laserPoints[pointindex];
-		ofSetColor(lp.getColor()*255);
+		ofSetColor(lp.getColour()*255);
 		ofDrawCircle(p, 3);
 	}
 	
@@ -658,7 +660,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     
     
     
-    processPoints(masterIntensity);
+    processPoints(masterIntensity, false);
     dac.sendPoints(laserPoints);
     
    
@@ -1163,7 +1165,7 @@ void Projector :: addPoint(ofxLaser::Point p) {
 
 
 
-void  Projector :: processPoints(float masterIntensity) {
+void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			
 	// Some lasers change colour too early/late, so the colourChangeOffset system
 	// mitigates against that by shifting the colours for the points.
@@ -1172,66 +1174,64 @@ void  Projector :: processPoints(float masterIntensity) {
 	// To avoid creating a whole new vector, we're storing the overlap in a buffer of
 	// colours.
 	// I'm sure there must be some slicker C++ way of doing this...
-	//ofLog(OF_LOG_NOTICE, ofToString(colourChangeOffset));
-	int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeOffset ;
 	
+	if(offsetColours) {
+	// the offset value is in time, so we convert it to a number of points.
+		// this way we can change the PPS and this should still work
+		int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeOffset ;
+		
+		// if >0 then we change the colour later, ie we shift the colours forward
 
-	if(colourChangeIndexOffset>0) {
-		vector<ofColor> colourBuffer(colourChangeIndexOffset);
-		
-		for(int i = 0; i<laserPoints.size(); i++) {
+		if(colourChangeIndexOffset>0) {
 			
-			Point& p = laserPoints[i];
-			// todo : check colour range is 0 to 255
-			if(i<colourChangeIndexOffset) colourBuffer[i].set(p.r, p.g, p.b);
-			
-			int colourPointIndex = i+colourChangeIndexOffset;
-			ofColor c;
-			if(colourPointIndex>=laserPoints.size()) {
-				c = colourBuffer[colourPointIndex%laserPoints.size()];
-			
-			} else {
-				Point& colourPoint = laserPoints[colourPointIndex];
-				c.set(colourPoint.r, colourPoint.g, colourPoint.b);
-			}
-			p.r = c.r;
-			p.g = c.g;
-			p.b = c.b;
-
-		}
-		
-	} else {
-		// change negative to positive
-		colourChangeIndexOffset*=-1;
-		vector<ofColor> colourBuffer(colourChangeIndexOffset);
-		int bufferStartIndex = laserPoints.size()-colourChangeIndexOffset;
-		
-		for(int i = laserPoints.size()-1; i>=0; i--) {
-			
-			Point& p = laserPoints[i];
-			// todo : check colour range is 0 to 255
-			if(i>=bufferStartIndex) {
-			//	ofLog(OF_LOG_NOTICE, "storing colour "+ofToString(i)+" in " + ofToString( i-bufferStartIndex));
-				colourBuffer[i-bufferStartIndex].set(p.r, p.g, p.b);
+			// add some points to the end of the vector to allow for the offset
+			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
+			for(int i = laserPoints.size()-1; i>=0; i--) {
+				Point& p = laserPoints[i];
+				
+				// if we're one of the new points at the end copy the position
+				// from the last point
+				if(i>=laserPoints.size()-colourChangeIndexOffset) {
+					// copy the last positino in the original array
+					
+					p = laserPoints[laserPoints.size()-1-colourChangeIndexOffset];
+					//cout << (laserPoints.size()-1-colourChangeOffset) << " " << p << endl;
+					
+				}
+				//now shift the colour from an earlier point
+				if(i>=colourChangeIndexOffset){
+					p.copyColourFromPoint(laserPoints[i-colourChangeIndexOffset]);
+				} else {
+					p.setColour(0,0,0);
+				}
 				
 			}
-			int colourPointIndex = i-colourChangeIndexOffset;
-			ofColor c;
-			if(colourPointIndex<0) {
-				c = colourBuffer[i];
-			//	ofLog(OF_LOG_NOTICE, "getting colour for "+ofToString(i)+" from " + ofToString( i));
-				
-			} else {
-				Point& colourPoint = laserPoints[colourPointIndex];
-				c.set(colourPoint.r, colourPoint.g, colourPoint.b);
-			}
-			p.r = c.r;
-			p.g = c.g;
-			p.b = c.b;
 			
+		} else {
+			
+			// if we're <0 then we shift the colours backward
+			
+			// change negative to positive
+			colourChangeIndexOffset*=-1;
+			
+			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
+			
+			for(int i = laserPoints.size()-1; i>=0; i--) {
+				Point& p = laserPoints[i];
+				
+				ofColor c(0,0,0);
+				if(i<laserPoints.size()-colourChangeIndexOffset) c = p.getColour();
+				if(i>=colourChangeIndexOffset) {
+					p = laserPoints[i-colourChangeIndexOffset];
+				} else {
+					p= laserPoints[colourChangeIndexOffset];
+				}
+				p.setColour(c.r, c.g, c.b);
+			
+			}
+
 		}
 	}
-	
 
 	
 	for(int i = 0; i<laserPoints.size(); i++) {
