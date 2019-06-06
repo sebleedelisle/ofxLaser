@@ -7,7 +7,7 @@ Safety Notice
 =============
 **LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK. NEVER LOOK INTO THE BEAM.** Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Check the exposure area for reflective surfaces. Take laser safety training and get licenced to use high power lasers in your location. In the UK I can recommend [this one](https://www.lvroptical.com/display.html). 
 
-Seriously, don't mess around with this stuff. You can really damage your eyes. You've been warned. 
+Seriously, don't mess around with this stuff. You can really damage your eyes.  
 
 Features
 ----------
