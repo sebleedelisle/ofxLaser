@@ -30,4 +30,4 @@
 
 
 #include "clipper.hpp"
-#include "ofx/Clipper.h"
+#include "ofxClipper.h"
