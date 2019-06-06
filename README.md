@@ -1,7 +1,7 @@
 ofxLaser
 =========
 
-An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with the Etherdream and IDN controllers, but more DACs to be added in the future.
+An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Laserdock/LaserCube and IDN controllers, but more DACs to be added in the future.
 
 Safety Notice
 =============
