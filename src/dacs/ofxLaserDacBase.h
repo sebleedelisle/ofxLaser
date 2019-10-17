@@ -22,7 +22,7 @@ namespace ofxLaser {
 		
 		virtual ofColor getStatusColour(){return ofColor::white; };
 	
-		virtual const vector<ofParameter<int>*>& getDisplayData() { return displayData;};
+		virtual const vector<ofAbstractParameter*>& getDisplayData() { return displayData;};
 		virtual void resetDisplayData(){};
 		virtual void reset() {};
 
@@ -61,7 +61,7 @@ namespace ofxLaser {
 		
 	protected :
 	
-		vector<ofParameter<int>*> displayData;
+		vector<ofAbstractParameter*> displayData;
 		bool resetFlag = false;
 
 	};

@@ -31,70 +31,105 @@ DacLaserdock:: ~DacLaserdock() {
 }
 
 
-void DacLaserdock::setup() {
+void DacLaserdock::setup(string serial) {
 	
-	device =  lddmanager.get_next_available_device();
-	if(device==NULL) {
-		return;
+	serialNumber = serial;
+	
+	connectToDevice(serial);
+
+	pointBufferDisplay.set("Point Buffer", 0,0,1799);
+	displayData.push_back(&serialNumber);
+	displayData.push_back(&pointBufferDisplay);
+	
+	startThread();
+
+}
+
+
+bool DacLaserdock::connectToDevice(string serial) {
+	
+	std::vector<std::unique_ptr<LaserdockDevice> > devices = lddmanager.get_laserdock_devices();
+	LaserdockDevice* newdevice = nullptr;
+	if(devices.size()==0) {
+		
+	} else if(serial == "") {
+		newdevice = devices[0].release();
+	} else {
+		for(int i = 0; i<devices.size(); i++) {
+			if(devices[i]->serial_number() == serial) {
+				newdevice = devices[i].release();
+				break;
+			}
+		}
+	}
+	if(newdevice == nullptr) {
+		//ofLogNotice("DacLaserdock : couldn't connect to DAC " + ofToString(serial));
+		
+		return false;
 	}
 	
+	// NEW DEVICE ACQUIRED!
+	if(device!=nullptr) {
+		// make sure device is released if we already have one
+		delete device;
+	}
+	
+	device = newdevice;
+	
 	connected = true;
-
-	cout << "Device Status:" << device->status() << endl;
-	print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
-	print_uint32("Firmware minor version", device, &LaserdockDevice::version_minor_number);
-	print_uint32("Max Dac Rate", device, &LaserdockDevice::max_dac_rate);
-	print_uint32("Min Dac Value", device, &LaserdockDevice::min_dac_value);
-	print_uint32("Max Dac Value", device, &LaserdockDevice::max_dac_value);
-	device->set_dac_rate(1000);
-	print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
-	device->set_dac_rate(30000);
-	print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
-
-	print_uint32("Sample Element Count", device, &LaserdockDevice::sample_element_count);
-	print_uint32("ISO packket sample count", device, &LaserdockDevice::iso_packet_sample_count);
-	print_uint32("Bulky packet sample count", device, &LaserdockDevice::bulk_packet_sample_count);
-	print_uint32("Ringbuffer sample count", device, &LaserdockDevice::ringbuffer_sample_count);
-	print_uint32("Ringbuffer empty sample count", device, &LaserdockDevice::ringbuffer_empty_sample_count);
-
-	cout << "Clearing ringbuffer: " << device->clear_ringbuffer() << endl;
+	
+	newPPS = pps;
+	pps = 0; 
+	
+//	cout << "Device Status:" << device->status() << endl;
+//	print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
+//	print_uint32("Firmware minor version", device, &LaserdockDevice::version_minor_number);
+//	print_uint32("Max Dac Rate", device, &LaserdockDevice::max_dac_rate);
+//	print_uint32("Min Dac Value", device, &LaserdockDevice::min_dac_value);
+//	print_uint32("Max Dac Value", device, &LaserdockDevice::max_dac_value);
+//	device->set_dac_rate(1000);
+//	print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
+//	device->set_dac_rate(30000);
+//	print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
+//
+//	print_uint32("Sample Element Count", device, &LaserdockDevice::sample_element_count);
+//	print_uint32("ISO packket sample count", device, &LaserdockDevice::iso_packet_sample_count);
+//	print_uint32("Bulky packet sample count", device, &LaserdockDevice::bulk_packet_sample_count);
+//	print_uint32("Ringbuffer sample count", device, &LaserdockDevice::ringbuffer_sample_count);
+//	print_uint32("Ringbuffer empty sample count", device, &LaserdockDevice::ringbuffer_empty_sample_count);
+//
+//	cout << "Serial number: " << device->serial_number() << endl;
+//
+//	cout << "Clearing ringbuffer: " << device->clear_ringbuffer() << endl;
+	
 	bool enabled = false ;
-
+	
 	if(!device->enable_output()){
 		cout << "Failed enabling output state" << endl;
 	}
-
+	
 	if(!device->get_output(&enabled)){
 		cout << "Failed reading output state" << endl;
 	} else
 	{
 		cout << "Output Enabled/Disabled: " << enabled << endl;
 	}
-
+	
 	LaserdockDevice &d = *device;
 	d.runner_mode_enable(1);
 	d.runner_mode_enable(0);
 	d.runner_mode_run(1);
 	d.runner_mode_run(0);
 	
-	
 	LaserdockSample * samples = (LaserdockSample*) calloc(sizeof(LaserdockSample), 7);
 	memset(samples, 0xFF, sizeof(LaserdockSample) * 7);
 	d.runner_mode_load(samples, 0, 7);
+
+	serialNumber.setName("Serial");
+	serialNumber.set(device->serial_number());
+	ofLogNotice("DacLaserdock : connecting to : " + ofToString(serialNumber));
 	
-//	if(!device->disable_output()){
-//		cout << "Failed disabling output state" << endl;
-//	}
-//
-//	if(!device->get_output(&enabled)){
-//		cout << "Failed reading output state" << endl;
-//	} else
-//	{
-//		cout << "Output Enabled/Disabled: " << enabled << endl;
-//	}
-
-	startThread();
-
+	return true;
 }
 
 bool DacLaserdock:: sendFrame(const vector<Point>& points){
@@ -165,7 +200,7 @@ bool DacLaserdock::sendPoints(const vector<Point>& points) {
 	if(bufferedPoints.size()>pps*0.5) {
 		return false;
 	}
-
+	frameMode = false; 
 	LaserdockSample p1;
 	if(lock()) {
 		frameMode = false;
@@ -205,7 +240,7 @@ void DacLaserdock :: threadedFunction(){
 	
 		int count = samples_per_packet;
 
-		if(newPPS!=pps) {
+		if(connected && (newPPS!=pps)) {
 			pps = newPPS;
 			device->set_dac_rate(pps);
 		}
@@ -239,11 +274,40 @@ void DacLaserdock :: threadedFunction(){
 		}
 		
 		unlock();
-		if(!device->send_samples(samples,samples_per_packet)){
-			ofLog(OF_LOG_NOTICE, "send_samples failed");
+
+		if(connected) {
+			if(!device->send_samples(samples,samples_per_packet)){
+				ofLog(OF_LOG_NOTICE, "send_samples failed");
+				setConnected(false);
+			} else {
+				setConnected(true);
+			}
+		} else {
+			// try to reconnect!
+			if(lock()){
+				if(!connectToDevice(serialNumber)) {
+					unlock();
+					// wait half a second?
+					sleep(500);
+				} else {
+					unlock();
+				}
+			};
+			
 		}
-		
 	}
 	
 	free(samples);
+}
+
+
+
+void DacLaserdock :: setConnected(bool state) {
+	if(connected!=state) {
+		
+		while(!lock()){};
+		connected = state;
+		unlock();
+		
+	}
 }

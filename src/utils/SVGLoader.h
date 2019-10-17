@@ -53,12 +53,12 @@ class SVGLoader : public ofThread{
     //ofxSVGFromString & getSvg(int index);
 	ofxLaser::Graphic& getLaserGraphic(int index);
 
-	string& getSvgFilename(int index);
+	//string& getSvgFilename(int index);
 	ofDirectory dir;
 	vector<ofFile> files;
 	
 	//vector<ofxSVGFromString> svgs;
-	vector<string> fileNames;
+	//vector<string> fileNames;
 	vector<string> dataStrings;
 	vector<ofxLaser::Graphic> frames;
 	ofxLaser::Graphic empty;

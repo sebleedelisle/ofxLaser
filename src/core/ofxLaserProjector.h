@@ -13,6 +13,7 @@
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 #include "ofxGui.h"
+#include "PennerEasing.h"
 
 namespace ofxLaser {
 
@@ -97,7 +98,7 @@ namespace ofxLaser {
         vector<ofParameter<bool>> zonesSoloed;
         vector<bool> zonesEnabled;
 
-		DacBase& dac;
+		DacBase* dac;
 		
 		const int min = -32768;
 		const int max = 32767;
@@ -167,29 +168,4 @@ namespace ofxLaser {
 	};
 
 }
-
-
-// Modified from Robert Penner's easing equations
-
-class Quint {
-	
-public:
-	
-	static float easeIn (float t,float b , float c, float d) {
-		t/=d;
-		return c*t*t*t*t*t + b;
-	}
-	static float easeOut(float t,float b , float c, float d) {
-		t=t/d-1;
-		return c*(t*t*t*t*t + 1) + b;
-	}
-	
-	static float easeInOut(float t,float b , float c, float d) {
-		t/=d/2;
-		if (t < 1) return c/2*t*t*t*t*t + b;
-		;t-=2;
-		return c/2*(t*t*t*t*t + 2) + b;
-	}
-	
-};
 

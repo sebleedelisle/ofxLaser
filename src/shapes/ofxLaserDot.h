@@ -26,17 +26,19 @@ class Dot : public Shape{
 	}
 	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		int maxPoints = profile.dotMaxPoints; 
-		int pointcount = ceil(maxPoints * intensity)/speedMultiplier;// ceil(dotMaxPoints* dot->intensity);
-		
+		int pointcount = ceil(maxPoints * intensity/speedMultiplier);// ceil(dotMaxPoints* dot->intensity);
+		float interpolation = pointcount - (maxPoints * intensity/speedMultiplier);
+		ofColor col(colour);
+		col *= ofMap(pointcount-1 + interpolation, 0, pointcount,0,1);
 		for(int i = 0; i<pointcount; i++) {
 			//addIldaPoint(dot.getStartPos(), dot.colour);
-			points.push_back(ofxLaser::Point(getStartPos(), colour));
+			points.push_back(ofxLaser::Point(getStartPos(), col));
 		}
 	};
 	
 	
 	void addPreviewToMesh(ofMesh& mesh){
-		float radius = ofMap(intensity, 0, 1,0.5,2);
+		float radius = ofMap(intensity, 0, 1,0.5,2, true);
 		ofColor c(colour);
 		c.setBrightness(ofMap(intensity,0,0.5,150,255,true));
 		

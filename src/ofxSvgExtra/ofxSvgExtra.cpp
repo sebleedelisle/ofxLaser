@@ -97,11 +97,12 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 	if(!strokeWidthElements.empty()) {
 		
 		for(ofXmlExtra & element: strokeWidthElements){
-			cout << element.toString() << endl;
+			//cout << element.toString() << endl;
 			float strokewidth = element.getAttribute("stroke-width").getFloatValue();
+			//cout << strokewidth << endl;
 			strokewidth = MAX(1,round(strokewidth));
 			element.getAttribute("stroke-width").set(strokewidth);
-			
+			//cout << strokewidth << endl;
 		}
 	}
 	
@@ -124,32 +125,47 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 	
 	// implement the SVG "use" element by expanding out those elements into
 	// XML that svgtiny will parse correctly.
-	ofXmlExtra::Search useElements = xml.find("//use");
-	if(!useElements.empty()) {
-		
-		for(ofXmlExtra & element: useElements){
+
+	finished = false;
+	
+	while(!finished) {
+		ofXmlExtra::Search useElements = xml.find("//use");
+		if(!useElements.empty()) {
 			
-			// get the id attribute
-			string id = element.getAttribute("xlink:href").getValue();
-			// remove the leading "#" from the id
-			id.erase(id.begin());
-			
-			// find the original definition of that element - TODO add defs into path?
-			string searchstring ="//*[@id='"+id+"']";
-			ofXmlExtra idelement = xml.findFirst(searchstring);
-			
-			// if we found one then use it! (find first returns an empty xml on failure)
-			if(idelement.getAttribute("id").getValue()!="") {
+			for(ofXmlExtra & element: useElements){
 				
-				// make a copy of that element
-				element.appendChild(idelement);
+				// get the id attribute
+				string id = element.getAttribute("xlink:href").getValue();
+				// remove the leading "#" from the id
+				id.erase(id.begin());
 				
-				// then turn the use element into a g element
-				element.setName("g");
+				// find the original definition of that element - TODO add defs into path?
+				string searchstring ="//*[@id='"+id+"']";
+				ofXmlExtra idelement = xml.findFirst(searchstring);
 				
+				// if we found one then use it! (find first returns an empty xml on failure)
+				if(idelement.getAttribute("id").getValue()!="") {
+					
+					// make a copy of that element
+					element.appendChild(idelement);
+					
+					// TODO - maybe give the element a new name to avoid id conflicts?
+					
+					// then turn the use element into a g element
+					element.setName("g");
+					
+				}
 			}
+		} else {
+			finished = true;
 		}
+		
+		//cout << xml.toString()<<endl;
+		//cout << "------------------------------------------------------"<< endl;
 	}
+	//cout << xml.toString()<<endl;
+	
+	
 	
 	xmlstring = xml.toString();
 	
@@ -190,7 +206,10 @@ void ofxSVGExtra::setupShape(struct svgtiny_shape * shape, ofPath & path){
     }
 
 	if(shape->stroke != svgtiny_TRANSPARENT){
-		path.setStrokeWidth(shape->stroke_width);
+		// abs the stroke width because apparently sometimes
+		// the transformation can cause the stroke width to become
+		// negative #facepalm
+		path.setStrokeWidth(abs(shape->stroke_width));
 		path.setStrokeHexColor(shape->stroke);
 	}
 

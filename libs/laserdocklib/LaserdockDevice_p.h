@@ -5,6 +5,7 @@
 #ifndef LASERDOCKLIB_LASERDOCKDEVICEPRIVATE_H
 #define LASERDOCKLIB_LASERDOCKDEVICEPRIVATE_H
 
+#include <string>
 
 #ifdef ANDROID
 class _jobject;
@@ -19,6 +20,7 @@ public:
     struct libusb_device_handle *devh_ctl;
     struct libusb_device_handle *devh_data;
     libusb_device * usbdevice;
+	std::string serial_number;
     bool flipx;
     bool flipy;
     LaserdockDevice::Status status;

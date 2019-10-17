@@ -14,7 +14,7 @@ int Graphic::numGraphicsInMemory = 0;
 void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
 	
 	const vector <ofPath> & paths = svg.getPaths();
-	
+	// TODO add subtracted fills to mask polyline.
 	for (ofPath path : svg.getPaths()){
 		addPath(path, false, subtractFills);
 	}
@@ -25,6 +25,10 @@ void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
 			polylines[i]->simplify(0.2);
 		}
 	}
+	
+//	ofJson json;
+//	serialize(json);
+//	deserialize(json);
 	
 }
 void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
@@ -709,7 +713,80 @@ void Graphic :: clear() {
 	for(ofPolyline* poly : polylines) Factory::releasePolyline(poly);
     polylines.clear();
     colours.clear(); 
-    
+	polylineMask.clear();
 }
 
 
+void Graphic :: serialize(ofJson&json) {
+	ofJson& jsonPolylines = json["polylines"];
+	for(ofPolyline* poly : polylines) {
+		ofJson polyjson;
+		serializePoly(polyjson, *poly);
+		jsonPolylines.push_back(polyjson);
+	}
+	ofJson& jsonColours = json["colours"];
+	for(ofColor& colour : colours) {
+		jsonColours.push_back(colour.getHex());
+	}
+	
+	ofJson& jsonMask = json["polymask"];
+	for(ofPolyline& poly : polylineMask) {
+		ofJson polyjson;
+		serializePoly(polyjson, poly);
+		jsonMask.push_back(polyjson);
+	}
+	
+	//cout << json.dump() << endl;
+	
+}
+void Graphic :: deserialize(ofJson&json) {
+	
+	clear();
+
+	ofJson& jsonPolylines = json["polylines"];
+	for (ofJson::iterator it = jsonPolylines.begin(); it != jsonPolylines.end(); ++it) {
+		ofJson polylineData = *it;
+		ofPolyline* newPoly = Factory::getPolyline(); // make a copy;
+		deserializePoly(polylineData, *newPoly);
+		polylines.push_back(newPoly);
+	}
+	ofJson& jsonColours = json["colours"];
+	for (ofJson::iterator it = jsonColours.begin(); it != jsonColours.end(); ++it) {
+		ofJson colourdata = *it;
+		colours.push_back(ofColor::fromHex(colourdata));
+	}
+	ofJson& jsonMask = json["polymask"];
+	for (ofJson::iterator it = jsonMask.begin(); it != jsonMask.end(); ++it) {
+		ofJson polylineData = *it;
+		ofPolyline newPoly;
+		deserializePoly(polylineData, newPoly);
+		polylineMask.push_back(newPoly);
+	}
+
+}
+
+void Graphic::serializePoly(ofJson& json, ofPolyline& poly) {
+	auto & vertices =  poly.getVertices();
+	if(!vertices.empty()){
+		ofJson& line = json["vertices"];
+		for( size_t i=0; i<vertices.size(); i++ ){
+			ofJson point;
+			point["x"] = vertices[i].x;
+			point["y"] = vertices[i].y;
+			point["z"] = vertices[i].z;
+			line.push_back(point);
+		}
+		
+	}
+}
+
+void Graphic::deserializePoly(ofJson& json, ofPolyline& poly) {
+
+	ofJson& linedata = json["vertices"];
+	for (ofJson::iterator it = linedata.begin(); it != linedata.end(); ++it) {
+		ofJson pointdata = *it;
+		poly.addVertex(pointdata["x"], pointdata["y"], pointdata["z"]);
+	}
+		
+	
+}

@@ -87,7 +87,7 @@ void ofApp::update(){
 void ofApp::draw() {
 	
 
-	ofBackground(0);
+	ofBackground(40);
     
 	ofxLaser::Graphic& laserGraphic = laserGraphics[currentSVG];
 	

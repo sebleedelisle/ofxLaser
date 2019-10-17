@@ -142,6 +142,10 @@ LaserdockDevice::Status LaserdockDevice::status() const {
     return d->status;
 }
 
+std::string LaserdockDevice::serial_number() const {
+	return d->serial_number;
+}
+
 
 bool LaserdockDevice::usb_send(unsigned char * data, int length){
     //printf("sending usb, numbytes %d.\n", numbytes);

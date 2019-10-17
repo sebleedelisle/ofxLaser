@@ -29,18 +29,18 @@ DacEtherdream :: DacEtherdream(){
     
     
     //TODO
-    // this should really be dependent on network latency
+    // this should really be dependent on network latency	
     // and also we should have the option of lower latency on better networks
 	// also make this adjustable
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
     dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-    pointsToSendBeforePlaying = 100; 	// the minimum number of points to buffer before
+	pointsToSendBeforePlaying = 500;//500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 
 }
-const vector<ofParameter<int>*>& DacEtherdream :: getDisplayData() {
+const vector<ofAbstractParameter*>& DacEtherdream :: getDisplayData() {
 	if(lock()) {
 	
 		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
@@ -59,6 +59,9 @@ const vector<ofParameter<int>*>& DacEtherdream :: getDisplayData() {
 }
 
 DacEtherdream :: ~DacEtherdream(){
+	
+	close(); 
+	
 	for (int i = 0; i < sparePoints.size(); ++i) {
 		delete sparePoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
 		// and deallocates *tmp[i]
@@ -69,7 +72,7 @@ DacEtherdream :: ~DacEtherdream(){
 		// and deallocates *tmp[i]
 	}
 	bufferedPoints.clear();
-	close(); 
+	
 }
 
 void DacEtherdream :: setup(string ip) {
@@ -241,7 +244,8 @@ inline bool DacEtherdream :: sendData(){
 			minpointcount = MAX(minBuffer - response.status.buffer_fullness,0);
 		}
 		
-		if(npointstosend<minpointcount) {
+		while((framePoints.size()>0) && (npointstosend<minpointcount)) {
+			//cout << npointstosend << " " << minpointcount << endl;
 			// send the frame!
 			for(int i = 0; i<framePoints.size(); i++) {
 				addPoint(framePoints[i]);
@@ -469,15 +473,19 @@ void DacEtherdream :: threadedFunction(){
 
 bool DacEtherdream::setPointsPerSecond(uint32_t newpps){
 	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
-	while(!lock());
-	newPPS = newpps;
-	if (!beginSent) {
-		pps = newPPS; // pps rate will get sent with begin anyway
-		unlock();
-		return true;
+	if(!isThreadRunning()){
+		pps = newPPS = newpps;
 	} else {
-		unlock();
-		return false; 
+		while(!lock());
+		newPPS = newpps;
+		if (!beginSent) {
+			pps = newPPS; // pps rate will get sent with begin anyway
+			unlock();
+			return true;
+		} else {
+			unlock();
+			return false;
+		}
 	}
 }
 

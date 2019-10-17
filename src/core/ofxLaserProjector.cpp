@@ -11,9 +11,9 @@
 
 using namespace ofxLaser;
 
-Projector::Projector(string projectorlabel, DacBase& laserdac) : dac(laserdac){
+Projector::Projector(string projectorlabel, DacBase& laserdac) {
 	
-	
+	dac = &laserdac;
 	laserHomePosition = ofPoint(400,400);
 	label = projectorlabel;
 	//maskRectangle.set(0,0,800,800);
@@ -206,7 +206,7 @@ void Projector:: ppsChanged(int& e){
 	ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
 	pps=round(pps/100)*100;
 	if(pps<=100) pps =100;
-	dac.setPointsPerSecond(pps);
+	dac->setPointsPerSecond(pps);
 }
 
 
@@ -284,26 +284,38 @@ void Projector::renderStatusBox(float x, float y, float w, float h) {
 	// draw name of projector
 	//ofSetText
 	ofSetColor(20);
-	ofDrawBitmapString(label + " "+dac.getLabel(), 8, 13);
+	ofDrawBitmapString(ofToString(label.back()) + " "+dac->getLabel(), 8, 13);
 	string framerate = ofToString(round(smoothedFrameRate));
 	ofDrawBitmapString(framerate, w-(framerate.size()*8)- 18,13);
-	ofSetColor(dac.getStatusColour());
+	ofSetColor(dac->getStatusColour());
 	ofDrawRectangle(w-18+4,4,10,10); 
 	//ofNoFill();
 	//ofSetColor(255);
 	//ofDrawRectangle(0,0,w,h);
 	ofTranslate(0,24);
-	const vector<ofParameter<int>*>& displaydata = dac.getDisplayData();
+	const vector<ofAbstractParameter*>& displaydata = dac->getDisplayData();
 	for(int i = 0; i<displaydata.size(); i++) {
-		const ofParameter<int>& dataelement = *(displaydata[i]);
+		
+		ofAbstractParameter* dataelement = displaydata[i];
+		
 		ofSetColor(0);
 		ofDrawRectangle(8,i*16,w-16,10);
-		ofSetColor(150);
-		float size = ofMap(dataelement.get(), dataelement.getMin(), dataelement.getMax(), 0,w-16, true);
-		ofDrawRectangle(8, i*16, size,10);
-		ofSetColor(100);
-		ofDrawBitmapString(dataelement.getName(),8,i*16+10); 
 		
+		ofParameter<int>* intparam = dynamic_cast<ofParameter<int>*>(dataelement);
+		if(intparam!=nullptr) {
+			ofSetColor(100);
+			ofDrawBitmapString(dataelement->getName(),8,i*16+10);
+			ofSetColor(150);
+			
+			float size = ofMap(intparam->get(), intparam->getMin(), intparam->getMax(), 0,w-16, true);
+			ofDrawRectangle(8, i*16, size,10);
+		}
+		ofParameter<string>* stringparam = dynamic_cast<ofParameter<string>*>(dataelement);
+		if(stringparam!=nullptr) {
+			ofSetColor(100);
+			ofDrawBitmapString(stringparam->get(),8,i*16+10);
+			
+		}
 	}
 	
 	
@@ -542,7 +554,7 @@ void Projector::update(bool updateZones) {
 
 	if(resetDac) {
 		resetDac = false; 
-		dac.reset();
+		dac->reset();
 	}
     bool soloMode = false;
     for(int i = 0; i<zonesSoloed.size(); i++) {
@@ -579,7 +591,7 @@ void Projector::update(bool updateZones) {
 		}
 	}
 	
-	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.05;
+	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.2;
 
 }
 
@@ -661,7 +673,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     
     
     processPoints(masterIntensity, false);
-    dac.sendPoints(laserPoints);
+    dac->sendPoints(laserPoints);
     
    
 }
@@ -907,7 +919,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 			
 			
 		}
-		//addPointsForMoveTo(currentPosition, laserHomePosition);
+		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
 	
@@ -915,12 +927,12 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
 	}
 	processPoints(masterIntensity);
-	dac.sendFrame(laserPoints);
+	dac->sendFrame(laserPoints);
     numPoints = laserPoints.size();
 	
 	if(sortedsegmentpoints.size()>0) {
 		if(smoothHomePosition) {
-			laserHomePosition += (sortedsegmentpoints.front()->getStart()-laserHomePosition)*0.06;
+			laserHomePosition += (sortedsegmentpoints.front()->getStart()-laserHomePosition)*0.01;
 		} else {
 			laserHomePosition = sortedsegmentpoints.back()->getEnd();
 		}

@@ -23,12 +23,25 @@ int SVGLoader:: startLoad(string path) {
 
 	files = dir.getFiles();
 
-	ofSort(files, sortalgo);
+	dir.close();
 	
-	for(int j = 0; j<files.size(); j++) {
-		string newname = path+"/"+files[j].getFileName();
-		fileNames.push_back(newname);
-	}
+	
+//	for(int j = 0; j<files.size(); j++) {
+//
+//		//string newname = path+"/"+files[j].getFileName();
+//
+//		ofFile ofxlgfile(path+"/"+files[j].getBaseName()+".ofxlg");
+//		if(ofxlgfile.exists()) {
+//			time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
+//			time_t originalfiletime = std::filesystem::last_write_time(files[j]);
+//			if(ofxlgfiletime>originalfiletime) {
+//				files[j].close();
+//				files[j] = ofxlgfile;
+//
+//			}
+//		}
+//		files[j].close();
+//	}
 
 	frames.resize(files.size());
 	
@@ -43,33 +56,20 @@ int SVGLoader:: startLoad(string path) {
 }
 void SVGLoader::threadedFunction() {
 	
+	ofSort(files, sortalgo);
 	
-	dataStrings.resize(files.size());
+	string dataString;
 	int dupeCount = 0;
 	int loadedCount = 0;
 	
+	// load the file
 	for(int i = 0; i<files.size();i++) {
-		const ofFile & file = files.at(i);
-		ofBuffer buffer = ofBufferFromFile(file.getAbsolutePath());
+		ofFile & file = files.at(i);
 		
-		dataStrings[i] = buffer.getText();
-		buffer.clear();
-	}
-	for(int i = 0; i<dataStrings.size();i++) {
 
-		//ofLog(OF_LOG_NOTICE, "Loading frame #"+ofToString(i));
-		//if(!isThreadRunning()) break;
-		
-		ofFile& file = files[i];
-		
-		while(!lock()){
-			sleep(1);
-		}
-		//ofLog(OF_LOG_NOTICE,file.getFileName());
-		unlock();
-		
-		bool dupe = false;
-		string &data1 = dataStrings[i];
+		// TODO compare resulting graphics rather than original files?
+//		bool dupe = false;
+//		string &data1 = dataStrings[i];
 //		for(int j = 0; j<i;j++) {
 //			string & data2 = dataStrings[j];
 //			if(data1.size()!=data2.size()) {
@@ -83,16 +83,45 @@ void SVGLoader::threadedFunction() {
 //		}
 		
 		
-		if(dupe) {
-			ofLog(OF_LOG_NOTICE, "duplicate detected " + ofToString(i));
-			dupeCount++;
-			
-		} else {
+//		if(dupe) {
+//			ofLog(OF_LOG_NOTICE, "duplicate detected " + ofToString(i));
+//			dupeCount++;
+//
+//		} else {
 
-			svgData = data1;
+		//svgData = dataStr;
+		//cout << file.getExtension() << endl;
+		
+		bool loadOptimised = false;
+		ofFile ofxlgfile(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg");
+		if(ofxlgfile.exists()) {
+			time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
+			time_t originalfiletime = std::filesystem::last_write_time(file);
+			if(ofxlgfiletime>originalfiletime) {
+				loadOptimised = true;
+			}
+		}
+		
+		if(!loadOptimised) {
+			
+			//ofLogNotice("Loading svg : " + file.getAbsolutePath());
+			ofBuffer buffer = ofBufferFromFile(file.getAbsolutePath());
+			
+			dataString = buffer.getText();
+			buffer.clear();
+			
+			
+			//ofLog(OF_LOG_NOTICE, "Loading frame #"+ofToString(i));
+			//if(!isThreadRunning()) break;
+			
+//			while(!lock()){
+//				sleep(1);
+//			}
+//			//ofLog(OF_LOG_NOTICE,file.getFileName());
+//			unlock();
 			
 			try {
-				svg.loadFromString(svgData);
+				svg.loadFromString(dataString);
 			} catch (const std::exception& e) {
 				ofLog(OF_LOG_ERROR, ofToString(e.what()));
 			}
@@ -101,12 +130,30 @@ void SVGLoader::threadedFunction() {
 				sleep(1);
 			}
 			frames[i].addSvg(svg);
-
-			loadCount=i+1;
 			
-			loadedCount++;
+			ofJson json;
+			frames[i].serialize(json);
+			//cout << "Saving optimised file : " << file.getEnclosingDirectory()+file.getBaseName()+".ofxlg" << endl;
+			ofSavePrettyJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg", json);
 			unlock();
+
+		} else {
+			
+			//ofLogNotice("Loading ofxlg : " + file.getAbsolutePath());
+			ofJson json = ofLoadJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg");
+			while(!lock()){
+				sleep(1);
+			}
+			frames[i].deserialize(json);
+			unlock();
+
 		}
+		file.close();
+		
+		loadCount=i+1;
+		
+		loadedCount++;
+//		}
 	
 	}
 	dir.close();
@@ -137,12 +184,12 @@ void SVGLoader::replaceAll(string& data, string stringToFind, string stringToRep
 	
 
 }
-
-string& SVGLoader::getSvgFilename(int index) {
-	//if(svgs.size()==0) return;
-	index = index %fileNames.size();
-	return fileNames.at(index);
-}
+//
+//string& SVGLoader::getSvgFilename(int index) {
+//	//if(svgs.size()==0) return;
+//	index = index %fileNames.size();
+//	return fileNames.at(index);
+//}
 
 ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 	if(isThreadRunning() && !lock()) {

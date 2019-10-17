@@ -73,6 +73,11 @@ class Graphic {
 	void autoCentre();
 	void translate(glm::vec3 offset);
 	
+	void serialize(ofJson&json);
+	void deserialize(ofJson&json);
+	void serializePoly(ofJson& json, ofPolyline& poly);
+	void deserializePoly(ofJson& json, ofPolyline& poly);
+
 	// goes through all the polylines and connects touching lines
 	// that are the same colour
 	void connectLineSegments();

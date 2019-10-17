@@ -27,11 +27,13 @@ class DacLaserdock : public DacBase, ofThread{
 	DacLaserdock() : lddmanager(LaserdockDeviceManager::getInstance()) {};
 	~DacLaserdock();
 	
-	void setup();
+	void setup(string serial="");
+	bool connectToDevice(string serial="");
 	
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;
 	bool setPointsPerSecond(uint32_t pps);
+	
 	string getLabel(){return "Laserdock";};
 	
 	// TODO return relevant colour
@@ -43,12 +45,18 @@ class DacLaserdock : public DacBase, ofThread{
 	// simple object pooling system
 	LaserdockSample* getLaserdockSample();
 	
+	ofParameter<int> pointBufferDisplay;
+	ofParameter<string> serialNumber; 
+	//	ofParameter<int> latencyDisplay;
+//	ofParameter<int> reconnectCount;
 	
 	private:
 	void threadedFunction();
 
+	void setConnected(bool state);
+	
 	LaserdockDeviceManager &lddmanager;
-	LaserdockDevice * device;
+	LaserdockDevice * device = nullptr;
 	
 	LaserdockSample sendpoint, lastpoint;
 	deque<LaserdockSample*> bufferedPoints;
@@ -60,8 +68,9 @@ class DacLaserdock : public DacBase, ofThread{
 	bool frameMode = true; 
 	bool replayFrames = true;
 	bool isReplaying = false;
-	bool connected = false; 
-
+	bool connected = false;
+	
+	
 };
 
 }

@@ -102,7 +102,7 @@ namespace ofxLaser {
 		bool setPointsPerSecond(uint32_t newpps);
 		string getLabel();
 		ofColor getStatusColour();
-		const vector<ofParameter<int>*>& getDisplayData();
+		const vector<ofAbstractParameter*>& getDisplayData();
 		
 		void setup(string ip);
 		//bool addPoints(const vector<dac_point> &points );

@@ -16,20 +16,17 @@ namespace ofxLaser {
 		set(0,0);
 	};
 	
-	void set(float xpos, float ypos, float r = 2.5) {
+	void set(float xpos, float ypos, float r =5) {
 		
 		x = xpos;
 		y = ypos;
 		radius = r;
-		//ofLog(OF_LOG_NOTICE, "Radius : "+ofToString(radius));
 	};
 	
 	void set(glm::vec3 pos) {
 		x = pos.x;
 		y = pos.y;
 		z = pos.z;
-		
-		//ofLog(OF_LOG_NOTICE, "DragHandle::set " + ofToString(pos) + " " +ofToString(x) + " " + ofToString(y));
 		
 	};
 	void set(glm::vec2 pos) {

@@ -29,9 +29,9 @@
 namespace ofx {
 
 
-const ClipperLib::cInt Clipper::DEFAULT_CLIPPER_SCALE = 1000000;
-const double Clipper::DEFAULT_MITER_LIMIT = 2;
-const double Clipper::DEFAULT_ARC_TOLERANCE = 0.25;
+	const ClipperLib::cInt Clipper::DEFAULT_CLIPPER_SCALE = 10000; // 1000000;
+	const double Clipper::DEFAULT_MITER_LIMIT = 2;
+	const double Clipper::DEFAULT_ARC_TOLERANCE = 0.25;
 
 
 Clipper::Clipper()

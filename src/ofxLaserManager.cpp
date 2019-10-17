@@ -31,7 +31,8 @@ Manager :: Manager() {
 	height = 800;
 	guiProjectorPanelWidth = 320;
 	guiSpacing = 8;
-	dacStatusBoxHeight = 88; 
+	dacStatusBoxHeight = 88;
+	dacStatusBoxSmallWidth = 160;
 	showPreview = true;
 	showZones = false;
 	currentProjector = -1;
@@ -248,7 +249,7 @@ void Manager::send(){
 			}
 		}
 	} else {
-		// OPTIMISE ALGORITHM GOES HERE
+		// TODO : 	OPTIMISE ALGORITHM GOES HERE
 		// figure out which shapes are in each zone
 		// if a shape is entirely enclosed in a zone, then
 		// mark the shape as such
@@ -337,8 +338,11 @@ void Manager:: drawUI(bool expandPreview){
 			zones[i]->draw();
 		}
 		
+		ofPushMatrix();
+		ofTranslate(previewOffset);
+		ofScale(previewScale, previewScale);
 		laserMask.draw(showBitmapMask);
-
+		ofPopMatrix();
 		ofPopStyle();
 
 	}
@@ -361,7 +365,7 @@ void Manager:: drawUI(bool expandPreview){
 			if((!expandPreview)&&(showPathPreviews)) {
 				ofFill();
 				ofSetColor(0);
-				ofRectangle projectorPreviewRect(((smallPreviewHeight*scale) +guiSpacing)*i,0,smallPreviewHeight*scale,smallPreviewHeight*scale);
+				ofRectangle projectorPreviewRect(((smallPreviewHeight*scale) +guiSpacing)*i,0,smallPreviewHeight*scale, smallPreviewHeight*scale);
 				ofDrawRectangle(projectorPreviewRect);
 				projectors[i]->drawLaserPath(projectorPreviewRect);
 			}
@@ -373,23 +377,7 @@ void Manager:: drawUI(bool expandPreview){
 		
 		// if we're not filling the preview to fit the screen, draw the projector
 		// gui elements
-		if(!expandPreview) {
-			if(projectors.size()>2) {
-				for(int i = 0; i<projectors.size(); i++) {
-					int x = projectors[i]->gui->getPosition().x;
-					projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
-				}
-			} else {
-				for(int i = 0; i<projectors.size(); i++) {
-					int x = projectors[i]->gui->getPosition().x;
-					int y = projectors[i]->gui->getPosition().y;
-					int w = projectors[i]->gui->getWidth();
-					projectors[i]->renderStatusBox(x, y-guiSpacing-dacStatusBoxHeight, guiProjectorPanelWidth,dacStatusBoxHeight);
-					projectors[i]->showWarpGui();
-					projectors[i]->gui->draw();
-				}
-			}
-		}
+		
 		
 	} else  {
 		// ELSE we have a currently selected projector, so draw the various UI elements
@@ -412,29 +400,76 @@ void Manager:: drawUI(bool expandPreview){
 				projectors[i]->hideWarpGui();
 			}
 			
-			// if this is the current projector or we have 2 or fewer projectors, then render the gui
-			if(guiIsVisible && ((i==currentProjector) || (projectors.size()<=2))) {
-				if(guiIsVisible) {
-					int x = projectors[i]->gui->getPosition().x;
-					int y = guiSpacing;
-					projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
-					projectors[i]->gui->draw();
-					
-				}
-			}
+	
         }
 	
 	
     }
- 
-    
-//    for(int i = 0; i<projectors.size(); i++) {
-//		//projectors[i]->guiIsVisible = guiIsVisible;
-//		if(guiIsVisible && projectors[i]->guiIsVisible) projectors[i]->gui->draw();
-//	}
+
 	ofPopStyle();
-    if(!expandPreview) gui.draw();
-    
+	
+
+	// ofxGUI panel stuff :
+	
+	//    for(int i = 0; i<projectors.size(); i++) {
+	//		//projectors[i]->guiIsVisible = guiIsVisible;
+	//		if(guiIsVisible && projectors[i]->guiIsVisible) projectors[i]->gui->draw();
+	//	}
+	
+	if((!expandPreview) && (guiIsVisible)) {
+	
+	// if this is the current projector or we have 2 or fewer projectors, then render the gui
+		if(showAdvanced) {
+			
+			for(int i = 0; i<projectors.size(); i++) {
+				if ((i==currentProjector) || (projectors.size()<=2)) {
+					
+					int x = projectors[i]->gui->getPosition().x;
+					int y = projectors[i]->gui->getPosition().y - guiSpacing - dacStatusBoxHeight;
+					projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
+					projectors[i]->gui->draw();
+
+				
+				}
+			}
+			
+			if((projectors.size()>2) && (currentProjector==-1) ) {
+				for(int i = 0; i<projectors.size(); i++) {
+					int x = projectors[i]->gui->getPosition().x;
+					projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
+				}
+				
+			}
+			
+		} else {
+			
+			int w = dacStatusBoxSmallWidth;
+			int x = gui.getPosition().x-w-guiSpacing;
+			
+			// draw all the status boxes but small
+			
+			for(int i = 0; i<projectors.size(); i++) {
+				//int x = projectors[i]->gui->getPosition().x;
+				projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+gui.getPosition().y, w,dacStatusBoxHeight);
+			}
+			
+		
+		}
+		
+		
+//		} else {
+//			for(int i = 0; i<projectors.size(); i++) {
+//				int x = projectors[i]->gui->getPosition().x;
+//				int y = projectors[i]->gui->getPosition().y;
+//				int w = projectors[i]->gui->getWidth();
+//				projectors[i]->renderStatusBox(x, y-guiSpacing-dacStatusBoxHeight, guiProjectorPanelWidth,dacStatusBoxHeight);
+//				projectors[i]->showWarpGui();
+//				//projectors[i]->gui->draw();
+//			}
+//		}
+//	}
+   		gui.draw();
+	}
 	
 }
 
@@ -544,7 +579,16 @@ void Manager :: updateScreenSize() {
 	updateGuiPositions();
 	
 }
-
+bool Manager ::toggleGui(){
+	guiIsVisible = !guiIsVisible;
+	return guiIsVisible;
+}
+void Manager ::setGuiVisible(bool visible){
+	guiIsVisible = visible;
+}
+bool Manager::isGuiVisible() {
+	return guiIsVisible;
+}
 void Manager :: updateGuiPositions() {
 
 	
@@ -560,16 +604,31 @@ void Manager :: updateGuiPositions() {
 
 	}
 	
-	if(projectors.size()>2) {
-		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
-	} else if(projectors.size()>0){
-		int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
-		gui.setPosition(x, guiSpacing);
-	} else {
+	if(projectors.size() == 0) {
 		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
 		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
+		
+	} else {
+		if(showAdvanced) {
+			if(projectors.size()>2) {
+				gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
+			} else if(projectors.size()>0){
+				int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
+				gui.setPosition(x, guiSpacing);
+			}
+		} else {
+			int x = ofGetWidth()-guiSpacing;
+			gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
+			
+		}
+		
 	}
 }
+
+void Manager::showAdvancedPressed(bool& state){
+	updateGuiPositions();
+}
+
 ofxPanel& Manager ::getGui(){
 	return gui;
 }
@@ -606,7 +665,7 @@ void Manager::previousProjector() {
 	
 }
 
-void Manager::initGui(bool showAdvanced) {
+void Manager::initGui(bool showExperimental) {
 	
 	// TODO - warn if called more than once.
 	
@@ -620,7 +679,8 @@ void Manager::initGui(bool showAdvanced) {
 	gui.add(armAllButton.setup("ARM ALL"));
 	gui.add(disarmAllButton.setup("DISARM ALL"));
 	gui.add(masterIntensity.set("Master Intensity", 1,0,1));
-
+	gui.add(showAdvanced.set("Advanced Settings", false));
+	
 	gui.setDefaultHeight(20);
 
 	armAllButton.addListener(this, &ofxLaser::Manager::armAllProjectors);
@@ -656,16 +716,17 @@ void Manager::initGui(bool showAdvanced) {
     
 	gui.loadFromFile("laserSettings.xml");
     showPreview = true;
-	showPathPreviews = true;
+	//showPathPreviews = true;
 	//gui.setPosition(width+10, 8);
-	
+	showAdvanced.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
+
     
 	// TODO - check font exists?
 	//gui.loadFont("fonts/Verdana.ttf", 8, false);
 	
 	ofxGuiSetDefaultWidth(guiProjectorPanelWidth);
 	for(int i = 0; i<projectors.size(); i++) {
-		projectors[i]->initGui(showAdvanced);
+		projectors[i]->initGui(showExperimental);
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
 	}
 	

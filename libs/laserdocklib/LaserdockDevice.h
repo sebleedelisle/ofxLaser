@@ -6,6 +6,7 @@
 #define LASERDOCKLIB_LASERDOCKDEVICE_H
 
 #include <memory>
+#include <string>
 
 #ifdef _WIN32
 #define LASERDOCKLIB_EXPORT __declspec(dllexport)
@@ -18,10 +19,10 @@ uint16_t LASERDOCKLIB_EXPORT laserdock_sample_flip(uint16_t);
 
 struct LaserdockSample
 {
-    uint16_t rg;      //lower byte is red, top byte is green
-    uint16_t b;       //lower byte is blue
-    uint16_t x;
-    uint16_t y;
+    uint16_t rg = 0;      //lower byte is red, top byte is green
+    uint16_t b = 0;       //lower byte is blue
+    uint16_t x = 2048;
+    uint16_t y = 2048;
 };
 
 #ifdef ANDROID
@@ -45,7 +46,8 @@ public:
     virtual ~LaserdockDevice();
 
     Status status() const;
-
+	std::string serial_number() const;
+	
     bool enable_output();
     bool disable_output();
     bool get_output(bool * enabled);

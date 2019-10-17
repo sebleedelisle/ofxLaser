@@ -69,6 +69,7 @@ namespace ofxLaser {
         void updateScreenSize(ofResizeEventArgs &e);
 		void updateScreenSize();
 		void updateGuiPositions();
+		void showAdvancedPressed(bool& state); 
 
         void send();
         void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
@@ -85,12 +86,16 @@ namespace ofxLaser {
 		void drawLine(const ofPoint& start, const ofPoint& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawDot(const ofPoint& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
 		void drawCircle(const ofPoint & centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
-
+		
 		Projector& getProjector(int index = 0);
 		void initGui(bool showAdvanced = false);
 		void addCustomParameter(ofAbstractParameter& param);
 		ofxPanel& getGui();
 		bool togglePreview();
+		bool toggleGui();
+		void setGuiVisible(bool visible);
+		bool isGuiVisible();
+
 		void saveSettings();
 		
 		Zone& getZone(int zonenum);
@@ -103,6 +108,7 @@ namespace ofxLaser {
 	
 		int width, height;
 		int guiProjectorPanelWidth;
+		int dacStatusBoxSmallWidth;
 		int dacStatusBoxHeight; 
 		int guiSpacing; 
 		// converts openGL coords to screen coords //
@@ -114,11 +120,14 @@ namespace ofxLaser {
 		
 		ofParameter<int> testPattern;
 		
+		ofParameter<bool> showAdvanced;
+		
         ofParameter<bool> showZones;
         ofParameter<bool> showPreview;
 		ofParameter<bool> showPathPreviews;
         ofParameter<bool> useBitmapMask;
         ofParameter<bool> showBitmapMask;
+		
 		
 		ofParameter<float>masterIntensity; 
 		ofParameter<bool>showGuide;
