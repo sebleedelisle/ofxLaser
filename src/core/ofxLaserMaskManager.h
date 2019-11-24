@@ -26,6 +26,7 @@ public:
     float getBrightness(int x, int y);
     bool loadSettings();
     bool saveSettings();
+	bool setOffsetAndScale(ofPoint offset, float scale); 
     
     QuadMask& addQuadMask(float level=1);
     
@@ -35,9 +36,11 @@ public:
     ofPixels pixels;
 	ofImage maskBitmap;
 	int width, height; 
-    
+	
     protected :
     bool dirty;
+	ofPoint offset;
+	float scale = 1;
     bool firstUpdate = true; 
     
 };

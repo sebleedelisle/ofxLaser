@@ -98,7 +98,7 @@ void DacEtherdream :: setup(string ip) {
 		connected = true;
 	} catch (Poco::Exception& exc) {
 		//Handle your network errors.
-		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " + exc.displayText());
+		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " +ip+" "+ exc.displayText());
 		connected = false;
 
 	}catch (Poco::Net::HostNotFoundException& exc) {

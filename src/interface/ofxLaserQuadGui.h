@@ -68,13 +68,11 @@ class QuadGui {
     
     
 	protected :
-	bool visible; 
-    bool isDirty;
+	bool visible = true;
+    bool isDirty = true;
     
     bool initialised = false; 
 	
 
-
-	
 };
 }

@@ -70,12 +70,15 @@ bool MaskManager::draw(bool showBitmap) {
     
     if(showBitmap) {
         ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(offset);
+		ofScale(scale, scale);
         ofEnableBlendMode(OF_BLENDMODE_ADD);
         ofSetColor(50,0,0);
         fbo.draw(0,0);
         
         ofPopStyle();
-        
+		ofPopMatrix();
         for(int i= 0; i<quads.size(); i++) {
             quads[i]->draw();
         }
@@ -96,6 +99,8 @@ QuadMask& MaskManager::addQuadMask(float level) {
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
     quad->setName("maskquad"+ofToString(quads.size()),ofToString(quads.size()));
     quad->loadSettings();
+	quad->offset = offset;
+	quad->scale = scale; 
     return *quad;
 }
 
@@ -123,6 +128,18 @@ void MaskManager::init(int w, int h){
     
 }
 
+bool MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
+	if((offset == newoffset) && (newscale==scale)) return false;
+	offset = newoffset;
+	scale = newscale;
+	dirty = true;
+	for(QuadMask* quad : quads) {
+		quad->offset = offset;
+		quad->scale = scale;
+	}
+	
+}
+
 float MaskManager::getBrightness(int x, int y) {
     ofFloatColor c = pixels.getColor(x,y);
     return c.getBrightness();
@@ -137,6 +154,7 @@ bool MaskManager::loadSettings() {
     for(int i = 0; i<quads.size(); i++) {
         quads[i]->loadSettings();
     }
+	dirty = true; 
     return true;
 }
 bool MaskManager::saveSettings() {

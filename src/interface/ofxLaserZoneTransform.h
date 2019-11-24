@@ -26,6 +26,8 @@ class ZoneTransform {
 	~ZoneTransform();
 	
 	void init(ofRectangle& srcRect);
+	void initGuiListeners();
+	
 	void initListeners();
 	void removeListeners();
 	
@@ -61,9 +63,13 @@ class ZoneTransform {
 	
 	bool loadSettings();
 	void saveSettings();
+	void serialize(ofJson&json);
+	bool deserialize(ofJson&jsonGroup);
+
 	
 	void setVisible(bool warpvisible);
 	bool checkDirty();
+	void setDirty(bool state) {isDirty = state;};
 
 	cv::Point2f toCv(glm::vec3 p) {
 		return cv::Point2f(p.x, p.y);
@@ -81,7 +87,7 @@ class ZoneTransform {
 	
 	ofParameterGroup params;
 	
-	ofParameter<bool>simpleMode;
+	ofParameter<bool>editSubdivisions;
 	ofParameter<bool>useHomography;
 	ofParameter<int>xDivisionsNew;
 	ofParameter<int>yDivisionsNew;
@@ -113,7 +119,7 @@ class ZoneTransform {
 	int xDivisions;
 	int yDivisions;
 	
-
+	//TODO move to utils
 	void drawDashedLine(ofPoint p1, ofPoint p2) {
 		
 		glEnable (GL_LINE_STIPPLE);
@@ -138,8 +144,5 @@ class ZoneTransform {
 	
 	
 };
-	
-	
-	
 	
 }

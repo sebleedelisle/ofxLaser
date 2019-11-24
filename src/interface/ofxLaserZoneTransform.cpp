@@ -11,6 +11,12 @@
 using namespace ofxLaser;
 
 
+
+ZoneTransform::~ZoneTransform() {
+	if(initialised) removeListeners();
+}
+
+
 ZoneTransform::ZoneTransform(int _index, string filename) {
 
 	saveLabel = filename;
@@ -27,13 +33,13 @@ ZoneTransform::ZoneTransform(int _index, string filename) {
 	
 	dstHandles.resize(4);
 	srcPoints.resize(4);
-	simpleMode = true;
+	editSubdivisions = false;
 	
 	params.setName("ZoneTransform");
 
 	params.add(xDivisionsNew.set("x divisions", 1,1,6));
 	params.add(yDivisionsNew.set("y divisions", 1,1,6));
-	params.add(simpleMode.set("simple mode", true));
+	params.add(editSubdivisions.set("edit subdivisions", false));
 	params.add(useHomography.set("perspective", true));
 
 	xDivisions = 1;
@@ -48,7 +54,7 @@ ZoneTransform::ZoneTransform(int _index, string filename) {
 
 void ZoneTransform::init(ofRectangle& srcRect) {
 	
-	if(!loadSettings() ) {
+	//if(!loadSettings() ) {
 		float srcwidth = srcRect.getWidth();
 		float srcheight = srcRect.getHeight();
 		
@@ -61,18 +67,17 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 		
 		updateDivisions();
 		
-	} else {
-		setSrc(srcRect);
-	}
+	//} else {
+	//	setSrc(srcRect);
+	//}
+	
+}
+
+void ZoneTransform::initGuiListeners(){
 	xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
 	yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
 	
 }
-
-ZoneTransform::~ZoneTransform() {
-	if(initialised) removeListeners();
-}
-
 
 void ZoneTransform::update(){
 	if(isDirty) {
@@ -102,7 +107,7 @@ void ZoneTransform::draw() {
 		
 		
 		ofColor edge = ofColor(255);
-		ofColor inside  = simpleMode?ofColor(0,0,255) : ofColor(100,100,255);
+		ofColor inside  = editSubdivisions?ofColor(100,100,255):ofColor(0,0,255);
 		
 		if(x<xDivisions) {
 			if((y>0)&&(y<yDivisions)) {
@@ -124,7 +129,7 @@ void ZoneTransform::draw() {
 	
 	if(selected) {
 		for(int i = 0; i<dstHandles.size(); i++) {
-			if((!simpleMode) || (isCorner(i))) dstHandles[i].draw();
+			if((editSubdivisions) || (isCorner(i))) dstHandles[i].draw();
 		}
 	}
 	ofPopMatrix();
@@ -250,8 +255,12 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 		srcCVPoints[i] = toCv(srcPoints[i]);
 	
 	}
-	cv::perspectiveTransform(srcCVPoints, dstCVPoints, homography);
-	
+	try {
+		cv::perspectiveTransform(srcCVPoints, dstCVPoints, homography);
+	} catch ( cv::Exception & e ) {
+		ofLog(OF_LOG_ERROR, e.msg ); // output exception message
+	}
+		
 	for(int i = 0; i<dstHandles.size(); i++) {
 		dstHandles[i].set(toOf(dstCVPoints[i]));
 	//	ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
@@ -309,7 +318,8 @@ void ZoneTransform:: updateDivisions(){
 	
 	setDstCorners(corners[0], corners[1], corners[2], corners[3]);
 	
-	updateQuads(); 
+	updateQuads();
+	
 	
 }
 
@@ -400,12 +410,12 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	for(int i = 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].hitTest(mousePoint)) {
 			
-			if(simpleMode && !isCorner(i)) continue;
+			if(!editSubdivisions && !isCorner(i)) continue;
 			
 			dstHandles[i].startDrag(mousePoint);
 			handleHit = true;
 			
-			if(simpleMode) {
+			if(!editSubdivisions) {
 				
 				DragHandle& currentHandle = dstHandles[i];
 				
@@ -493,7 +503,7 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 //	}
 	
 	isDirty |= (dragCount>0);
-	if((dragCount>0)&&(simpleMode)) resetFromCorners();
+	if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
 	
 	return dragCount>0;
 	
@@ -546,33 +556,78 @@ bool ZoneTransform::hitTest(ofPoint mousePoint) {
 }
 
 void ZoneTransform::saveSettings() {
+	
 	ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
-	ofParameterGroup saveParams;
 	
-	saveParams.setName("handles");
-	for(int i = 0; i<dstHandles.size(); i++) {
-		ofParameter<glm::vec3> p;
-		p = dstHandles[i];
-		p.setName("dstHandle"+ofToString(i));
-		
-		//ofLog(OF_LOG_NOTICE, "dstHandle"+ofToString(i));
-		saveParams.add(p);
-	}
+	ofJson json;
+	serialize(json);
+	ofSavePrettyJson(saveLabel+".json", json);
 	
-	ofxPanel gui;
-	
-	gui.add(params);
-
-	gui.saveToFile(saveLabel+".xml");
-	ofxPanel gui2;
-	gui2.add(saveParams);
-	gui2.saveToFile(saveLabel+"-Points.xml");
-	
-
+//	ofParameterGroup saveParams;
+//
+//	saveParams.setName("handles");
+//	for(int i = 0; i<dstHandles.size(); i++) {
+//		ofParameter<glm::vec3> p;
+//		p = dstHandles[i];
+//		p.setName("dstHandle"+ofToString(i));
+//
+//		//ofLog(OF_LOG_NOTICE, "dstHandle"+ofToString(i));
+//		saveParams.add(p);
+//	}
+//
+//	ofxPanel gui;
+//
+//	gui.add(params);
+//
+//	gui.saveToFile(saveLabel+".xml");
+//	ofxPanel gui2;
+//	gui2.add(saveParams);
+//	gui2.saveToFile(saveLabel+"-Points.xml");
+//
+//
 }
 
+void ZoneTransform::serialize(ofJson&json) {
+	ofSerialize(json,params);
+	ofJson& handlesjson = json["handles"];
+	for(int i = 0; i<dstHandles.size(); i++) {
+		DragHandle& pos = dstHandles[i];
+		handlesjson.push_back({pos.x, pos.y});
+	}
+	cout << json.dump(3) << endl;
+	//deserialize(json);
+}
+bool ZoneTransform::deserialize(ofJson& jsonGroup) {
+	
+	ofJson& paramjson = jsonGroup["ZoneTransform"];
+	ofDeserialize(paramjson, params);
+	ofJson& handlejson = jsonGroup["handles"];
+	
+	// number of handles could be different now
+	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
+	xDivisions = xDivisionsNew;
+	yDivisions = yDivisionsNew;
+	dstHandles.resize(numhandles);
+	
+	if(handlejson.size()>=numhandles) {
+		for(int i = 0; i<numhandles; i++) {
+			ofJson& point = handlejson[i];
+			dstHandles[i].x = point[0];
+			dstHandles[i].y = point[1];
+			dstHandles[i].z = 0;
+			
+		}
+	}
+}
 bool ZoneTransform::loadSettings() {
 	
+	ofFile jsonfile(saveLabel+".json");
+	if(jsonfile.exists()) {
+		ofJson json = ofLoadJson(saveLabel+".json");
+		if(deserialize(json)) return true;
+	}
+	
+	// this is all here in case of old xml files being present.
 	ofFile file(saveLabel+".xml");
 	if(!file.exists()) return false;
 	

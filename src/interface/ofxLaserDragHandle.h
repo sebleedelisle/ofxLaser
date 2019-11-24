@@ -15,6 +15,13 @@ namespace ofxLaser {
 	DragHandle() {
 		set(0,0);
 	};
+		
+	DragHandle(glm::vec3 p) {
+		set(p); 
+	}
+	DragHandle(float x, float y) {
+		set(x, y);
+	}
 	
 	void set(float xpos, float ypos, float r =5) {
 		

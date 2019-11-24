@@ -315,6 +315,8 @@ void Manager:: drawUI(bool expandPreview){
 		if(currentProjector>=0) {
 			previewOffset.set(guiSpacing,800+16);
 			previewScale = (float)smallPreviewHeight/(float)height;
+			
+			
 		// but if we're expanding the preview, then work out the scale
 		// to fill the whole screen
 		} else if(expandPreview) {
@@ -323,6 +325,7 @@ void Manager:: drawUI(bool expandPreview){
 			if(height*previewScale>ofGetHeight()) {
 				previewScale = (float)ofGetHeight()/(float)height;
 			}
+			
 		}
 		
 		renderPreview();
@@ -339,9 +342,12 @@ void Manager:: drawUI(bool expandPreview){
 		}
 		
 		ofPushMatrix();
+		laserMask.setOffsetAndScale(previewOffset,previewScale);
+		laserMask.draw(showBitmapMask);
 		ofTranslate(previewOffset);
 		ofScale(previewScale, previewScale);
-		laserMask.draw(showBitmapMask);
+		
+		
 		ofPopMatrix();
 		ofPopStyle();
 
@@ -493,7 +499,6 @@ void Manager :: renderPreview() {
 	if((showGuide) && (guideImage.isAllocated())){
 		
 		ofPushMatrix();
-		
 		ofPushStyle();
 		
 		ofSetColor(guideBrightness);
@@ -680,6 +685,9 @@ void Manager::initGui(bool showExperimental) {
 	gui.add(disarmAllButton.setup("DISARM ALL"));
 	gui.add(masterIntensity.set("Master Intensity", 1,0,1));
 	gui.add(showAdvanced.set("Advanced Settings", false));
+	gui.add(showGuide.set("show guide image", true));
+	gui.add(guideBrightness.set("guide brightness", 150,0,255));
+	
 	
 	gui.setDefaultHeight(20);
 

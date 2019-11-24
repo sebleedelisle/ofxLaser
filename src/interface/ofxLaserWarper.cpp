@@ -30,9 +30,12 @@ void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, gl
 	dstCVPoints[3] = toCv(dst4);
 
 
-	
+	try{
 	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
-	inverseHomography = homography.inv();
+		inverseHomography = homography.inv();
+	} catch ( cv::Exception & e ) {
+		ofLog(OF_LOG_ERROR, e.msg ); // output exception message
+	}
 }
 
 
@@ -61,13 +64,15 @@ cv::Point2f Warper :: getWarpedPoint(float x, float y, bool useHomography) {
 
 
 	if(useHomography) {
-		if (post.size() < 1) pre.resize(1);
-		if (post.size() < 1) pre.resize(1);
+		if (post.size() < 1) post.resize(1);
+		if (pre.size() < 1) pre.resize(1);
 		pre[0].x = x;
 		pre[0].y = y;
-
-		cv::perspectiveTransform(pre, post, homography);
-
+		try {
+			cv::perspectiveTransform(pre, post, homography);
+		} catch ( cv::Exception & e ) {
+			ofLog(OF_LOG_ERROR, e.msg ); // output exception message
+		}
 		return post[0];
 	} else {
 

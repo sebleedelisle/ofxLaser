@@ -48,6 +48,14 @@ void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
 	
 }
 
+void Graphic :: addSvg(string filename, bool optimise, bool subtractFills) {
+	ofxSVGExtra svg;
+	svg.load(filename);
+	addSvg(svg, optimise, subtractFills);
+
+	
+}
+
 void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	
 	if(polylines.size()==0) return;

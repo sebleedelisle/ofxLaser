@@ -84,7 +84,7 @@ namespace ofxLaser {
 
 
 		vector<Zone*> zones;
-		vector<ZoneTransform*> zoneWarps;
+		vector<ZoneTransform*> zoneTransforms;
 		vector<ofRectangle> zoneMasks;
 		
 		vector<ofParameter<float>>leftEdges;
