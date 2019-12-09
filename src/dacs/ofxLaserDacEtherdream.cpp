@@ -128,8 +128,9 @@ void DacEtherdream :: setup(string ip) {
 		
 #ifndef _MSC_VER
 		// only linux and osx
+		//http://www.yonch.com/tech/82-linux-thread-priority
 		struct sched_param param;
-		param.sched_priority = 89;
+		param.sched_priority = 60; // 89;
 		pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
 #else
 		// windows implementation
@@ -414,6 +415,15 @@ void DacEtherdream :: threadedFunction(){
 				waitForAck('c');
 			}
 			prepareSendCount = 0;
+			
+			// clear frame
+			for(dac_point* point : bufferedPoints) {
+				*point = framePoints[0];
+				point->r = 0;
+				point->g = 0;
+				point->b = 0;
+			}
+			
 		}
 
 		if((response.status.playback_state == PLAYBACK_IDLE) && (response.status.light_engine_state == LIGHT_ENGINE_READY)) {
@@ -432,17 +442,20 @@ void DacEtherdream :: threadedFunction(){
 		}
 		
 		// if we're playing and we have a new point rate, send it!
-		if((response.status.playback_state==PLAYBACK_PLAYING) && (newPPS!=pps)) {
-			pps = newPPS;
+		if(connected && (response.status.playback_state==PLAYBACK_PLAYING) && (newPPS!=pps)) {
 			
-			sendPointRate(pps);
-			waitForAck('q');
-			queuedPPSChangeMessages++;
+			
+			if(sendPointRate(pps)){
+				pps = newPPS;
+				waitForAck('q');
+				queuedPPSChangeMessages++;
+			}
+			
 			
 		}
 		
 		// if state is prepared or playing, and we have points in the buffer, then send the points
-		if(response.status.playback_state!=PLAYBACK_IDLE) {
+		if(connected && (response.status.playback_state!=PLAYBACK_IDLE)) {
 			
 			// min buffer amount
 			if(numPointsToSend>pointsToSendBeforePlaying){
@@ -460,10 +473,19 @@ void DacEtherdream :: threadedFunction(){
 			
 		}
 		// if state is prepared and we have sent enough points and we haven't already, send begin
-		if((response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=pointsToSendBeforePlaying)) {
+		if(connected && (response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=pointsToSendBeforePlaying)) {
 			sendBegin();
 			beginSent = waitForAck('b');
 
+			
+		}
+		
+		
+		if(!connected) {
+			if(socket.available()) {
+				connected = true;
+				resetFlag = true;
+			}
 			
 		}
 		
@@ -548,7 +570,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 			ofLog(OF_LOG_ERROR,  "Network error: " + exc.displayText());
 			//	isOpen = false;
 			failed = true;
-		}catch (Poco::TimeoutException& exc) {
+		} catch (Poco::TimeoutException& exc) {
 			//Handle your network errors.
 			ofLog(OF_LOG_ERROR,  "Timeout error: " + exc.displayText());
 			//	isOpen = false;
@@ -557,10 +579,10 @@ inline bool DacEtherdream::waitForAck(char command) {
 		}
 		
 		// this should mean that the socket has been closed...
-        if(n==0) {
-            yield();
-		    sleep(1);
-			ofLog(OF_LOG_ERROR,  "Socket disconnected");
+        if((n==0) || (failed)) {
+            //yield();
+		    //sleep(1);
+			//ofLog(OF_LOG_ERROR,  "Socket disconnected");
 			failed = true;
 			
 		}
@@ -831,6 +853,7 @@ bool DacEtherdream :: sendClear(){
 }
 
 bool DacEtherdream :: sendBytes(const void* buffer, int length) {
+	
 	int numBytesSent = 0;
 	bool failed = false;
 	bool networkerror = false;

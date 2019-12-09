@@ -44,6 +44,7 @@ Manager :: Manager() {
 Manager :: ~Manager() {
     ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
     ofRemoveListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
+	saveSettings();
 }
 
 void Manager :: setup(int w, int h){
@@ -81,7 +82,7 @@ void Manager :: addZone(float x, float y, float w, float h) {
 	if(w<=0) w = width;
 	if(h<=0) h = height;
 	zones.push_back(new Zone(zones.size(), x, y, w, h));
-	zones.back()->load();
+	zones.back()->loadSettings();
 	
 }
 
@@ -676,14 +677,14 @@ void Manager::initGui(bool showExperimental) {
 	
 	ofxGuiSetDefaultWidth(220);
 	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
-	gui.setup("Laser", "laserSettings.xml");
+	gui.setup("Laser", "laserSettings.json");
 	
 	
 	gui.setDefaultHeight(40);
 
 	gui.add(armAllButton.setup("ARM ALL"));
 	gui.add(disarmAllButton.setup("DISARM ALL"));
-	gui.add(masterIntensity.set("Master Intensity", 1,0,1));
+	gui.add(masterIntensity.set("Master Intensity", 0.1,0,1));
 	gui.add(showAdvanced.set("Advanced Settings", false));
 	gui.add(showGuide.set("show guide image", true));
 	gui.add(guideBrightness.set("guide brightness", 150,0,255));
@@ -721,8 +722,10 @@ void Manager::initGui(bool showExperimental) {
 		customParams.setName("Custom");
 		gui.add(customParams);
 	}
-    
+	
+	// try loading the xml file for legacy reasons
 	gui.loadFromFile("laserSettings.xml");
+	gui.loadFromFile("laserSettings.json");
     showPreview = true;
 	//showPathPreviews = true;
 	//gui.setPosition(width+10, 8);
@@ -765,11 +768,9 @@ void Manager::testPatternAllProjectors(int &pattern){
 	}
 }
 void Manager::saveSettings() {
-	gui.saveToFile("laserSettings.xml");
+	gui.saveToFile("laserSettings.json");
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->saveSettings();
-		
-
 	}
     laserMask.saveSettings();
 	

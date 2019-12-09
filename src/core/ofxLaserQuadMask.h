@@ -14,9 +14,9 @@ class QuadMask : public QuadGui{
     
     public :
     QuadMask() : QuadGui() {};
-    
-    bool loadSettings();
-    void saveSettings();
+//    
+//    bool loadSettings();
+//    void saveSettings();
 
     float maskLevel = 1; 
     

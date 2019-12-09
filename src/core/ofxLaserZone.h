@@ -35,8 +35,13 @@ namespace ofxLaser {
 		bool mouseDragged(ofMouseEventArgs &e);
 		bool mouseReleased(ofMouseEventArgs &e);
 		void startDragging(int handleIndex, ofPoint clickPos);
-		bool load();
-		bool save();
+
+		bool loadSettings();
+		bool saveSettings();
+		
+		void serialize(ofJson&json);
+		bool deserialize(ofJson&jsonGroup);
+
 		
 		ofRectangle rect;
 

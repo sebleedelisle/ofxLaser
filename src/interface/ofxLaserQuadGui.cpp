@@ -35,7 +35,7 @@ void QuadGui::set (const ofRectangle& rect) {
 }
 
 void QuadGui::set(float x, float y, float w, float h) {
-    
+	
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
@@ -283,8 +283,41 @@ void QuadGui::updateCentreHandle() {
 }
 
 
+
+void QuadGui::serialize(ofJson&json) {
+	//ofSerialize(json,params);
+	ofJson& handlesjson = json["handles"];
+	for(int i = 0; i<4; i++) {
+		DragHandle& pos = handles[i];
+		handlesjson.push_back({pos.x, pos.y});
+	}
+	cout << json.dump(3) << endl;
+	//deserialize(json);
+}
+
+bool QuadGui::deserialize(ofJson& jsonGroup) {
+	
+	ofJson& handlejson = jsonGroup["handles"];
+	
+	for(int i = 0; i<4; i++) {
+		ofJson& point = handlejson[i];
+		handles[i].x = point[0];
+		handles[i].y = point[1];
+		handles[i].z = 0;
+		
+	}
+	
+}
+
 bool QuadGui::loadSettings() {
 
+	ofFile jsonfile(saveLabel+".json");
+	if(jsonfile.exists()) {
+		ofJson json = ofLoadJson(saveLabel+".json");
+		if(deserialize(json)) return true;
+	}
+	
+	/// LEGACY XML settings
 	string filename = saveLabel+".xml";
 	ofxXmlSettings xml;
 	if(!xml.loadFile(filename)) {
@@ -294,7 +327,6 @@ bool QuadGui::loadSettings() {
 	}
 	
 	//cout << "Warp Pre load: " << filename << " " << dstPoints[0].x << ", " << dstPoints[0].y << endl;
-	
 	
 	handles[0].x	= xml.getValue("quad:upperLeft:x", 0.0);
 	handles[0].y	= xml.getValue("quad:upperLeft:y", 0.0);
@@ -308,49 +340,55 @@ bool QuadGui::loadSettings() {
 	handles[3].x	= xml.getValue("quad:lowerRight:x", 1.0);
 	handles[3].y	= xml.getValue("quad:lowerRight:y", 1.0);
 	
-
-	
 	updateCentreHandle();
+	// convert to json
+	saveSettings();
 	
 	return true;
 }
 
 void QuadGui::saveSettings() {
-	
-	ofxXmlSettings xml;
-	
-	string filename = saveLabel+".xml";
-	
-	xml.addTag("quad");
-	xml.pushTag("quad");
-	
-	xml.addTag("upperLeft");
-	xml.pushTag("upperLeft");
-	xml.addValue("x", handles[0].x);
-	xml.addValue("y", handles[0].y);
-	xml.popTag();
-	
-	xml.addTag("upperRight");
-	xml.pushTag("upperRight");
-	xml.addValue("x", handles[1].x);
-	xml.addValue("y", handles[1].y);
-	xml.popTag();
-    
-    xml.addTag("lowerLeft");
-    xml.pushTag("lowerLeft");
-    xml.addValue("x", handles[2].x);
-    xml.addValue("y", handles[2].y);
-    xml.popTag();
-    
-	xml.addTag("lowerRight");
-	xml.pushTag("lowerRight");
-	xml.addValue("x", handles[3].x);
-	xml.addValue("y", handles[3].y);
-	xml.popTag();
 
-    
-	xml.saveFile(filename);
 	
+	ofJson json;
+	serialize(json);
+	ofSavePrettyJson(saveLabel+".json", json);
+	
+	//
+//	ofxXmlSettings xml;
+//
+//	string filename = saveLabel+".xml";
+//
+//	xml.addTag("quad");
+//	xml.pushTag("quad");
+//
+//	xml.addTag("upperLeft");
+//	xml.pushTag("upperLeft");
+//	xml.addValue("x", handles[0].x);
+//	xml.addValue("y", handles[0].y);
+//	xml.popTag();
+//
+//	xml.addTag("upperRight");
+//	xml.pushTag("upperRight");
+//	xml.addValue("x", handles[1].x);
+//	xml.addValue("y", handles[1].y);
+//	xml.popTag();
+//
+//    xml.addTag("lowerLeft");
+//    xml.pushTag("lowerLeft");
+//    xml.addValue("x", handles[2].x);
+//    xml.addValue("y", handles[2].y);
+//    xml.popTag();
+//
+//	xml.addTag("lowerRight");
+//	xml.pushTag("lowerRight");
+//	xml.addValue("x", handles[3].x);
+//	xml.addValue("y", handles[3].y);
+//	xml.popTag();
+//
+//
+//	xml.saveFile(filename);
+//
 	
 }
 

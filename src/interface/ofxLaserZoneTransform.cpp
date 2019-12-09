@@ -562,29 +562,7 @@ void ZoneTransform::saveSettings() {
 	ofJson json;
 	serialize(json);
 	ofSavePrettyJson(saveLabel+".json", json);
-	
-//	ofParameterGroup saveParams;
-//
-//	saveParams.setName("handles");
-//	for(int i = 0; i<dstHandles.size(); i++) {
-//		ofParameter<glm::vec3> p;
-//		p = dstHandles[i];
-//		p.setName("dstHandle"+ofToString(i));
-//
-//		//ofLog(OF_LOG_NOTICE, "dstHandle"+ofToString(i));
-//		saveParams.add(p);
-//	}
-//
-//	ofxPanel gui;
-//
-//	gui.add(params);
-//
-//	gui.saveToFile(saveLabel+".xml");
-//	ofxPanel gui2;
-//	gui2.add(saveParams);
-//	gui2.saveToFile(saveLabel+"-Points.xml");
-//
-//
+
 }
 
 void ZoneTransform::serialize(ofJson&json) {
@@ -597,6 +575,7 @@ void ZoneTransform::serialize(ofJson&json) {
 	cout << json.dump(3) << endl;
 	//deserialize(json);
 }
+
 bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	
 	ofJson& paramjson = jsonGroup["ZoneTransform"];
@@ -627,7 +606,7 @@ bool ZoneTransform::loadSettings() {
 		if(deserialize(json)) return true;
 	}
 	
-	// this is all here in case of old xml files being present.
+	// LEGACY code! for old XML settings files
 	ofFile file(saveLabel+".xml");
 	if(!file.exists()) return false;
 	
@@ -638,14 +617,11 @@ bool ZoneTransform::loadSettings() {
 	gui.loadFromFile(saveLabel+".xml");
 	
 	ofxPanel gui2;
-	ofLog(OF_LOG_NOTICE, saveLabel+ " " +ofToString(xDivisionsNew)+ " " +ofToString(yDivisionsNew));
 	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
 	xDivisions = xDivisionsNew;
 	yDivisions = yDivisionsNew;
 	
 	dstHandles.resize(numhandles);
-	//srcPoints.resize(numhandles);
-	//updateDivisions();
 	
 	
 	for(int i = 0; i<numhandles; i++) {
@@ -660,13 +636,12 @@ bool ZoneTransform::loadSettings() {
 	gui2.loadFromFile(saveLabel+"-Points.xml");
 	for(int i = 0; i<numhandles; i++) {
 		dstHandles[i].set(loadParams.getVec2f("dstHandle"+ofToString(i)));
-		//inteofLog(OF_LOG_NOTICE,ofToString(i)+"===="+ofToString(loadParams.getVec2f("dstHandle"+ofToString(i))));
+		
 	}
 	
-	// shouldn't update all sections?
-	//if(simpleMode)
-	//updateDivisions();
+	// save as json
+	saveSettings();
 	
-	//ofLog(OF_LOG_NOTICE, loadParams.toString());
+
 	return true;
 }

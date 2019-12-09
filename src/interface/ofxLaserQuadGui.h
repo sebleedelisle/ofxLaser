@@ -43,6 +43,10 @@ class QuadGui {
 	
 	bool loadSettings();
 	void saveSettings();
+	void serialize(ofJson&json);
+	bool deserialize(ofJson&jsonGroup);
+
+	
 	
 	void setVisible(bool warpvisible);
 	bool checkDirty(); 
@@ -65,7 +69,6 @@ class QuadGui {
 	float scale = 1;
 	
     bool selected; 
-    
     
 	protected :
 	bool visible = true;

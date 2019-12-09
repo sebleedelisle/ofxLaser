@@ -152,3 +152,4 @@ Desktop.ini
 /example_SVGLoad/bin/data/WarpProjector1Zone1.xml
 /example_MultipleLasers/bin
 /example_SVGLoad/bin
+example_HelloLaser/bin/data/*..json

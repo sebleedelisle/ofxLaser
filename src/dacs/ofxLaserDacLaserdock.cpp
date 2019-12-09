@@ -9,17 +9,18 @@
 
 typedef bool (LaserdockDevice::*ReadMethodPtr)(uint32_t *);
 
-void print_uint32(string name, LaserdockDevice *d, ReadMethodPtr method){
-	uint32_t count = 0;
-	bool successful = (d->*method)(&count);
-	
-	if(!successful){
-		cout << "Failed reading " << name << endl;
-		return;
-	}
-	
-	cout << name << ": " << count << endl;
-}
+// *** WAS USED FOR DEBUGGING - NOT NECESSARY?
+//void print_uint32(string name, LaserdockDevice *d, ReadMethodPtr method){
+//	uint32_t count = 0;
+//	bool successful = (d->*method)(&count);
+//
+//	if(!successful){
+//		cout << "Failed reading " << name << endl;
+//		return;
+//	}
+//
+//	cout << name << ": " << count << endl;
+//}
 
 
 using namespace ofxLaser;

@@ -33,11 +33,11 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	gui = new ofxPanel();
 	
-	gui->setup(label, label+".xml");
+	gui->setup(label, label+".json");
 	gui->setName(label);
 	
 	gui->add(armed.set("ARMED", false));
-	gui->add(intensity.set("Intensity", 0.1,0,1));
+	gui->add(intensity.set("Intensity", 1,0,1));
 	gui->add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
 	gui->add(resetDac.set("Reset DAC", false));
 	
@@ -169,8 +169,9 @@ void Projector :: initGui(bool showAdvanced) {
 	}
 	
 
-	
+	// try loading the xml file for legacy reasons
 	gui->loadFromFile(label+".xml");
+	gui->loadFromFile(label+".json");
 	
 	minimiseGui();
 	
@@ -1350,7 +1351,7 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 
 void Projector::saveSettings(){
-	gui->saveToFile(label+".xml");
+	gui->saveToFile(label+".json");
 	// not sure this is needed cos we save if we edit...
 //	for(int i = 0; i<zoneWarps.size(); i++) {
 //		zoneWarps[i]->saveSettings();

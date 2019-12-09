@@ -294,15 +294,23 @@ bool Zone :: mouseReleased(ofMouseEventArgs &e){
 	for(unsigned int i = 0; i<handles.size(); i++) {
 		if(handles[i].stopDrag()) wasDragging = true;
 	}
-	if(wasDragging) save();
+	if(wasDragging) saveSettings();
 	
 	return wasDragging;
 	
 }
 
-bool Zone ::  load() {
+bool Zone ::  loadSettings() {
 	
-	// TODO : a bit hacky - should probably store params as an object property
+	
+	ofFile jsonfile(label+".json");
+	if(jsonfile.exists()) {
+		ofJson json = ofLoadJson(label+".json");
+		if(deserialize(json)) return true;
+	}
+	
+	
+	// LEGACY XML settings
 	ofParameterGroup params;
 	vector<ofParameter<glm::vec3>> points;
 	points.resize(handles.size());
@@ -320,11 +328,8 @@ bool Zone ::  load() {
 			handles[i].set(points[i]);
 		}
 		
-//		ofPoint start = handles[0];
-//		ofPoint end = handles.back();
-//	
-		
-		rect.set(handles[0], handles[1]);
+		isDirty = true;
+		saveSettings();
 		
 		return true;
 	}
@@ -332,22 +337,51 @@ bool Zone ::  load() {
 	
 
 }
-
-bool Zone :: save() {
+bool Zone::deserialize(ofJson& jsonGroup) {
 	
-	ofParameterGroup params;
-	vector<ofParameter<ofPoint>> points;
-	points.resize(handles.size());
-
-	for(unsigned int i = 0; i<handles.size(); i++) {
-		params.add(points[i].set("point_"+ofToString(i),handles[i]));
+	ofJson& pointjson = jsonGroup["points"];
+	
+	for(int i = 0; i<handles.size(); i++) {
+		ofJson& point = pointjson[i];
+		handles[i].x = point[0];
+		handles[i].y = point[1];
+		handles[i].z = 0;
 		
 	}
 	
-	ofXml settings;
-    
-    ofSerialize( settings, params );
-    
-	return settings.save(label+".xml");
+	isDirty = true;
 	
+}
+bool Zone :: saveSettings() {
+	ofJson json;
+	serialize(json);
+	ofSavePrettyJson(label+".json", json);
+//
+//	ofParameterGroup params;
+//	vector<ofParameter<ofPoint>> points;
+//	points.resize(handles.size());
+//
+//	for(unsigned int i = 0; i<handles.size(); i++) {
+//		params.add(points[i].set("point_"+ofToString(i),handles[i]));
+//
+//	}
+//
+//	ofXml settings;
+//
+//    ofSerialize( settings, params );
+//
+//	return settings.save(label+".xml");
+	
+}
+
+
+void Zone :: serialize(ofJson&json) {
+	
+	ofJson& pointsjson = json["points"];
+	for(int i = 0; i<handles.size(); i++) {
+		DragHandle& pos = handles[i];
+		pointsjson.push_back({pos.x, pos.y});
+	}
+	cout << json.dump(3) << endl;
+	//deserialize(json);
 }
