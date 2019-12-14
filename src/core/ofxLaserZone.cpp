@@ -337,7 +337,7 @@ bool Zone ::  loadSettings() {
 	
 
 }
-bool Zone::deserialize(ofJson& jsonGroup) {
+void Zone::deserialize(ofJson& jsonGroup) {
 	
 	ofJson& pointjson = jsonGroup["points"];
 	
@@ -352,7 +352,7 @@ bool Zone::deserialize(ofJson& jsonGroup) {
 	isDirty = true;
 	
 }
-bool Zone :: saveSettings() {
+void Zone :: saveSettings() {
 	ofJson json;
 	serialize(json);
 	ofSavePrettyJson(label+".json", json);

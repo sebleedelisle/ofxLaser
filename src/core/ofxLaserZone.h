@@ -37,10 +37,10 @@ namespace ofxLaser {
 		void startDragging(int handleIndex, ofPoint clickPos);
 
 		bool loadSettings();
-		bool saveSettings();
+		void saveSettings();
 		
 		void serialize(ofJson&json);
-		bool deserialize(ofJson&jsonGroup);
+		void deserialize(ofJson&jsonGroup);
 
 		
 		ofRectangle rect;
