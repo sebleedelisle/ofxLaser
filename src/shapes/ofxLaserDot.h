@@ -27,13 +27,16 @@ class Dot : public Shape{
 	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 		int maxPoints = profile.dotMaxPoints; 
 		int pointcount = ceil(maxPoints * intensity/speedMultiplier);// ceil(dotMaxPoints* dot->intensity);
+		// interpolation aims to smooth the final point in the dot to have greater granularity of colours.
+		// the value is the fraction of the brightness of the last pixel, from 0 (brightest) to 1(dimmest);
 		float interpolation = pointcount - (maxPoints * intensity/speedMultiplier);
 		ofColor col(colour);
-		col *= ofMap(pointcount-1 + interpolation, 0, pointcount,0,1);
-		for(int i = 0; i<pointcount; i++) {
+		//col *= ofMap(pointcount-1 + interpolation, 0, pointcount,0,1);
+		for(int i = 0; i<pointcount-1; i++) {
 			//addIldaPoint(dot.getStartPos(), dot.colour);
 			points.push_back(ofxLaser::Point(getStartPos(), col));
 		}
+		points.push_back(ofxLaser::Point(getStartPos(), col* ofMap(interpolation, 0, 1,1,0)));
 	};
 	
 	
