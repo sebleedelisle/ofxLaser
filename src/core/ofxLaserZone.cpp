@@ -306,7 +306,8 @@ bool Zone ::  loadSettings() {
 	ofFile jsonfile(label+".json");
 	if(jsonfile.exists()) {
 		ofJson json = ofLoadJson(label+".json");
-		if(deserialize(json)) return true;
+		deserialize(json);
+		return true;
 	}
 	
 	
