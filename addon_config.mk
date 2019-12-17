@@ -18,13 +18,15 @@ meta:
 	ADDON_NAME = ofxLaser
 	ADDON_DESCRIPTION = Addon for controlling one or more ILDA lasers.
 	ADDON_AUTHOR = Seb Lee-Delisle
-	ADDON_TAGS = "laser" "ilda" "etherdream" "idn" 
+	ADDON_TAGS = "laser" "ilda" "etherdream" "idn" "laserdock" "lasercube"
 	ADDON_URL = http://github.com/sebleedelisle/ofxLaser
 
 common:
 	# dependencies with other addons, a list of them separated by spaces
 	# or use += in several lines
-	ADDON_DEPENDENCIES = ofxXmlSettings ofxGui ofxOpenCV ofxNetwork ofxPoco ofxSvg
+	# NOTE - we only include ofxKinect as it's the easiest way to ensure libusb
+	# is included cross platform
+	ADDON_DEPENDENCIES = ofxXmlSettings ofxGui ofxOpenCV ofxNetwork ofxPoco ofxSvg ofxKinect
 	
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
@@ -41,7 +43,7 @@ common:
 
 	# linux only, any library that should be included in the project using
 	# pkg-config
-	 ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
+	# ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
 
 	# osx/iOS only, any framework that should be included in the project
 	# ADDON_FRAMEWORKS =
@@ -70,8 +72,16 @@ common:
 		# ADDON_LIBS += libs/opencv/lib/linuxarmv6l/libopencv_legacy.a
 		# ADDON_LIBS += libs/opencv/lib/linuxarmv6l/libopencv_calib3d.a
 		# ...
+		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
+		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
+
 	linux:
+		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
+		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
+
+
 	win_cb:
+
 	linuxarmv6l:
 	linuxarmv7l:
 	android/armeabi:	
