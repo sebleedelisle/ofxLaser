@@ -120,7 +120,7 @@ namespace ofxLaser {
 		
 		ofParameter<int> testPattern;
 		
-		ofParameter<bool> showAdvanced;
+		ofParameter<bool> showProjectorSettings;
 		
         ofParameter<bool> showZones;
         ofParameter<bool> showPreview;
@@ -130,8 +130,8 @@ namespace ofxLaser {
 		
 		
 		ofParameter<float>masterIntensity; 
-		ofParameter<bool>showGuide;
-		ofParameter<int>guideBrightness;
+		//ofParameter<bool>showGuide;
+		//ofParameter<int>guideBrightness;
 		ofImage guideImage;
 		
         MaskManager laserMask;

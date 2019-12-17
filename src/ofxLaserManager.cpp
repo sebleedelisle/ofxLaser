@@ -426,7 +426,7 @@ void Manager:: drawUI(bool expandPreview){
 	if((!expandPreview) && (guiIsVisible)) {
 	
 	// if this is the current projector or we have 2 or fewer projectors, then render the gui
-		if(showAdvanced) {
+		if(showProjectorSettings) {
 			
 			for(int i = 0; i<projectors.size(); i++) {
 				if ((i==currentProjector) || (projectors.size()<=2)) {
@@ -497,25 +497,25 @@ void Manager :: renderPreview() {
     ofDrawRectangle(0,0,width,height);
 	
 	// render guide if we have one
-	if((showGuide) && (guideImage.isAllocated())){
-		
-		ofPushMatrix();
-		ofPushStyle();
-		
-		ofSetColor(guideBrightness);
-		
-		guideImage.setAnchorPercent(0.5, 0.5);
-		
-		ofTranslate(width/2, height/2);
-		ofScale(height/guideImage.getHeight(), height/guideImage.getHeight());
-		guideImage.draw(0,0);
-		
-		
-		
-		ofPopStyle();
-		
-		ofPopMatrix();
-	}
+//	if((showGuide) && (guideImage.isAllocated())){
+//
+//		ofPushMatrix();
+//		ofPushStyle();
+//
+//		ofSetColor(guideBrightness);
+//
+//		guideImage.setAnchorPercent(0.5, 0.5);
+//
+//		ofTranslate(width/2, height/2);
+//		ofScale(height/guideImage.getHeight(), height/guideImage.getHeight());
+//		guideImage.draw(0,0);
+//
+//
+//
+//		ofPopStyle();
+//
+//		ofPopMatrix();
+//	}
 	
     // Draw laser graphics preview ----------------
     ofMesh mesh;
@@ -615,7 +615,7 @@ void Manager :: updateGuiPositions() {
 		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
 		
 	} else {
-		if(showAdvanced) {
+		if(showProjectorSettings) {
 			if(projectors.size()>2) {
 				gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
 			} else if(projectors.size()>0){
@@ -685,9 +685,9 @@ void Manager::initGui(bool showExperimental) {
 	gui.add(armAllButton.setup("ARM ALL"));
 	gui.add(disarmAllButton.setup("DISARM ALL"));
 	gui.add(masterIntensity.set("Master Intensity", 0.1,0,1));
-	gui.add(showAdvanced.set("Advanced Settings", false));
-	gui.add(showGuide.set("show guide image", true));
-	gui.add(guideBrightness.set("guide brightness", 150,0,255));
+	gui.add(showProjectorSettings.set("Edit Projector", false));
+	//gui.add(showGuide.set("show guide image", true));
+	//gui.add(guideBrightness.set("guide brightness", 150,0,255));
 	
 	
 	gui.setDefaultHeight(20);
@@ -712,10 +712,10 @@ void Manager::initGui(bool showExperimental) {
     params.add(useBitmapMask.set("Use bitmap mask", false));
     params.add(showBitmapMask.set("Show bitmap mask", false));
 	
-	if(guideImage.isAllocated()) {
-		params.add(showGuide.set("show guide image", true));
-		params.add(guideBrightness.set("guide brightness", 150,0,255));
-	}
+//	if(guideImage.isAllocated()) {
+//		params.add(showGuide.set("show guide image", true));
+//		params.add(guideBrightness.set("guide brightness", 150,0,255));
+//	}
 	
 	gui.add(params);
 	if(customParams.size()>0) {
@@ -729,7 +729,7 @@ void Manager::initGui(bool showExperimental) {
     showPreview = true;
 	//showPathPreviews = true;
 	//gui.setPosition(width+10, 8);
-	showAdvanced.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
+	showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
 
     
 	// TODO - check font exists?
