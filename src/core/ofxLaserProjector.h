@@ -17,7 +17,8 @@
 
 namespace ofxLaser {
 
-	class SegmentPoints : public vector<Point> {
+	// a container than holds all the points for a shape
+	class ShapePoints : public vector<Point> {
 		
 		public:
 		bool tested = false;
@@ -44,6 +45,9 @@ namespace ofxLaser {
 		
 		void update(bool updateZones);
 		void send(ofPixels* pixels = NULL, float masterIntensity = 1);
+		void getAllShapePoints(vector<ShapePoints>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
+
+		
         void sendRawPoints(const vector<Point>& points, int zonenum = 0, float masterIntensity =1);
         int getPointRate() {
             return pps; 
@@ -64,7 +68,7 @@ namespace ofxLaser {
 
 		void addPoint(ofxLaser::Point p);
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
-		void addPoints(vector<ofxLaser::Point>&points);
+		void addPoints(vector<ofxLaser::Point>&points, bool reversed = false);
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>& points);
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
@@ -125,6 +129,8 @@ namespace ofxLaser {
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
 		ofParameter<float> rotation;
+		ofParameter<float>targetFramerate;
+		ofParameter<bool>syncToTargetFramerate;
 		
 		ofParameter<float> moveSpeed = 5;
 		ofParameter<int> shapePreBlank = 0;

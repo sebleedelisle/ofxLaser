@@ -46,11 +46,7 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
     
-    if(showAdvanced) {
-        projectorparams.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
-		projectorparams.add(smoothHomePosition.set("Smooth home position", true));
-    }
-    else speedMultiplier = 1;
+	
     
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-4,4));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
@@ -62,9 +58,19 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
-	projectorparams.add(rotation.set("rotation",0,-90,90));
 	projectorparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
-	
+	projectorparams.add(rotation.set("Output rotation",0,-90,90));
+
+	if(showAdvanced) {
+		ofParameterGroup advanced;
+		advanced.setName("Advanced");
+		advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
+		advanced.add(smoothHomePosition.set("Smooth home position", true));
+		advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 35));
+		advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
+		projectorparams.add(advanced);
+	}
+	else speedMultiplier = 1;
 	
 	gui->add(projectorparams);
 	
@@ -198,10 +204,14 @@ void Projector :: minimiseGui() {
 	ofxGuiGroup* g;
 	//	g = dynamic_cast <ofxGuiGroup *>(gui->getControl(projectorlabel));
 	//	if(g) g->maximize();
-	g = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
-	if(g) g->maximize();
-    g = dynamic_cast <ofxGuiGroup *>(g->getControl("Output position offset"));
-    if(g) g->minimize();
+	ofxGuiGroup* projsettings = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
+	if(projsettings) {
+		projsettings->maximize();
+    	g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Output position offset"));
+    	if(g) g->minimize();
+		g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Advanced"));
+		if(g) g->minimize();
+	}
 }
 
 Projector::~Projector() {
@@ -698,11 +708,145 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		return;
 	}
 	
-	vector<SegmentPoints> allzonesegmentpoints;
-	vector<SegmentPoints*> sortedsegmentpoints;
-	vector<SegmentPoints> zonesegmentpoints;
+	vector<ShapePoints> allzoneshapepoints;
+
+	// TODO add speed multiplier to getPointsForMove function
+	getAllShapePoints(&allzoneshapepoints, pixels, speedMultiplier);
+	
+	vector<ShapePoints*> sortedshapepoints;
+	
+	// sort the point objects
+	if(allzoneshapepoints.size()>0) {
+		bool reversed = false;
+		int currentIndex = 0;
+		float shortestDistance = INFINITY;
+		int nextDotIndex = -1;
+
+		
+		do {
+			
+			ShapePoints& shapePoints1 = allzoneshapepoints[currentIndex];
+			
+			shapePoints1.tested = true;
+			sortedshapepoints.push_back(&shapePoints1);
+			shapePoints1.reversed = reversed;
+			
+			shortestDistance = INFINITY;
+			nextDotIndex = -1;
+			
+			
+			for(int j = 0; j<allzoneshapepoints.size(); j++) {
+				
+				ShapePoints& shapePoints2 = allzoneshapepoints[j];
+				if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
+				
+				shapePoints2.reversed = false;
+				
+				if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
+					shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
+					nextDotIndex = j;
+					reversed = false;
+				}
+				
+				if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
+					shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
+					nextDotIndex = j;
+					reversed = true;
+				}
+				
+				
+			}
+			
+			currentIndex = nextDotIndex;
+			
+			
+			
+		} while (currentIndex>-1);
+
+		// go through the point objects
+		// add move between each one
+		// add points to the laser
+		
+		ofPoint currentPosition = laserHomePosition; // MUST be in projector space
+		
+		for(int j = 0; j<sortedshapepoints.size(); j++) {
+			ShapePoints& shapepoints = *sortedshapepoints[j];
+			if(shapepoints.size()==0) continue;
+			
+			if(currentPosition.distance(shapepoints.getStart())>2){
+				addPointsForMoveTo(currentPosition, shapepoints.getStart());
+			
+				for(int k = 0; k<shapePreBlank; k++) {
+					addPoint((ofPoint)shapepoints.getStart(), ofColor(0));
+				}
+				for(int k = 0;k<shapePreOn;k++) {
+					addPoint(shapepoints.getStart());
+				}
+			}
+			
+			addPoints(shapepoints, shapepoints.reversed);
+
+			currentPosition = shapepoints.getEnd();
+			
+			ShapePoints* nextshapepoints = nullptr;
+			
+			if(j<sortedshapepoints.size()-1) {
+				nextshapepoints = sortedshapepoints[j+1];
+			}
+			if((nextshapepoints==nullptr) || (currentPosition.distance(nextshapepoints->getStart())>2)){
+				for(int k = 0;k<shapePostOn;k++) {
+					addPoint(shapepoints.getEnd());
+				}
+				for(int k = 0; k<shapePostBlank; k++) {
+					addPoint((ofPoint)shapepoints.getEnd(), ofColor(0));
+				}
+			}
+		
+			
+			
+		}
+		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
+		
+	}
+	
+	if (laserPoints.size() == 0) {
+		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
+	}
+	
+	// TODO add system to speed up if too much stuff to draw
+	if (syncToTargetFramerate) {
+		//targetFramerate = round(targetFramerate * 100) / 100.0f;
+		float targetNumPoints = (float)pps / targetFramerate;
+		// TODO : CHANGE TO PARAMETER
+		if (ofGetKeyPressed(OF_KEY_LEFT)) targetNumPoints -= 10;
+		if (ofGetKeyPressed(OF_KEY_RIGHT)) targetNumPoints += 10;
+		while (laserPoints.size() < targetNumPoints) {
+			addPoint(laserHomePosition, ofColor::black);
+		}
+	}
+	
+	processPoints(masterIntensity);
+	
+	dac->sendFrame(laserPoints);
+    numPoints = laserPoints.size();
+	
+	if(sortedshapepoints.size()>0) {
+		if(smoothHomePosition) {
+			laserHomePosition += (sortedshapepoints.front()->getStart()-laserHomePosition)*0.01;
+		} else {
+			laserHomePosition = sortedshapepoints.back()->getEnd();
+		}
+	}
+}
+
+
+void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
+	
+	vector<ShapePoints>& allzoneshapepoints = *shapepointscontainer;
+	
+	// temp vectors for storing the shapes in
+	vector<ShapePoints> zoneshapepoints;
 	vector<Point> shapepoints;
-	deque<Shape*> zoneshapes;
 	
 	// go through each zone
 	for(int i = 0; i<zones.size(); i++) {
@@ -711,7 +855,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		Zone& zone = *zones[i];
 		ZoneTransform& warp = *zoneTransforms[i];
 		ofRectangle& maskRectangle = zoneMasks[i];
-		zoneshapes = zone.shapes;
+		deque<Shape*> zoneshapes = zone.shapes;
 		
 		// add testpattern points for this zone...
 		// get array of segmentpoints and append them
@@ -719,9 +863,9 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		
 		zoneshapes.insert(zoneshapes.end(), testPatternShapes.begin(), testPatternShapes.end());
 		
-		zonesegmentpoints.clear(); 
+		zoneshapepoints.clear();
 		
-		// got through each shape in the zone
+		// go through each shape in the zone
 		
 		for(int j = 0; j<zoneshapes.size(); j++)  {
 			
@@ -731,15 +875,15 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 			RenderProfile& renderProfile = getRenderProfile(shape.profileLabel);
 			
 			shapepoints.clear();
-			shape.appendPointsToVector(shapepoints, renderProfile, speedMultiplier);
+			shape.appendPointsToVector(shapepoints, renderProfile, speedmultiplier);
 			
 			bool offScreen = true;
 			
-			SegmentPoints segmentpoints;
+			ShapePoints segmentpoints;
 			
 			//iterate through the points
 			for(int k = 0; k<shapepoints.size(); k++) {
-
+				
 				Point& p = shapepoints[k];
 				
 				// mask the points
@@ -748,10 +892,10 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 				//
 				
 				if(p.x<maskRectangle.getLeft() ||
-						p.x>maskRectangle.getRight() ||
-						p.y<maskRectangle.getTop() ||
-						p.y>maskRectangle.getBottom())  {
-
+				   p.x>maskRectangle.getRight() ||
+				   p.y<maskRectangle.getTop() ||
+				   p.y>maskRectangle.getBottom())  {
+					
 					if(!offScreen) {
 						offScreen = true;
 						// if we already have points then add an inbetween point
@@ -762,10 +906,10 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 							lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
 							lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
 							segmentpoints.push_back(lastpoint);
-
+							
 							// add this bunch to the collection
-							zonesegmentpoints.push_back(segmentpoints); // should copy
-
+							zoneshapepoints.push_back(segmentpoints); // should copy
+							
 							//clear the vector and start again
 							segmentpoints.clear();
 							
@@ -790,40 +934,40 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 					}
 					segmentpoints.push_back(p);
 				}
-
+				
 				// create a point object for it
-			
+				
 			} // end shapepoints
 			// add the segment points to the points for the zone
 			if(segmentpoints.size()>0) {
-				zonesegmentpoints.push_back(segmentpoints);
+				zoneshapepoints.push_back(segmentpoints);
 			}
 			
 		} // end zoneshapes
 		
 		
 		// go through all the points and warp them into projector space
-		for(int j = 0; j<zonesegmentpoints.size(); j++) {
-			SegmentPoints& segmentpoints = zonesegmentpoints[j];
+		for(int j = 0; j<zoneshapepoints.size(); j++) {
+			ShapePoints& segmentpoints = zoneshapepoints[j];
 			for(int k= 0; k<segmentpoints.size(); k++) {
-
-                // Check against the mask image
-                if(pixels!=NULL) {
-                    Point& p = segmentpoints[k];
-                    ofFloatColor c = pixels->getColor(p.x, p.y);
-                    float brightness = c.getBrightness();
-                    p.r*=brightness;
-                    p.g*=brightness;
-                    p.b*=brightness; 
-                }
-                
+				
+				// Check against the mask image
+				if(pixels!=NULL) {
+					Point& p = segmentpoints[k];
+					ofFloatColor c = pixels->getColor(p.x, p.y);
+					float brightness = c.getBrightness();
+					p.r*=brightness;
+					p.g*=brightness;
+					p.b*=brightness;
+				}
+				
 				segmentpoints[k] = warp.getWarpedPoint(segmentpoints[k]);
 			}
 		}
 		
 		
 		// add all the segments for the zone into the big container for all the segs
-		allzonesegmentpoints.insert(allzonesegmentpoints.end(), zonesegmentpoints.begin(), zonesegmentpoints.end());
+		allzoneshapepoints.insert(allzoneshapepoints.end(), zoneshapepoints.begin(), zoneshapepoints.end());
 		
 		// delete all the test pattern shapes
 		for(int j = 0; j<testPatternShapes.size(); j++) {
@@ -833,121 +977,12 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		
 	} // end zones
 	
-	// sort the point objects
-	if(allzonesegmentpoints.size()>0) {
-		bool reversed = false;
-		int currentIndex = 0;
-		float shortestDistance = INFINITY;
-		int nextDotIndex = -1;
-
-		
-		do {
-			
-			SegmentPoints& shape1 = allzonesegmentpoints[currentIndex];
-			
-			shape1.tested = true;
-			sortedsegmentpoints.push_back(&shape1);
-			shape1.reversed = reversed;
-			
-			shortestDistance = INFINITY;
-			nextDotIndex = -1;
-			
-			
-			for(int j = 0; j<allzonesegmentpoints.size(); j++) {
-				
-				SegmentPoints& shape2 = allzonesegmentpoints[j];
-				if((&shape1==&shape2) || (shape2.tested)) continue;
-				
-				shape2.reversed = false;
-				
-				if(shape1.getEnd().squareDistance(shape2.getStart()) < shortestDistance) {
-					shortestDistance = shape1.getEnd().squareDistance(shape2.getStart());
-					nextDotIndex = j;
-					reversed = false;
-				}
-				
-				if((shape2.reversable) && (shape1.getEnd().squareDistance(shape2.getEnd()) < shortestDistance)) {
-					shortestDistance = shape1.getEnd().squareDistance(shape2.getEnd());
-					nextDotIndex = j;
-					reversed = true;
-				}
-				
-				
-			}
-			
-			currentIndex = nextDotIndex;
-			
-			
-			
-		} while (currentIndex>-1);
-
-		// go through the point objects
-		// add move between each one
-		// add points to the laser
-		
-		ofPoint currentPosition = laserHomePosition; // MUST be in projector space
-		
-		for(int j = 0; j<sortedsegmentpoints.size(); j++) {
-			SegmentPoints& segmentpoints = *sortedsegmentpoints[j];
-			if(segmentpoints.size()==0) continue;
-			
-			if(currentPosition.distance(segmentpoints.getStart())>2){
-				addPointsForMoveTo(currentPosition, segmentpoints.getStart());
-			
-				for(int k = 0; k<shapePreBlank; k++) {
-					addPoint((ofPoint)segmentpoints.getStart(), ofColor(0));
-				}
-				for(int k = 0;k<shapePreOn;k++) {
-					addPoint(segmentpoints.getStart());
-				}
-			}
-			if(segmentpoints.reversed) {
-				for(int k=segmentpoints.size()-1;k>=0; k--) {
-					addPoint((Point)segmentpoints[k]);
-				}
-			} else {
-				addPoints(segmentpoints);
-
-			}
-			
-			currentPosition = segmentpoints.getEnd();
-			
-			SegmentPoints* nextsegment = nullptr;
-			
-			if(j<sortedsegmentpoints.size()-1) {
-				nextsegment = sortedsegmentpoints[j+1];
-			}
-			if((nextsegment==nullptr) || (currentPosition.distance(nextsegment->getStart())>2)){
-				for(int k = 0;k<shapePostOn;k++) {
-					addPoint(segmentpoints.getEnd());
-				}
-				for(int k = 0; k<shapePostBlank; k++) {
-					addPoint((ofPoint)segmentpoints.getEnd(), ofColor(0));
-				}
-			}
-		
-			
-			
-		}
-		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
-		
-	}
 	
-	if (laserPoints.size() == 0) {
-		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
-	}
-	processPoints(masterIntensity);
-	dac->sendFrame(laserPoints);
-    numPoints = laserPoints.size();
 	
-	if(sortedsegmentpoints.size()>0) {
-		if(smoothHomePosition) {
-			laserHomePosition += (sortedsegmentpoints.front()->getStart()-laserHomePosition)*0.01;
-		} else {
-			laserHomePosition = sortedsegmentpoints.back()->getEnd();
-		}
-	}
+	
 }
+
+
 
 RenderProfile& Projector::getRenderProfile(string profilelabel) {
 	
@@ -1172,9 +1207,15 @@ void Projector :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool
 	addPoint(ofxLaser::Point(p, c, pointIntensity, useCalibration));
 	
 }
-void Projector :: addPoints(vector<ofxLaser::Point>&points) {
-	for(int i = 0; i<points.size();i++) {
-		addPoint(points[i]);
+void Projector :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
+	if(!reversed) {
+		for(int i = 0; i<points.size();i++) {
+			addPoint(points[i]);
+		}
+	} else {
+		for(int i=points.size()-1;i>=0; i--) {
+			addPoint(points[i]);
+		}
 	}
 }
 
