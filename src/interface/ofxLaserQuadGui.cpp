@@ -306,7 +306,7 @@ bool QuadGui::deserialize(ofJson& jsonGroup) {
 		handles[i].z = 0;
 		
 	}
-	
+	return true; 
 }
 
 bool QuadGui::loadSettings() {

@@ -597,6 +597,7 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 			
 		}
 	}
+	return true; 
 }
 bool ZoneTransform::loadSettings() {
 	

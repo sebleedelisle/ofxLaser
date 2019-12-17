@@ -153,3 +153,6 @@ Desktop.ini
 /example_MultipleLasers/bin
 /example_SVGLoad/bin
 example_HelloLaser/bin/data/*..json
+*.db-wal
+*.db-shm
+*.json
