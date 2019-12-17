@@ -5,3 +5,4 @@ ofxOpenCv
 ofxPoco
 ofxSvg
 ofxXmlSettings
+ofxKinect
