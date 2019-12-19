@@ -31,7 +31,8 @@ void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, gl
 
 
 	try{
-	homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
+		// NB 8 is CV_RANSAC which isn't defined in all platforms for some reason.
+		homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),8, 100);
 		inverseHomography = homography.inv();
 	} catch ( cv::Exception & e ) {
 		ofLog(OF_LOG_ERROR, e.msg ); // output exception message
