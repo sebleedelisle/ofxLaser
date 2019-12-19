@@ -497,6 +497,7 @@ bool DacEtherdream::setPointsPerSecond(uint32_t newpps){
 	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
 	if(!isThreadRunning()){
 		pps = newPPS = newpps;
+		return true; 
 	} else {
 		while(!lock());
 		newPPS = newpps;
