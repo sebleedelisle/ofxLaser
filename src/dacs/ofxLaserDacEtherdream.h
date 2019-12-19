@@ -17,7 +17,6 @@
 
 #ifdef TARGET_WIN32
 #include <Windows.h>
-#define Byte BYTE
 #endif
 
 
@@ -151,8 +150,8 @@ namespace ofxLaser {
 		dac_point lastpoint;
 		dac_point sendpoint;
 		
-		Byte buffer[1024];
-		Byte outbuffer[100000];
+		uint8_t buffer[1024];
+		uint8_t outbuffer[100000];
         int numBytesSent;
 		
 		Poco::Net::StreamSocket socket;
