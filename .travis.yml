@@ -187,6 +187,7 @@ matrix:
     - compiler: gcc
 
 install:
+  - travis_wait mvn install
   - cd ~
   - git clone --depth=1 --branch=$OF_BRANCH https://github.com/openframeworks/openFrameworks
   - cd openFrameworks
