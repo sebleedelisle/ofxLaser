@@ -26,7 +26,7 @@ public:
     float getBrightness(int x, int y);
     bool loadSettings();
     bool saveSettings();
-	bool setOffsetAndScale(ofPoint offset, float scale); 
+	void setOffsetAndScale(ofPoint offset, float scale); 
     
     QuadMask& addQuadMask(float level=1);
     
