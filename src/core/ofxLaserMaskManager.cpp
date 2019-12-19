@@ -129,7 +129,7 @@ void MaskManager::init(int w, int h){
 }
 
 void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
-	if((offset == newoffset) && (newscale==scale)) return false;
+	if((offset == newoffset) && (newscale==scale)) return;
 	offset = newoffset;
 	scale = newscale;
 	dirty = true;
