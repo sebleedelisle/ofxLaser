@@ -245,7 +245,8 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 	dstCVPoints[2] = toCv(bottomleft);
 	dstCVPoints[3] = toCv(bottomright);
 	
-	cv::Mat homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),CV_RANSAC, 100);
+	// NB 8 is CV_RANSAC which isn't defined in all platforms for some reason.
+	cv::Mat homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),8, 100);
 	
 	srcCVPoints.resize(srcPoints.size());
 	dstCVPoints.resize(srcPoints.size());
