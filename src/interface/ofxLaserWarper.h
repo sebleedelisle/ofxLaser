@@ -11,7 +11,7 @@
 #include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
-#include "opencv2/calib3d/calib3d_c.h"
+
 
 namespace ofxLaser {
 class Warper {
