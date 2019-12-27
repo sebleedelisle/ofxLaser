@@ -19,7 +19,7 @@ void ofApp::setup(){
 	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
 	string dacIp = buffer.getText();
 	// if there's no file, then use the default IP address :
-	if(dacIp=="") dacIp ="10.0.1.12";
+	if(dacIp=="") dacIp ="10.0.1.120";
 	dac.setup(dacIp);
 #endif
 	
@@ -274,8 +274,5 @@ void ofApp::mouseReleased(int x, int y, int button) {
 //--------------------------------------------------------------
 void ofApp::exit(){
 	laser.saveSettings();
-#ifndef USE_LASERDOCK
-	dac.close();
-#endif
 }
 

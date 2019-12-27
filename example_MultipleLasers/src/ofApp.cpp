@@ -16,10 +16,12 @@ void ofApp::setup(){
 	
 	laser.addProjector(dac1);
 	laser.addProjector(dac2);
-	dac1.setup();
-	dac2.setup();
+
 	laser.addZoneToProjector(0,0);
 	laser.addZoneToProjector(1,1);
+	
+	dac1.setup();
+	dac2.setup();
 #else
 	// load the IP address of the Etherdream / IDN DAC
 	ofBuffer buffer = ofBufferFromFile("dacIP.txt");

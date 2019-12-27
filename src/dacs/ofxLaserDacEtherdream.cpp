@@ -60,7 +60,7 @@ const vector<ofAbstractParameter*>& DacEtherdream :: getDisplayData() {
 
 DacEtherdream :: ~DacEtherdream(){
 	
-	close(); 
+	close();
 	
 	for (int i = 0; i < sparePoints.size(); ++i) {
 		delete sparePoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
@@ -75,6 +75,16 @@ DacEtherdream :: ~DacEtherdream(){
 	
 }
 
+void DacEtherdream :: close() {
+	
+	
+	if(isThreadRunning()) waitForThread();
+	if(connected) {
+		sendStop();
+		waitForAck('s');
+		socket.close();
+	}
+}
 void DacEtherdream :: setup(string ip) {
 	// TODO - this can return a Poco::Net::HostNotFoundException - add try / catch
 
@@ -149,7 +159,7 @@ void DacEtherdream :: reset() {
 	
 }
 
-void DacEtherdream :: close() {
+void DacEtherdream :: closeWhileRunning() {
 	if(!connected) return;
 	while(!lock());
 	sendStop();
@@ -376,6 +386,8 @@ inline bool DacEtherdream :: addPoint(const dac_point &point ){
 	bufferedPoints.push_back(p);
 	return true;
 }
+
+
 void DacEtherdream :: threadedFunction(){
 	
 	waitForAck('?');
@@ -887,7 +899,7 @@ bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 	
 	if(failed) {
 		if(networkerror) {
-			close();
+			closeWhileRunning();
 			setup(ipaddress);
 		}
 		beginSent = false;

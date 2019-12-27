@@ -107,7 +107,9 @@ namespace ofxLaser {
 		void setup(string ip);
 		//bool addPoints(const vector<dac_point> &points );
 		bool addPoint(const dac_point &point );
+		void closeWhileRunning();
 		void close();
+	
 		
 		void reset(); 
         
