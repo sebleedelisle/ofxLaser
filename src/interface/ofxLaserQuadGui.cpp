@@ -314,10 +314,13 @@ bool QuadGui::loadSettings() {
 	ofFile jsonfile(saveLabel+".json");
 	if(jsonfile.exists()) {
 		ofJson json = ofLoadJson(saveLabel+".json");
-		if(deserialize(json)) return true;
+		if(deserialize(json)) {
+			updateCentreHandle();
+			return true;
+		}
 	}
 	
-	/// LEGACY XML settings
+	/// LEGACY XML settings ------------------------------------
 	string filename = saveLabel+".xml";
 	ofxXmlSettings xml;
 	if(!xml.loadFile(filename)) {

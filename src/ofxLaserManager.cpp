@@ -197,7 +197,8 @@ void Manager::drawCircle(const ofPoint & centre, const float& radius, const ofCo
 }
 
 void Manager:: update(){
-	
+	if(doArmAll) armAllProjectors();
+	if(doDisarmAll) disarmAllProjectors();
 	zonesChanged = false;
 	
     if(useBitmapMask) laserMask.update();
@@ -226,6 +227,27 @@ void Manager:: update(){
 
 
 void Manager::send(){
+	
+	if(laserMasks) {
+		vector<ofPolyline*> polylines = laserMask.getLaserMaskShapes();
+		for(ofPolyline* poly : polylines) {
+			ofPoint centre= poly->getCentroid2D();
+			poly->translate(-centre);
+			poly->scale(1.01,1.01);
+			poly->translate(centre);
+		}
+		for(int i = 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
+			setTargetZone(i);
+			for(ofPolyline* poly:polylines) {
+				
+				drawPoly(*poly, ofColor::cyan);
+			}
+			
+		}
+		
+		for(ofPolyline* poly : polylines)  ofxLaser::Factory::releasePolyline(poly);
+	}
+	
 	
 	// here's where the magic happens.
 	// 1 :
@@ -696,7 +718,7 @@ void Manager::initGui(bool showExperimental) {
 	disarmAllButton.addListener(this, &ofxLaser::Manager::disarmAllProjectors);
 	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 
-	
+
 	for(int i = 0; i<projectors.size();i++) {
 		gui.add(projectors[i]->armed);
 		
@@ -710,7 +732,8 @@ void Manager::initGui(bool showExperimental) {
 	params.add(showPreview.set("Show preview", true));
 	params.add(showPathPreviews.set("Show path previews", true));
     params.add(useBitmapMask.set("Use bitmap mask", false));
-    params.add(showBitmapMask.set("Show bitmap mask", false));
+	params.add(showBitmapMask.set("Show bitmap mask", false));
+	params.add(laserMasks.set("Laser mask shapes", false));
 	
 //	if(guideImage.isAllocated()) {
 //		params.add(showGuide.set("show guide image", true));
@@ -752,15 +775,27 @@ void Manager::addCustomParameter(ofAbstractParameter& param){
 	
 }
 
+
+void Manager::armAllProjectorsListener() {
+	
+	doArmAll = true;
+}
+void Manager::disarmAllProjectorsListener(){
+
+	doDisarmAll = true;
+}
 void Manager::armAllProjectors() {
+	
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->armed = true;
 	}
+	doArmAll = false;
 }
 void Manager::disarmAllProjectors(){
 	for(int i = 0; i<projectors.size(); i++) {
 		projectors[i]->armed = false;
 	}
+	doDisarmAll = false;
 }
 void Manager::testPatternAllProjectors(int &pattern){
 	for(int i = 0; i<projectors.size(); i++) {
@@ -825,8 +860,12 @@ bool Manager::togglePreview(){
 
 Zone& Manager::getZone(int zonenum) {
 	// TODO bounds check?
-	return *zones[zonenum-1];
+	return *zones.at(zonenum);
 	
+}
+
+int Manager::getNumZones() {
+	return zones.size();
 }
 
 bool Manager::setTargetZone(int zone){  // only for OFX_ZONE_MANUAL

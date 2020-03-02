@@ -22,6 +22,9 @@ namespace ofxLaser {
 		Zone(int index, float x, float y, float w, float h);
 		~Zone();
 
+		void set(float x, float y, float w, float h);
+		void set(ofRectangle newrect);
+		
 		bool update();
 		bool addShape(Shape* s);
 		void draw();

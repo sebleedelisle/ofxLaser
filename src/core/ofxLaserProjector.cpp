@@ -292,7 +292,7 @@ void Projector::updateZoneMasks() {
 void Projector::renderStatusBox(float x, float y, float w, float h) {
 	ofPushStyle();
 	ofPushMatrix();
-	
+	ofDisableBlendMode();
 	ofTranslate(x,y);
 	ofFill();
 	ofSetColor(50);

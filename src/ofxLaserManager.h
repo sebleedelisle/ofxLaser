@@ -77,6 +77,8 @@ namespace ofxLaser {
         int getProjectorPointRate(int projectornum = 0);
         float getProjectorFrameRate(int projectornum); 
 
+		void armAllProjectorsListener();
+		void disarmAllProjectorsListener();
 		void armAllProjectors();
 		void disarmAllProjectors();
 		void testPatternAllProjectors(int& pattern);
@@ -99,6 +101,7 @@ namespace ofxLaser {
 		void saveSettings();
 		
 		Zone& getZone(int zonenum);
+		int getNumZones(); 
 		bool setTargetZone(int zone);
 		bool setZoneMode(ofxLaserZoneMode newmode);
 		
@@ -127,6 +130,7 @@ namespace ofxLaser {
 		ofParameter<bool> showPathPreviews;
         ofParameter<bool> useBitmapMask;
         ofParameter<bool> showBitmapMask;
+		ofParameter<bool> laserMasks; 
 		
 		
 		ofParameter<float>masterIntensity; 
@@ -150,6 +154,8 @@ namespace ofxLaser {
 		bool guiIsVisible;
 		ofxButton armAllButton;
 		ofxButton disarmAllButton;
+		bool doArmAll = false;
+		bool doDisarmAll = false;
 		
 		private:
 		int createDefaultZone();

@@ -9,6 +9,8 @@
 #pragma once
 #include "ofMain.h"
 #include "ofxLaserQuadMask.h"
+#include "ofxLaserFactory.h"
+
 
 namespace ofxLaser {
     
@@ -27,7 +29,8 @@ public:
     bool loadSettings();
     bool saveSettings();
 	void setOffsetAndScale(ofPoint offset, float scale); 
-    
+	
+	vector<ofPolyline*> getLaserMaskShapes();
     QuadMask& addQuadMask(float level=1);
     
     vector<QuadMask*> quads;

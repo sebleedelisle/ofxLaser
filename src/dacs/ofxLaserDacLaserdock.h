@@ -13,7 +13,7 @@
 #include "ofxNetwork.h"
 #include "LaserdockDeviceManager.h"
 #include "LaserdockDevice.h"
-#include <libusb.h>
+#include "libusb.h"
 
 
 #define LASERDOCK_MIN 0

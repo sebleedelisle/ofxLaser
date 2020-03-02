@@ -37,6 +37,7 @@ bool MaskManager::update() {
     firstUpdate = false;
     if(dirty) {
         fbo.begin();
+		ofDisableBlendMode();
         ofBackground(255);
 		if(maskBitmap.isAllocated()) {
 			maskBitmap.draw(0,0,width, height);
@@ -149,10 +150,32 @@ ofPixels* MaskManager::getPixels() {
     return &pixels;
 }
 
+vector<ofPolyline*>  MaskManager::getLaserMaskShapes(){
+	
+	vector<ofPolyline*> polylines;
+	for(int i = 0 ;i<quads.size(); i++) {
+		QuadMask& quad = *quads[i];
+		ofPolyline* poly = ofxLaser::Factory :: getPolyline();
+
+
+		poly->addVertex(quad.handles[0]);
+		poly->addVertex(quad.handles[1]);
+		poly->addVertex(quad.handles[3]);
+		poly->addVertex(quad.handles[2]);
+		poly->setClosed(true);
+		polylines.push_back(poly);
+
+
+
+	}
+	return polylines;
+	
+}
 
 bool MaskManager::loadSettings() {
     for(int i = 0; i<quads.size(); i++) {
         quads[i]->loadSettings();
+		
     }
 	dirty = true; 
     return true;

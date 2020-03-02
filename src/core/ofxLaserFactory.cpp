@@ -10,12 +10,6 @@
 
 using namespace ofxLaser;
 
-//// static class members
-//vector<ofPolyline*> ofxLaser::Factory::polylinePool;
-//vector<ofPolyline*> ofxLaser::Factory::polylineSpares;
+// static class members
 
 Poco::ObjectPool<ofPolyline> ofxLaser::Factory::polylineObjectPool(500,10000000);
-
-
-//vector<ofxLaser::Polyline*> ofxLaser::Factory::laserPolylinePool;
-//vector<ofxLaser::Polyline*> ofxLaser::Factory::laserPolylineSpares;

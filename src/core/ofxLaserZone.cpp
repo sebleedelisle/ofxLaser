@@ -18,20 +18,35 @@ Zone::Zone() {
 Zone::Zone(int _index, float x, float y, float w, float h) {
 	//ofLog(OF_LOG_NOTICE, "Zone(x, y, w, h) constructor") ;
 	index = _index;
+	set(x, y, w,h);
 	
-	rect.set(x,y,w,h);
 	label = "Zone"+ofToString(index+1);
 	editable = false;
-	handles.resize(2);
-	handles[0].set(rect.getTopLeft());
-	handles[1].set(rect.getBottomRight());
+	
 	initListeners();
 }
+
 
 Zone::~Zone() {
 	removeListeners();
 	
 }
+
+void Zone::set(float x, float y, float w, float h) {
+	set(ofRectangle(x,y,w,h));
+}
+void Zone::set(ofRectangle
+			   newrect) {
+	
+	if(newrect!=rect) {
+		rect.set(newrect);
+		handles.resize(2);
+		handles[0].set(rect.getTopLeft());
+		handles[1].set(rect.getBottomRight());
+		isDirty = true;
+	}
+}
+
 bool Zone::update() {
 	//shapes.clear();
 	//previewPathMesh.clear();
