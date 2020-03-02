@@ -3,6 +3,7 @@
 // This example demonstrates how you can use the rolling shutter in
 // cameras to create cool effects. See my collaboration with Tom Scott
 // for more information https://www.youtube.com/watch?v=8YONOexk0Ek&t=319s
+// (apologies for the lack of comments / documentation)
 
 
 
