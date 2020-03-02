@@ -40,7 +40,7 @@ Roadmap
 Licence
 -------
 The code in this repository is available under the [MIT License](https://secure.wikimedia.org/wikipedia/en/wiki/Mit_license).  
-Copyright (c) 20012-2019 Seb Lee-Delisle [seb.ly](http://seb.ly)
+Copyright (c) 2012-2019 Seb Lee-Delisle [seb.ly](http://seb.ly)
 
 Installation
 -------
