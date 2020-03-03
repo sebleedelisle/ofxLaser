@@ -68,6 +68,7 @@ ofxOpenCv (comes with oF)
 ofxNetwork (comes with oF)  
 ofxPoco (comes with oF)  
 ofxSvg (comes with oF)  
+ofxKinect - (only used as an easy way to get libusb installed cross platform) (comes with oF) 
 
 Compatibility
 ------------
