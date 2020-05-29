@@ -8,7 +8,7 @@
 
 #include "ofxGui.h"
 
-#include "HeliosDac.h"
+//#include "HeliosDac.h"
 
 #define USE_ETHERDREAM
 //#define USE_IDN
