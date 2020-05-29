@@ -27,9 +27,11 @@ Features
 
 Supported Laser interfaces
 --------------------------
-* Etherdream
-* Laserdock / Lasercube
+USB : 
 * HeliosDAC 
+* Laserdock / Lasercube
+Network :
+* Etherdream
 * IDN (Ilda Digital Network standard)
 
 Roadmap
