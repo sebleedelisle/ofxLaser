@@ -29,13 +29,13 @@ Supported Laser interfaces
 --------------------------
 * Etherdream
 * Laserdock / Lasercube
+* HeliosDAC 
 * IDN (Ilda Digital Network standard)
 
 Roadmap
 -----------
 * Automatic discovery of Etherdreams (currently requires the DAC IP address)
 * Automatic discovery of IDN DACs (currently requires the DAC IP address)
-* Masking in laser space, not source space
 
 Licence
 -------
@@ -47,8 +47,9 @@ Installation
 
 First, pick the branch that matches your version of openFrameworks:
 
-* OF 0.10.1 [master](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/) 
-* OF 0.9.8 : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
+* OF 0.11.x [master](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/) 
+* OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_9.10.1) 
+* OF 0.9.x : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
 Either clone out the source code using git:
 
@@ -72,7 +73,8 @@ ofxKinect - (only used as an easy way to get libusb installed cross platform) (c
 
 Compatibility
 ------------
-openFrameworks 0.10.1 - currently tested with 0.10.1
+openFrameworks 0.10.1 
+openFrameworks 0.9.8
 
 Known issues
 ------------
