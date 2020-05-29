@@ -98,10 +98,14 @@ public:
 //	}
 
 	static float easeInOut(float t, float b , float c, float d) {
-		t/=d/2;
-		if (t < 1) return c/2*t*t + b;
-		t-=2;
-		return c/2*(t*t + 2) + b;
+//		t/=d/2;
+//		if (t < 1) return c/2*t*t + b;
+//		t-=2;
+//		return c/2*(t*t + 2) + b;
+//
+		if ((t/=d/2) < 1) return c/2*t*t + b;
+		return -c/2 * ((--t)*(t-2) - 1) + b;
+		
 	}
 
 	static float easeIn (float t,float b , float c, float d) {

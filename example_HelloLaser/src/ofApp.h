@@ -5,12 +5,14 @@
 #include "ofxLaserDacEtherdream.h"
 #include "ofxLaserDacLaserdock.h"
 #include "ofxLaserDacIDN.h"
+#include "ofxLaserDacHelios.h"
 
 #include "ofxGui.h"
 
 #define USE_ETHERDREAM
 //#define USE_IDN
 //#define USE_LASERDOCK
+//#define USE_HELIOS
 
 class ofApp : public ofBaseApp{
 	
