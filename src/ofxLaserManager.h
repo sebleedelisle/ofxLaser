@@ -90,6 +90,7 @@ namespace ofxLaser {
 		void drawCircle(const ofPoint & centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
 		
 		Projector& getProjector(int index = 0);
+		int getNumProjectors() { return projectors.size(); };
 		void initGui(bool showAdvanced = false);
 		void addCustomParameter(ofAbstractParameter& param);
 		ofxPanel& getGui();
@@ -169,7 +170,7 @@ namespace ofxLaser {
 		//ofParameter<int> testPattern;
 		
 		ofPolyline tmpPoly; // to avoid generating polyline objects
-		int screenHeight;
+
 		
 		
 	};

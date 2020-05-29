@@ -22,7 +22,7 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) {
 	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT, ofToString("Default"));
 	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High quality"));
 	
-	numTestPatterns = 8;
+	numTestPatterns = 9;
     //guiIsVisible = true;
 	
 	guiInitialised = false;
@@ -1155,6 +1155,14 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 			
 		}
 		shapes.push_back(new ManualShape(points, colours, false,OFXLASER_PROFILE_DEFAULT));
+		
+	} else if(testPattern ==9) {
+		ofRectangle rect = maskRectangle;
+		
+		shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
 		
 	}
 	return shapes; 

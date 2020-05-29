@@ -603,7 +603,6 @@ void Manager ::updateScreenSize(ofResizeEventArgs &e){
 }
 
 void Manager :: updateScreenSize() {
-	screenHeight = ofGetHeight();
 	updateGuiPositions();
 	
 }
