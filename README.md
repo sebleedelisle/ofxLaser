@@ -30,6 +30,7 @@ Supported Laser interfaces
 USB : 
 * HeliosDAC 
 * Laserdock / Lasercube
+
 Network :
 * Etherdream
 * IDN (Ilda Digital Network standard)
