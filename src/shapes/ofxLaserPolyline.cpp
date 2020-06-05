@@ -150,7 +150,7 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const Rende
 			vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
 			
 			
-			for(int i = 0; i<unitDistances.size(); i++) {
+			for(size_t i = 0; i<unitDistances.size(); i++) {
 				
 				float distanceAlongPoly = (unitDistances[i]*0.999* length) + startdistance;
 				

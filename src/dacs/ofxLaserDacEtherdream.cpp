@@ -62,12 +62,12 @@ DacEtherdream :: ~DacEtherdream(){
 	
 	close();
 	
-	for (int i = 0; i < sparePoints.size(); ++i) {
+	for (size_t i= 0; i < sparePoints.size(); ++i) {
 		delete sparePoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
 		// and deallocates *tmp[i]
 	}
 	sparePoints.clear();
-	for (int i = 0; i < bufferedPoints.size(); ++i) {
+	for (size_t i= 0; i < bufferedPoints.size(); ++i) {
 		delete bufferedPoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
 		// and deallocates *tmp[i]
 	}
@@ -192,7 +192,7 @@ bool DacEtherdream:: sendFrame(const vector<Point>& points){
 			frameMode = true;
 			framePoints.resize(points.size());
 
-			for(int i = 0; i<points.size(); i++) {
+			for(size_t i= 0; i<points.size(); i++) {
 				
 				const Point& p2 = points[i];
 				p1.x = ofMap(p2.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
@@ -258,7 +258,7 @@ inline bool DacEtherdream :: sendData(){
 		while((framePoints.size()>0) && (npointstosend<minpointcount)) {
 			//cout << npointstosend << " " << minpointcount << endl;
 			// send the frame!
-			for(int i = 0; i<framePoints.size(); i++) {
+			for(size_t i= 0; i<framePoints.size(); i++) {
 				addPoint(framePoints[i]);
 			}
 			newFrame = false;
@@ -347,7 +347,7 @@ bool DacEtherdream:: sendPoints(const vector<Point>& points){
 	if(lock()) {
 		frameMode = false;
 		
-		for(int i = 0; i<points.size(); i++) {
+		for(size_t i= 0; i<points.size(); i++) {
 			
 			const Point& p2 = points[i];
 			p1.x = ofMap(p2.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);

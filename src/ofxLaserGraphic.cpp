@@ -21,7 +21,7 @@ void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
 	
 	if(optimise) {
 		connectLineSegments();
-		for(int i = 0; i<polylines.size(); i++) {
+		for(size_t i= 0; i<polylines.size(); i++) {
 			polylines[i]->simplify(0.2);
 		}
 	}
@@ -41,7 +41,7 @@ void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
 	
 	if(optimise) {
 		connectLineSegments();
-		for(int i = 0; i<polylines.size(); i++) {
+		for(size_t i= 0; i<polylines.size(); i++) {
 			polylines[i]->simplify(0.2);
 		}
 	}
@@ -62,7 +62,7 @@ void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	vector <ofPolyline*> newPolylines;
 	vector <ofColor> newColours;
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
 		
@@ -100,7 +100,7 @@ void Graphic::intersectRect(ofRectangle& rect) {
 	ofPath sourcepath;
 	sourcepath.rectangle(rect);
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
 		
@@ -141,7 +141,7 @@ void Graphic::intersectPaths(vector<ofPath>& paths) {
 	//ofPath sourcepath;
 	//sourcepath.rectangle(rect);
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
 		
@@ -176,7 +176,7 @@ void Graphic :: replacePolylines(vector<ofPolyline*>& newPolylines, vector<ofCol
 	// delete all the polylines and colours!
 	clear();
 	// and now add the updated ones :
-	for(int i = 0; i<newPolylines.size(); i++) {
+	for(size_t i= 0; i<newPolylines.size(); i++) {
 	
 		ofPolyline* poly = newPolylines[i];
 		poly->simplify();
@@ -209,7 +209,7 @@ bool Graphic:: pointInsidePath(glm::vec3 point, ofPath& path) {
 
 void Graphic :: translate(glm::vec3 offset) {
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		ofPolyline& poly =*polylines[i];
 		poly.translate(offset);
@@ -222,7 +222,7 @@ void Graphic :: autoCentre() {
 	
 	ofRectangle boundingBox;
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		ofPolyline& poly =*polylines[i];
 		
@@ -360,7 +360,7 @@ void Graphic::subtractPolyline(ofPolyline* polyToSubtract, bool useTransform) {
 		transformPolyline(*newPoly);
 	}
 
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
 
@@ -396,7 +396,7 @@ void Graphic::subtractPolyline(ofPolyline* polyToSubtract, bool useTransform) {
 void Graphic :: transformPolyline(ofPolyline& poly) {
 	vector<glm::vec3>& newPolyVerts = poly.getVertices();
 
-	for(int i = 0; i<newPolyVerts.size(); i++) {
+	for(size_t i= 0; i<newPolyVerts.size(); i++) {
 		newPolyVerts[i]=gLProject(newPolyVerts[i]);
 	}
 	
@@ -410,7 +410,7 @@ ofPath Graphic :: transformPath(ofPath& path) {
 		ofPolyline newpoly = poly;
 		transformPolyline(newpoly);
 		returnpath.moveTo(newpoly[0]);
-		for( int i = 1; i < newpoly.size(); ++i ) returnpath.lineTo( newpoly[i] );
+		for( size_t i= 1; i < newpoly.size(); ++i ) returnpath.lineTo( newpoly[i] );
 	}
 	return returnpath;
 	
@@ -441,7 +441,7 @@ glm::vec3 Graphic::gLProject(glm::vec3& v) {
 
 void Graphic ::  connectLineSegments() {
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		ofPolyline* poly1 = polylines[i];
 		
 		float smallestAngle = 360;
@@ -704,7 +704,7 @@ void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string
 	
 	//laser.setTargetZone(targetZone); // only relevant if we're in OFXLASER_ZONE_MANUAL
 	
-	for(int i = 0; i<polylines.size(); i++) {
+	for(size_t i= 0; i<polylines.size(); i++) {
 		ofColor col = colours[i];
 		col*=brightness;
 		laser.drawPoly(*polylines[i],col, renderProfile);

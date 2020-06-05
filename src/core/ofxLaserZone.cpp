@@ -120,7 +120,7 @@ ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer
 		// add a dummy shape to fix the start position
 		shapes.push_front(new ofxLaser::Dot(currentPosition, c, 1, ""));
 		
-		for(unsigned int i =0; i<shapes.size(); i++ ) {
+		for(size_t i=0; i<shapes.size(); i++ ) {
 			shapes[i]->tested = false;
 			shapes[i]->reversed = false;
 			
@@ -260,7 +260,7 @@ bool Zone :: mousePressed(ofMouseEventArgs &e){
 	//
 	//	} else {
 	
-	for(unsigned int i = 0; i<handles.size(); i++) {
+	for(size_t i= 0; i<handles.size(); i++) {
 		if(handles[i].hitTest(mousePoint)) {
 			startDragging(i, mousePoint);
 			handleHit = true;
@@ -281,7 +281,7 @@ bool Zone :: mouseDragged(ofMouseEventArgs &e){
 	
 	//ofRectangle bounds(centreHandle, 0, 0);
 	bool dragging = false;
-	for(unsigned int i = 0; i<handles.size(); i++) {
+	for(size_t i= 0; i<handles.size(); i++) {
 		if(handles[i].updateDrag(mousePoint)) dragging = true;
 		//bounds.growToInclude(handles[i]);
 	}
@@ -306,7 +306,7 @@ bool Zone :: mouseReleased(ofMouseEventArgs &e){
 	
 	bool wasDragging = false;
 	
-	for(unsigned int i = 0; i<handles.size(); i++) {
+	for(size_t i= 0; i<handles.size(); i++) {
 		if(handles[i].stopDrag()) wasDragging = true;
 	}
 	if(wasDragging) saveSettings();
@@ -330,7 +330,7 @@ bool Zone ::  loadSettings() {
 	ofParameterGroup params;
 	vector<ofParameter<glm::vec3>> points;
 	points.resize(handles.size());
-	for(unsigned int i = 0; i<handles.size(); i++) {
+	for(size_t i= 0; i<handles.size(); i++) {
 		params.add(points[i].set("point_"+ofToString(i),ofPoint()));
 		
 	}
@@ -340,7 +340,7 @@ bool Zone ::  loadSettings() {
         
         ofDeserialize( settings, params );
 
-		for(unsigned int i = 0; i<handles.size(); i++) {
+		for(size_t i= 0; i<handles.size(); i++) {
 			handles[i].set(points[i]);
 		}
 		
@@ -377,7 +377,7 @@ void Zone :: saveSettings() {
 //	vector<ofParameter<ofPoint>> points;
 //	points.resize(handles.size());
 //
-//	for(unsigned int i = 0; i<handles.size(); i++) {
+//	for(size_t i= 0; i<handles.size(); i++) {
 //		params.add(points[i].set("point_"+ofToString(i),handles[i]));
 //
 //	}

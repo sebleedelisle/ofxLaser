@@ -12,7 +12,7 @@ bool PolylineUtils::getIntersectionPoints(ofPolyline& poly, glm::vec3 p1, glm::v
 	
 	glm::vec3 lastPoint;
 	
-	for(int i = 0; i<polypoints.size(); i++ ){
+	for(size_t i = 0; i<polypoints.size(); i++ ){
 		
 		if(i>0){
 			glm::vec3 intersection;

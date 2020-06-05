@@ -203,7 +203,7 @@ void Manager:: update(){
 	
     if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!
-	for(int i = 0; i<shapes.size(); i++) {
+	for(size_t i= 0; i<shapes.size(); i++) {
 		delete shapes[i];
 	}
 	shapes.clear();
@@ -211,14 +211,14 @@ void Manager:: update(){
     // updates all the zones. If zone->update returns true, then
     // it means that the zone has changed.
 	bool updateZoneRects = false;
-	for(int i = 0; i<zones.size(); i++) {
+	for(size_t i= 0; i<zones.size(); i++) {
 		zones[i]->visible= (currentProjector==-1);
 		updateZoneRects = updateZoneRects | zones[i]->update(); // is this dangerous? Optimisation may stop the function being called. 
 	}
     
     // update all the projectors which clears the points,
     // and updates all the zone settings
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->update(updateZoneRects); // clears the points
 	}
 	zonesChanged = updateZoneRects;
@@ -236,7 +236,7 @@ void Manager::send(){
 			poly->scale(1.01,1.01);
 			poly->translate(centre);
 		}
-		for(int i = 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
+		for(size_t i= 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
 			setTargetZone(i);
 			for(ofPolyline* poly:polylines) {
 				
@@ -260,7 +260,7 @@ void Manager::send(){
 			Zone& z = *zones[j];
 			z.shapes.clear();
 		
-			for(int i = 0; i<shapes.size(); i++) {
+			for(size_t i= 0; i<shapes.size(); i++) {
 				Shape* s = shapes[i];
 				// if (zone should have shape) then
 				// TODO zone intersect shape test
@@ -304,7 +304,7 @@ void Manager::send(){
 	// So - the shapes need to be sorted in projector space but their points need to be
 	// calculated at zone space. Otherwise the perspective distortion won't look right in
 	// terms of brightness distribution.
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		
 		Projector& p = *projectors[i];
 		
@@ -354,7 +354,7 @@ void Manager:: drawUI(bool expandPreview){
 		renderPreview();
 		
 		// this renders the zones in the graphics source space
-		for(int i = 0; i<zones.size(); i++) {
+		for(size_t i= 0; i<zones.size(); i++) {
 			zones[i]->visible = showZones;
 			zones[i]->active = showZones && (currentProjector<0);
 			
@@ -390,7 +390,7 @@ void Manager:: drawUI(bool expandPreview){
 		
 		ofTranslate(guiSpacing,height+(guiSpacing*2));
 		
-		for(int i = 0; i<projectors.size(); i++) {
+		for(size_t i= 0; i<projectors.size(); i++) {
 			if((!expandPreview)&&(showPathPreviews)) {
 				ofFill();
 				ofSetColor(0);
@@ -412,7 +412,7 @@ void Manager:: drawUI(bool expandPreview){
 		// ELSE we have a currently selected projector, so draw the various UI elements
 		// for that...
 		
-        for(int i = 0; i<projectors.size(); i++) {
+        for(size_t i= 0; i<projectors.size(); i++) {
 			if(i==currentProjector) {
 				
 				ofFill();
@@ -440,7 +440,7 @@ void Manager:: drawUI(bool expandPreview){
 
 	// ofxGUI panel stuff :
 	
-	//    for(int i = 0; i<projectors.size(); i++) {
+	//    for(size_t i= 0; i<projectors.size(); i++) {
 	//		//projectors[i]->guiIsVisible = guiIsVisible;
 	//		if(guiIsVisible && projectors[i]->guiIsVisible) projectors[i]->gui->draw();
 	//	}
@@ -450,7 +450,7 @@ void Manager:: drawUI(bool expandPreview){
 	// if this is the current projector or we have 2 or fewer projectors, then render the gui
 		if(showProjectorSettings) {
 			
-			for(int i = 0; i<projectors.size(); i++) {
+			for(size_t i= 0; i<projectors.size(); i++) {
 				if ((i==currentProjector) || (projectors.size()<=2)) {
 					
 					int x = projectors[i]->gui->getPosition().x;
@@ -463,7 +463,7 @@ void Manager:: drawUI(bool expandPreview){
 			}
 			
 			if((projectors.size()>2) && (currentProjector==-1) ) {
-				for(int i = 0; i<projectors.size(); i++) {
+				for(size_t i= 0; i<projectors.size(); i++) {
 					int x = projectors[i]->gui->getPosition().x;
 					projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
 				}
@@ -477,7 +477,7 @@ void Manager:: drawUI(bool expandPreview){
 			
 			// draw all the status boxes but small
 			
-			for(int i = 0; i<projectors.size(); i++) {
+			for(size_t i= 0; i<projectors.size(); i++) {
 				//int x = projectors[i]->gui->getPosition().x;
 				projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+gui.getPosition().y, w,dacStatusBoxHeight);
 			}
@@ -487,7 +487,7 @@ void Manager:: drawUI(bool expandPreview){
 		
 		
 //		} else {
-//			for(int i = 0; i<projectors.size(); i++) {
+//			for(size_t i= 0; i<projectors.size(); i++) {
 //				int x = projectors[i]->gui->getPosition().x;
 //				int y = projectors[i]->gui->getPosition().y;
 //				int w = projectors[i]->gui->getWidth();
@@ -546,7 +546,7 @@ void Manager :: renderPreview() {
     mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
     
     // Draw the preview laser graphics, with zones overlaid
-    for(int i = 0; i<shapes.size(); i++) {
+    for(size_t i= 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
     }
 	
@@ -555,7 +555,7 @@ void Manager :: renderPreview() {
 		const vector<glm::vec3>& points = mesh.getVertices();
         std::vector<ofFloatColor>& colours = mesh.getColors();
         
-        for(int i = 0;i<points.size(); i++ ){
+        for(size_t i= 0;i<points.size(); i++ ){
  
             ofFloatColor& c = colours.at(i);
 			const glm::vec3& p = points[i];
@@ -581,7 +581,7 @@ void Manager :: renderPreview() {
     
     std::vector<ofFloatColor>& colours = mesh.getColors();
     
-    for(int i = 0; i<colours.size(); i++) {
+    for(size_t i= 0; i<colours.size(); i++) {
         colours[i].r*=0.4;
         colours[i].g*=0.4;
         colours[i].b*=0.4;
@@ -620,7 +620,7 @@ void Manager :: updateGuiPositions() {
 
 	
 
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		int x = ofGetWidth()-(guiProjectorPanelWidth+guiSpacing);
 		if(projectors.size()<=2){
 			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
@@ -718,7 +718,7 @@ void Manager::initGui(bool showExperimental) {
 	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 
 
-	for(int i = 0; i<projectors.size();i++) {
+	for(size_t i= 0; i<projectors.size();i++) {
 		gui.add(projectors[i]->armed);
 		
 	}
@@ -758,7 +758,7 @@ void Manager::initGui(bool showExperimental) {
 	//gui.loadFont("fonts/Verdana.ttf", 8, false);
 	
 	ofxGuiSetDefaultWidth(guiProjectorPanelWidth);
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->initGui(showExperimental);
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
 	}
@@ -785,25 +785,25 @@ void Manager::disarmAllProjectorsListener(){
 }
 void Manager::armAllProjectors() {
 	
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->armed = true;
 	}
 	doArmAll = false;
 }
 void Manager::disarmAllProjectors(){
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->armed = false;
 	}
 	doDisarmAll = false;
 }
 void Manager::testPatternAllProjectors(int &pattern){
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->testPattern = testPattern;
 	}
 }
 void Manager::saveSettings() {
 	gui.saveToFile("laserSettings.json");
-	for(int i = 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->saveSettings();
 	}
     laserMask.saveSettings();

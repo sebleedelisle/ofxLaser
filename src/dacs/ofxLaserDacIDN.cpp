@@ -56,7 +56,7 @@ bool DacIDN :: sendFrame(const vector<Point>& points) {
 	
 	pointsToSend.resize(points.size());
 	
-	for(int i = 0; i<points.size(); i++) {
+	for(size_t i = 0; i<points.size(); i++) {
 		IDN_point& p1 = pointsToSend[i];
 		Point p2 = points[i];
 		p1.x = ofMap(p2.x,0,800,IDN_MIN, IDN_MAX, true);
@@ -104,7 +104,7 @@ void DacIDN :: threadedFunction(){
 		lastFrameTime = ofGetElapsedTimeMicros();
 		lastFrameDuration = (((uint64_t)(pointsToSend.size() - 1)) * 1000000ull) / (uint64_t)pps;
 		// copy the points into the buffer
-		for(int i = 0; i<pointsToSend.size(); i++) {
+		for(size_t i = 0; i<pointsToSend.size(); i++) {
 			bufferedPoints[i] = pointsToSend[i];
 		}
 		newFrameIsBuffered = false;

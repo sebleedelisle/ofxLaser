@@ -63,7 +63,7 @@ void SVGLoader::threadedFunction() {
 	int loadedCount = 0;
 	
 	// load the file
-	for(int i = 0; i<files.size();i++) {
+	for(size_t i = 0; i<files.size();i++) {
 		ofFile & file = files.at(i);
 		
 
@@ -198,7 +198,7 @@ ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 		
 		ofxLaser::Graphic* returngraphic = &empty;
 		
-		if(index>=frames.size()) index = frames.size()-1;
+		if(index>=(int)frames.size()) index = frames.size()-1;
 		if(index<0) index = 0;
 		
 		if((frames.size()!=0) && (loadCount>index)) {

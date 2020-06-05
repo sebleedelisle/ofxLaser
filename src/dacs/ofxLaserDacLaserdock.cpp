@@ -56,7 +56,7 @@ bool DacLaserdock::connectToDevice(string serial) {
 	} else if(serial == "") {
 		newdevice = devices[0].release();
 	} else {
-		for(int i = 0; i<devices.size(); i++) {
+		for(size_t i = 0; i<devices.size(); i++) {
 			if(devices[i]->serial_number() == serial) {
 				newdevice = devices[i].release();
 				break;
@@ -152,7 +152,7 @@ bool DacLaserdock:: sendFrame(const vector<Point>& points){
 		
 		if(lock()) {
 			frameMode = true;
-			for(int i = 0; i<points.size(); i++) {
+			for(size_t i = 0; i<points.size(); i++) {
 				
 				const Point& p2 = points[i];
 				p1.x = ofMap(p2.x,0,800, LASERDOCK_MIN, LASERDOCK_MAX);
@@ -208,7 +208,7 @@ bool DacLaserdock::sendPoints(const vector<Point>& points) {
 	if(lock()) {
 		frameMode = false;
 
-		for(int i = 0; i<points.size(); i++) {
+		for(size_t i = 0; i<points.size(); i++) {
 			const Point& p2 = points[i];
 			p1.x = ofMap(p2.x,0,800, LASERDOCK_MIN, LASERDOCK_MAX);
 			p1.y = ofMap(p2.y,800,0, LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP in ilda specs
@@ -250,7 +250,7 @@ void DacLaserdock :: threadedFunction(){
 		// if we're out of points, let's replay the frame!
 		if(bufferedPoints.size()<samples_per_packet) {
 			if(frameMode && replayFrames) {
-				for(int i = 0; i<framePoints.size(); i++) {
+				for(size_t i = 0; i<framePoints.size(); i++) {
 					addPoint(framePoints[i]);
 				}
 				isReplaying = true;

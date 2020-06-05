@@ -34,7 +34,7 @@ int HeliosDac::OpenDevices()
 	if (result < 0)
 		return result;
 
-	libusb_set_debug(NULL, LIBUSB_LOG_LEVEL);
+	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
 
 	libusb_device** devs;
 	ssize_t cnt = libusb_get_device_list(NULL, &devs);
@@ -102,7 +102,7 @@ int HeliosDac::SetLibusbDebugLogLevel(int logLevel)
 	if (!inited)
 		return HELIOS_ERROR_NOT_INITIALIZED;
 	
-	libusb_set_debug(NULL, logLevel);
+	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
 
 	return HELIOS_SUCCESS;
 }

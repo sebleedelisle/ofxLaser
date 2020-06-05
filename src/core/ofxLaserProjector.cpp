@@ -135,7 +135,7 @@ void Projector :: initGui(bool showAdvanced) {
 	ofParameterGroup zonemutegroup;
 	zonemutegroup.setName("Mute Zones");
 	zonesMuted.resize(zones.size());
-	for(int i = 0; i<zones.size(); i++) {
+	for(size_t i = 0; i<zones.size(); i++) {
 		zonemutegroup.add(zonesMuted[i].set(zones[i]->label, false));
 	}
 	gui->add(zonemutegroup);
@@ -143,7 +143,7 @@ void Projector :: initGui(bool showAdvanced) {
     ofParameterGroup zonesologroup;
     zonesologroup.setName("Solo Zones");
     zonesSoloed.resize(zones.size());
-    for(int i = 0; i<zones.size(); i++) {
+    for(size_t i = 0; i<zones.size(); i++) {
         zonesologroup.add(zonesSoloed[i].set(zones[i]->label, false));
     }
     
@@ -151,7 +151,7 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	
     
-	for(int i = 0; i<zones.size(); i++) {
+	for(size_t i = 0; i<zones.size(); i++) {
 		
 		ofParameter<float>& leftEdge = leftEdges[i];
 		ofParameter<float>& rightEdge = rightEdges[i];
@@ -183,14 +183,14 @@ void Projector :: initGui(bool showAdvanced) {
 	
 	minimiseGui();
 	
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		zoneTransforms[i]->initGuiListeners();
 		zoneTransforms[i]->loadSettings(); 
 	}
 	
 	armed = false;
 	testPattern = 0;
-    for(int i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
+    for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
     
     initListeners();
     
@@ -275,7 +275,7 @@ void Projector::zoneMaskChanged(ofAbstractParameter& e) {
 
 void Projector::updateZoneMasks() {
 	
-	for(int i = 0; i<zoneMasks.size(); i++) {
+	for(size_t i = 0; i<zoneMasks.size(); i++) {
 		
 		ofRectangle& zoneMask = zoneMasks[i];
 		Zone& zone = *zones[i];
@@ -315,7 +315,7 @@ void Projector::renderStatusBox(float x, float y, float w, float h) {
 	//ofDrawRectangle(0,0,w,h);
 	ofTranslate(0,24);
 	const vector<ofAbstractParameter*>& displaydata = dac->getDisplayData();
-	for(int i = 0; i<displaydata.size(); i++) {
+	for(size_t i = 0; i<displaydata.size(); i++) {
 		
 		ofAbstractParameter* dataelement = displaydata[i];
 		
@@ -360,7 +360,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 	
 
 	// draw the handles for all the warp UIs
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		if(!zonesEnabled[i]) continue;
 		ZoneTransform& warp = *zoneTransforms[i];
 		warp.offset = ofPoint(x,y) + (ofPoint(outputOffset)*warpscale);
@@ -375,7 +375,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 	
 	// go through and draw blue rectangles around the warper
 	ofPoint p;
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 
 		ZoneTransform& warp = *zoneTransforms[i];
 		
@@ -448,7 +448,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 	ofPoint p;
 
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		ZoneTransform& warp = *zoneTransforms[i];
 
 		warp.setVisible(zonesEnabled[i]);
@@ -484,7 +484,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
 	
-	for(int i = 0; i<previewPathMesh.getNumVertices();i++) {
+	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
 		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 200,20),0,200));
 	}
 
@@ -526,7 +526,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 void Projector :: hideWarpGui() {
 	
 	// disable warps
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		
 		
 		ZoneTransform& warp = *zoneTransforms[i];
@@ -541,7 +541,7 @@ void Projector :: hideWarpGui() {
 }
 void Projector :: showWarpGui() {
 	
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		
 		
 		ZoneTransform& warp = *zoneTransforms[i];
@@ -579,19 +579,19 @@ void Projector::update(bool updateZones) {
 		dac->reset();
 	}
     bool soloMode = false;
-    for(int i = 0; i<zonesSoloed.size(); i++) {
+    for(size_t i = 0; i<zonesSoloed.size(); i++) {
         if(zonesSoloed[i]) {
             soloMode = true;
             break;
         }
     }
     if(soloMode) {
-        for(int i = 0; i<zonesEnabled.size(); i++ ) {
+        for(size_t i = 0; i<zonesEnabled.size(); i++ ) {
             zonesEnabled[i] = zonesSoloed[i];
         }
         
     } else {
-        for(int i = 0; i<zonesEnabled.size(); i++ ) {
+        for(size_t i = 0; i<zonesEnabled.size(); i++ ) {
             zonesEnabled[i] = !zonesMuted[i];
         }
     }
@@ -599,13 +599,13 @@ void Projector::update(bool updateZones) {
     
 	laserPoints.clear();
 	previewPathMesh.clear();
-	for(int i = 0; i<zoneTransforms.size(); i++) {
+	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		zoneTransforms[i]->update();
 	}
 	
 	// if any of the source rectangles have changed then update all the warps
 	if(updateZones) {
-		for(int i = 0; i<zoneTransforms.size(); i++) {
+		for(size_t i = 0; i<zoneTransforms.size(); i++) {
 			ZoneTransform& warp = *zoneTransforms[i];
 			warp.setSrc(zones[i]->rect);
 			warp.updateHomography();
@@ -851,7 +851,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 	vector<Point> shapepoints;
 	
 	// go through each zone
-	for(int i = 0; i<zones.size(); i++) {
+	for(size_t i = 0; i<zones.size(); i++) {
 		
 		if(!zonesEnabled[i]) continue;
 		Zone& zone = *zones[i];
@@ -1219,11 +1219,11 @@ void Projector :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool
 }
 void Projector :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
 	if(!reversed) {
-		for(int i = 0; i<points.size();i++) {
+		for(size_t i = 0; i<points.size();i++) {
 			addPoint(points[i]);
 		}
 	} else {
-		for(int i=points.size()-1;i>=0; i--) {
+		for(size_t i=points.size()-1;i>=0; i--) {
 			addPoint(points[i]);
 		}
 	}
@@ -1262,7 +1262,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			
 			// add some points to the end of the vector to allow for the offset
 			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
-			for(int i = laserPoints.size()-1; i>=0; i--) {
+			for(size_t i = laserPoints.size()-1; i>=0; i--) {
 				Point& p = laserPoints[i];
 				
 				// if we're one of the new points at the end copy the position
@@ -1292,7 +1292,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			
 			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
 			
-			for(int i = laserPoints.size()-1; i>=0; i--) {
+			for(size_t i = laserPoints.size()-1; i>=0; i--) {
 				Point& p = laserPoints[i];
 				
 				ofColor c(0,0,0);
@@ -1310,7 +1310,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 	}
 
 	
-	for(int i = 0; i<laserPoints.size(); i++) {
+	for(size_t i = 0; i<laserPoints.size(); i++) {
 		
 		ofxLaser::Point &p = laserPoints[i];
 		
@@ -1404,7 +1404,7 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 void Projector::saveSettings(){
 	gui->saveToFile(label+".json");
 	// not sure this is needed cos we save if we edit...
-//	for(int i = 0; i<zoneWarps.size(); i++) {
+//	for(size_t i = 0; i<zoneWarps.size(); i++) {
 //		zoneWarps[i]->saveSettings();
 //	}
 	

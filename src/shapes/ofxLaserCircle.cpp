@@ -51,7 +51,7 @@ void Circle::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderP
 	vector<float> unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
 	
 	
-	for(int i = 0; i<unitDistances.size(); i++) {
+	for(size_t i = 0; i<unitDistances.size(); i++) {
 		
 		ofPoint p = polyline.getPointAtLength((unitDistances[i]* length));
 		
@@ -66,7 +66,7 @@ void Circle::addPreviewToMesh(ofMesh& mesh){
 	mesh.addColor(ofColor(0));
 	mesh.addVertex(vertices.front());
 	
-	for(int i = 0; i<vertices.size(); i++) {
+	for(size_t i = 0; i<vertices.size(); i++) {
 		
 		mesh.addColor(colour);
 		mesh.addVertex(vertices[i]);

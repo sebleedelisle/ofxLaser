@@ -121,7 +121,7 @@ void ZoneTransform::draw() {
 	ofSetColor(150,150,255);
 	ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
 	
-	for(int i= 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
 		int y = i/(xDivisions+1);
 				
@@ -147,7 +147,7 @@ void ZoneTransform::draw() {
 	}
 	
 	if(selected) {
-		for(int i = 0; i<dstHandles.size(); i++) {
+		for(size_t i = 0; i<dstHandles.size(); i++) {
 			if((editSubdivisions) || (isCorner(i))) dstHandles[i].draw();
 		}
 	}
@@ -271,7 +271,7 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 	dstCVPoints.resize(srcPoints.size());
 	
 
-	for(int i = 0; i<srcPoints.size(); i++) {
+	for(size_t i= 0; i<srcPoints.size(); i++) {
 		srcCVPoints[i] = toCv(srcPoints[i]);
 	
 	}
@@ -281,7 +281,7 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 		ofLog(OF_LOG_ERROR, e.msg ); // output exception message
 	}
 		
-	for(int i = 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		dstHandles[i].set(toOf(dstCVPoints[i]));
 	//	ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
 		
@@ -427,7 +427,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	// this section of code if we click drag anywhere in the zone
 
 	
-	for(int i = 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].hitTest(mousePoint)) {
 			
 			if(!editSubdivisions && !isCorner(i)) continue;
@@ -481,7 +481,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 
 		//centreHandle.startDrag(mousePoint);
 		handleHit = true;
-		for(int i = 0; i<dstHandles.size(); i++) {
+		for(size_t i= 0; i<dstHandles.size(); i++) {
 			dstHandles[i].startDrag(mousePoint);
 		}
 
@@ -511,7 +511,7 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
 	//ofRectangle bounds(centreHandle, 0, 0);
 	int dragCount = 0;
-	for(int i = 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].updateDrag(mousePoint)) dragCount++;
 		//bounds.growToInclude(handles[i]);
 	}
@@ -539,7 +539,7 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	
 	bool wasDragging = false;
 	
-	for(int i = 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].stopDrag()) wasDragging = true;
 	}
 	
@@ -588,7 +588,7 @@ void ZoneTransform::saveSettings() {
 void ZoneTransform::serialize(ofJson&json) {
 	ofSerialize(json,params);
 	ofJson& handlesjson = json["handles"];
-	for(int i = 0; i<dstHandles.size(); i++) {
+	for(size_t i= 0; i<dstHandles.size(); i++) {
 		DragHandle& pos = dstHandles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
