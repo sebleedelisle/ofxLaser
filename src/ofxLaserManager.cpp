@@ -65,7 +65,7 @@ void Manager::addProjector(DacBase& dac) {
 		addZoneToProjector(createDefaultZone(), projectors.size()-1);
 		
 	}
-	Projector& proj = *projectors.back();
+	//Projector& proj = *projectors.back();
 
 	//proj.gui->setPosition(width+320,10);
 	
@@ -86,7 +86,7 @@ void Manager :: addZone(float x, float y, float w, float h) {
 	
 }
 
-void Manager::addZoneToProjector(int zonenum, int projnum) {
+void Manager::addZoneToProjector(unsigned int zonenum, unsigned int projnum) {
 	if(projectors.size()<=projnum) {
 		ofLog(OF_LOG_ERROR, "Invalid projector number passed to AddZoneToProjector(...)");
 		return;
@@ -256,7 +256,7 @@ void Manager::send(){
 	// into local zone space.
 	
 	if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
-		for(int j = 0; j<zones.size(); j++) {
+		for(size_t j = 0; j<zones.size(); j++) {
 			Zone& z = *zones[j];
 			z.shapes.clear();
 		
@@ -383,7 +383,7 @@ void Manager:: drawUI(bool expandPreview){
 	if(currentProjector==-1) {
 		ofPushMatrix();
 		float scale = 1 ;
-		if((smallPreviewHeight+guiSpacing)*projectors.size()>ofGetWidth()-(guiSpacing*2)) {
+		if((smallPreviewHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
 			scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(smallPreviewHeight+guiSpacing)*(float)projectors.size());
 			//ofScale(scale, scale);
 		}
@@ -413,7 +413,7 @@ void Manager:: drawUI(bool expandPreview){
 		// for that...
 		
         for(size_t i= 0; i<projectors.size(); i++) {
-			if(i==currentProjector) {
+			if((int)i==currentProjector) {
 				
 				ofFill();
 				ofSetColor(0);
@@ -451,7 +451,7 @@ void Manager:: drawUI(bool expandPreview){
 		if(showProjectorSettings) {
 			
 			for(size_t i= 0; i<projectors.size(); i++) {
-				if ((i==currentProjector) || (projectors.size()<=2)) {
+				if (((int)i==currentProjector) || (projectors.size()<=2)) {
 					
 					int x = projectors[i]->gui->getPosition().x;
 					int y = projectors[i]->gui->getPosition().y - guiSpacing - dacStatusBoxHeight;
@@ -660,11 +660,11 @@ ofxPanel& Manager ::getGui(){
 	return gui;
 }
 
-int Manager :: getProjectorPointRate(int projectornum ){
+int Manager :: getProjectorPointRate(unsigned int projectornum ){
     return projectors.at(projectornum)->getPointRate();
 }
 
-float Manager :: getProjectorFrameRate(int projectornum ){
+float Manager :: getProjectorFrameRate(unsigned int projectornum ){
 	if((projectornum>=0) && (projectornum<projectors.size())) {
     	return projectors.at(projectornum)->getFrameRate();
 	} else return 0;
@@ -679,7 +679,7 @@ void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int proj
 
 void Manager::nextProjector() {
 	currentProjector++;
-	if(currentProjector>=projectors.size()) currentProjector=-1;
+	if(currentProjector>=(int)projectors.size()) currentProjector=-1;
 	updateGuiPositions();
 	
 }
@@ -867,7 +867,7 @@ int Manager::getNumZones() {
 	return zones.size();
 }
 
-bool Manager::setTargetZone(int zone){  // only for OFX_ZONE_MANUAL
+bool Manager::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL
 	if(zone>=zones.size()) return false;
 	else if(zone<0) return false;
 	else {
@@ -881,7 +881,7 @@ bool Manager::setZoneMode(ofxLaserZoneMode newmode) {
 	return true;
 }
 
-bool Manager::isProjectorArmed(int i){
+bool Manager::isProjectorArmed(unsigned int i){
 	if((i<0) || (i>=projectors.size())){
 		return false;
 	} else {

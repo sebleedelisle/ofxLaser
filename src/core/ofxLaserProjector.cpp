@@ -630,7 +630,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     vector<Point>segmentpoints;
     
     //iterate through the points
-    for(int k = 0; k<points.size(); k++) {
+    for(size_t k = 0; k<points.size(); k++) {
         
         Point p = points[k];
 //        previewPathMesh.addVertex(p);
@@ -688,7 +688,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
     
     // go through all the points and warp them into projector space
 
-    for(int k= 0; k<segmentpoints.size(); k++) {
+    for(size_t k= 0; k<segmentpoints.size(); k++) {
         addPoint(warp.getWarpedPoint(segmentpoints[k]));
     }
     
@@ -737,7 +737,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 			nextDotIndex = -1;
 			
 			
-			for(int j = 0; j<allzoneshapepoints.size(); j++) {
+			for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
 				
 				ShapePoints& shapePoints2 = allzoneshapepoints[j];
 				if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
@@ -771,7 +771,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		
 		ofPoint currentPosition = laserHomePosition; // MUST be in projector space
 		
-		for(int j = 0; j<sortedshapepoints.size(); j++) {
+		for(size_t j = 0; j<sortedshapepoints.size(); j++) {
 			ShapePoints& shapepoints = *sortedshapepoints[j];
 			if(shapepoints.size()==0) continue;
 			
@@ -869,7 +869,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 		
 		// go through each shape in the zone
 		
-		for(int j = 0; j<zoneshapes.size(); j++)  {
+		for(size_t j = 0; j<zoneshapes.size(); j++)  {
 			
 			// get the points
 			Shape& shape = *(zoneshapes[j]);
@@ -949,7 +949,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 		
 		
 		// go through all the points and warp them into projector space
-		for(int j = 0; j<zoneshapepoints.size(); j++) {
+		for(size_t j = 0; j<zoneshapepoints.size(); j++) {
 			ShapePoints& segmentpoints = zoneshapepoints[j];
 			for(int k= 0; k<segmentpoints.size(); k++) {
 				
@@ -972,7 +972,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 		allzoneshapepoints.insert(allzoneshapepoints.end(), zoneshapepoints.begin(), zoneshapepoints.end());
 		
 		// delete all the test pattern shapes
-		for(int j = 0; j<testPatternShapes.size(); j++) {
+		for(size_t j = 0; j<testPatternShapes.size(); j++) {
 			delete testPatternShapes[j];
 		}
 		testPatternShapes.clear();
@@ -1223,7 +1223,7 @@ void Projector :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
 			addPoint(points[i]);
 		}
 	} else {
-		for(size_t i=points.size()-1;i>=0; i--) {
+		for(int i=(int)points.size()-1;i>=0; i--) {
 			addPoint(points[i]);
 		}
 	}
@@ -1262,7 +1262,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			
 			// add some points to the end of the vector to allow for the offset
 			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
-			for(size_t i = laserPoints.size()-1; i>=0; i--) {
+			for(int i = (int)laserPoints.size()-1; i>=0; i--) {
 				Point& p = laserPoints[i];
 				
 				// if we're one of the new points at the end copy the position
@@ -1292,7 +1292,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			
 			laserPoints.resize(laserPoints.size()+colourChangeIndexOffset);
 			
-			for(size_t i = laserPoints.size()-1; i>=0; i--) {
+			for(int i = (int)laserPoints.size()-1; i>=0; i--) {
 				Point& p = laserPoints[i];
 				
 				ofColor c(0,0,0);

@@ -41,7 +41,7 @@ class Line : public Shape{
 		
 		ofPoint p;
 		
-		for(int i = 0; i<unitDistances.size(); i++) {
+		for(size_t i = 0; i<unitDistances.size(); i++) {
 			
 			float unitDistance = unitDistances[i];
 			

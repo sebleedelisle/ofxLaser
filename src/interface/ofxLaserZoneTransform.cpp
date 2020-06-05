@@ -226,7 +226,7 @@ void ZoneTransform::setSrc(const ofRectangle& rect) {
 	int numpoints = xpoints*ypoints;
 	
 	// srcPoints should already have enough but let's check
-	if(srcPoints.size()!= numpoints) {
+	if((int)srcPoints.size()!= numpoints) {
 		srcPoints.resize(numpoints);
 	}
 	
@@ -450,11 +450,11 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 				corners.push_back(&bottomLeft);
 				corners.push_back(&bottomRight);
 			
-				int handleIndex;
+				int handleIndex = 0;
 				if(currentHandle == topLeft) handleIndex = 0;
-				if(currentHandle == topRight) handleIndex = 1;
-				if(currentHandle == bottomLeft) handleIndex = 2;
-				if(currentHandle == bottomRight) handleIndex =3;
+				else if(currentHandle == topRight) handleIndex = 1;
+				else if(currentHandle == bottomLeft) handleIndex = 2;
+				else if(currentHandle == bottomRight) handleIndex =3;
 				
 				int x = ((handleIndex%2)+1)%2;
 				int y = handleIndex/2;
@@ -608,7 +608,7 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	yDivisions = yDivisionsNew;
 	dstHandles.resize(numhandles);
 	
-	if(handlejson.size()>=numhandles) {
+	if((int)handlejson.size()>=numhandles) {
 		for(int i = 0; i<numhandles; i++) {
 			ofJson& point = handlejson[i];
 			dstHandles[i].x = point[0];

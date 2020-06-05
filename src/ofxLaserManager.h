@@ -56,7 +56,7 @@ namespace ofxLaser {
 		void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
 		void addZone(const ofRectangle& zoneRect);
 		
-		void addZoneToProjector(int zonenum, int projnum);
+		void addZoneToProjector(unsigned int zonenum, unsigned int projnum);
 		
 		void nextProjector();
 		void previousProjector();
@@ -74,8 +74,8 @@ namespace ofxLaser {
         void send();
         void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
         
-        int getProjectorPointRate(int projectornum = 0);
-        float getProjectorFrameRate(int projectornum); 
+        int getProjectorPointRate(unsigned int projectornum = 0);
+        float getProjectorFrameRate(unsigned int projectornum);
 
 		void armAllProjectorsListener();
 		void disarmAllProjectorsListener();
@@ -103,12 +103,12 @@ namespace ofxLaser {
 		
 		Zone& getZone(int zonenum);
 		int getNumZones(); 
-		bool setTargetZone(int zone);
+		bool setTargetZone(unsigned int zone);
 		bool setZoneMode(ofxLaserZoneMode newmode);
 		
 		// should be called before initGui
 		bool setGuideImage(string filename);
-		bool isProjectorArmed(int i); 
+		bool isProjectorArmed(unsigned int i); 
 	
 		int width, height;
 		int guiProjectorPanelWidth;
