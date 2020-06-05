@@ -61,13 +61,15 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	projectorparams.add(rotation.set("Output rotation",0,-90,90));
 
+	
+	ofParameterGroup advanced;
+	advanced.setName("Advanced");
+	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
+	advanced.add(smoothHomePosition.set("Smooth home position", true));
+	advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 35));
+	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
+
 	if(showAdvanced) {
-		ofParameterGroup advanced;
-		advanced.setName("Advanced");
-		advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
-		advanced.add(smoothHomePosition.set("Smooth home position", true));
-		advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 35));
-		advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 		projectorparams.add(advanced);
 	}
 	else speedMultiplier = 1;
