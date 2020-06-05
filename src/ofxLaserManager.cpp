@@ -267,7 +267,7 @@ void Manager::send(){
 				if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
 					bool shapeAdded = z.addShape(s);
 				} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
-					if(s->getTargetZone() == j) z.addShape(s);
+					if(s->getTargetZone() == (int)j) z.addShape(s);
 				}
 			}
 		}

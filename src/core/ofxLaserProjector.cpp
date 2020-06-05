@@ -1296,7 +1296,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 				Point& p = laserPoints[i];
 				
 				ofColor c(0,0,0);
-				if(i<laserPoints.size()-colourChangeIndexOffset) c = p.getColour();
+				if(i<(int)laserPoints.size()-colourChangeIndexOffset) c = p.getColour();
 				if(i>=colourChangeIndexOffset) {
 					p = laserPoints[i-colourChangeIndexOffset];
 				} else {
