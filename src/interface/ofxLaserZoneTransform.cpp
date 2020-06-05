@@ -10,7 +10,28 @@
 
 using namespace ofxLaser;
 
+// static property / method
+ofMesh ZoneTransform::dashedLineMesh;
 
+void ZoneTransform::drawDashedLine(glm::vec3 p1, glm::vec3 p2) {
+	dashedLineMesh.clear();
+	
+	float l = glm::length(p2-p1);
+
+	for(float p = 0; p<l; p+=4) {
+		dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
+	}
+	ofPushStyle();
+	ofNoFill();
+	ofSetColor(0,100,255);
+	ofSetLineWidth(1);
+
+	dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
+	dashedLineMesh.draw();
+	ofPopStyle();
+
+}
+				 
 
 ZoneTransform::~ZoneTransform() {
 	if(initialised) removeListeners();
@@ -103,9 +124,7 @@ void ZoneTransform::draw() {
 	for(int i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
 		int y = i/(xDivisions+1);
-		
-		
-		
+				
 		ofColor edge = ofColor(255);
 		ofColor inside  = editSubdivisions?ofColor(100,100,255):ofColor(0,0,255);
 		

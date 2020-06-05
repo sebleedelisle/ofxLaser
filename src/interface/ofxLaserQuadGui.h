@@ -60,8 +60,7 @@ class QuadGui {
 	DragHandle handles[4];
 	DragHandle centreHandle;
 	vector<DragHandle*> allHandles;
-	//vector<ofPoint> points;
-	
+
 	float width;
 	float height;
 	

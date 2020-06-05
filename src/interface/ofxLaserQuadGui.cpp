@@ -89,6 +89,7 @@ void QuadGui :: draw() {
 	glm::vec3 p2 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[2], 0.1);
     
     if(selected) {
+		
         drawDashedLine(handles[1], handles[3]);
         drawDashedLine(handles[3], handles[2]);
         drawDashedLine(handles[0], handles[1]);
@@ -114,26 +115,19 @@ void QuadGui :: draw() {
     ofPopMatrix();
 }
 void QuadGui::drawDashedLine(ofPoint p1, ofPoint p2) {
-    
-    glEnable (GL_LINE_STIPPLE);
-    
-    glLineStipple (2, 0xAAAA);  /*  first parameter set the dash length in px  */
-    glBegin(GL_LINES);
-    glVertex2f (p1.x, p1.y);
-    glVertex2f (p2.x, p2.y);
-    glEnd();
-    glDisable (GL_LINE_STIPPLE);
-    glFlush ();
-    
+	// TODO rewrite dashed line code :)
+	// ( GL_LINE_STIPPLE is deprecated)
+	
+	ofDrawLine(p1,p2);
 }
+
+
 bool QuadGui::checkDirty() {
 	if(isDirty) {
 		return true;
 	} else {
 		return false;
 	}
-	
-	
 }
 
 

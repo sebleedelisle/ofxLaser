@@ -119,20 +119,10 @@ class ZoneTransform {
 	int xDivisions;
 	int yDivisions;
 	
+	static ofMesh dashedLineMesh;
+	
 	//TODO move to utils
-	void drawDashedLine(ofPoint p1, ofPoint p2) {
-		
-		glEnable (GL_LINE_STIPPLE);
-		
-		glLineStipple (2, 0xAAAA);  /*  first parameter set the dash length in px  */
-		glBegin(GL_LINES);
-		glVertex2f (p1.x, p1.y);
-		glVertex2f (p2.x, p2.y);
-		glEnd();
-		glDisable (GL_LINE_STIPPLE);
-		glFlush ();
-		
-	}
+	static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
 	
 	
 	
