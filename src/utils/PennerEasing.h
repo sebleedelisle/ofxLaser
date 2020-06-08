@@ -103,8 +103,16 @@ public:
 //		t-=2;
 //		return c/2*(t*t + 2) + b;
 //
-		if ((t/=d/2) < 1) return c/2*t*t + b;
-		return -c/2 * ((--t)*(t-2) - 1) + b;
+		
+		t = t / d * 2;
+		if (t < 1)
+			return c / 2 * (t * t) + b;
+		else
+			return -c / 2 * ((t - 1) * (t - 3) - 1) + b;
+		
+				
+//		if ((t/=d/2) < 1) return c/2*t*t + b;
+//		return -c/2 * ((--t)*(t-2) - 1) + b;
 		
 	}
 

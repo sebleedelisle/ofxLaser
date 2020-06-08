@@ -50,7 +50,7 @@ void Projector :: initGui(bool showAdvanced) {
     
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,-4,4));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
-	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,15));
+	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,50));
 	projectorparams.add(shapePreBlank.set("Blank points before", 1,0,8));
 	projectorparams.add(shapePreOn.set("On points before", 1,0,8));
 	projectorparams.add(shapePostOn.set("On points after", 1,0,8));
@@ -66,6 +66,7 @@ void Projector :: initGui(bool showAdvanced) {
 	advanced.setName("Advanced");
 	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
+	advanced.add(sortShapes.set("Optimise shape draw order", true));
 	advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 35));
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 
@@ -717,6 +718,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 	
 	vector<ShapePoints*> sortedshapepoints;
 	
+	
 	// sort the point objects
 	if(allzoneshapepoints.size()>0) {
 		bool reversed = false;
@@ -724,46 +726,53 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		float shortestDistance = INFINITY;
 		int nextDotIndex = -1;
 
-		
-		do {
-			
-			ShapePoints& shapePoints1 = allzoneshapepoints[currentIndex];
-			
-			shapePoints1.tested = true;
-			sortedshapepoints.push_back(&shapePoints1);
-			shapePoints1.reversed = reversed;
-			
-			shortestDistance = INFINITY;
-			nextDotIndex = -1;
-			
-			
+		if(sortShapes) {
+			do {
+				
+				ShapePoints& shapePoints1 = allzoneshapepoints[currentIndex];
+				
+				shapePoints1.tested = true;
+				sortedshapepoints.push_back(&shapePoints1);
+				shapePoints1.reversed = reversed;
+				
+				shortestDistance = INFINITY;
+				nextDotIndex = -1;
+				
+				
+				for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
+					
+					ShapePoints& shapePoints2 = allzoneshapepoints[j];
+					if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
+					
+					shapePoints2.reversed = false;
+					
+					if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
+						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
+						nextDotIndex = j;
+						reversed = false;
+					}
+					
+					if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
+						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
+						nextDotIndex = j;
+						reversed = true;
+					}
+					
+					
+				}
+				
+				currentIndex = nextDotIndex;
+				
+				
+				
+			} while (currentIndex>-1);
+		} else {
 			for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
-				
-				ShapePoints& shapePoints2 = allzoneshapepoints[j];
-				if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
-				
-				shapePoints2.reversed = false;
-				
-				if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
-					shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
-					nextDotIndex = j;
-					reversed = false;
-				}
-				
-				if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
-					shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
-					nextDotIndex = j;
-					reversed = true;
-				}
-				
-				
+				sortedshapepoints.push_back(&allzoneshapepoints[j]);
 			}
 			
-			currentIndex = nextDotIndex;
-			
-			
-			
-		} while (currentIndex>-1);
+		}
+		
 
 		// go through the point objects
 		// add move between each one

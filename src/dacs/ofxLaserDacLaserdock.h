@@ -64,6 +64,7 @@ class DacLaserdock : public DacBase, ofThread{
 	vector<LaserdockSample> framePoints;
 	
 	uint32_t pps, newPPS;
+	uint32_t maxPPS; 
 	
 	bool frameMode = true; 
 	bool replayFrames = true;

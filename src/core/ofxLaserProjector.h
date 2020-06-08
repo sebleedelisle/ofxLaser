@@ -131,6 +131,7 @@ namespace ofxLaser {
 		ofParameter<float> rotation;
 		ofParameter<float>targetFramerate;
 		ofParameter<bool>syncToTargetFramerate;
+		ofParameter<bool>sortShapes;
 		
 		ofParameter<float> moveSpeed = 5;
 		ofParameter<int> shapePreBlank = 0;

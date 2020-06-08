@@ -43,6 +43,7 @@ void DacLaserdock::setup(string serial) {
 	displayData.push_back(&pointBufferDisplay);
 	
 	startThread();
+	maxPPS = 50000;
 
 }
 
@@ -79,9 +80,13 @@ bool DacLaserdock::connectToDevice(string serial) {
 	
 	connected = true;
 	
-	newPPS = pps;
-	//pps = 0;
+	device->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
 	
+	//newPPS = pps;
+	// should ensure that pps get set
+	pps = 0;
+
+	//
 //	cout << "Device Status:" << device->status() << endl;
 //	print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
 //	print_uint32("Firmware minor version", device, &LaserdockDevice::version_minor_number);
@@ -130,7 +135,7 @@ bool DacLaserdock::connectToDevice(string serial) {
 	serialNumber.set(device->serial_number());
 	ofLogNotice("DacLaserdock : connecting to : " + ofToString(serialNumber));
 	
-	device->set_dac_rate(pps);
+	//device->set_dac_rate(pps);
 	
 	return true;
 }
@@ -273,8 +278,12 @@ void DacLaserdock :: threadedFunction(){
 			samples[i] = p;
 		}
 		if(connected && (newPPS!=pps)) {
-			pps = newPPS;
-			device->set_dac_rate(pps);
+			if (newPPS>maxPPS) {
+				newPPS = maxPPS;
+			}
+			if(device->set_dac_rate(newPPS)) {
+				pps = newPPS;
+			}
 		}
 		unlock();
 
