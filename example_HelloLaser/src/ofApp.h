@@ -9,10 +9,10 @@
 
 #include "ofxGui.h"
 
-#define USE_ETHERDREAM
+//#define USE_ETHERDREAM
 //#define USE_IDN
 //#define USE_LASERDOCK
-//#define USE_HELIOS
+#define USE_HELIOS
 
 class ofApp : public ofBaseApp{
 	
@@ -42,6 +42,9 @@ public:
 #endif
 #ifdef USE_LASERDOCK
 	ofxLaser::DacLaserdock dac;
+#endif
+#ifdef USE_HELIOS
+	ofxLaser::DacHelios dac;
 #endif
 	
 	bool drawingShape = false;

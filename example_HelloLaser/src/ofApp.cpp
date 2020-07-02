@@ -21,7 +21,7 @@ void ofApp::setup(){
 	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
 	string dacIp = buffer.getText();
 	// if there's no file, then use the default IP address :
-	if(dacIp=="") dacIp ="10.0.1.120";
+	if(dacIp=="") dacIp ="10.0.1.130";
 	dac.setup(dacIp);
 #endif
 	

@@ -33,25 +33,7 @@ void DacHelios::setup(string name) {
 
 
 bool DacHelios::connectToDevice(string name) {
-	// to do - check name
-	// note - this is  a bit different from
-	// LaserDock as the name is always the same
-	// unless you change it
-	//
-	// TODO store the used devices somehow to make
-	// sure we keep track of which are being used.
-//	int numDevs = heliosDac.OpenDevices();
-//	char devicename[32];
-//	if(numDevs>0) {
-//		for(int i = 0; i<numDevs; i++) {
-//			heliosDac.GetName(i,devicename);
-//			ofLogNotice("Helios "+ofToString(i)+ " : " + devicename);
-//		}
-//		setConnected(true);
-//	} else {
-//		setConnected(false);
-//	}
-//
+
 	deviceNumber = heliosManager.connectToDevice(name);
 	if(deviceNumber<0) setConnected(false);
 	else setConnected(true);
@@ -164,7 +146,7 @@ bool DacHelios::setPointsPerSecond(uint32_t newpps) {
 
 void DacHelios :: threadedFunction(){
 	
-	const uint32_t samples_per_packet = 256;
+	const uint32_t samples_per_packet = 1024;
 
 	HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
 		

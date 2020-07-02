@@ -34,6 +34,7 @@ namespace ofxLaser {
 				char devicename[32];
 				heliosDacDevice.GetName(i, devicename);
 				string deviceNameStr(devicename);
+				ofLogNotice(ofToString(i)+ " " + deviceNameStr); 
 				if((!inUse[i]) && ((name.empty()) ||(name == deviceNameStr))) {
 					inUse[i] = true;
 					return i;
