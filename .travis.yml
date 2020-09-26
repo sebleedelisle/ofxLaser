@@ -190,7 +190,7 @@ install:
   - cd ~
   - git clone --depth=1 --branch=$OF_BRANCH https://github.com/openframeworks/openFrameworks
   - cd openFrameworks
-  - travis_wait scripts/ci/addons/install.sh
+  - travis_wait 40 scripts/ci/addons/install.sh
 
 script:
   - scripts/ci/addons/build.sh
