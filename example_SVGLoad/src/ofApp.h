@@ -1,8 +1,8 @@
 #pragma once
 
-#define USE_ETHERDREAM
+//#define USE_ETHERDREAM
 //#define USE_IDN
-//#define USE_LASERDOCK
+#define USE_LASERDOCK
 
 #include "ofMain.h"
 #include "ofxLaserManager.h"

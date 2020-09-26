@@ -111,6 +111,10 @@ namespace ofxLaser {
 		string label;
 		float smoothedFrameRate = 0; 
 		vector<Point> laserPoints;
+		vector<Point> sparePoints;
+		vector<Point> sparePoints2;
+		unsigned long frameCounter = 0; 
+		
         int numPoints;
 		ofMesh previewPathMesh;
 		

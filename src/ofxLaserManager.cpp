@@ -63,8 +63,10 @@ void Manager::addProjector(DacBase& dac) {
 	// If we have no zones set up then create a big default zone.
 	if(zones.size()==0) {
 		addZoneToProjector(createDefaultZone(), projectors.size()-1);
-		
+	} else if(zones.size()==1) {
+		addZoneToProjector(0, projectors.size()-1);
 	}
+	
 	//Projector& proj = *projectors.back();
 
 	//proj.gui->setPosition(width+320,10);

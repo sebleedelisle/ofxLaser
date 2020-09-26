@@ -26,6 +26,7 @@ void ofApp::setup(){
 #endif
 	
 	
+	
 	// if you don't want to manage your own GUI for your app you can add extra
 	// params to the laser GUI
 	laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
@@ -177,22 +178,28 @@ void ofApp :: showLaserEffect(int effectnum) {
 			
 		case 5: {
 			
-			// LASER PARTICLES
-			int numParticles = 20;
+			ofPoint p;
+			p.x+=laserWidth/2;
+			p.y+=laserHeight/2;
 			
-			for(int i = 0; i<numParticles; i++) {
-				
-				float progress =(float)i/(float)(numParticles-1);
-				
-				float xpos =left + (width*progress) ;
-				
-				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
-				ofColor c;
-				c.setHsb(progress*255, 255, 255);
-				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
-				
-			}
-			
+			laser.drawDot(p, color);
+//
+//			// LASER PARTICLES
+//			int numParticles = 20;
+//
+//			for(int i = 0; i<numParticles; i++) {
+//
+//				float progress =(float)i/(float)(numParticles-1);
+//
+//				float xpos =left + (width*progress) ;
+//
+//				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
+//				ofColor c;
+//				c.setHsb(progress*255, 255, 255);
+//				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
+//
+//			}
+//
 			break;
 			
 		}
@@ -201,7 +208,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 			// LASER PARTICLES ANIMATING
 			
 			float speed = 1;
-			for(int i = 0; i<30; i++) {
+			for(int i = 0; i<1; i++) {
 		
 				ofColor c;
 				c.setHsb(i*6,255,255);
@@ -212,7 +219,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				p.x+=laserWidth/2;
 				p.y+=laserHeight/2;
                 
-				laser.drawDot(p, c);
+				laser.drawDot(p, color);//c);
 				
 			}
 			
