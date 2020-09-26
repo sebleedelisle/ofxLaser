@@ -50,7 +50,7 @@ Installation
 
 First, pick the branch that matches your version of openFrameworks:
 
-* OF 0.11.x [master](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/master](https://github.com/sebleedelisle/ofxLaser/) 
+* OF 0.11.x [main](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/main](https://github.com/sebleedelisle/ofxLaser/) 
 * OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_9.10.1) 
 * OF 0.9.x : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
@@ -59,7 +59,7 @@ Either clone out the source code using git:
 	> cd openFrameworks/addons/
 	> git clone https://github.com/sebleedelisle/ofxLaser.git
 
-Or download the source from GitHub [here](https://github.com/sebleedelisle/ofxLaser/archive/master.zip), unzip the folder, rename it from `ofxLaser-master` to `ofxLaser` and place it in your `openFrameworks/addons` folder.
+Or download the source from GitHub [here](https://github.com/sebleedelisle/ofxLaser/archive/master.zip), unzip the folder, rename it from `ofxLaser-main` to `ofxLaser` and place it in your `openFrameworks/addons` folder.
 
 To run the examples, import them into the project generator, create a new project, and open the project file in your IDE.
 
