@@ -15,7 +15,7 @@ void ofApp::setup(){
 #if defined(USE_LASERDOCK) || defined(USE_HELIOS)
 	// NB with laser dock you can pass a serial number,
 	// with HeliosDAC you can pass a device name
-	dac.setup();
+	dac.setup("Helios 825438257");
 #else
 	// load the IP address of the Etherdream / IDN DAC
 	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
@@ -178,28 +178,22 @@ void ofApp :: showLaserEffect(int effectnum) {
 			
 		case 5: {
 			
-			ofPoint p;
-			p.x+=laserWidth/2;
-			p.y+=laserHeight/2;
+			// LASER PARTICLES
+			int numParticles = 20;
 			
-			laser.drawDot(p, color);
-//
-//			// LASER PARTICLES
-//			int numParticles = 20;
-//
-//			for(int i = 0; i<numParticles; i++) {
-//
-//				float progress =(float)i/(float)(numParticles-1);
-//
-//				float xpos =left + (width*progress) ;
-//
-//				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
-//				ofColor c;
-//				c.setHsb(progress*255, 255, 255);
-//				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
-//
-//			}
-//
+			for(int i = 0; i<numParticles; i++) {
+				
+				float progress =(float)i/(float)(numParticles-1);
+				
+				float xpos =left + (width*progress) ;
+				
+				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
+				ofColor c;
+				c.setHsb(progress*255, 255, 255);
+				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
+				
+			}
+			
 			break;
 			
 		}
@@ -208,7 +202,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 			// LASER PARTICLES ANIMATING
 			
 			float speed = 1;
-			for(int i = 0; i<1; i++) {
+			for(int i = 0; i<30; i++) {
 		
 				ofColor c;
 				c.setHsb(i*6,255,255);
@@ -219,13 +213,14 @@ void ofApp :: showLaserEffect(int effectnum) {
 				p.x+=laserWidth/2;
 				p.y+=laserHeight/2;
                 
-				laser.drawDot(p, color);//c);
+				laser.drawDot(p, c);
 				
 			}
 			
 			break;
 			
 		}
+			
 	}
 
 	// LASER POLYLINES
