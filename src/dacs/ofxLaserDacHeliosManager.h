@@ -8,38 +8,45 @@
 #pragma once
 #include "HeliosDac.h"
 #include "ofMain.h"
+#include "libusb.h"
 
 namespace ofxLaser {
 	class DacHeliosManager {
 	
-		
+		public :
 		DacHeliosManager();
 		~DacHeliosManager();
 		
-		private :
+		bool updateUsbDeviceList();
+		bool isHeliosDevice(libusb_device_descriptor& devdesc);
+		
+		HeliosDacDevice* getDacDeviceForName(string name);
+		
+		bool deleteDevice(HeliosDacDevice* device); 
+			
+		
 		
 		
 		bool initialised = false;
 		
-		HeliosDac heliosDacDevice;
+		//HeliosDac heliosDacDevice;
 		
-		public :
-
+	
 		// returns DAC id string
-        string connectToDevice(string name);
+        //string connectToDevice(string name);
 
-		bool deviceDisconnected(string devId);
+		//bool deviceDisconnected(string devId);
 		
 
-		bool doesIdExist(string devId);
-		int getDeviceNumForId(string devId);
+		//bool doesIdExist(string devId);
+		//int getDeviceNumForId(string devId);
 
 		
-        int getStatus(string devId);
+        //int getStatus(string devId);
 
-        int setShutter(string devId, bool shutterActive);
+        //int setShutter(string devId, bool shutterActive);
         
-        int writeFrame(string devId, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
+        //int writeFrame(string devId, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
 
 		DacHeliosManager(const DacHeliosManager&) = delete;
 		DacHeliosManager& operator=(const DacHeliosManager &) = delete;
@@ -53,8 +60,10 @@ namespace ofxLaser {
 		int numDevices = 0;
 		//vector<bool> inUse;
 		
-		map<string, int> deviceNumById;
-		map<string, bool> inUse;
+		//map<string, HeliosDacDevice*> deviceByName;
+		vector<HeliosDacDevice*> availableDevices;
+		vector<HeliosDacDevice*> usedDevices;
+		//map<string, bool> inUse;
 	};
 	
 };

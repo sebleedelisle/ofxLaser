@@ -71,7 +71,8 @@ class DacHelios : public DacBase, ofThread{
 	
 	DacHeliosManager &heliosManager;
 	//int deviceNumber;
-	string deviceId = ""; 
+	string deviceId = "";
+	HeliosDacDevice* dacDevice = nullptr; 
 	
 	
 };

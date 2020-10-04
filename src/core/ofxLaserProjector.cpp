@@ -29,6 +29,16 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) {
 	
 };
 
+Projector::~Projector() {
+	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
+	pps.removeListener(this, &Projector::ppsChanged);
+	armed.removeListener(this, &ofxLaser::Projector::setArmed);
+	
+	delete gui;
+	
+	
+	
+}
 void Projector :: initGui(bool showAdvanced) {
 	
 	gui = new ofxPanel();
@@ -224,12 +234,6 @@ void Projector :: minimiseGui() {
 	}
 }
 
-Projector::~Projector() {
-	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
-	pps.removeListener(this, &Projector::ppsChanged);
-	delete gui; 
-	
-}
 
 void Projector:: ppsChanged(int& e){
 	ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));

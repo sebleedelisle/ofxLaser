@@ -17,6 +17,7 @@ class LaserdockDeviceManagerPrivate {
 
 public:
     LaserdockDeviceManagerPrivate(LaserdockDeviceManager *q_ptr);
+	~LaserdockDeviceManagerPrivate();
 
     bool initialize_usb();
     bool is_laserdock(libusb_device * device) const;

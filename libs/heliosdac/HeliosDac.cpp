@@ -10,294 +10,301 @@ Standard: C++14
 git repo: https://github.com/Grix/helios_dac.git
 
 See header HeliosDac.h for function and usage documentation
+ 
+RIPPED APART BY Seb Lee-Delisle
+with apologies to Gitle.
+ 
 */
 
 
 #include "HeliosDac.h"
-
-HeliosDac::HeliosDac()
-{
-	inited = false;
-}
-
-HeliosDac::~HeliosDac()
-{
-	CloseDevices();
-}
-
-int HeliosDac::OpenDevices()
-{
-	libusb_device** devs;
-	
-	if (inited) {
-		
-		ssize_t cnt = libusb_get_device_list(NULL, &devs);
-		unsigned int newdevnum = 0;
-		
-		for (int i = 0; i < cnt; i++)
-		{
-			struct libusb_device_descriptor devDesc;
-			int result = libusb_get_device_descriptor(devs[i], &devDesc);
-			if (result < 0)
-				continue;
-
-			if ((devDesc.idProduct != HELIOS_PID) || (devDesc.idVendor != HELIOS_VID))
-				continue;
-			newdevnum++;
-			//libusb_device_handle* devHandle;
-			//result = libusb_open(devs[i], &devHandle);
-			
-		}
-		
-		libusb_free_device_list(devs, 1);
-		if(newdevnum!=deviceList.size()) {
-			CloseDevices();
-		} else {
-			return deviceList.size();
-		}
-	}
-	
-	int result = libusb_init(NULL);
-	if (result < 0)
-		return result;
-
-	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
-
-	ssize_t cnt = libusb_get_device_list(NULL, &devs);
-	if (cnt < 0)
-		return (int)cnt;
-
-	std::lock_guard<std::mutex> lock(threadLock);
-
-	unsigned int devNum = 0;
-	for (int i = 0; i < cnt; i++)
-	{
-		struct libusb_device_descriptor devDesc;
-		int result = libusb_get_device_descriptor(devs[i], &devDesc);
-		if (result < 0)
-			continue;
-
-		if ((devDesc.idProduct != HELIOS_PID) || (devDesc.idVendor != HELIOS_VID))
-			continue;
-
-		libusb_device_handle* devHandle;
-		result = libusb_open(devs[i], &devHandle);
-		if (result < 0)
-			continue;
-
-		result = libusb_claim_interface(devHandle, 0);
-		if (result < 0)
-			continue;
-
-		result = libusb_set_interface_alt_setting(devHandle, 0, 1);
-		if (result < 0)
-			continue;
-
-		//successfully opened, add to device list
-		//deviceList.push_back(std::make_unique<HeliosDacDevice>(devHandle));
-		deviceList.push_back(std::unique_ptr<HeliosDacDevice>(new HeliosDacDevice(devHandle)));
-		
-
-		devNum++;
-	}
-
-	libusb_free_device_list(devs, 1);
-
-	if (devNum > 0)
-		inited = true;
-
-	return devNum;
-}
-
-int HeliosDac::CloseDevices()
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-	
-	std::lock_guard<std::mutex> lock(threadLock);
-	inited = false;
-	deviceList.clear(); //various destructors will clean all devices
-
-	libusb_exit(NULL);
-
-	return HELIOS_SUCCESS;
-}
-
-int HeliosDac::SetLibusbDebugLogLevel(int logLevel)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-	
-	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
-
-	return HELIOS_SUCCESS;
-}
-
-int HeliosDac::WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	if (points == NULL)
-		return HELIOS_ERROR_NULL_POINTS;
-
-	if (numOfPoints > HELIOS_MAX_POINTS)
-		return HELIOS_ERROR_TOO_MANY_POINTS;
-
-	if (pps > HELIOS_MAX_RATE)
-		return HELIOS_ERROR_PPS_TOO_HIGH;
-
-	if (pps < HELIOS_MIN_RATE)
-		return HELIOS_ERROR_PPS_TOO_LOW;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL; 
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->SendFrame(pps, flags, points, numOfPoints);
-}
-
-int HeliosDac::GetStatus(unsigned int devNum)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->GetStatus();
-}
-
-int HeliosDac::GetFirmwareVersion(unsigned int devNum)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->GetFirmwareVersion();
-}
-
-int HeliosDac::GetName(unsigned int devNum, char* name)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	char dacName[32];
-	if (dev->GetName(dacName) < 0)
-	{
-		// The device didn't return a name so build a generic name
-		memcpy(name, "Helios ", 8);
-		name[7] = (char)((int)(devNum >= 10) + 48);
-		name[8] = (char)((int)(devNum % 10) + 48);
-		name[9] = '\0';
-	}
-	else
-	{
-		memcpy(name, dacName, 32);
-	}
-	return HELIOS_SUCCESS;
-}
-
-int HeliosDac::SetName(unsigned int devNum, char* name)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->SetName(name);
-}
-
-int HeliosDac::Stop(unsigned int devNum)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->Stop();
-}
-
-int HeliosDac::SetShutter(unsigned int devNum, bool level)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->SetShutter(level);
-}
-
-int HeliosDac::EraseFirmware(unsigned int devNum)
-{
-	if (!inited)
-		return HELIOS_ERROR_NOT_INITIALIZED;
-
-	std::unique_lock<std::mutex> lock(threadLock);
-	HeliosDacDevice* dev = NULL;
-	if (devNum < deviceList.size())
-		dev = deviceList[devNum].get();
-	lock.unlock();
-	if (dev == NULL)
-		return HELIOS_ERROR_INVALID_DEVNUM;
-
-	return dev->EraseFirmware();
-}
-
+//
+//HeliosDac::HeliosDac()
+//{
+//	inited = false;
+//}
+//
+//HeliosDac::~HeliosDac()
+//{
+//	CloseDevices();
+//}
+//
+//int HeliosDac::OpenDevices()
+//{
+//	libusb_device** devs;
+//	
+//	if (inited) {
+//		
+//		ssize_t cnt = libusb_get_device_list(NULL, &devs);
+//		unsigned int newdevnum = 0;
+//		
+//		for (int i = 0; i < cnt; i++)
+//		{
+//			struct libusb_device_descriptor devDesc;
+//			int result = libusb_get_device_descriptor(devs[i], &devDesc);
+//			if (result < 0)
+//				continue;
+//
+//			if ((devDesc.idProduct != HELIOS_PID) || (devDesc.idVendor != HELIOS_VID))
+//				continue;
+//			newdevnum++;
+//			//libusb_device_handle* devHandle;
+//			//result = libusb_open(devs[i], &devHandle);
+//			
+//		}
+//		
+//		libusb_free_device_list(devs, 1);
+//		if(newdevnum!=deviceList.size()) {
+//			CloseDevices();
+//		} else {
+//			return deviceList.size();
+//		}
+//	}
+//	
+//	int result = libusb_init(NULL);
+//	if (result < 0)
+//		return result;
+//
+//	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
+//
+//	ssize_t cnt = libusb_get_device_list(NULL, &devs);
+//	if (cnt < 0)
+//		return (int)cnt;
+//
+//	//std::lock_guard<std::mutex> lock(threadLock);
+//
+//	unsigned int devNum = 0;
+//	for (int i = 0; i < cnt; i++)
+//	{
+//		struct libusb_device_descriptor devDesc;
+//		int result = libusb_get_device_descriptor(devs[i], &devDesc);
+//		if (result < 0)
+//			continue;
+//
+//		if ((devDesc.idProduct != HELIOS_PID) || (devDesc.idVendor != HELIOS_VID))
+//			continue;
+//
+//		libusb_device_handle* devHandle;
+//		result = libusb_open(devs[i], &devHandle);
+//		if (result < 0)
+//			continue;
+//
+//		result = libusb_claim_interface(devHandle, 0);
+//		if (result < 0)
+//			continue;
+//
+//		result = libusb_set_interface_alt_setting(devHandle, 0, 1);
+//		if (result < 0)
+//			continue;
+//
+//		//successfully opened, add to device list
+//		//deviceList.push_back(std::make_unique<HeliosDacDevice>(devHandle));
+//		deviceList.push_back(std::unique_ptr<HeliosDacDevice>(new HeliosDacDevice(devHandle)));
+//		
+//
+//		devNum++;
+//	}
+//
+//	libusb_free_device_list(devs, 1);
+//
+//	if (devNum > 0)
+//		inited = true;
+//
+//	return devNum;
+//}
+//
+//int HeliosDac::CloseDevices()
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//	
+//	//std::lock_guard<std::mutex> lock(threadLock);
+//	inited = false;
+//	deviceList.clear(); //various destructors will clean all devices
+//
+//	libusb_exit(NULL);
+//
+//	return HELIOS_SUCCESS;
+//}
+//
+//int HeliosDac::SetLibusbDebugLogLevel(int logLevel)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//	
+//	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
+//
+//	return HELIOS_SUCCESS;
+//}
+//
+//int HeliosDac::WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	if (points == NULL)
+//		return HELIOS_ERROR_NULL_POINTS;
+//
+//	if (numOfPoints > HELIOS_MAX_POINTS)
+//		return HELIOS_ERROR_TOO_MANY_POINTS;
+//
+//	if (pps > HELIOS_MAX_RATE)
+//		return HELIOS_ERROR_PPS_TOO_HIGH;
+//
+//	if (pps < HELIOS_MIN_RATE)
+//		return HELIOS_ERROR_PPS_TOO_LOW;
+//
+//	
+//	HeliosDacDevice* dev = NULL; 
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->SendFrame(pps, flags, points, numOfPoints);
+//}
+//
+//int HeliosDac::GetStatus(unsigned int devNum)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->GetStatus();
+//}
+//
+//int HeliosDac::GetFirmwareVersion(unsigned int devNum)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->GetFirmwareVersion();
+//}
+//
+//int HeliosDac::GetName(unsigned int devNum, char* name)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	char dacName[32];
+//	if (dev->GetName(dacName) < 0)
+//	{
+//		// The device didn't return a name so build a generic name
+//		memcpy(name, "Helios ", 8);
+//		name[7] = (char)((int)(devNum >= 10) + 48);
+//		name[8] = (char)((int)(devNum % 10) + 48);
+//		name[9] = '\0';
+//	}
+//	else
+//	{
+//		memcpy(name, dacName, 32);
+//	}
+//	return HELIOS_SUCCESS;
+//}
+//
+//int HeliosDac::SetName(unsigned int devNum, char* name)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->SetName(name);
+//}
+//
+//int HeliosDac::Stop(unsigned int devNum)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->Stop();
+//}
+//
+//int HeliosDac::SetShutter(unsigned int devNum, bool level)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->SetShutter(level);
+//}
+//
+//int HeliosDac::EraseFirmware(unsigned int devNum)
+//{
+//	if (!inited)
+//		return HELIOS_ERROR_NOT_INITIALIZED;
+//
+//	
+//	HeliosDacDevice* dev = NULL;
+//	if (devNum < deviceList.size())
+//		dev = deviceList[devNum].get();
+//	
+//	if (dev == NULL)
+//		return HELIOS_ERROR_INVALID_DEVNUM;
+//
+//	return dev->EraseFirmware();
+//}
+//
 
 /// -----------------------------------------------------------------------
 /// HELIOSDACDEVICE START (one instance for each connected DAC)
 /// -----------------------------------------------------------------------
 
-HeliosDac::HeliosDacDevice::HeliosDacDevice(libusb_device_handle* handle)
+HeliosDacDevice::HeliosDacDevice(libusb_device_handle* handle)
 {
+	
+	ofLogNotice("HeliosDacDevice constructor");
+	
 	closed = true;
 	usbHandle = handle;
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	std::lock_guard<std::mutex>lock(frameLock);
+	//std::lock_guard<std::mutex>lock(frameLock);
 
 	int actualLength = 0;
 
@@ -347,14 +354,29 @@ HeliosDac::HeliosDacDevice::HeliosDacDevice(libusb_device_handle* handle)
 	frameBuffer = new std::uint8_t[HELIOS_MAX_POINTS * 7 + 5];
 
 	closed = false;
+	
+	nameStr = GetName(); 
 
-	std::thread frameHandlerThread(&HeliosDac::HeliosDacDevice::FrameHandler, this);
-	frameHandlerThread.detach();
+
+}
+
+HeliosDacDevice::~HeliosDacDevice()
+{
+	ofLogNotice("HeliosDacDevice destructor");
+	SetClosed();
+	
+	delete frameBuffer;
+}
+
+void HeliosDacDevice::SetClosed(){
+	if(closed) return;
+	libusb_close(usbHandle);
+	closed = true;
 }
 
 //sends a raw frame buffer (implemented as bulk transfer) to a dac device
 //returns 1 if success
-int HeliosDac::HeliosDacDevice::SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints)
+int HeliosDacDevice::SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints)
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
@@ -408,7 +430,7 @@ int HeliosDac::HeliosDacDevice::SendFrame(unsigned int pps, std::uint8_t flags, 
 }
 
 //sends frame to DAC
-int HeliosDac::HeliosDacDevice::DoFrame()
+int HeliosDacDevice::DoFrame()
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
@@ -424,26 +446,10 @@ int HeliosDac::HeliosDacDevice::DoFrame()
 
 //continually running thread, when a frame is ready, it is sent to the DAC
 //only used if HELIOS_FLAGS_DONT_BLOCK is used with writeframe
-void HeliosDac::HeliosDacDevice::FrameHandler()
-{ 
-	while (!closed)
-	{
-		//wait until frame is ready to be sent
-		while ((!frameReady) && (!closed))
-			std::this_thread::sleep_for(std::chrono::microseconds(100));
-
-		if (closed)
-			return;
-
-		DoFrame();
-
-		frameReady = false;
-	}
-}
 
 
 //Gets firmware version of DAC
-int HeliosDac::HeliosDacDevice::GetFirmwareVersion()
+int HeliosDacDevice::GetFirmwareVersion()
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
@@ -451,8 +457,8 @@ int HeliosDac::HeliosDacDevice::GetFirmwareVersion()
 	return firmwareVersion;
 }
 
-//Gets firmware version of DAC
-int HeliosDac::HeliosDacDevice::GetName(char* dacName)
+//Gets name of DAC
+int HeliosDacDevice::GetName(char* dacName)
 {
 	if (closed)
 	{
@@ -461,8 +467,7 @@ int HeliosDac::HeliosDacDevice::GetName(char* dacName)
 	
 	int errorCode;
 
-	std::lock_guard<std::mutex> lock(frameLock);
-
+	
 	for (int i = 0; (i < 2); i++) //retry command if necessary
 	{
 		int actualLength = 0;
@@ -500,16 +505,30 @@ int HeliosDac::HeliosDacDevice::GetName(char* dacName)
 	return errorCode;
 }
 
+string HeliosDacDevice :: GetName() {
+	char dacName[32];
+	
+	int result = GetName(dacName);
+	
+	if(result==HELIOS_SUCCESS) {
+		string deviceNameStr(dacName);
+		return deviceNameStr;
+	} else {
+		return "";
+	}
+
+}
+
+
 //Gets status of DAC, 1 means DAC is ready to receive frame, 0 means it's not
-int HeliosDac::HeliosDacDevice::GetStatus()
+int HeliosDacDevice::GetStatus()
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
 
 	int errorCode;
 
-	std::lock_guard<std::mutex> lock(frameLock);
-
+	
 	int actualLength = 0;
 	std::uint8_t ctrlBuffer[2] = { 0x03, 0 };
 	if (SendControl(ctrlBuffer, 2) == HELIOS_SUCCESS)
@@ -533,6 +552,9 @@ int HeliosDac::HeliosDacDevice::GetStatus()
 		else
 		{
 			errorCode = HELIOS_ERROR_LIBUSB_BASE + transferResult;
+			if(transferResult == LIBUSB_ERROR_NO_DEVICE) {
+				closed = true;
+			}
 		}
 	}
 	else
@@ -544,13 +566,12 @@ int HeliosDac::HeliosDacDevice::GetStatus()
 }
 
 //Set shutter level of DAC
-int HeliosDac::HeliosDacDevice::SetShutter(bool level)
+int HeliosDacDevice::SetShutter(bool level)
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
 
-	std::lock_guard<std::mutex> lock(frameLock);
-
+	
 	std::uint8_t txBuffer[2] = { 0x02, level };
 	if (SendControl(txBuffer, 2) == HELIOS_SUCCESS)
 		return HELIOS_SUCCESS;
@@ -559,12 +580,11 @@ int HeliosDac::HeliosDacDevice::SetShutter(bool level)
 }
 
 //Stops output of DAC
-int HeliosDac::HeliosDacDevice::Stop()
+int HeliosDacDevice::Stop()
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
 
-	std::lock_guard<std::mutex> lock(frameLock);
 
 	std::uint8_t txBuffer[2] = { 0x01, 0 };
 	if (SendControl(txBuffer, 2) == HELIOS_SUCCESS)
@@ -577,13 +597,12 @@ int HeliosDac::HeliosDacDevice::Stop()
 }
 
 //Sets persistent name of DAC
-int HeliosDac::HeliosDacDevice::SetName(char* name)
+int HeliosDacDevice::SetName(char* name)
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
 
-	std::lock_guard<std::mutex> lock(frameLock);
-
+	
 	std::uint8_t txBuffer[32] = { 0x06 };
 	memcpy(&txBuffer[1], name, 30);
 	txBuffer[31] = '\0';
@@ -594,12 +613,10 @@ int HeliosDac::HeliosDacDevice::SetName(char* name)
 }
 
 //Erases the firmware of the DAC, allowing it to be updated
-int HeliosDac::HeliosDacDevice::EraseFirmware()
+int HeliosDacDevice::EraseFirmware()
 {
 	if (closed)
 		return HELIOS_ERROR_DEVICE_CLOSED;
-
-	std::lock_guard<std::mutex> lock(frameLock);
 
 	std::uint8_t txBuffer[2] = { 0xDE, 0 };
 	if (SendControl(txBuffer, 2) == HELIOS_SUCCESS)
@@ -613,7 +630,7 @@ int HeliosDac::HeliosDacDevice::EraseFirmware()
 
 //sends a raw control signal (implemented as interrupt transfer) to a dac device
 //returns 1 if successful
-int HeliosDac::HeliosDacDevice::SendControl(std::uint8_t* bufferAddress, unsigned int length)
+int HeliosDacDevice::SendControl(std::uint8_t* bufferAddress, unsigned int length)
 {
 	if (bufferAddress == NULL)
 		return HELIOS_ERROR_DEVICE_NULL_BUFFER;
@@ -624,17 +641,11 @@ int HeliosDac::HeliosDacDevice::SendControl(std::uint8_t* bufferAddress, unsigne
 	int actualLength = 0;
 	int transferResult = libusb_interrupt_transfer(usbHandle, EP_INT_OUT, bufferAddress, length, &actualLength, 16);
 
-	if (transferResult == LIBUSB_SUCCESS)
+	if (transferResult == LIBUSB_SUCCESS) {
 		return HELIOS_SUCCESS;
-	else
+	} else if(transferResult == LIBUSB_ERROR_NO_DEVICE) {
+		closed = true;
+	} else {
 		return HELIOS_ERROR_LIBUSB_BASE + transferResult;
-}
-
-HeliosDac::HeliosDacDevice::~HeliosDacDevice()
-{
-	closed = true;
-	std::lock_guard<std::mutex>lock(frameLock); //wait until all threads have closed
-
-	libusb_close(usbHandle);
-	delete frameBuffer;
+	}
 }

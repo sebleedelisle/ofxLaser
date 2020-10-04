@@ -107,97 +107,109 @@ typedef struct
 	std::uint8_t i;	//8 bit (from 0 to 0xFF)
 } HeliosPoint;
 
-class HeliosDac
+
+
+class HeliosDacDevice //individual dac, interal use
 {
 public:
 
-	HeliosDac();
-	~HeliosDac();
+	HeliosDacDevice(libusb_device_handle*);
+	~HeliosDacDevice();
+	int SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
+	int GetStatus();
+	int GetFirmwareVersion();
+	int GetName(char* name);
+	string GetName();
+	int SetName(char* name);
+	int SetShutter(bool level);
+	int Stop();
+	int EraseFirmware();
+	bool isClosed() { return closed; };
+	void SetClosed();
 
-	//unless otherwise specified, functions return HELIOS_SUCCESS if OK, and HELIOS_ERROR if something went wrong.
-
-	//initializes drivers, opens connection to all devices.
-	//Returns number of available devices.
-	//NB: To re-scan for newly connected DACs after this function has once been called before, you must first call CloseDevices()
-	int OpenDevices();
-
-	//closes and frees all devices
-	int CloseDevices();
-	
-	//sets debug log level in libusb
-	int SetLibusbDebugLogLevel(int logLevel);
-
-	//writes and outputs a frame to the speficied dac
-	//devNum: dac number (0 to n where n+1 is the return value from OpenDevices() )
-	//pps: rate of output in points per second
-	//flags: (default is 0)
-	//	Bit 0 (LSB) = if 1, start output immediately, instead of waiting for current frame (if there is one) to finish playing
-	//	Bit 1 = if 1, play frame only once, instead of repeating until another frame is written
-	//  Bit 2 = if 1, don't let WriteFrame() block execution while waiting for the transfer to finish 
-	//			(NB: then the function might return 1 even if it fails)
-	//	Bit 3-7 = reserved
-	//points: pointer to point data. See point structure declaration earlier in this document
-	//numOfPoints: number of points in the frame
-	int WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
-
-	//Gets status of DAC, 1 means DAC is ready to receive frame, 0 means it is not
-	int GetStatus(unsigned int devNum);
-
-	//Returns firmware version of DAC
-	int GetFirmwareVersion(unsigned int devNum);
-
-	//Gets name of DAC (populates name with max 32 characters)
-	int GetName(unsigned int devNum, char* name);
-
-	//Sets name of DAC (name must be max 31 characters incl. null terminator)
-	int SetName(unsigned int devNum, char* name);
-
-	//Stops output of DAC until new frame is written (NB: blocks for 100ms)
-	int Stop(unsigned int devNum);
-
-	//Sets shutter level of DAC
-	int SetShutter(unsigned int devNum, bool level);
-
-	//Erase the firmware of the DAC, allowing it to be updated by accessing the SAM-BA bootloader
-	int EraseFirmware(unsigned int devNum);
+	string nameStr = "";
 
 private:
 
-	class HeliosDacDevice //individual dac, interal use
-	{
-	public:
+	int DoFrame();
+	
+	int SendControl(std::uint8_t* buffer, unsigned int bufferSize);
 
-		HeliosDacDevice(libusb_device_handle*);
-		~HeliosDacDevice();
-		int SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
-		int GetStatus();
-		int GetFirmwareVersion();
-		int GetName(char* name);
-		int SetName(char* name);
-		int SetShutter(bool level);
-		int Stop();
-		int EraseFirmware();
+	struct libusb_transfer* interruptTransfer = NULL;
+	struct libusb_device_handle* usbHandle;
 
-	private:
+	bool frameReady = false;
+	int firmwareVersion = 0;
+	char name[32];
+	bool closed = true;
+	std::uint8_t* frameBuffer;
+	unsigned int frameBufferSize;
+	int frameResult = -1;
 
-		int DoFrame();
-		void FrameHandler();
-		int SendControl(std::uint8_t* buffer, unsigned int bufferSize);
-
-		struct libusb_transfer* interruptTransfer = NULL;
-		struct libusb_device_handle* usbHandle;
-		std::mutex frameLock;
-		bool frameReady = false;
-		int firmwareVersion = 0;
-		char name[32];
-		bool closed = true;
-		std::uint8_t* frameBuffer;
-		unsigned int frameBufferSize;
-		int frameResult = -1;
-
-	};
-
-	std::vector<std::unique_ptr<HeliosDacDevice>> deviceList;
-	std::mutex threadLock;
-	bool inited = false;
 };
+
+
+//
+//class HeliosDac
+//{
+//public:
+//
+//	HeliosDac();
+//	~HeliosDac();
+//
+//	//unless otherwise specified, functions return HELIOS_SUCCESS if OK, and HELIOS_ERROR if something went wrong.
+//
+//	//initializes drivers, opens connection to all devices.
+//	//Returns number of available devices.
+//	//NB: To re-scan for newly connected DACs after this function has once been called before, you must first call CloseDevices()
+//	int OpenDevices();
+//
+//	//closes and frees all devices
+//	int CloseDevices();
+//	
+//	//sets debug log level in libusb
+//	int SetLibusbDebugLogLevel(int logLevel);
+//
+//	//writes and outputs a frame to the speficied dac
+//	//devNum: dac number (0 to n where n+1 is the return value from OpenDevices() )
+//	//pps: rate of output in points per second
+//	//flags: (default is 0)
+//	//	Bit 0 (LSB) = if 1, start output immediately, instead of waiting for current frame (if there is one) to finish playing
+//	//	Bit 1 = if 1, play frame only once, instead of repeating until another frame is written
+//	//  Bit 2 = if 1, don't let WriteFrame() block execution while waiting for the transfer to finish 
+//	//			(NB: then the function might return 1 even if it fails)
+//	//	Bit 3-7 = reserved
+//	//points: pointer to point data. See point structure declaration earlier in this document
+//	//numOfPoints: number of points in the frame
+//	int WriteFrame(unsigned int devNum, unsigned int pps, std::uint8_t flags, HeliosPoint* points, unsigned int numOfPoints);
+//
+//	//Gets status of DAC, 1 means DAC is ready to receive frame, 0 means it is not
+//	int GetStatus(unsigned int devNum);
+//
+//	//Returns firmware version of DAC
+//	int GetFirmwareVersion(unsigned int devNum);
+//
+//	//Gets name of DAC (populates name with max 32 characters)
+//	int GetName(unsigned int devNum, char* name);
+//
+//	//Sets name of DAC (name must be max 31 characters incl. null terminator)
+//	int SetName(unsigned int devNum, char* name);
+//
+//	//Stops output of DAC until new frame is written (NB: blocks for 100ms)
+//	int Stop(unsigned int devNum);
+//
+//	//Sets shutter level of DAC
+//	int SetShutter(unsigned int devNum, bool level);
+//
+//	//Erase the firmware of the DAC, allowing it to be updated by accessing the SAM-BA bootloader
+//	int EraseFirmware(unsigned int devNum);
+//
+//private:
+//
+//
+//	std::vector<std::unique_ptr<HeliosDacDevice>> deviceList;
+//
+//	bool inited = false;
+//};
+//
+//

@@ -54,7 +54,9 @@ LaserdockDeviceManager::~LaserdockDeviceManager() {
 LaserdockDeviceManagerPrivate::LaserdockDeviceManagerPrivate(LaserdockDeviceManager *q_ptr) : q(q_ptr) {
     this->initialize_usb();
 }
-
+LaserdockDeviceManagerPrivate::~LaserdockDeviceManagerPrivate() {
+	libusb_exit(NULL);
+}
 bool LaserdockDeviceManagerPrivate::initialize_usb() {
     int rc;
     rc = libusb_init(&m_libusb_ctx);
