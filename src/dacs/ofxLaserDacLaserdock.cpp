@@ -82,7 +82,7 @@ bool DacLaserdock::connectToDevice(string serial) {
 	
 	device->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
 	
-	//newPPS = pps;
+	newPPS = maxPPS;
 	// should ensure that pps get set
 	pps = 0;
 
@@ -236,6 +236,15 @@ bool DacLaserdock::setPointsPerSecond(uint32_t newpps) {
 	
 };
 
+
+void DacLaserdock :: reset() {
+    if(lock()) {
+        resetFlag = true;
+        unlock();
+    }
+}
+
+
 void DacLaserdock :: threadedFunction(){
 	
 	const uint32_t samples_per_packet = 64;
@@ -252,6 +261,10 @@ void DacLaserdock :: threadedFunction(){
 		
 		while(!lock()){};
 
+        if(resetFlag) {
+            // TODO - do something
+        }
+        
 		// if we're out of points, let's replay the frame!
 		if(bufferedPoints.size()<samples_per_packet) {
 			if(frameMode && replayFrames) {
@@ -285,9 +298,14 @@ void DacLaserdock :: threadedFunction(){
 				pps = newPPS;
 			}
 		}
+        
+        // if resetFlag and connected then disconnect
 		unlock();
 
 		if(connected) {
+            
+            
+            
 			if(!device->send_samples(samples,samples_per_packet)){
 				ofLog(OF_LOG_NOTICE, "send_samples failed");
 				setConnected(false);
@@ -302,6 +320,7 @@ void DacLaserdock :: threadedFunction(){
 					// wait half a second?
 					sleep(500);
 				} else {
+                    resetFlag = false;
 					unlock();
 				}
 			};

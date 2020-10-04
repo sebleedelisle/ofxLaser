@@ -27,16 +27,42 @@ HeliosDac::~HeliosDac()
 
 int HeliosDac::OpenDevices()
 {
-	if (inited)
-		return deviceList.size();
+	libusb_device** devs;
+	
+	if (inited) {
+		
+		ssize_t cnt = libusb_get_device_list(NULL, &devs);
+		unsigned int newdevnum = 0;
+		
+		for (int i = 0; i < cnt; i++)
+		{
+			struct libusb_device_descriptor devDesc;
+			int result = libusb_get_device_descriptor(devs[i], &devDesc);
+			if (result < 0)
+				continue;
 
+			if ((devDesc.idProduct != HELIOS_PID) || (devDesc.idVendor != HELIOS_VID))
+				continue;
+			newdevnum++;
+			//libusb_device_handle* devHandle;
+			//result = libusb_open(devs[i], &devHandle);
+			
+		}
+		
+		libusb_free_device_list(devs, 1);
+		if(newdevnum!=deviceList.size()) {
+			CloseDevices();
+		} else {
+			return deviceList.size();
+		}
+	}
+	
 	int result = libusb_init(NULL);
 	if (result < 0)
 		return result;
 
 	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
 
-	libusb_device** devs;
 	ssize_t cnt = libusb_get_device_list(NULL, &devs);
 	if (cnt < 0)
 		return (int)cnt;

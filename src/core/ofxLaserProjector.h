@@ -45,6 +45,9 @@ namespace ofxLaser {
 		
 		void update(bool updateZones);
 		void send(ofPixels* pixels = NULL, float masterIntensity = 1);
+        
+        void setArmed(bool& armed); 
+        
 		void getAllShapePoints(vector<ShapePoints>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
 		

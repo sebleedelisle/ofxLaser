@@ -29,6 +29,7 @@ class DacLaserdock : public DacBase, ofThread{
 	
 	void setup(string serial="");
 	bool connectToDevice(string serial="");
+    void reset(); 
 	
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;

@@ -37,10 +37,15 @@ void Projector :: initGui(bool showAdvanced) {
 	gui->setName(label);
 	
 	gui->add(armed.set("ARMED", false));
-	gui->add(intensity.set("Intensity", 1,0,1));
+	armed.addListener(this, &ofxLaser::Projector::setArmed);
+    
+    
+    gui->add(intensity.set("Intensity", 1,0,1));
 	gui->add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
 	gui->add(resetDac.set("Reset DAC", false));
 	
+    
+    
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
@@ -200,7 +205,9 @@ void Projector :: initGui(bool showAdvanced) {
 	
 }
 
-
+void Projector ::setArmed(bool& armed){
+    dac->setActive(armed); 
+}
 
 void Projector :: minimiseGui() {
 	gui->minimizeAll();

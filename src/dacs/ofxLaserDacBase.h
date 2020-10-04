@@ -22,9 +22,10 @@ namespace ofxLaser {
 		
 		virtual ofColor getStatusColour(){return ofColor::white; };
 	
-		virtual const vector<ofAbstractParameter*>& getDisplayData() { return displayData;};
+		virtual const vector<ofAbstractParameter*>& getDisplayData();
 		virtual void resetDisplayData(){};
 		virtual void reset() {};
+        virtual void setActive(bool active);
 
 
 		static uint16_t bytesToUInt16(unsigned char* byteaddress) {
@@ -63,6 +64,7 @@ namespace ofxLaser {
 	
 		vector<ofAbstractParameter*> displayData;
 		bool resetFlag = false;
+        bool armed = false;
 
 	};
 

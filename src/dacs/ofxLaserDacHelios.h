@@ -26,6 +26,9 @@ class DacHelios : public DacBase, ofThread{
 	
 	void setup(string serial="");
 	bool connectToDevice(string serial="");
+    void reset();
+    void setActive(bool active);
+
 	
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;
@@ -56,15 +59,19 @@ class DacHelios : public DacBase, ofThread{
 	vector<HeliosPoint*> sparePoints;
 	vector<HeliosPoint> framePoints;
 	
-	uint32_t pps, newPPS;
+	uint32_t pps = 30000, newPPS = 30000;
 	
 	bool frameMode = true; 
 	bool replayFrames = true;
 	bool isReplaying = false;
 	bool connected = false;
+    bool newArmed = false;  // as in the PPS system, this knows
+                            // if armed status has changed and sends
+                            // signal to DAC
 	
 	DacHeliosManager &heliosManager;
-	int deviceNumber; 
+	//int deviceNumber;
+	string deviceId = ""; 
 	
 	
 };

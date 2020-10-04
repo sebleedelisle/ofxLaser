@@ -34,11 +34,17 @@ void DacHelios::setup(string name) {
 
 bool DacHelios::connectToDevice(string name) {
 
-	deviceNumber = heliosManager.connectToDevice(name);
-	if(deviceNumber<0) setConnected(false);
-	else setConnected(true);
+	deviceId = name;
+	string newname = heliosManager.connectToDevice(name);
 	
-
+	if(name.empty()) deviceId = newname;
+	
+	if(newname=="") setConnected(false);
+	else {
+		setConnected(true);
+		deviceName = deviceId;
+		ofLogNotice("Connected to HeliosDac : "+deviceId);
+	}
 	return connected;
 }
 
@@ -144,6 +150,18 @@ bool DacHelios::setPointsPerSecond(uint32_t newpps) {
 	
 };
 
+void DacHelios :: setActive(bool active){
+    newArmed = active;
+    
+}
+void DacHelios :: reset() {
+    if(lock()) {
+        resetFlag = true;
+        unlock();
+    }
+}
+
+
 void DacHelios :: threadedFunction(){
 	
 	const uint32_t samples_per_packet = 1024;
@@ -192,27 +210,62 @@ void DacHelios :: threadedFunction(){
 			pps = newPPS;
 			//device->set_dac_rate(pps);
 		}
+        if(connected && (newArmed!=armed)) {
+            if(heliosManager.setShutter(deviceId, newArmed)==HELIOS_SUCCESS) {
+                armed = newArmed;
+            }
+        }
+         // if resetFlag and connected then disconnect
 		unlock();
 
-		if(connected) {
-			while((heliosManager.getStatus(deviceNumber)!=1) && isThreadRunning()) yield();
-			if(!heliosManager.writeFrame(deviceNumber,pps, HELIOS_FLAGS_SINGLE_MODE, &samples[0], samplecount)){
-				ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed");
+        
+		if(connected && isThreadRunning()) {
+            
+            // getStatus is used to determine if the
+            // dac is ready for more points or not
+			bool dacReady = false;
+			int status = 0;
+			if(isThreadRunning()) do {
+				status = heliosManager.getStatus(deviceId);
+				dacReady = (status != 0); // 0 means buffer full, 1 means ready
+				//ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
+				yield();
+			} while((!dacReady) && isThreadRunning());
+            
+//			if(status!=1) {
+//				ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
+//			}
+			if(!isThreadRunning()) break; 
+			int result = heliosManager.writeFrame(deviceId,pps, HELIOS_FLAGS_SINGLE_MODE, &samples[0], samplecount);
+			//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
+			if(result <=-5000){ // then we have a USB connection error
+				ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
+				setConnected(false);
+			} else if(result!=HELIOS_SUCCESS) {
+				ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. Error : "+ ofToString(result));
 				setConnected(false);
 			} else {
 				setConnected(true);
 			}
-		} else {
-//			// try to reconnect!
-//			if(lock()){
-//				if(!connectToDevice(serialNumber)) {
-//					unlock();
-//					// wait half a second?
-//					sleep(500);
-//				} else {
-//					unlock();
-//				}
-//			};
+		} else  {
+            
+            // DO RECONNECT
+            //resetFlag = false;
+            
+			// TODO : handle reconnection better
+			// try to reconnect!
+			
+			if(!connectToDevice(deviceId)) {
+				
+				// wait half a second?
+				sleep(500);
+			} else {
+				
+				setConnected(true);
+				
+			}
+			
+			yield();
 			
 		}
 	}
@@ -227,6 +280,11 @@ void DacHelios :: setConnected(bool state) {
 		
 		while(!lock()){};
 		connected = state;
+		if(!connected) {
+			heliosManager.deviceDisconnected(deviceName);
+			armed = !newArmed;
+		}
+		ofLogNotice("Helios Dac changed connection state : "+ofToString(connected));
 		unlock();
 		
 	}
