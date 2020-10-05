@@ -17,7 +17,7 @@ namespace ofxLaser {
 		DacHeliosManager();
 		~DacHeliosManager();
 		
-		bool updateUsbDeviceList();
+		void updateUsbDeviceList();
 		bool isHeliosDevice(libusb_device_descriptor& devdesc);
 		
 		HeliosDacDevice* getDacDeviceForName(string name);

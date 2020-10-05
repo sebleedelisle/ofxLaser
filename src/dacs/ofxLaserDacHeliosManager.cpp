@@ -43,7 +43,7 @@ DacHeliosManager::~DacHeliosManager() {
 	libusb_exit(NULL);
 }
 
-bool DacHeliosManager::updateUsbDeviceList() {
+void DacHeliosManager::updateUsbDeviceList() {
 	ofLogNotice("DacHeliosManager::updateUsbDeviceList");
 	libusb_device** devs;
 	
