@@ -372,21 +372,7 @@ void Zone :: saveSettings() {
 	ofJson json;
 	serialize(json);
 	ofSavePrettyJson(label+".json", json);
-//
-//	ofParameterGroup params;
-//	vector<ofParameter<ofPoint>> points;
-//	points.resize(handles.size());
-//
-//	for(size_t i= 0; i<handles.size(); i++) {
-//		params.add(points[i].set("point_"+ofToString(i),handles[i]));
-//
-//	}
-//
-//	ofXml settings;
-//
-//    ofSerialize( settings, params );
-//
-//	return settings.save(label+".xml");
+
 	
 }
 
@@ -400,4 +386,11 @@ void Zone :: serialize(ofJson&json) {
 	}
 	cout << json.dump(3) << endl;
 	//deserialize(json);
+}
+
+void Zone::setHandleSize(float size) {
+	for(DragHandle& handle : handles) {
+		handle.setSize(size);
+	}
+	
 }

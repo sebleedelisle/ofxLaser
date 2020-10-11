@@ -94,6 +94,7 @@ namespace ofxLaser {
 		void initGui(bool showAdvanced = false);
 		void addCustomParameter(ofAbstractParameter& param);
 		ofxPanel& getGui();
+		void setDefaultHandleSize(float size);
 		bool togglePreview();
 		bool toggleGui();
 		void setGuiVisible(bool visible);
@@ -131,7 +132,9 @@ namespace ofxLaser {
 		ofParameter<bool> showPathPreviews;
         ofParameter<bool> useBitmapMask;
         ofParameter<bool> showBitmapMask;
-		ofParameter<bool> laserMasks; 
+		ofParameter<bool> laserMasks;
+		
+		float defaultHandleSize = 8;
 		
 		
 		ofParameter<float>masterIntensity; 

@@ -25,13 +25,14 @@ DacHeliosManager::DacHeliosManager() {
 DacHeliosManager::~DacHeliosManager() {
 	ofLogNotice("DacHeliosManager destructor");
 	//for(HeliosDacDevice* dac :
-	ofLogNotice("...deleting " + ofToString(availableDevices.size()) + " devices...");
+	ofLogNotice("...deleting " + ofToString(usedDevices.size()) + " devices...");
 	
 	for(HeliosDacDevice* dac : usedDevices) {
 	//
 		dac->SetClosed(); // also closes USB connection and waits for thread to finish
-
+		
 	}
+	ofLogNotice("...deleting " + ofToString(availableDevices.size()) + " devices...");
 	
 	for(HeliosDacDevice* dac : availableDevices) {
 		dac->SetClosed();

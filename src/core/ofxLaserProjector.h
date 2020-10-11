@@ -40,6 +40,7 @@ namespace ofxLaser {
 		~Projector();
 		
         void initGui(bool showAdvanced = false);
+		void setDefaultHandleSize(float size);
         void initListeners();
         bool mousePressed(ofMouseEventArgs &e);
 		
@@ -104,6 +105,8 @@ namespace ofxLaser {
         vector<ofParameter<bool>> zonesMuted;
         vector<ofParameter<bool>> zonesSoloed;
         vector<bool> zonesEnabled;
+		
+		float defaultHandleSize = 8;
 
 		DacBase* dac;
 		

@@ -28,7 +28,7 @@ class DacHelios : public DacBase, ofThread{
 	bool connectToDevice(string serial="");
     void reset();
     void setActive(bool active);
-
+	void close(); 
 	
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;

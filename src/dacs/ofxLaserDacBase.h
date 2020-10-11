@@ -26,7 +26,7 @@ namespace ofxLaser {
 		virtual void resetDisplayData(){};
 		virtual void reset() {};
         virtual void setActive(bool active);
-
+		virtual void close(){};
 
 		static uint16_t bytesToUInt16(unsigned char* byteaddress) {
 			return (uint16_t)(*(byteaddress+1)<<8)|*byteaddress;

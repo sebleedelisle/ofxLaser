@@ -67,6 +67,7 @@ void Manager::addProjector(DacBase& dac) {
 		addZoneToProjector(0, projectors.size()-1);
 	}
 	
+	projector->setDefaultHandleSize(defaultHandleSize);
 	//Projector& proj = *projectors.back();
 
 	//proj.gui->setPosition(width+320,10);
@@ -768,6 +769,14 @@ void Manager::initGui(bool showExperimental) {
 	updateScreenSize();
 
 	ofxGuiSetDefaultWidth(220);
+	
+}
+
+void Manager::setDefaultHandleSize(float size) {
+	defaultHandleSize = size;
+	for(Projector* projector : projectors) {
+		projector->setDefaultHandleSize(defaultHandleSize);
+	}
 	
 }
 

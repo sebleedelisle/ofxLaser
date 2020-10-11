@@ -666,3 +666,9 @@ bool ZoneTransform::loadSettings() {
 
 	return true;
 }
+void ZoneTransform::setHandleSize(float size) {
+	for(DragHandle& handle : dstHandles) {
+		handle.setSize(size);
+	}
+	
+}

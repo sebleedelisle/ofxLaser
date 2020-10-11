@@ -33,12 +33,19 @@ Projector::~Projector() {
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
 	pps.removeListener(this, &Projector::ppsChanged);
 	armed.removeListener(this, &ofxLaser::Projector::setArmed);
-	
+	if(dac!=nullptr) dac->close();
 	delete gui;
+}
+
+void Projector::setDefaultHandleSize(float size) {
 	
-	
+	defaultHandleSize = size;
+	for(ZoneTransform* zonetrans : zoneTransforms) {
+		zonetrans->setHandleSize(defaultHandleSize);
+	}
 	
 }
+
 void Projector :: initGui(bool showAdvanced) {
 	
 	gui = new ofxPanel();

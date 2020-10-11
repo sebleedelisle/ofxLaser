@@ -24,6 +24,7 @@ namespace ofxLaser {
 
 		void set(float x, float y, float w, float h);
 		void set(ofRectangle newrect);
+		void setHandleSize(float size); 
 		
 		bool update();
 		bool addShape(Shape* s);

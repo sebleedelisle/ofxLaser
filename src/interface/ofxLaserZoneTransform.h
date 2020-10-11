@@ -51,6 +51,9 @@ class ZoneTransform {
 	void setDst(const ofRectangle& rect);
 	
 	void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
+
+	
+	void setHandleSize(float size);
 	
 	void update();
 	void draw();
@@ -66,7 +69,6 @@ class ZoneTransform {
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
-	
 	void setVisible(bool warpvisible);
 	bool checkDirty();
 	void setDirty(bool state) {isDirty = state;};
@@ -86,7 +88,8 @@ class ZoneTransform {
 	ofPoint getCentre(); 
 	
 	ofParameterGroup params;
-	
+
+
 	ofParameter<bool>editSubdivisions;
 	ofParameter<bool>useHomography;
 	ofParameter<int>xDivisionsNew;

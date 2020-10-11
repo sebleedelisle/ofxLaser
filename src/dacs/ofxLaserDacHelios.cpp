@@ -13,10 +13,22 @@ using namespace ofxLaser;
 DacHelios:: ~DacHelios() {
 	ofLogNotice("DacHelios destructor"); 
 	//stopThread();
-	waitForThread(true); // also stops the thread
+	close();
 	
-	delete dacDevice;
-	
+}
+
+void DacHelios::close() {
+	if(isThreadRunning()) {
+		waitForThread(true); // also stops the thread
+		if(lock()) {
+			if(dacDevice!=nullptr) {
+				dacDevice->SetClosed();
+				dacDevice = nullptr;
+			}
+			unlock();
+		}
+		delete dacDevice;
+	}
 }
 
 
