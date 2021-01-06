@@ -91,6 +91,7 @@ void Projector :: initGui(bool showAdvanced) {
 	advanced.add(sortShapes.set("Optimise shape draw order", true));
 	advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 120));
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
+	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
 
 	if(showAdvanced) {
 		projectorparams.add(advanced);
@@ -204,6 +205,9 @@ void Projector :: initGui(bool showAdvanced) {
 	gui->loadFromFile(label+".xml");
 	gui->loadFromFile(label+".json");
 	
+	// error checking on blank shift for older config files
+	if(colourChangeOffset<0) colourChangeOffset = 0;
+	
 	minimiseGui();
 	
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
@@ -285,7 +289,10 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	topEdges.push_back(0);
 	bottomEdges.push_back(0);
 	
-	zoneTransform.loadSettings();
+	if(guiInitialised) {
+		ofLogWarning("Projector::addZone() - Please add zones before initialising the laser gui"); 
+		zoneTransform.loadSettings();
+	}
 }
 
 void Projector::zoneMaskChanged(ofAbstractParameter& e) {
@@ -724,6 +731,7 @@ void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum
 
 void Projector::send(ofPixels* pixels, float masterIntensity) {
 
+
 	if(!guiInitialised) {
 		ofLog(OF_LOG_ERROR, "Error, ofxLaser::projector not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
 		return;
@@ -841,20 +849,29 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 	if (laserPoints.size() == 0) {
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
 	}
-	
+	int targetNumPoints;
 	// TODO add system to speed up if too much stuff to draw
 	if (syncToTargetFramerate) {
 		//targetFramerate = round(targetFramerate * 100) / 100.0f;
-		float targetNumPoints = (float)pps / targetFramerate;
+		targetNumPoints = round((float)pps / targetFramerate);
 		// TODO : CHANGE TO PARAMETER
-		if (ofGetKeyPressed(OF_KEY_LEFT)) targetNumPoints -= 10;
-		if (ofGetKeyPressed(OF_KEY_RIGHT)) targetNumPoints += 10;
+		if(syncShift!=0) {
+			targetNumPoints+=syncShift;
+			if(!ofGetMousePressed()) syncShift = 0;
+		}
+		//if (ofGetKeyPressed(OF_KEY_LEFT)) targetNumPoints -= 10;
+		//if (ofGetKeyPressed(OF_KEY_RIGHT)) targetNumPoints += 10;
 		while (laserPoints.size() < targetNumPoints) {
 			addPoint(laserHomePosition, ofColor::black);
 		}
 	}
 	
 	processPoints(masterIntensity);
+	
+	if(syncToTargetFramerate && (laserPoints.size()!=targetNumPoints)) {
+	
+		ofLogError("syncToTargetFramerate failed! " + ofToString(targetNumPoints)+ " " + ofToString(laserPoints.size()));
+	}
 	
 	dac->sendFrame(laserPoints);
     numPoints = laserPoints.size();

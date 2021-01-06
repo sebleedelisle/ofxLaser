@@ -324,6 +324,8 @@ void ZoneTransform:: divisionsChanged(int& e){
 }
 
 void ZoneTransform:: updateDivisions(){
+	//ofLogNotice("ZoneTransform::updateDivisions()");
+
 	//ofLog(OF_LOG_NOTICE, "divisionsChanged");
 	
     vector<ofPoint> corners  = getCorners();
@@ -345,9 +347,16 @@ void ZoneTransform:: updateDivisions(){
 
 
 void ZoneTransform::updateQuads() {
+	//ofLogNotice("ZoneTransform::updateQuads()");
 	
 	int quadnum = xDivisions*yDivisions;
 	quadWarpers.resize(quadnum);
+	
+	if(srcPoints.size()!=dstHandles.size()) {
+		srcPoints.resize((xDivisions+1)*(yDivisions+1));
+		
+		setSrc(srcRect);
+	}
 	
 	for(int i = 0; i<quadnum; i++) {
 		
@@ -577,7 +586,7 @@ bool ZoneTransform::hitTest(ofPoint mousePoint) {
 
 void ZoneTransform::saveSettings() {
 	
-	ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
+	//ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
 	
 	ofJson json;
 	serialize(json);
@@ -592,12 +601,12 @@ void ZoneTransform::serialize(ofJson&json) {
 		DragHandle& pos = dstHandles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
-	cout << json.dump(3) << endl;
+	//cout << json.dump(3) << endl;
 	//deserialize(json);
 }
 
 bool ZoneTransform::deserialize(ofJson& jsonGroup) {
-	
+	//ofLogNotice("ZoneTransform::deserialize()");
 	ofJson& paramjson = jsonGroup["ZoneTransform"];
 	ofDeserialize(paramjson, params);
 	ofJson& handlejson = jsonGroup["handles"];
@@ -617,10 +626,11 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 			
 		}
 	}
+	//updateDivisions();
 	return true; 
 }
 bool ZoneTransform::loadSettings() {
-	
+	//ofLogNotice("ZoneTransform::loadSettings()");
 	ofFile jsonfile(saveLabel+".json");
 	if(jsonfile.exists()) {
 		ofJson json = ofLoadJson(saveLabel+".json");

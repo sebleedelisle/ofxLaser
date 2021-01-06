@@ -15,7 +15,7 @@ void ofApp::setup(){
 #if defined(USE_LASERDOCK) || defined(USE_HELIOS)
 	// NB with laser dock you can pass a serial number,
 	// with HeliosDAC you can pass a device name
-	dac.setup("Helios 825438257");
+	dac.setup("");
 #else
 	// load the IP address of the Etherdream / IDN DAC
 	ofBuffer buffer = ofBufferFromFile("dacIP.txt");

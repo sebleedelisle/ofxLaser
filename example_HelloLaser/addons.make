@@ -1,8 +1,8 @@
 ofxGui
 ofxKinect
-ofxLaser
-ofxNetwork
+ofxXmlSettings
 ofxOpenCv
+ofxNetwork
 ofxPoco
 ofxSvg
-ofxXmlSettings
+ofxLaser

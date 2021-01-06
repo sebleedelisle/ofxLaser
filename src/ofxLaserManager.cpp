@@ -726,7 +726,7 @@ void Manager::initGui(bool showExperimental) {
 		
 	}
 	
-	gui.add(testPattern.set("Test Pattern", 0,0,8));
+	gui.add(testPattern.set("Test Pattern", 0,0,9));
 	
 	//ofParameterGroup params;
 	params.setName("Interface");
