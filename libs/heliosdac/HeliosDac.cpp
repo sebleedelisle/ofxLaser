@@ -440,8 +440,10 @@ int HeliosDacDevice::DoFrame()
 
 	if (transferResult == LIBUSB_SUCCESS)
 		return HELIOS_SUCCESS;
-	else
+	else {
+		cout << "libusb error : " << transferResult << " while sending " <<frameBufferSize << " samples" << endl; 
 		return HELIOS_ERROR_LIBUSB_BASE + transferResult;
+	}
 }
 
 //continually running thread, when a frame is ready, it is sent to the DAC
