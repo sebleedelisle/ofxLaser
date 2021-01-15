@@ -123,9 +123,11 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 }
 
 inline bool DacHelios :: addPoint(const HeliosPoint &point ){
+	//lock();
 	HeliosPoint* p = getHeliosPoint();
 	*p = point; // copy assignment hopefully!
 	bufferedPoints.push_back(p);
+	//unlock();
 	return true;
 }
 
@@ -212,9 +214,10 @@ void DacHelios :: threadedFunction(){
 		// 1 : transfer the points into a format that we can
 		//     send to the DAC
 		
-		while(!lock()){};
+		//while(!lock()){};
 
 		// if we're out of points, let's replay the frame!
+		lock();
 		if(bufferedPoints.size()<samples_per_packet) {
 			if(frameMode && replayFrames) {
 				for(size_t i= 0; i<framePoints.size(); i++) {
@@ -230,14 +233,17 @@ void DacHelios :: threadedFunction(){
 				}
 			}
 		}
+		unlock();
 		
 		HeliosPoint& p = sendpoint;
 		for(int i = 0; i<samples_per_packet; i++) {
 
 			if(bufferedPoints.size()>0) {
+				lock();
 				p = *bufferedPoints[0];
 				sparePoints.push_back(bufferedPoints[0]);
 				bufferedPoints.pop_front();
+				unlock();
 				lastpoint = p;
 			} else {
 				//p = lastpoint;
@@ -257,7 +263,7 @@ void DacHelios :: threadedFunction(){
             }
         }
        
-		unlock();
+		//unlock();
 
         
 		if(connected && isThreadRunning()) {
@@ -268,7 +274,7 @@ void DacHelios :: threadedFunction(){
 			int status = 0;
 			if(isThreadRunning()) do {
 				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
-				dacReady = (status != 0); // 0 means buffer full, 1 means ready
+				dacReady = (status == 1); // 0 means buffer full, 1 means ready
 				//ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
 				//yield();
 				if(!dacReady) sleep(1);

@@ -391,6 +391,7 @@ int HeliosDacDevice::SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint
 	unsigned int numOfPointsActual = numOfPoints;
 	if ((((int)numOfPoints-45) % 64) == 0)
 	{
+		cout << "HelioDacDevice horrific hack engaged! " << endl; 
 		numOfPointsActual--;
 		//adjust pps to keep the same frame duration even with one less point
 		ppsActual = (unsigned int)((pps * (double)numOfPointsActual / (double)numOfPoints) + 0.5); 
@@ -441,7 +442,7 @@ int HeliosDacDevice::DoFrame()
 	if (transferResult == LIBUSB_SUCCESS)
 		return HELIOS_SUCCESS;
 	else {
-		cout << "libusb error : " << transferResult << " while sending " <<frameBufferSize << " samples" << endl; 
+		cout << "libusb error : " << transferResult << " while sending " <<frameBufferSize << " samples" << endl;
 		return HELIOS_ERROR_LIBUSB_BASE + transferResult;
 	}
 }
