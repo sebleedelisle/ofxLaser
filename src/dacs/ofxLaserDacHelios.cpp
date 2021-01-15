@@ -271,7 +271,7 @@ void DacHelios :: threadedFunction(){
 				dacReady = (status != 0); // 0 means buffer full, 1 means ready
 				//ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
 				//yield();
-				sleep(1);
+				if(!dacReady) sleep(1);
 			} while((!dacReady) && isThreadRunning());
             
 //			if(status!=1) {
