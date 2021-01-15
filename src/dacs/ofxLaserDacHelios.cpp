@@ -221,6 +221,13 @@ void DacHelios :: threadedFunction(){
 					addPoint(framePoints[i]);
 				}
 				isReplaying = true;
+			} else {
+				// Minimum 10 points per frame
+				while(bufferedPoints.size()<10) { // add blank points to fill the space
+					// clear the point so we don't just project strong beams
+					lastpoint.r = lastpoint.g = lastpoint.b = 0;
+					addPoint(lastpoint);
+				}
 			}
 		}
 		
