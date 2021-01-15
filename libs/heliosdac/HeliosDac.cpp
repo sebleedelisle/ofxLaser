@@ -645,6 +645,7 @@ int HeliosDacDevice::SendControl(std::uint8_t* bufferAddress, unsigned int lengt
 		return HELIOS_SUCCESS;
 	} else if(transferResult == LIBUSB_ERROR_NO_DEVICE) {
 		closed = true;
+		return HELIOS_ERROR_DEVICE_CLOSED; 
 	} else {
 		return HELIOS_ERROR_LIBUSB_BASE + transferResult;
 	}
