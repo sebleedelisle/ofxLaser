@@ -85,10 +85,9 @@ bool DacHelios::connectToDevice(string name) {
 bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
 	
-	// TODO we can probably simplify the replaying
-	// system as the Helios will automatically replay frames
 	
-	int maxBufferSize = 1000;
+	int maxBufferSize = 1000; // TODO make this based on framerate
+    
 	HeliosPoint& p1 = sendpoint;
 	// if we already have too many points in the buffer,
 	// then it means that we need to skip this frame
@@ -108,8 +107,10 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 				p1.g = roundf(p2.g);
 				p1.b = roundf(p2.b);
 				p1.i = 255;
+                // copies the point and adds it into the buffer
 				addPoint(p1);
-				
+				// but also add it to the framepoints in case we
+                // need to repeat the frame
 				framePoints[i] = p1;
 			}
 			isReplaying = false;
@@ -118,6 +119,7 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 		return true;
 	} else {
 		// we've skipped this frame... TODO - dropped frame count?
+        ofLogNotice("HeliosDace::sendFrame - frame skipped");
 		return false;
 	}
 }
@@ -201,6 +203,7 @@ void DacHelios :: reset() {
 void DacHelios :: threadedFunction(){
 	
 	const uint32_t samples_per_packet = 1024;
+    const int minBuffer = 100; // TODO make this dependent on pointrate
 
 	HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
 		
@@ -218,19 +221,20 @@ void DacHelios :: threadedFunction(){
 
 		// if we're out of points, let's replay the frame!
 		lock();
-		if(bufferedPoints.size()<samples_per_packet) {
+		if(bufferedPoints.size()<minBuffer) {
 			if(frameMode && replayFrames) {
+                ofLogNotice("HeliosDac : replaying frame");
 				for(size_t i= 0; i<framePoints.size(); i++) {
 					addPoint(framePoints[i]);
 				}
 				isReplaying = true;
 			} else {
 				// Minimum 10 points per frame
-				while(bufferedPoints.size()<10) { // add blank points to fill the space
-					// clear the point so we don't just project strong beams
-					lastpoint.r = lastpoint.g = lastpoint.b = 0;
-					addPoint(lastpoint);
-				}
+//				while(bufferedPoints.size()<10) { // add blank points to fill the space
+//					// clear the point so we don't just project strong beams
+//					lastpoint.r = lastpoint.g = lastpoint.b = 0;
+//					addPoint(lastpoint);
+//				}
 			}
 		}
 		unlock();
