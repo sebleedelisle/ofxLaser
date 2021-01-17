@@ -188,8 +188,11 @@ void DacHelios :: threadedFunction(){
 			bool dacReady = false;
 			int status = 0;
 				
-			while(!dacReady)  {
-				if(framesChannel.tryReceive(newFrame)) {
+			while((!dacReady) && isThreadRunning())  {
+				// if we're in frame mode or we don't have a next frame let's pull another frame off the buffer
+				// (means that we only skip frames in frame mode) 
+				if( (frameMode || nextFrame==nullptr) &&
+					 (framesChannel.tryReceive(newFrame)) ) {
 					if(nextFrame!=nullptr) {
 						nextFrame = releaseFrame(nextFrame);
 					}
@@ -267,7 +270,6 @@ void DacHelios :: threadedFunction(){
 		}
 	}
 
-	//free(samples);
 }
 
 
