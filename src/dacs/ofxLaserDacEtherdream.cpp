@@ -268,7 +268,7 @@ inline bool DacEtherdream :: sendData(){
 		
 		
 	}
-		outbuffer[0]= command;
+	outbuffer[0]= command;
 	writeUInt16ToBytes(npointstosend, &outbuffer[1]);
 	int pos = 3;
 	
@@ -328,8 +328,14 @@ inline bool DacEtherdream :: sendData(){
 		
 		ofLog(OF_LOG_ERROR, "ofxLaser::DacEtherdream - too many bytes to send! - " + ofToString(numBytesSent));
 	}
-	return sendBytes(&outbuffer, numBytesSent);
-	//cout << "sent " << n << " bytes" << endl;
+	
+	if(verbose) {
+		ofLogNotice("sending points : " + ofToString(npointstosend));
+	}
+	
+	//cout << "sent " << numBytesSent << " bytes" << endl;
+	return sendBytes(outbuffer, numBytesSent);
+	
 	//cout << "numPointsToSend " << numPointsToSend << endl;
 }
 
@@ -638,10 +644,15 @@ inline bool DacEtherdream::waitForAck(char command) {
 //			}
 			
         }
+		
+		if(verbose) {
+			if(command == 'd') logData();
+		}
+		
 		if(verbose || (response.response!='a')) {
             ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
-            ofLog(OF_LOG_NOTICE, "num points sent : "+ ofToString(numPointsToSend) );
-            
+//            ofLog(OF_LOG_NOTICE, "num points sent : "+ ofToString(numPointsToSend) );
+//
 			string data = "";
 			data+= "\nprotocol           : " + to_string(response.status.protocol) + "\n";
 			data+= "light_engine_state : " + light_engine_states[response.status.light_engine_state]+" "+to_string(response.status.light_engine_state) + "\n";
@@ -786,7 +797,7 @@ inline bool DacEtherdream :: sendBegin(){
 	//	}
 	
 	//int n = socket->sendBytes(&send[0],7);
-	beginSent = sendBytes(&buffer, 7);
+	beginSent = sendBytes(buffer, 7);
 	
 	return beginSent;
 	
@@ -796,7 +807,7 @@ inline bool DacEtherdream :: sendBegin(){
 inline bool DacEtherdream :: sendPrepare(){
 	ofLog(OF_LOG_NOTICE, "sendPrepare()");
 	prepareSendCount++;
-	int send = 0x70; //'p'
+	uint8_t send = 0x70; //'p'
 	return sendBytes(&send,1);
 	//cout << "sent " << n << " bytes" << endl;
 	//prepareSent = true;
@@ -807,7 +818,7 @@ inline bool DacEtherdream :: sendPrepare(){
 inline bool DacEtherdream :: sendPointRate(uint32_t rate){
 	outbuffer[0] = 'q';
 	writeUInt32ToBytes(rate, &outbuffer[1]);
-	return sendBytes(&outbuffer, 5);
+	return sendBytes(outbuffer, 5);
 	
 }
 
@@ -847,25 +858,25 @@ void DacEtherdream :: logData() {
     
 }
 bool DacEtherdream :: sendPing(){
-	char ping = '?';
+	uint8_t ping = '?';
 	return sendBytes(&ping, 1);
 }
 bool DacEtherdream :: sendEStop(){
-	char ping = '\0';
+	uint8_t ping = '\0';
 	return sendBytes(&ping, 1);
 }
 bool DacEtherdream :: sendStop(){
 	// non-emergency stop
-	char ping = 's';
+	uint8_t ping = 's';
 	return sendBytes(&ping, 1);
 }
 bool DacEtherdream :: sendClear(){
-	char ping = 'c';
+	uint8_t ping = 'c';
 	// clear emergency stop
 	return sendBytes(&ping, 1);
 }
 
-bool DacEtherdream :: sendBytes(const void* buffer, int length) {
+bool DacEtherdream :: sendBytes(const uint8_t* buffer, int length) {
 	
 	int numBytesSent = 0;
 	bool failed = false;
@@ -874,6 +885,15 @@ bool DacEtherdream :: sendBytes(const void* buffer, int length) {
 
 	try {
 		numBytesSent = socket.sendBytes(buffer, length);
+		if(verbose && (length>1)) {
+			cout << "command sent : " << buffer[0] << " numBytesSent : " << numBytesSent <<  endl;
+			for(int i = 1; i<length; i++) {
+				
+				printf("%X2 ", (uint8_t)buffer[i]);
+				if(i%8==0) cout << endl;
+			}
+			cout << endl;
+		}
 	}
 	catch (Poco::Exception& exc) {
 		//Handle your network errors.

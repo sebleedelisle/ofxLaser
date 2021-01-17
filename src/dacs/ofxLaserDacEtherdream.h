@@ -6,7 +6,6 @@
 //
 //
 
-
 #pragma once
 #include "ofxLaserDacBase.h"
 
@@ -18,7 +17,6 @@
 #ifdef TARGET_WIN32
 #include <Windows.h>
 #endif
-
 
 #define LIGHT_ENGINE_READY    0
 #define LIGHT_ENGINE_WARMUP	  1
@@ -147,13 +145,13 @@ namespace ofxLaser {
 		bool sendClear();
 		inline bool sendPointRate(uint32_t rate);
 		inline bool waitForAck(char command);
-		bool sendBytes(const void* buffer, int length);
+		bool sendBytes(const uint8_t* buffer, int length);
 		
 		dac_point lastpoint;
 		dac_point sendpoint;
 		
 		uint8_t buffer[1024];
-		uint8_t outbuffer[100000];
+		uint8_t outbuffer[100000]; // TODO is this enough? is it ever checked ? 
         int numBytesSent;
 		
 		Poco::Net::StreamSocket socket;

@@ -171,8 +171,6 @@ void DacHelios :: reset() {
 
 void DacHelios :: threadedFunction(){
 	
-	
-	//HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
 	DacHeliosFrame* currentFrame = nullptr;
 	DacHeliosFrame* nextFrame = nullptr;
 	DacHeliosFrame* newFrame = nullptr;
@@ -210,12 +208,11 @@ void DacHelios :: threadedFunction(){
 				dacReady = (status == 1);
 				
 				if(!dacReady) {
+
 					if(status<0) {
 						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));
 					sleep(1);
-					//cout << "."; 
-				} 
-			
+				} 		
 				
 			}
 			// if we got to here then the dac is ready but we might not have a
@@ -230,6 +227,12 @@ void DacHelios :: threadedFunction(){
 			if(currentFrame!=nullptr) {
 				int result =  0;
 				if(dacDevice!=nullptr) result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+				
+				// if we're not in frame mode then delete the points
+				if((result == HELIOS_SUCCESS) && (!frameMode) ) {
+					currentFrame=nullptr;
+				}
+				
 				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
 				if(result <=-5000){ // then we have a USB connection error
 					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
@@ -241,11 +244,9 @@ void DacHelios :: threadedFunction(){
 					setConnected(true);
 				}
 			}
-		} else  {
+		} else {
             
-            // DO RECONNECT
-            //resetFlag = false;
-            
+ 
 			// TODO : handle reconnection better
 			// try to reconnect!
 			
@@ -253,10 +254,11 @@ void DacHelios :: threadedFunction(){
 				if(lock()) {
 					if(connectToDevice(deviceName)) {
 						setConnected(true);
-					// wait half a second?
+					
 						unlock();
 					} else {
 						unlock();
+						// wait half a second and try again
 						for(size_t i = 0; (i<10)&&(isThreadRunning()); i++ ) {
 							sleep(50);
 						}

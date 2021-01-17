@@ -57,7 +57,7 @@ class DacIDN : public DacBase, ofThread {
 	
 	// TODO return relevant colour 
 	ofColor getStatusColour(){
-		return ofColor::green;
+		return connected ? ofColor::green :  ofColor::red;
 	}
 	
 	void close();
