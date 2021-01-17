@@ -9,15 +9,29 @@
 
 using namespace ofxLaser;
 
-
+DacHelios:: DacHelios() : heliosManager(DacHeliosManager::getInstance()) {
+	pps = 30000;
+	newPPS = 30000;
+	
+	frameMode = true;
+	
+	connected = false;
+    newArmed = false;  // as in the PPS system, this knows
+                            // if armed status has changed and sends
+                            // signal to DAC
+	deviceId = "";
+	dacDevice = nullptr;
+	
+}
 DacHelios:: ~DacHelios() {
-	ofLogNotice("DacHelios destructor"); 
+	ofLogNotice("DacHelios destructor");
 	//stopThread();
 	close();
 	
 }
 
 void DacHelios::close() {
+	
 	if(isThreadRunning()) {
 		waitForThread(true); // also stops the thread
 		if(lock()) {
@@ -48,6 +62,23 @@ void DacHelios::setup(string name) {
 
 }
 
+const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
+	if(lock()) {
+	
+		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
+		
+		//int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
+		
+		//pointBufferDisplay = bufferedPoints.size();
+																 
+		//latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
+		//reconnectCount = prepareSendCount;
+	
+		unlock();
+	}
+	
+	return displayData;
+}
 
 bool DacHelios::connectToDevice(string name) {
 	
@@ -66,116 +97,54 @@ bool DacHelios::connectToDevice(string name) {
 	} else {
 		connected = false;
 	}
-//
-//	deviceId = name;
-//	string newname = heliosManager.connectToDevice(name);
-//
-//	if(name.empty()) deviceId = newname;
-//
-//	if(newname=="") setConnected(false);
-//	else {
-//		setConnected(true);
-//		deviceName = deviceId;
-//		ofLogNotice("Connected to HeliosDac : "+deviceId);
-//	}
+
 	return connected;
 	
 }
 
 bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
-	
-	
-	int maxBufferSize = 1000; // TODO make this based on framerate
-    
-	HeliosPoint& p1 = sendpoint;
-	// if we already have too many points in the buffer,
-	// then it means that we need to skip this frame
-	
-	if(isReplaying || (bufferedPoints.size()<maxBufferSize)) {
-		
-		framePoints.resize(points.size());
-		
-		if(lock()) {
-			frameMode = true;
-			for(size_t i= 0; i<points.size(); i++) {
-				
-				const Point& p2 = points[i];
-				p1.x = ofMap(p2.x,0,800, HELIOS_MIN, HELIOS_MAX);
-				p1.y = ofMap(p2.y,800,0, HELIOS_MIN, HELIOS_MAX); // Y is UP
-				p1.r = roundf(p2.r);
-				p1.g = roundf(p2.g);
-				p1.b = roundf(p2.b);
-				p1.i = 255;
-                // copies the point and adds it into the buffer
-				addPoint(p1);
-				// but also add it to the framepoints in case we
-                // need to repeat the frame
-				framePoints[i] = p1;
-			}
-			isReplaying = false;
-			unlock();
-		}
-		return true;
-	} else {
-		// we've skipped this frame... TODO - dropped frame count?
-        ofLogNotice("HeliosDace::sendFrame - frame skipped");
-		return false;
-	}
-}
+	// get frame object
 
-inline bool DacHelios :: addPoint(const HeliosPoint &point ){
-	//lock();
-	HeliosPoint* p = getHeliosPoint();
-	*p = point; // copy assignment hopefully!
-	bufferedPoints.push_back(p);
-	//unlock();
+	DacHeliosFrame* frame = new DacHeliosFrame();
+	
+	// add all points into the frame object
+	frameMode = true;
+	for(ofxLaser::Point p : points) {
+		frame->addPoint(p);
+	}
+	// add the frame object to the frame channel
+	framesChannel.send(frame);
+	
 	return true;
-}
-
-
-HeliosPoint*  DacHelios :: getHeliosPoint() {
-	HeliosPoint* p;
-	if(sparePoints.size()==0) {
-		p= new HeliosPoint();
-	} else {
-		p = sparePoints.back();
-		sparePoints.pop_back();
-	}
 	
-	p->x =
-	p->y =
-	p->r =
-	p->g =
-	p->b =
-	p->i = 0;
-	
-	return p;
 }
 
 
 bool DacHelios::sendPoints(const vector<Point>& points) {
-	if(bufferedPoints.size()>pps*0.5) {
-		return false;
-	}
-	frameMode = false; 
-	HeliosPoint p1;
-	if(lock()) {
-		frameMode = false;
-
-		for(size_t i= 0; i<points.size(); i++) {
-			const Point& p2 = points[i];
-			p1.x = ofMap(p2.x,0,800, HELIOS_MIN, HELIOS_MAX);
-			p1.y = ofMap(p2.y,800,0, HELIOS_MIN, HELIOS_MAX); // Y is UP
-			p1.r = roundf(p2.r);
-			p1.g = roundf(p2.g);
-			p1.b = roundf(p2.b);
-			p1.i = 255;
-			addPoint(p1);
-		}
-		unlock();
-	}
-	return true;
+	return false;
+	
+	//	if(bufferedPoints.size()>pps*0.5) {
+//		return false;
+//	}
+//	frameMode = false;
+//	HeliosPoint p1;
+//	if(lock()) {
+//		frameMode = false;
+//
+//		for(size_t i= 0; i<points.size(); i++) {
+//			const Point& p2 = points[i];
+//			p1.x = ofMap(p2.x,0,800, HELIOS_MIN, HELIOS_MAX);
+//			p1.y = ofMap(p2.y,800,0, HELIOS_MIN, HELIOS_MAX); // Y is UP
+//			p1.r = roundf(p2.r);
+//			p1.g = roundf(p2.g);
+//			p1.b = roundf(p2.b);
+//			p1.i = 255;
+//			addPoint(p1);
+//		}
+//		unlock();
+//	}
+//	return true;
 };
 
 bool DacHelios::setPointsPerSecond(uint32_t newpps) {
@@ -202,107 +171,76 @@ void DacHelios :: reset() {
 
 void DacHelios :: threadedFunction(){
 	
-	const uint32_t samples_per_packet = 1024;
-    const int minBuffer = 100; // TODO make this dependent on pointrate
+	//const uint32_t samples_per_packet = 1024;
+    const int minBuffer = 500; // TODO make this dependent on pointrate
 
-	HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
-		
-	int _index = 0;
+	//HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
+	DacHeliosFrame* currentFrame = nullptr;
+	DacHeliosFrame* nextFrame = nullptr;
+	DacHeliosFrame* newFrame = nullptr;
 	
 	while(isThreadRunning()) {
 	
-		int samplecount = samples_per_packet;
-
-		
-		// 1 : transfer the points into a format that we can
-		//     send to the DAC
-		
-		//while(!lock()){};
-
-		// if we're out of points, let's replay the frame!
-		lock();
-		if(bufferedPoints.size()<minBuffer) {
-			if(frameMode && replayFrames) {
-                ofLogNotice("HeliosDac : replaying frame");
-				for(size_t i= 0; i<framePoints.size(); i++) {
-					addPoint(framePoints[i]);
-				}
-				isReplaying = true;
-			} else {
-				// Minimum 10 points per frame
-//				while(bufferedPoints.size()<10) { // add blank points to fill the space
-//					// clear the point so we don't just project strong beams
-//					lastpoint.r = lastpoint.g = lastpoint.b = 0;
-//					addPoint(lastpoint);
-//				}
-			}
-		}
-		unlock();
-		
-		HeliosPoint& p = sendpoint;
-		for(int i = 0; i<samples_per_packet; i++) {
-
-			if(bufferedPoints.size()>0) {
-				lock();
-				p = *bufferedPoints[0];
-				sparePoints.push_back(bufferedPoints[0]);
-				bufferedPoints.pop_front();
-				unlock();
-				lastpoint = p;
-			} else {
-				//p = lastpoint;
-				//p.r = p.g = p.b =0;
-				samplecount = i;
-				break;
-			}
-			samples[i] = p;
-		}
 		if(connected && (newPPS!=pps)) {
 			pps = newPPS;
 			
 		}
         if(connected && (newArmed!=armed)) {
-            if(dacDevice->SetShutter(newArmed)==HELIOS_SUCCESS) {
+            if((dacDevice!=nullptr) && (dacDevice->SetShutter(newArmed)==HELIOS_SUCCESS)) {
                 armed = newArmed;
             }
         }
        
-		//unlock();
-
         
 		if(connected && isThreadRunning()) {
             
-            // getStatus is used to determine if the
-            // dac is ready for more points or not
+			// is there a new frame?
+			// if so, store it
 			bool dacReady = false;
 			int status = 0;
-			if(isThreadRunning()) do {
-				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
-				dacReady = (status == 1); // 0 means buffer full, 1 means ready
 				
-				//yield();
+			while(!dacReady)  {
+				if(framesChannel.tryReceive(newFrame)) {
+					if(nextFrame!=nullptr) {
+						delete nextFrame;
+					}
+					nextFrame = newFrame;
+				}
+				
+				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
+				
+				dacReady = (status == 1);
+				
 				if(!dacReady) {
 					if(status>1)
 						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
 					sleep(1);
 				}
-			} while((!dacReady) && isThreadRunning());
-            
-//			if(status!=1) {
-//				ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
-//			}
-			//if(!isThreadRunning()) break;
-			int result =  0;
-			if(dacDevice!=nullptr) result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, &samples[0], samplecount);
-			//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
-			if(result <=-5000){ // then we have a USB connection error
-				ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
-				if(result!=-5007) setConnected(false); // time out error
-			} else if(result!=HELIOS_SUCCESS) {
-				ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. Error : "+ ofToString(result));
-				setConnected(false);
-			} else {
-				setConnected(true);
+			
+				
+			}
+			// if we got to here then the dac is ready but we might not have a
+			// currentFrame yet...
+			if(nextFrame!=nullptr) {
+				if(currentFrame!=nullptr) {
+					delete currentFrame;
+				}
+				currentFrame = nextFrame;
+				nextFrame = nullptr;
+			}
+			if(currentFrame!=nullptr) {
+				int result =  0;
+				if(dacDevice!=nullptr) result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
+				if(result <=-5000){ // then we have a USB connection error
+					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
+					if(result!=-5007) setConnected(false); // time out error
+				} else if(result!=HELIOS_SUCCESS) {
+					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. Error : "+ ofToString(result));
+					setConnected(false);
+				} else {
+					setConnected(true);
+				}
 			}
 		} else  {
             
