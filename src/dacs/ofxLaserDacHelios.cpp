@@ -171,9 +171,7 @@ void DacHelios :: reset() {
 
 void DacHelios :: threadedFunction(){
 	
-	//const uint32_t samples_per_packet = 1024;
-    const int minBuffer = 500; // TODO make this dependent on pointrate
-
+	
 	//HeliosPoint * samples = (HeliosPoint *)calloc(sizeof(HeliosPoint), samples_per_packet);
 	DacHeliosFrame* currentFrame = nullptr;
 	DacHeliosFrame* nextFrame = nullptr;
@@ -206,16 +204,17 @@ void DacHelios :: threadedFunction(){
 					}
 					nextFrame = newFrame;
 				}
-				
+				//float time = ofGetElapsedTimef(); 
 				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
-				
+				//cout << status << " " << ofGetElapsedTimef()-time << endl; 
 				dacReady = (status == 1);
 				
 				if(!dacReady) {
-					if(status>1)
-						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus : "+ ofToString(status));
+					if(status<0) {
+						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));
 					sleep(1);
-				}
+					//cout << "."; 
+				} 
 			
 				
 			}
