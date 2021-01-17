@@ -28,6 +28,7 @@ DacHelios:: ~DacHelios() {
 	//stopThread();
 	close();
 	
+	
 }
 
 void DacHelios::close() {
@@ -106,7 +107,7 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
 	// get frame object
 
-	DacHeliosFrame* frame = new DacHeliosFrame();
+	DacHeliosFrame* frame = getFrame();
 	
 	// add all points into the frame object
 	frameMode = true;
@@ -198,7 +199,7 @@ void DacHelios :: threadedFunction(){
 			while(!dacReady)  {
 				if(framesChannel.tryReceive(newFrame)) {
 					if(nextFrame!=nullptr) {
-						delete nextFrame;
+						nextFrame = releaseFrame(nextFrame);
 					}
 					nextFrame = newFrame;
 				}
@@ -220,7 +221,7 @@ void DacHelios :: threadedFunction(){
 			// currentFrame yet...
 			if(nextFrame!=nullptr) {
 				if(currentFrame!=nullptr) {
-					delete currentFrame;
+					releaseFrame(currentFrame);
 				}
 				currentFrame = nextFrame;
 				nextFrame = nullptr;
@@ -231,7 +232,7 @@ void DacHelios :: threadedFunction(){
 				
 				// if we're not in frame mode then delete the points
 				if((result == HELIOS_SUCCESS) && (!frameMode) ) {
-					currentFrame=nullptr;
+					currentFrame=releaseFrame(currentFrame);
 				}
 				
 				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
@@ -295,3 +296,27 @@ void DacHelios :: setConnected(bool state) {
 		
 	}
 }
+
+
+DacHeliosFrame* DacHelios :: getFrame() {
+	DacHeliosFrame* returnframe;
+	
+	if(spareFrames.tryReceive(returnframe)) {
+		//ofLogNotice("DacHelios :: getFrame() - removed frame from channel");
+		returnframe->reset();
+		return returnframe;
+	} else {
+		//ofLogNotice("DacHelios :: getFrame() - created new frame");
+		returnframe =new DacHeliosFrame();
+		return returnframe;
+	}
+		
+}
+DacHeliosFrame* DacHelios :: releaseFrame(DacHeliosFrame* frame){
+	//delete frame;
+	//
+	spareFrames.send(frame);
+	//ofLogNotice("DacHelios :: releaseFrame() - added frame to channel "+ofToString(frame->numSamples));
+	return nullptr;
+}
+

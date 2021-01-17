@@ -27,6 +27,9 @@ class DacHeliosFrame {
 	~DacHeliosFrame() {
 		free(samples);
 	}
+	void reset() {
+		numSamples = 0;
+	} 
 	
 	void addPoint(ofxLaser::Point& p) {
 		// TODO check size
@@ -66,6 +69,10 @@ class DacHelios : public DacBase, ofThread{
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;
 	bool setPointsPerSecond(uint32_t pps);
+	
+	DacHeliosFrame* getFrame();
+	DacHeliosFrame* releaseFrame(DacHeliosFrame* frame);
+	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
 	string getLabel(){return "Helios";};
 	
