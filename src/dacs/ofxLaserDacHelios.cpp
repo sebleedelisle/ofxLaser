@@ -123,29 +123,21 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 
 
 bool DacHelios::sendPoints(const vector<Point>& points) {
-	return false;
 	
-	//	if(bufferedPoints.size()>pps*0.5) {
-//		return false;
-//	}
-//	frameMode = false;
-//	HeliosPoint p1;
-//	if(lock()) {
-//		frameMode = false;
-//
-//		for(size_t i= 0; i<points.size(); i++) {
-//			const Point& p2 = points[i];
-//			p1.x = ofMap(p2.x,0,800, HELIOS_MIN, HELIOS_MAX);
-//			p1.y = ofMap(p2.y,800,0, HELIOS_MIN, HELIOS_MAX); // Y is UP
-//			p1.r = roundf(p2.r);
-//			p1.g = roundf(p2.g);
-//			p1.b = roundf(p2.b);
-//			p1.i = 255;
-//			addPoint(p1);
-//		}
-//		unlock();
-//	}
-//	return true;
+	if(!connected) return false;
+	// get frame object
+
+	DacHeliosFrame* frame = getFrame();
+	
+	// add all points into the frame object
+	frameMode = false;
+	for(ofxLaser::Point p : points) {
+		frame->addPoint(p);
+	}
+	// add the frame object to the frame channel
+	framesChannel.send(frame);
+	
+	return true;
 };
 
 bool DacHelios::setPointsPerSecond(uint32_t newpps) {
