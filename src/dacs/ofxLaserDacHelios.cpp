@@ -211,8 +211,9 @@ void DacHelios :: threadedFunction(){
 
 					if(status<0) {
 						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));
+					}
 					sleep(1);
-				} 		
+				}
 				
 			}
 			// if we got to here then the dac is ready but we might not have a
@@ -243,6 +244,8 @@ void DacHelios :: threadedFunction(){
 				} else {
 					setConnected(true);
 				}
+			} else {
+				ofLogError("DacHelios - run out of points!");
 			}
 		} else {
             
