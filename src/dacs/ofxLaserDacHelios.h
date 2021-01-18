@@ -90,7 +90,8 @@ class DacHelios : public DacBase, ofThread{
 
 	void setConnected(bool state);
 	
-	
+	/// TEMP
+	ofxLaser::Point lastPoint;
 	
 	ofThreadChannel<DacHeliosFrame*> framesChannel;
 		

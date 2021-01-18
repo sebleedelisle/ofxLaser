@@ -131,8 +131,10 @@ bool DacHelios::sendPoints(const vector<Point>& points) {
 	
 	// add all points into the frame object
 	frameMode = false;
+	frame->addPoint(lastPoint);
 	for(ofxLaser::Point p : points) {
 		frame->addPoint(p);
+		lastPoint = p; 
 	}
 	// add the frame object to the frame channel
 	framesChannel.send(frame);
@@ -190,7 +192,7 @@ void DacHelios :: threadedFunction(){
 				
 			while((!dacReady) && isThreadRunning())  {
 				// if we're in frame mode or we don't have a next frame let's pull another frame off the buffer
-				// (means that we only skip frames in frame mode) 
+				// (means that we only skip frames in frame mode)
 				if( (frameMode || nextFrame==nullptr) &&
 					 (framesChannel.tryReceive(newFrame)) ) {
 					if(nextFrame!=nullptr) {
