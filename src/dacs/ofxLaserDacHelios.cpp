@@ -208,7 +208,7 @@ void DacHelios :: threadedFunction(){
 					if(status<0) {
 						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));
 					}
-					sleep(1);
+					usleep(100);
 				}
 				
 			}
@@ -223,8 +223,14 @@ void DacHelios :: threadedFunction(){
 			}
 			if(currentFrame!=nullptr) {
 				int result =  0;
-				if(dacDevice!=nullptr) result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
-				
+				int attempts = 0; 
+				if(dacDevice!=nullptr) {
+					while((attempts<512) && (result!=HELIOS_SUCCESS)) {
+						result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+						attempts++; 
+						yield(); 
+					}
+				}
 				// if we're not in frame mode then delete the points
 				if((result == HELIOS_SUCCESS) && (!frameMode) ) {
 					currentFrame=releaseFrame(currentFrame);
@@ -233,15 +239,15 @@ void DacHelios :: threadedFunction(){
 				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
 				if(result <=-5000){ // then we have a USB connection error
 					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
-					if(result!=-5007) setConnected(false); // time out error
+					//if(result!=-5007) setConnected(false); // time out error
 				} else if(result!=HELIOS_SUCCESS) {
 					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. Error : "+ ofToString(result));
-					setConnected(false);
+					//setConnected(false);
 				} else {
-					setConnected(true);
+					//setConnected(true);
 				}
 			} else {
-				ofLogError("DacHelios - run out of points!");
+				//ofLogError("DacHelios - run out of points!");
 			}
 		} else {
             
