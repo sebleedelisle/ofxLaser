@@ -200,19 +200,22 @@ void DacHelios :: threadedFunction(){
 					}
 					nextFrame = newFrame;
 				}
-				//float time = ofGetElapsedTimef(); 
+				yield(); 
+				float time = ofGetElapsedTimef(); 
 				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
-				//cout << status << " " << ofGetElapsedTimef()-time << endl; 
+				
+				yield(); 
 				dacReady = (status == 1);
 				
 				if(!dacReady) {
 
 					if(status<0) {
-						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));
+						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status) +" " + ofToString(ofGetElapsedTimef()-time));
 					}
 					usleep(100);
 				}
 				
+				yield(); 
 			}
 			// if we got to here then the dac is ready but we might not have a
 			// currentFrame yet...
