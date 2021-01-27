@@ -212,7 +212,7 @@ void DacHelios :: threadedFunction(){
 					if(status<0) {
 						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status) +" " + ofToString(ofGetElapsedTimef()-time));
 					}
-					usleep(100);
+					yield();
 				}
 				
 				yield(); 
