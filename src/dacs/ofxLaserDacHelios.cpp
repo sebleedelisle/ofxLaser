@@ -58,25 +58,36 @@ void DacHelios::setup(string name) {
 	pointBufferDisplay.set("Point Buffer", 0,0,1799);
 	displayData.push_back(&deviceName);
 	displayData.push_back(&pointBufferDisplay);
-	
+        
+    #ifndef _MSC_VER
+            // only linux and osx
+            //http://www.yonch.com/tech/82-linux-thread-priority
+            struct sched_param param;
+            param.sched_priority = 60;
+            pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+    #else
+            // windows implementation
+            SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+    #endif
+    
 	startThread();
 
 }
 
 const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
-	if(lock()) {
-	
-		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
-		
-		//int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
-		
-		//pointBufferDisplay = bufferedPoints.size();
-																 
-		//latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
-		//reconnectCount = prepareSendCount;
-	
-		unlock();
-	}
+//	if(lock()) {
+//
+//		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
+//
+//		//int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
+//
+//		//pointBufferDisplay = bufferedPoints.size();
+//
+//		//latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
+//		//reconnectCount = prepareSendCount;
+//
+//		unlock();
+//	}
 	
 	return displayData;
 }
@@ -105,15 +116,24 @@ bool DacHelios::connectToDevice(string name) {
 
 bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
-	// get frame object
-
+	// make a new frame object or reuse one if it already exists
 	DacHeliosFrame* frame = getFrame();
 	
+    int minSampleCount = pps * 0.01; // minimum frame length is 1/100 of a second
+    
 	// add all points into the frame object
 	frameMode = true;
-	for(ofxLaser::Point p : points) {
-		frame->addPoint(p);
-	}
+    while(frame->numSamples<minSampleCount) {
+        for(const ofxLaser::Point& p : points) {
+            frame->addPoint(p);
+        }
+   
+    }
+//    if ((((int)frame->numSamples-45) % 64) == 0) {
+//        Point p =points.back();
+//        p.setColour(0,0,0);
+//        frame->addPoint(p);
+//    }
 	// add the frame object to the frame channel
 	framesChannel.send(frame);
 	
@@ -201,7 +221,7 @@ void DacHelios :: threadedFunction(){
 					nextFrame = newFrame;
 				}
 				yield(); 
-				float time = ofGetElapsedTimef(); 
+				//float time = ofGetElapsedTimef();
 				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
 				
 				yield(); 
@@ -210,12 +230,12 @@ void DacHelios :: threadedFunction(){
 				if(!dacReady) {
 
 					if(status<0) {
-						ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status) +" " + ofToString(ofGetElapsedTimef()-time));
+                        ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));// +" " + ofToString(ofGetElapsedTimef()-time));
 					}
 					yield();
 				}
 				
-				yield(); 
+				//yield();
 			}
 			// if we got to here then the dac is ready but we might not have a
 			// currentFrame yet...
@@ -230,7 +250,7 @@ void DacHelios :: threadedFunction(){
 				int result =  0;
 				int attempts = 0; 
 				if(dacDevice!=nullptr) {
-					while((attempts<512) && (result!=HELIOS_SUCCESS)) {
+					while((attempts<10) && (result!=HELIOS_SUCCESS)) {
 						result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
 						attempts++; 
 						yield(); 
@@ -268,7 +288,7 @@ void DacHelios :: threadedFunction(){
 						unlock();
 					} else {
 						unlock();
-						// wait half a second and try again
+						// wait five seconds and try again
 						for(size_t i = 0; (i<10)&&(isThreadRunning()); i++ ) {
 							sleep(50);
 						}

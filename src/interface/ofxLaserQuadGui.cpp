@@ -285,7 +285,7 @@ void QuadGui::serialize(ofJson&json) {
 		DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
-	cout << json.dump(3) << endl;
+	//cout << json.dump(3) << endl;
 	//deserialize(json);
 }
 

@@ -41,9 +41,9 @@ class Dot : public Shape{
 	
 	
 	void addPreviewToMesh(ofMesh& mesh){
-		float radius = ofMap(intensity, 0, 1,0.5,2, true);
+		float radius = ofMap(intensity, 0, 1,0.1,1.5, true);
 		ofColor c(colour);
-		c.setBrightness(ofMap(intensity,0,0.5,150,255,true));
+		c*=(ofMap(intensity,0,0.5,0,1,true));
 		
 		ofVec3f v(0,-radius);
 		mesh.addColor(ofColor(0));

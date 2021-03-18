@@ -13,13 +13,18 @@ using namespace ofxLaser;
 DacHeliosManager::DacHeliosManager() {
 	
 	ofLogNotice("DacHeliosManager constructor");
+    //NB it doesn't matter how many times you call libusb_init - if there's
+    // already a default context it'll reuse it and not initialise it again
 	int result = libusb_init(NULL);
 	if (result < 0) {
 		ofLogError("DacHeliosManager failed to init libusb");
-	}
+        throw; 
+    } else {
 	
-	libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
-
+        libusb_set_option(NULL, LIBUSB_OPTION_LOG_LEVEL);
+        updateUsbDeviceList();
+       
+    }
 	
 }
 DacHeliosManager::~DacHeliosManager() {
@@ -159,7 +164,8 @@ bool DacHeliosManager::deleteDevice(HeliosDacDevice* deviceToDelete){
 
 HeliosDacDevice*  DacHeliosManager::getDacDeviceForName(string name) {
 	ofLogNotice("DacHeliosManager::getDacDeviceForName " + name);
-	updateUsbDeviceList();
+    
+	 
 	 
 	for(size_t i = 0; i<availableDevices.size(); i++) {
 		HeliosDacDevice* device = availableDevices.at(i);
