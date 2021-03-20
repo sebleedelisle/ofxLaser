@@ -637,41 +637,41 @@ bool ZoneTransform::loadSettings() {
 		if(deserialize(json)) return true;
 	}
 	
-	// LEGACY code! for old XML settings files
-	ofFile file(saveLabel+".xml");
-	if(!file.exists()) return false;
-	
-	ofParameterGroup loadParams;
-	ofxPanel gui;
-	gui.add(params);
-	
-	gui.loadFromFile(saveLabel+".xml");
-	
-	ofxPanel gui2;
-	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
-	xDivisions = xDivisionsNew;
-	yDivisions = yDivisionsNew;
-	
-	dstHandles.resize(numhandles);
-	
-	
-	for(int i = 0; i<numhandles; i++) {
-		ofParameter<glm::vec2> p;
-		p = dstHandles[i];
-		p.setName("dstHandle"+ofToString(i));
-		loadParams.add(p);
-	}
-	loadParams.setName("handles");
-	gui2.add(loadParams);
-	
-	gui2.loadFromFile(saveLabel+"-Points.xml");
-	for(int i = 0; i<numhandles; i++) {
-		dstHandles[i].set(loadParams.getVec2f("dstHandle"+ofToString(i)));
-		
-	}
-	
-	// save as json
-	saveSettings();
+//	// LEGACY code! for old XML settings files
+//	ofFile file(saveLabel+".xml");
+//	if(!file.exists()) return false;
+//
+//	ofParameterGroup loadParams;
+//	ofxPanel gui;
+//	gui.add(params);
+//
+//	gui.loadFromFile(saveLabel+".xml");
+//
+//	ofxPanel gui2;
+//	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
+//	xDivisions = xDivisionsNew;
+//	yDivisions = yDivisionsNew;
+//
+//	dstHandles.resize(numhandles);
+//
+//
+//	for(int i = 0; i<numhandles; i++) {
+//		ofParameter<glm::vec2> p;
+//		p = dstHandles[i];
+//		p.setName("dstHandle"+ofToString(i));
+//		loadParams.add(p);
+//	}
+//	loadParams.setName("handles");
+//	gui2.add(loadParams);
+//
+//	gui2.loadFromFile(saveLabel+"-Points.xml");
+//	for(int i = 0; i<numhandles; i++) {
+//		dstHandles[i].set(loadParams.getVec2f("dstHandle"+ofToString(i)));
+//
+//	}
+//
+//	// save as json
+//	saveSettings();
 	
 
 	return true;

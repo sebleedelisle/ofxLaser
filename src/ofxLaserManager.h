@@ -18,7 +18,7 @@
 #include "ofxLaserCircle.h"
 #include "ofxLaserProjector.h"
 #include "ofxLaserDacBase.h"
-#include "ofxGui.h"
+//#include "ofxGui.h"
 #include "ofxLaserMaskManager.h"
 
 #define OFXLASER_PROFILE_FAST "FAST"
@@ -93,7 +93,8 @@ namespace ofxLaser {
 		int getNumProjectors() { return projectors.size(); };
 		void initGui(bool showAdvanced = false);
 		void addCustomParameter(ofAbstractParameter& param);
-		ofxPanel& getGui();
+		//ofxPanel& getGui();
+        
 		void setDefaultHandleSize(float size);
 		bool togglePreview();
 		bool toggleGui();
@@ -152,12 +153,14 @@ namespace ofxLaser {
 		
 		protected :
 		
-		ofxPanel gui;
-		ofParameterGroup params;
+		//ofxPanel gui;
+        
+       
+		ofParameterGroup interfaceParams;
 		ofParameterGroup customParams;
 		bool guiIsVisible;
-		ofxButton armAllButton;
-		ofxButton disarmAllButton;
+		//ofxButton armAllButton;
+		//ofxButton disarmAllButton;
 		bool doArmAll = false;
 		bool doDisarmAll = false;
 		

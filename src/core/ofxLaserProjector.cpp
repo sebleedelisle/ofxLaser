@@ -34,7 +34,7 @@ Projector::~Projector() {
 	pps.removeListener(this, &Projector::ppsChanged);
 	armed.removeListener(this, &ofxLaser::Projector::setArmed);
 	if(dac!=nullptr) dac->close();
-	delete gui;
+	//delete gui;
 }
 
 void Projector::setDefaultHandleSize(float size) {
@@ -47,19 +47,20 @@ void Projector::setDefaultHandleSize(float size) {
 }
 
 void Projector :: initGui(bool showAdvanced) {
+
+	//gui = new ofxPanel();
+    
+    
+	//params.setup(label, label+".json");
+	params.setName(label);
 	
-	gui = new ofxPanel();
-	
-	gui->setup(label, label+".json");
-	gui->setName(label);
-	
-	gui->add(armed.set("ARMED", false));
+	params.add(armed.set("ARMED", false));
 	armed.addListener(this, &ofxLaser::Projector::setArmed);
     
     
-    gui->add(intensity.set("Intensity", 1,0,1));
-	gui->add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
-	gui->add(resetDac.set("Reset DAC", false));
+    params.add(intensity.set("Intensity", 1,0,1));
+	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+	params.add(resetDac.set("Reset DAC", false));
 	
     
     
@@ -89,7 +90,7 @@ void Projector :: initGui(bool showAdvanced) {
 	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
 	advanced.add(sortShapes.set("Optimise shape draw order", true));
-	advanced.add(targetFramerate.set("Target framerate (experimental)", 25, 23, 120));
+	advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
 
@@ -98,7 +99,7 @@ void Projector :: initGui(bool showAdvanced) {
 	}
 	else speedMultiplier = 1;
 	
-	gui->add(projectorparams);
+	params.add(projectorparams);
 	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
@@ -127,9 +128,7 @@ void Projector :: initGui(bool showAdvanced) {
     detail.cornerThreshold  = 20;
     detail.dotMaxPoints = 40;
     
-	gui->add(renderparams);
-	
-	
+	params.add(renderparams);
 	
 	ofParameterGroup colourparams;
 	colourparams.setName("Colour calibration");
@@ -152,7 +151,7 @@ void Projector :: initGui(bool showAdvanced) {
 	colourparams.add(blue25.set("blue 25", 0.25,0,1));
 	colourparams.add(blue0.set("blue 0", 0,0,1));
 	
-	gui->add(colourparams);
+	params.add(colourparams);
 	
     zonesEnabled.resize(zones.size());
     
@@ -162,7 +161,7 @@ void Projector :: initGui(bool showAdvanced) {
 	for(size_t i = 0; i<zones.size(); i++) {
 		zonemutegroup.add(zonesMuted[i].set(zones[i]->label, false));
 	}
-	gui->add(zonemutegroup);
+	params.add(zonemutegroup);
     
     ofParameterGroup zonesologroup;
     zonesologroup.setName("Solo Zones");
@@ -171,7 +170,7 @@ void Projector :: initGui(bool showAdvanced) {
         zonesologroup.add(zonesSoloed[i].set(zones[i]->label, false));
     }
     
-    gui->add(zonesologroup);
+    params.add(zonesologroup);
 	
 	
     
@@ -191,19 +190,19 @@ void Projector :: initGui(bool showAdvanced) {
 		
 		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
 		
-		gui->add(zonemaskgroup);
+		params.add(zonemaskgroup);
 		
 		ofParameterGroup zonewarpgroup;
 		zonewarpgroup.setName(zones[i]->label+"warp");
 		zonewarpgroup.add(zoneTransforms[i]->params);
-		gui->add(zonewarpgroup);
+		params.add(zonewarpgroup);
 	
 	}
 	
 
 	// try loading the xml file for legacy reasons
-	gui->loadFromFile(label+".xml");
-	gui->loadFromFile(label+".json");
+	//params.load(label+".xml");
+	//params.load(label+".json");
 	
 	// error checking on blank shift for older config files
 	if(colourChangeOffset<0) colourChangeOffset = 0;
@@ -226,23 +225,43 @@ void Projector :: initGui(bool showAdvanced) {
 	
 }
 
+void Projector :: drawGui() {
+    
+    auto mainSettings = ofxImGui::Settings();
+    
+
+    //if(ofxImGui::BeginWindow(label, mainSettings)) {
+        
+        ofxImGui::AddGroup(params, mainSettings);
+    ImGui::SameLine();
+       HelpMarker(
+           "- Load additional fonts with io.Fonts->AddFontFromFileTTF().\n"
+           "- The font atlas is built when calling io.Fonts->GetTexDataAsXXXX() or io.Fonts->Build().\n"
+           "- Read FAQ and docs/FONTS.txt for more details.\n"
+           "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
+     //   ofxImGui::EndWindow(mainSettings);
+
+    //}
+    
+}
+
 void Projector ::setArmed(bool& armed){
     dac->setActive(armed); 
 }
 
 void Projector :: minimiseGui() {
-	gui->minimizeAll();
-	ofxGuiGroup* g;
-	//	g = dynamic_cast <ofxGuiGroup *>(gui->getControl(projectorlabel));
-	//	if(g) g->maximize();
-	ofxGuiGroup* projsettings = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
-	if(projsettings) {
-		projsettings->maximize();
-    	g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Output position offset"));
-    	if(g) g->minimize();
-		g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Advanced"));
-		if(g) g->minimize();
-	}
+//	gui->minimizeAll();
+//	ofxGuiGroup* g;
+//	//	g = dynamic_cast <ofxGuiGroup *>(gui->getControl(projectorlabel));
+//	//	if(g) g->maximize();
+//	ofxGuiGroup* projsettings = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
+//	if(projsettings) {
+//		projsettings->maximize();
+//    	g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Output position offset"));
+//    	if(g) g->minimize();
+//		g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Advanced"));
+//		if(g) g->minimize();
+//	}
 }
 
 
@@ -1440,7 +1459,8 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 
 void Projector::saveSettings(){
-	gui->saveToFile(label+".json");
+    
+	//params.saveToFile(label+".json");
 	// not sure this is needed cos we save if we edit...
 //	for(size_t i = 0; i<zoneWarps.size(); i++) {
 //		zoneWarps[i]->saveSettings();

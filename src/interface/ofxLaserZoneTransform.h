@@ -13,7 +13,7 @@
 #include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
-#include "ofxGui.h"
+//#include "ofxGui.h"
 #include "ofxLaserWarper.h"
 
 namespace ofxLaser {

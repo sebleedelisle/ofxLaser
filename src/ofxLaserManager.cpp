@@ -456,10 +456,10 @@ void Manager:: drawUI(bool expandPreview){
 			for(size_t i= 0; i<projectors.size(); i++) {
 				if (((int)i==currentProjector) || (projectors.size()<=2)) {
 					
-					int x = projectors[i]->gui->getPosition().x;
-					int y = projectors[i]->gui->getPosition().y - guiSpacing - dacStatusBoxHeight;
-					projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
-					projectors[i]->gui->draw();
+					//int x = projectors[i]->gui->getPosition().x;
+					//int y = projectors[i]->gui->getPosition().y - guiSpacing - dacStatusBoxHeight;
+					//projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
+					projectors[i]->drawGui();
 
 				
 				}
@@ -467,8 +467,8 @@ void Manager:: drawUI(bool expandPreview){
 			
 			if((projectors.size()>2) && (currentProjector==-1) ) {
 				for(size_t i= 0; i<projectors.size(); i++) {
-					int x = projectors[i]->gui->getPosition().x;
-					projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
+					//int x = projectors[i]->gui->getPosition().x;
+					//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
 				}
 				
 			}
@@ -476,31 +476,20 @@ void Manager:: drawUI(bool expandPreview){
 		} else {
 			
 			int w = dacStatusBoxSmallWidth;
-			int x = gui.getPosition().x-w-guiSpacing;
+            int x = ofGetWidth() - 220; // gui.getPosition().x-w-guiSpacing;
 			
 			// draw all the status boxes but small
 			
 			for(size_t i= 0; i<projectors.size(); i++) {
 				//int x = projectors[i]->gui->getPosition().x;
-				projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+gui.getPosition().y, w,dacStatusBoxHeight);
+				//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+gui.getPosition().y, w,dacStatusBoxHeight);
+                projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
 			}
 			
 		
 		}
 		
-		
-//		} else {
-//			for(size_t i= 0; i<projectors.size(); i++) {
-//				int x = projectors[i]->gui->getPosition().x;
-//				int y = projectors[i]->gui->getPosition().y;
-//				int w = projectors[i]->gui->getWidth();
-//				projectors[i]->renderStatusBox(x, y-guiSpacing-dacStatusBoxHeight, guiProjectorPanelWidth,dacStatusBoxHeight);
-//				projectors[i]->showWarpGui();
-//				//projectors[i]->gui->draw();
-//			}
-//		}
-//	}
-   		gui.draw();
+   		//gui.draw();
 	}
 	
 }
@@ -629,26 +618,27 @@ void Manager :: updateGuiPositions() {
 			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
 		}
 		
-		projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
+		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
 		//projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
 
 	}
 	
 	if(projectors.size() == 0) {
 		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
-		gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
+		//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
 		
 	} else {
 		if(showProjectorSettings) {
 			if(projectors.size()>2) {
-				gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
+				//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
 			} else if(projectors.size()>0){
-				int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
-				gui.setPosition(x, guiSpacing);
+				//int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
+                int x = ofGetWidth()-220-220-guiSpacing;
+                //gui.setPosition(x, guiSpacing);
 			}
 		} else {
 			int x = ofGetWidth()-guiSpacing;
-			gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
+			//gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
 			
 		}
 		
@@ -658,10 +648,10 @@ void Manager :: updateGuiPositions() {
 void Manager::showAdvancedPressed(bool& state){
 	updateGuiPositions();
 }
-
-ofxPanel& Manager ::getGui(){
-	return gui;
-}
+//
+//ofxPanel& Manager ::getGui(){
+//	return gui;
+//}
 
 int Manager :: getProjectorPointRate(unsigned int projectornum ){
     return projectors.at(projectornum)->getPointRate();
@@ -697,70 +687,56 @@ void Manager::previousProjector() {
 
 void Manager::initGui(bool showExperimental) {
 	
-	// TODO - warn if called more than once.
-	
-	ofxGuiSetDefaultWidth(220);
-	ofxGuiSetFillColor(ofColor::fromHsb(144,100,112));
-	gui.setup("Laser", "laserSettings.json");
-	
-	
-	gui.setDefaultHeight(40);
+    
+   
+    
+//	gui.setup("Laser", "laserSettings.json");
+//
+//
+//	gui.setDefaultHeight(40);
+//
+//	gui.add(armAllButton.setup("ARM ALL"));
+//	gui.add(disarmAllButton.setup("DISARM ALL"));
+//	gui.add(masterIntensity.set("Master Intensity", 0.1,0,1));
+//	gui.add(showProjectorSettings.set("Edit Projector", false));
+//
+//
+//	gui.setDefaultHeight(20);
 
-	gui.add(armAllButton.setup("ARM ALL"));
-	gui.add(disarmAllButton.setup("DISARM ALL"));
-	gui.add(masterIntensity.set("Master Intensity", 0.1,0,1));
-	gui.add(showProjectorSettings.set("Edit Projector", false));
-	//gui.add(showGuide.set("show guide image", true));
-	//gui.add(guideBrightness.set("guide brightness", 150,0,255));
-	
-	
-	gui.setDefaultHeight(20);
-
-	armAllButton.addListener(this, &ofxLaser::Manager::armAllProjectors);
-	disarmAllButton.addListener(this, &ofxLaser::Manager::disarmAllProjectors);
-	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
+//	armAllButton.addListener(this, &ofxLaser::Manager::armAllProjectors);
+//	disarmAllButton.addListener(this, &ofxLaser::Manager::disarmAllProjectors);
+//	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 
 
-	for(size_t i= 0; i<projectors.size();i++) {
-		gui.add(projectors[i]->armed);
-		
-	}
-	
-	gui.add(testPattern.set("Test Pattern", 0,0,9));
-	
-	//ofParameterGroup params;
-	params.setName("Interface");
-	params.add(showZones.set("Show zones", false));
-	params.add(showPreview.set("Show preview", true));
-	params.add(showPathPreviews.set("Show path previews", true));
-    params.add(useBitmapMask.set("Use bitmap mask", false));
-	params.add(showBitmapMask.set("Show bitmap mask", false));
-	params.add(laserMasks.set("Laser mask shapes", false));
-	
-//	if(guideImage.isAllocated()) {
-//		params.add(showGuide.set("show guide image", true));
-//		params.add(guideBrightness.set("guide brightness", 150,0,255));
+//	for(size_t i= 0; i<projectors.size();i++) {
+//		gui.add(projectors[i]->armed);
+//
 //	}
 	
-	gui.add(params);
+//	gui.add(testPattern.set("Test Pattern", 0,0,9));
+	
+	interfaceParams.setName("Interface");
+	interfaceParams.add(showZones.set("Show zones", false));
+	interfaceParams.add(showPreview.set("Show preview", true));
+	interfaceParams.add(showPathPreviews.set("Show path previews", true));
+    interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
+	interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
+	interfaceParams.add(laserMasks.set("Laser mask shapes", false));
+	
+//	gui.add(params);
 	if(customParams.size()>0) {
 		customParams.setName("Custom");
-		gui.add(customParams);
+	//	gui.add(customParams);
 	}
 	
 	// try loading the xml file for legacy reasons
-	gui.loadFromFile("laserSettings.xml");
-	gui.loadFromFile("laserSettings.json");
+	//gui.loadFromFile("laserSettings.xml");
+	//gui.loadFromFile("laserSettings.json");
     showPreview = true;
-	//showPathPreviews = true;
-	//gui.setPosition(width+10, 8);
-	showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
+
+    //showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
 
     
-	// TODO - check font exists?
-	//gui.loadFont("fonts/Verdana.ttf", 8, false);
-	
-	ofxGuiSetDefaultWidth(guiProjectorPanelWidth);
 	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->initGui(showExperimental);
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
@@ -768,7 +744,6 @@ void Manager::initGui(bool showExperimental) {
 	
 	updateScreenSize();
 
-	ofxGuiSetDefaultWidth(220);
 	
 }
 
@@ -813,7 +788,7 @@ void Manager::testPatternAllProjectors(int &pattern){
 	}
 }
 void Manager::saveSettings() {
-	gui.saveToFile("laserSettings.json");
+	//gui.saveToFile("laserSettings.json");
 	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->saveSettings();
 	}

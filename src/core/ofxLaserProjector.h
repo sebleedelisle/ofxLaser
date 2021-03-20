@@ -12,7 +12,8 @@
 #include "ofxLaserZoneTransform.h"
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
-#include "ofxGui.h"
+// #include "ofxGui.h"
+#include "ofxImGui.h"
 #include "PennerEasing.h"
 
 namespace ofxLaser {
@@ -40,6 +41,21 @@ namespace ofxLaser {
 		~Projector();
 		
         void initGui(bool showAdvanced = false);
+        void drawGui();
+        
+        static void HelpMarker(const char* desc)
+        {
+            ImGui::TextDisabled("(?)");
+            if (ImGui::IsItemHovered())
+            {
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted(desc);
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+        }
+        
 		void setDefaultHandleSize(float size);
         void initListeners();
         bool mousePressed(ofMouseEventArgs &e);
@@ -179,8 +195,9 @@ namespace ofxLaser {
 		ofParameter<float>blue25;
 		ofParameter<float>blue0;
 		
-		ofxPanel* gui;
+		//ofxPanel* gui;
         //bool guiIsVisible;
+        ofParameterGroup params; 
 		bool guiInitialised = false; 
 
 	};

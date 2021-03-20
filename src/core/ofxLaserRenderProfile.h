@@ -7,7 +7,7 @@
 //
 #pragma once
 #include "ofMain.h"
-#include "ofxGui.h"
+//#include "ofxGui.h"
 
 namespace ofxLaser {
 
