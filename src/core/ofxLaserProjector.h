@@ -13,7 +13,7 @@
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 // #include "ofxGui.h"
-#include "ofxImGui.h"
+//#include "ofxImGui.h"
 #include "PennerEasing.h"
 
 namespace ofxLaser {
@@ -41,20 +41,9 @@ namespace ofxLaser {
 		~Projector();
 		
         void initGui(bool showAdvanced = false);
-        void drawGui();
         
-        static void HelpMarker(const char* desc)
-        {
-            ImGui::TextDisabled("(?)");
-            if (ImGui::IsItemHovered())
-            {
-                ImGui::BeginTooltip();
-                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-                ImGui::TextUnformatted(desc);
-                ImGui::PopTextWrapPos();
-                ImGui::EndTooltip();
-            }
-        }
+        bool loadSettings();
+        bool saveSettings();
         
 		void setDefaultHandleSize(float size);
         void initListeners();
@@ -77,7 +66,11 @@ namespace ofxLaser {
             else return pps;
         }
 		
-		void renderStatusBox(float x=0, float y=0, float w=300, float h=100);
+        
+        
+        string getDacLabel() ;
+        bool getDacConnectedState();
+		//void renderStatusBox(float x=0, float y=0, float w=300, float h=100);
 		
 		void addZone(Zone* zone, float srcwidth, float srcheight);
 		void drawLaserPath(ofRectangle rect);
@@ -93,7 +86,6 @@ namespace ofxLaser {
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>& points);
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
 		void processPoints(float masterIntensity, bool offsetColours = true);
-		void saveSettings();
 		
 		RenderProfile& getRenderProfile(string profilelabel);
 		
@@ -155,6 +147,8 @@ namespace ofxLaser {
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
 		ofParameter<float> rotation;
+        ofParameter<glm::vec2> outputOffset;
+        
 		ofParameter<float>targetFramerate;
 		ofParameter<bool>syncToTargetFramerate;
 		ofParameter<int>syncShift;
@@ -170,12 +164,12 @@ namespace ofxLaser {
 
 		ofParameter<bool> laserOnWhileMoving = false;
 		
-		ofParameter<glm::vec2> outputOffset;
 		
 		map<string, RenderProfile> renderProfiles;
 
 		// would probably be sensible to move these settings out into a colour
 		// calibration object.
+        ofParameterGroup colourParams;
         
 		ofParameter<float>red100;
 		ofParameter<float>red75;
@@ -197,7 +191,8 @@ namespace ofxLaser {
 		
 		//ofxPanel* gui;
         //bool guiIsVisible;
-        ofParameterGroup params; 
+        ofParameterGroup params;
+        ofParameterGroup advancedParams; 
 		bool guiInitialised = false; 
 
 	};

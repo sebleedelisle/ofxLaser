@@ -9,7 +9,6 @@
 
 #include "ofMain.h"
 #include "ofxLaserDragHandle.h"
-#include "ofxXmlSettings.h"
 #include "ofxLaserPoint.h"
 
 namespace ofxLaser {

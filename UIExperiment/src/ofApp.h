@@ -7,6 +7,9 @@
 #include "ofxLaserDacIDN.h"
 #include "ofxLaserDacHelios.h"
 
+
+
+
 //#define USE_ETHERDREAM
 //#define USE_IDN
 //#define USE_LASERDOCK
@@ -50,13 +53,13 @@ public:
 	bool drawingShape = false;
 	int laserWidth;
 	int laserHeight;
-    ofxImGui::Gui imGui;
-     ImFont* font;
-        
+   
+    
+    
 	std::vector<ofPolyline> polyLines;
 		
 	float elapsedTime; 
 
-    ofParameter<ofColor> color;
+    ofParameter<ofFloatColor> color;
 };
 

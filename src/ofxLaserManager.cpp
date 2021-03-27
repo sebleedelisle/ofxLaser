@@ -36,40 +36,41 @@ Manager :: Manager() {
 	showPreview = true;
 	showZones = false;
 	currentProjector = -1;
-    guiIsVisible = true;
+	guiIsVisible = true;
 	
-    ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize, OF_EVENT_ORDER_BEFORE_APP);
+	ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize, OF_EVENT_ORDER_BEFORE_APP);
 	
 }
 Manager :: ~Manager() {
-    ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
-    ofRemoveListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
+	ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
+	ofRemoveListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
 	saveSettings();
 }
 
 void Manager :: setup(int w, int h){
 	width = w;
 	height = h;
-    laserMask.init(w,h);
+	laserMask.init(w,h);
+    previewFbo.allocate(w, h, GL_RGBA, 3);
 }
 
 
 void Manager::addProjector(DacBase& dac) {
-
+	
 	// create and add new projector object
 	
-	Projector* projector = new Projector("Projector"+ofToString(projectors.size()+1), dac);
+	Projector* projector = new Projector("Projector"+ofToString((int)projectors.size()+1), dac);
 	projectors.push_back(projector);
 	// If we have no zones set up then create a big default zone.
 	if(zones.size()==0) {
-		addZoneToProjector(createDefaultZone(), projectors.size()-1);
+		addZoneToProjector(createDefaultZone(), (int)projectors.size()-1);
 	} else if(zones.size()==1) {
-		addZoneToProjector(0, projectors.size()-1);
+		addZoneToProjector(0, (int)projectors.size()-1);
 	}
 	
 	projector->setDefaultHandleSize(defaultHandleSize);
 	//Projector& proj = *projectors.back();
-
+	
 	//proj.gui->setPosition(width+320,10);
 	
 	//updateScreenSize();
@@ -84,7 +85,7 @@ void Manager::addZone(const ofRectangle& rect) {
 void Manager :: addZone(float x, float y, float w, float h) {
 	if(w<=0) w = width;
 	if(h<=0) h = height;
-	zones.push_back(new Zone(zones.size(), x, y, w, h));
+	zones.push_back(new Zone((int)zones.size(), x, y, w, h));
 	zones.back()->loadSettings();
 	
 }
@@ -107,7 +108,7 @@ int Manager::createDefaultZone() {
 	// check there aren't any zones yet?
 	// create a zone equal to the width and height of the total output space
 	addZone(0,0,width,height);
-	return zones.size()-1;
+	return (int)zones.size()-1;
 	
 }
 
@@ -155,15 +156,15 @@ void Manager::drawPoly(const ofPolyline & poly, const ofColor& col, string profi
 	
 	ofPolyline& polyline = tmpPoly;
 	polyline = poly;
-
+	
 	for(glm::vec3& v : polyline.getVertices()) {
 		v = gLProject(v);
 	}
 	
-
+	
 	
 	Polyline* p =new ofxLaser::Polyline(polyline, col, profileName);
-    p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
 }
@@ -176,7 +177,7 @@ void Manager::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, s
 	
 	if((poly.size()==0)||(poly.getPerimeter()<0.1)) return;
 	
-
+	
 	ofPolyline& polyline = tmpPoly;
 	polyline = poly;
 	
@@ -188,7 +189,7 @@ void Manager::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, s
 	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
-
+	
 	
 }
 
@@ -204,23 +205,23 @@ void Manager:: update(){
 	if(doDisarmAll) disarmAllProjectors();
 	zonesChanged = false;
 	
-    if(useBitmapMask) laserMask.update();
+	if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!
 	for(size_t i= 0; i<shapes.size(); i++) {
 		delete shapes[i];
 	}
 	shapes.clear();
-    
-    // updates all the zones. If zone->update returns true, then
-    // it means that the zone has changed.
+	
+	// updates all the zones. If zone->update returns true, then
+	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
 		zones[i]->visible= (currentProjector==-1);
-		updateZoneRects = updateZoneRects | zones[i]->update(); // is this dangerous? Optimisation may stop the function being called. 
+		updateZoneRects = updateZoneRects | zones[i]->update(); // is this dangerous? Optimisation may stop the function being called.
 	}
-    
-    // update all the projectors which clears the points,
-    // and updates all the zone settings
+	
+	// update all the projectors which clears the points,
+	// and updates all the zone settings
 	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->update(updateZoneRects); // clears the points
 	}
@@ -240,7 +241,7 @@ void Manager::send(){
 			poly->translate(centre);
 		}
 		for(size_t i= 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
-			setTargetZone(i);
+			setTargetZone((int)i);
 			for(ofPolyline* poly:polylines) {
 				
 				drawPoly(*poly, ofColor::cyan);
@@ -262,7 +263,7 @@ void Manager::send(){
 		for(size_t j = 0; j<zones.size(); j++) {
 			Zone& z = *zones[j];
 			z.shapes.clear();
-		
+			
 			for(size_t i= 0; i<shapes.size(); i++) {
 				Shape* s = shapes[i];
 				// if (zone should have shape) then
@@ -321,32 +322,53 @@ void Manager:: drawUI(bool expandPreview){
 	// if expandPreview is true, then we expand the preview area to the
 	// maximum space that we have available.
 	
-	
-	int smallPreviewHeight = 310;
-	
+    
+    // figure out the top and bottom section height
+    
+    // If the height of the laser is > 2/3 of the screen height (including spacing)
+    // then shrink it to be 2/3 of the height.
+    
+    
+    
+    // we're showing the previews then they go at the top
+    
+
+	int lowerSectionHeight = 310;
+    
+    int thirdOfHeight = (ofGetHeight()-(guiSpacing*3))/3;
+  
+    if(lowerSectionHeight>thirdOfHeight) lowerSectionHeight = thirdOfHeight;
 	
 	// showPreview determines whether we show the preview
 	// laser graphics on screen or not.
 	if(showPreview) {
-
+		
 		ofPushStyle();
 		
 		// work out the scale for the preview...
 		// default scale is 1 with an 8 pixel margin
 		previewScale = 1;
-		previewOffset.set(guiSpacing,guiSpacing);
-		
+		previewOffset = glm::vec2(guiSpacing,guiSpacing);
+        
+        if(height>(thirdOfHeight*2)) {
+            previewScale = (float)(thirdOfHeight*2) / (float)height;
+        }
 		// but if we're viewing a projector warp ui
 		// then shrink the preview down and move it underneath
 		if(currentProjector>=0) {
-			previewOffset.set(guiSpacing,800+16);
-			previewScale = (float)smallPreviewHeight/(float)height;
+            int positionY = 800 + guiSpacing*2;
+            if((thirdOfHeight*2)+(guiSpacing*2) < positionY ) {
+                positionY = (thirdOfHeight*2)+(guiSpacing*2);
+                
+            }
+			previewOffset = glm::vec2(guiSpacing,positionY);
+			previewScale = (float)lowerSectionHeight/(float)height;
 			
 			
-		// but if we're expanding the preview, then work out the scale
-		// to fill the whole screen
+			// but if we're expanding the preview, then work out the scale
+			// to fill the whole screen
 		} else if(expandPreview) {
-			previewOffset.set(0,0); 
+			previewOffset = glm::vec2(0,0);
 			previewScale = (float)ofGetWidth()/(float)width;
 			if(height*previewScale>ofGetHeight()) {
 				previewScale = (float)ofGetHeight()/(float)height;
@@ -356,7 +378,7 @@ void Manager:: drawUI(bool expandPreview){
 		
 		renderPreview();
 		
-		// this renders the zones in the graphics source space
+		// this renders the input zones in the graphics source space
 		for(size_t i= 0; i<zones.size(); i++) {
 			zones[i]->visible = showZones;
 			zones[i]->active = showZones && (currentProjector<0);
@@ -376,28 +398,31 @@ void Manager:: drawUI(bool expandPreview){
 		
 		ofPopMatrix();
 		ofPopStyle();
-
+        
+       
+        
+		
 	}
 	
-
+	
 	ofPushStyle();
 	
-    // if none of the projectors are selected then draw as many as we can on screen
+	// if none of the projectors are selected then draw as many as we can on screen
 	if(currentProjector==-1) {
 		ofPushMatrix();
 		float scale = 1 ;
-		if((smallPreviewHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
-			scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(smallPreviewHeight+guiSpacing)*(float)projectors.size());
+		if((lowerSectionHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
+			scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(lowerSectionHeight+guiSpacing)*(float)projectors.size());
 			//ofScale(scale, scale);
 		}
 		
-		ofTranslate(guiSpacing,height+(guiSpacing*2));
+		ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
 		
 		for(size_t i= 0; i<projectors.size(); i++) {
 			if((!expandPreview)&&(showPathPreviews)) {
 				ofFill();
 				ofSetColor(0);
-				ofRectangle projectorPreviewRect(((smallPreviewHeight*scale) +guiSpacing)*i,0,smallPreviewHeight*scale, smallPreviewHeight*scale);
+				ofRectangle projectorPreviewRect(((lowerSectionHeight*scale) +guiSpacing)*i,0,lowerSectionHeight*scale, lowerSectionHeight*scale);
 				ofDrawRectangle(projectorPreviewRect);
 				projectors[i]->drawLaserPath(projectorPreviewRect);
 			}
@@ -415,122 +440,91 @@ void Manager:: drawUI(bool expandPreview){
 		// ELSE we have a currently selected projector, so draw the various UI elements
 		// for that...
 		
-        for(size_t i= 0; i<projectors.size(); i++) {
+		for(size_t i= 0; i<projectors.size(); i++) {
 			if((int)i==currentProjector) {
 				
 				ofFill();
 				ofSetColor(0);
-				float size = expandPreview ? (float)ofGetHeight()-(guiSpacing*2) : 800;
+                float size = 800;
+                if(size>thirdOfHeight*2) size = thirdOfHeight*2;
+                if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
 				
 				ofDrawRectangle(guiSpacing,guiSpacing,size,size);
 				projectors[i]->showWarpGui();
-                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
+				projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
 				projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
 				
-
+				
 			} else {
 				projectors[i]->hideWarpGui();
 			}
 			
+			
+		}
+		
+		
+	}
 	
-        }
-	
-	
-    }
-
 	ofPopStyle();
 	
 
-	// ofxGUI panel stuff :
-	
-	//    for(size_t i= 0; i<projectors.size(); i++) {
-	//		//projectors[i]->guiIsVisible = guiIsVisible;
-	//		if(guiIsVisible && projectors[i]->guiIsVisible) projectors[i]->gui->draw();
-	//	}
-	
 	if((!expandPreview) && (guiIsVisible)) {
+		
+		// if this is the current projector or we have 2 or fewer projectors, then render the gui
+		if(!showProjectorSettings) {
+			
 	
-	// if this is the current projector or we have 2 or fewer projectors, then render the gui
-		if(showProjectorSettings) {
-			
-			for(size_t i= 0; i<projectors.size(); i++) {
-				if (((int)i==currentProjector) || (projectors.size()<=2)) {
-					
-					//int x = projectors[i]->gui->getPosition().x;
-					//int y = projectors[i]->gui->getPosition().y - guiSpacing - dacStatusBoxHeight;
-					//projectors[i]->renderStatusBox(x, y, guiProjectorPanelWidth,dacStatusBoxHeight);
-					projectors[i]->drawGui();
-
-				
-				}
-			}
-			
-			if((projectors.size()>2) && (currentProjector==-1) ) {
-				for(size_t i= 0; i<projectors.size(); i++) {
-					//int x = projectors[i]->gui->getPosition().x;
-					//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+guiSpacing, guiProjectorPanelWidth,dacStatusBoxHeight);
-				}
-				
-			}
-			
-		} else {
 			
 			int w = dacStatusBoxSmallWidth;
-            int x = ofGetWidth() - 220; // gui.getPosition().x-w-guiSpacing;
+			int x = ofGetWidth() - 220; // gui.getPosition().x-w-guiSpacing;
 			
 			// draw all the status boxes but small
 			
 			for(size_t i= 0; i<projectors.size(); i++) {
-				//int x = projectors[i]->gui->getPosition().x;
-				//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+gui.getPosition().y, w,dacStatusBoxHeight);
-                projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
+
+				//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
 			}
 			
-		
+			
 		}
 		
-   		//gui.draw();
+		
 	}
+    
+    ofxLaser::UI::updateGui();
+    ofxLaser::UI::startGui();
+    
+    drawLaserGui();
+    ofxLaser::UI::render();
 	
 }
 
 void Manager :: renderPreview() {
-	ofPushStyle();
-	
-	ofPushMatrix();
-	ofTranslate(previewOffset);
-	ofScale(previewScale, previewScale);
-	
-	
+    
+
+    if((previewFbo.getWidth()!=width*previewScale) || (previewFbo.getHeight()!=height*previewScale)) {
+       // previewFbo.clear();
+        previewFbo.allocate(width*previewScale, height*previewScale, GL_RGBA, 3);
+    }
+    
+    previewFbo.begin();
+    
+    ofClear(0,0,0,0);
+    ofPushStyle();
+    // ofEnableSmoothing();
+    ofPushMatrix();
+    //ofTranslate(previewOffset);
+    ofScale(previewScale, previewScale);
+    
+    
     // draw outline of laser output area
-	ofSetColor(0);
-	ofFill();
-	ofDrawRectangle(0,0,width,height);
-	ofSetColor(50);
+    ofSetColor(0);
+    ofFill();
+    ofDrawRectangle(0,0,width,height);
+    ofSetColor(50);
     ofNoFill();
     ofDrawRectangle(0,0,width,height);
-	
-	// render guide if we have one
-//	if((showGuide) && (guideImage.isAllocated())){
-//
-//		ofPushMatrix();
-//		ofPushStyle();
-//
-//		ofSetColor(guideBrightness);
-//
-//		guideImage.setAnchorPercent(0.5, 0.5);
-//
-//		ofTranslate(width/2, height/2);
-//		ofScale(height/guideImage.getHeight(), height/guideImage.getHeight());
-//		guideImage.draw(0,0);
-//
-//
-//
-//		ofPopStyle();
-//
-//		ofPopMatrix();
-//	}
-	
+    
     // Draw laser graphics preview ----------------
     ofMesh mesh;
     ofEnableBlendMode(OF_BLENDMODE_ADD);
@@ -541,30 +535,30 @@ void Manager :: renderPreview() {
     for(size_t i= 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
     }
-	
-	ofRectangle laserRect(0,0,width, height);
+    
+    ofRectangle laserRect(0,0,width, height);
     if(useBitmapMask) {
-		const vector<glm::vec3>& points = mesh.getVertices();
+        const vector<glm::vec3>& points = mesh.getVertices();
         std::vector<ofFloatColor>& colours = mesh.getColors();
         
         for(size_t i= 0;i<points.size(); i++ ){
- 
+            
             ofFloatColor& c = colours.at(i);
-			const glm::vec3& p = points[i];
-			
-			
-			float brightness;
-			
-			if(laserRect.inside(p)) {
-				brightness = laserMask.getBrightness(p.x, p.y);
-			} else {
-				brightness = 0;
-			}
-		
+            const glm::vec3& p = points[i];
+            
+            
+            float brightness;
+            
+            if(laserRect.inside(p)) {
+                brightness = laserMask.getBrightness(p.x, p.y);
+            } else {
+                brightness = 0;
+            }
+            
             c.r*=brightness;
             c.g*=brightness;
             c.b*=brightness;
-
+            
         }
     }
     
@@ -583,15 +577,17 @@ void Manager :: renderPreview() {
     mesh.draw();
     
     ofDisableBlendMode();
-
-	ofPopMatrix();
-	
+    // ofDisableSmoothing();
+    
+    ofPopMatrix();
+    
     ofPopStyle();
-	
+    previewFbo.end();
+    previewFbo.draw(previewOffset);
 }
 void Manager ::updateScreenSize(ofResizeEventArgs &e){
-    
-    updateScreenSize();
+	
+	updateScreenSize();
 }
 
 void Manager :: updateScreenSize() {
@@ -609,44 +605,44 @@ bool Manager::isGuiVisible() {
 	return guiIsVisible;
 }
 void Manager :: updateGuiPositions() {
-
-	
-
-	for(size_t i= 0; i<projectors.size(); i++) {
-		int x = ofGetWidth()-(guiProjectorPanelWidth+guiSpacing);
-		if(projectors.size()<=2){
-			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
-		}
-		
-		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
-		//projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
-
-	}
-	
-	if(projectors.size() == 0) {
-		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
-		//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
-		
-	} else {
-		if(showProjectorSettings) {
-			if(projectors.size()>2) {
-				//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
-			} else if(projectors.size()>0){
-				//int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
-                int x = ofGetWidth()-220-220-guiSpacing;
-                //gui.setPosition(x, guiSpacing);
-			}
-		} else {
-			int x = ofGetWidth()-guiSpacing;
-			//gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
-			
-		}
-		
-	}
+//
+//
+//
+//	for(size_t i= 0; i<projectors.size(); i++) {
+//		int x = ofGetWidth()-(guiProjectorPanelWidth+guiSpacing);
+//		if(projectors.size()<=2){
+//			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
+//		}
+//
+//		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
+//		//projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
+//
+//	}
+//
+//	if(projectors.size() == 0) {
+//		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
+//		//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
+//
+//	} else {
+//		if(showProjectorSettings) {
+//			if(projectors.size()>2) {
+//				//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
+//			} else if(projectors.size()>0){
+//				//int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
+//				int x = ofGetWidth()-220-220-guiSpacing;
+//				//gui.setPosition(x, guiSpacing);
+//			}
+//		} else {
+//			int x = ofGetWidth()-guiSpacing;
+//			//gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
+//
+//		}
+//
+//	}
 }
 
 void Manager::showAdvancedPressed(bool& state){
-	updateGuiPositions();
+	//updateGuiPositions();
 }
 //
 //ofxPanel& Manager ::getGui(){
@@ -654,19 +650,19 @@ void Manager::showAdvancedPressed(bool& state){
 //}
 
 int Manager :: getProjectorPointRate(unsigned int projectornum ){
-    return projectors.at(projectornum)->getPointRate();
+	return projectors.at(projectornum)->getPointRate();
 }
 
 float Manager :: getProjectorFrameRate(unsigned int projectornum ){
 	if((projectornum>=0) && (projectornum<projectors.size())) {
-    	return projectors.at(projectornum)->getFrameRate();
+		return projectors.at(projectornum)->getFrameRate();
 	} else return 0;
 }
 void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum, int zonenum){
-   // ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size())); 
-    Projector* proj = projectors.at(projectornum);
-    proj->sendRawPoints(points, zonenum, masterIntensity);
-
+	// ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size()));
+	Projector* proj = projectors.at(projectornum);
+	proj->sendRawPoints(points, zonenum, masterIntensity);
+	
 }
 
 
@@ -680,70 +676,51 @@ void Manager::nextProjector() {
 
 void Manager::previousProjector() {
 	currentProjector--;
-	if(currentProjector<-1) currentProjector=projectors.size()-1;
+	if(currentProjector<-1) currentProjector=(int)projectors.size()-1;
 	updateGuiPositions();
 	
 }
 
 void Manager::initGui(bool showExperimental) {
 	
-    
-   
-    
-//	gui.setup("Laser", "laserSettings.json");
-//
-//
-//	gui.setDefaultHeight(40);
-//
-//	gui.add(armAllButton.setup("ARM ALL"));
-//	gui.add(disarmAllButton.setup("DISARM ALL"));
-//	gui.add(masterIntensity.set("Master Intensity", 0.1,0,1));
-//	gui.add(showProjectorSettings.set("Edit Projector", false));
-//
-//
-//	gui.setDefaultHeight(20);
-
-//	armAllButton.addListener(this, &ofxLaser::Manager::armAllProjectors);
-//	disarmAllButton.addListener(this, &ofxLaser::Manager::disarmAllProjectors);
-//	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
-
-
-//	for(size_t i= 0; i<projectors.size();i++) {
-//		gui.add(projectors[i]->armed);
-//
-//	}
 	
-//	gui.add(testPattern.set("Test Pattern", 0,0,9));
+    ofxLaser::UI::setupGui();
+   
+	params.setName("Laser");
+	params.add(masterIntensity.set("Master Intensity", 0.1,0,1));
+	params.add(showProjectorSettings.set("Edit Projector", false));
+	params.add(testPattern.set("Test Pattern", 0,0,9));
+	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 	
 	interfaceParams.setName("Interface");
 	interfaceParams.add(showZones.set("Show zones", false));
 	interfaceParams.add(showPreview.set("Show preview", true));
 	interfaceParams.add(showPathPreviews.set("Show path previews", true));
-    interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
+	interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
 	interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
 	interfaceParams.add(laserMasks.set("Laser mask shapes", false));
 	
-//	gui.add(params);
+	params.add(interfaceParams);
 	if(customParams.size()>0) {
 		customParams.setName("Custom");
-	//	gui.add(customParams);
+		params.add(customParams);
 	}
 	
-	// try loading the xml file for legacy reasons
-	//gui.loadFromFile("laserSettings.xml");
-	//gui.loadFromFile("laserSettings.json");
-    showPreview = true;
 
-    //showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
-
+    loadSettings();
     
+	showPreview = true;
+	
+	//showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
+	
+	
 	for(size_t i= 0; i<projectors.size(); i++) {
 		projectors[i]->initGui(showExperimental);
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
 	}
 	
 	updateScreenSize();
-
+	
 	
 }
 
@@ -762,11 +739,11 @@ void Manager::addCustomParameter(ofAbstractParameter& param){
 
 
 void Manager::armAllProjectorsListener() {
-	
 	doArmAll = true;
 }
-void Manager::disarmAllProjectorsListener(){
 
+void Manager::disarmAllProjectorsListener(){
+	
 	doDisarmAll = true;
 }
 void Manager::armAllProjectors() {
@@ -787,12 +764,30 @@ void Manager::testPatternAllProjectors(int &pattern){
 		projectors[i]->testPattern = testPattern;
 	}
 }
-void Manager::saveSettings() {
+
+bool Manager::loadSettings() {
+    ofJson json = ofLoadJson("laserSettings.json");
+    
+    if(json.empty()) {
+        return false;
+    } else {
+        ofDeserialize(json, params);
+        return true;
+    }
+    
+}
+bool Manager::saveSettings() {
 	//gui.saveToFile("laserSettings.json");
+    
+    ofJson json;
+    ofSerialize(json, params);
+    bool savesuccess = ofSavePrettyJson("laserSettings.json", json);
+    
 	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->saveSettings();
+        savesuccess &= projectors[i]->saveSettings();
 	}
-    laserMask.saveSettings();
+    savesuccess &= laserMask.saveSettings();
+    return savesuccess;
 	
 }
 
@@ -803,7 +798,7 @@ ofPoint Manager::gLProject(ofPoint p) {
 }
 ofPoint Manager::gLProject( float x, float y, float z ) {
 	
-	ofRectangle rViewport = ofGetCurrentViewport();
+    ofRectangle rViewport = ofGetCurrentViewport();
 	
 	glm::mat4 modelview, projection;
 	glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelview));
@@ -821,15 +816,20 @@ ofPoint Manager::gLProject( float x, float y, float z ) {
 	
 	dScreen.y *= rViewport.height;
 	dScreen.y += rViewport.y;
-	
-	return ofPoint(dScreen.x, dScreen.y, 0.0f);
 
+    return ofPoint(dScreen.x, dScreen.y, 0.0f);// - offset;
+	
 }
 
 
 Projector& Manager::getProjector(int index){
 	return *projectors.at(index);
 };
+
+std::vector<Projector*>& Manager::getProjectors(){
+	return projectors;
+};
+
 
 bool Manager::setGuideImage(string filename){
 	return guideImage.load(filename);
@@ -850,7 +850,7 @@ Zone& Manager::getZone(int zonenum) {
 }
 
 int Manager::getNumZones() {
-	return zones.size();
+	return (int)zones.size();
 }
 
 bool Manager::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL
@@ -871,7 +871,442 @@ bool Manager::isProjectorArmed(unsigned int i){
 	if((i<0) || (i>=projectors.size())){
 		return false;
 	} else {
-		return projectors[i]->armed; 
+		return projectors[i]->armed;
 	}
 	
 }
+
+
+bool Manager::areAllLasersArmed(){
+	for(Projector* projector : projectors) {
+		if(!projector->armed) return false;
+	}
+	return true;
+	
+}
+
+void Manager::drawLaserGui() {
+    
+    ofxLaser::Manager& laser = *this;
+    // auto mainSettings = ofxImGui::Settings();
+    
+    int mainpanelwidth = 270;
+    int projectorpanelwidth = 320;
+    int spacing = 8;
+    
+    ImGuiWindowFlags window_flags = 0;
+    
+    window_flags |= ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoResize;
+    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+    //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
+    //      if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar;
+    //      if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
+    //
+    //
+    //      if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
+    //      if (no_nav)             window_flags |= ImGuiWindowFlags_NoNav;
+    //      if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground;
+    //      if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+    //      if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
+    //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
+    
+    
+    // calculate x position of main window
+    int x = ofGetWidth() - mainpanelwidth - spacing;
+    // if we're also showing the projector settings, make space
+    // TODO max 2 projectors
+    if(laser.showProjectorSettings){
+        x-=(laser.getNumProjectors()*projectorpanelwidth);
+        x-=(spacing*laser.getNumProjectors());
+    }
+    
+    // set the main window size and position
+    ImGui::SetNextWindowSize(ImVec2(mainpanelwidth,0), 0);
+    ImGui::SetNextWindowPos(ImVec2(x, spacing));
+    
+    // start the main window!
+    ImGui::Begin("Laser", NULL, window_flags);
+    
+    
+    
+    // some custom styles - to do put in a theme?
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 5.0f)); // 1 Spacing between items
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(6.0f, 6.0f)); // 2 gap between element and label
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 10.0f)); // 3 Size of elements (padding around contents);
+    
+    // change the colour for the arm all button if we're armed
+    ImGui::PushStyleColor(ImGuiCol_Button, laser.areAllLasersArmed()?(ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f):ImVec4(0.26f, 0.59f, 0.98f, 0.40f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, laser.areAllLasersArmed()?(ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f):ImVec4(0.26f, 0.59f, 0.98f, 1.0f));
+    
+    // the arm and disarm buttons
+    int buttonwidth = (mainpanelwidth-(spacing*3))/2;
+    if(ImGui::Button("ARM ALL LASERS", ImVec2(buttonwidth, 0.0f) )) {
+        laser.armAllProjectors();
+    }
+    ImGui::PopStyleColor(2);
+    ImGui::SameLine();
+    if(ImGui::Button("DISARM ALL LASERS",  ImVec2(buttonwidth, 0.0f))) {
+        laser.disarmAllProjectors();
+    }
+    
+    // increase the side of the slider grabber
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+    // change width of slider vs label
+    ImGui::PushItemWidth(ImGui::GetWindowWidth() - 120.0f);
+    
+    // add intensity slide
+    //UI::addFloatAsIntSlider(laser.masterIntensity, 100);
+    ImGui::PushItemWidth(mainpanelwidth-(spacing*2));
+    float multiplier = 100;
+    int value = laser.masterIntensity*multiplier;
+    if (ImGui::SliderInt(laser.masterIntensity.getName().c_str(), &value, laser.masterIntensity.getMin()*multiplier, laser.masterIntensity.getMax()*multiplier, "GLOBAL BRIGHTNESS %d")) {
+        laser.masterIntensity.set((float)value/multiplier);
+        
+    }
+    ImGui::PopItemWidth();
+    
+    
+    UI::addCheckbox(laser.showProjectorSettings);
+    
+    ImGui::PopStyleVar(2);
+    
+
+    for(int i = 0; i<laser.getNumProjectors(); i++) {
+        ofxLaser::Projector& projector = laser.getProjector(i);
+        string label = ofToString(i+1) + " ARMED";
+        ImGui::Checkbox(label.c_str(), (bool*)&projector.armed.get());
+        
+    }
+
+    UI::addIntSlider(laser.testPattern);
+    
+    // mainSettings.windowBlock = true;
+    UI::addParameterGroup(laser.interfaceParams);
+    
+    
+    if(laser.customParams.size()>0) {
+        ImGui::Separator();
+        ImGui::Text("CUSTOM PARAMETERS");
+        UI::addParameterGroup(laser.customParams); 
+       
+        
+        
+    }
+    
+    
+    ImGui::PopStyleVar(2);
+    
+    //    const void * ref1 = laser.testPattern.getInternalObject();
+    //    int* ref = (int*)ref1->value;
+    //    cout << laser.testPattern.getMin() << " " << ref << " " <<  endl;
+    //    ImGui::SliderInt(laser.testPattern.getName().c_str(), ref, laser.testPattern.getMin(), 10, "%d");
+    
+    
+    ImGui::PopItemWidth();
+    ImGui::End();
+    
+    
+    // show projector settings :
+    
+    if(laser.showProjectorSettings) {
+        x+=mainpanelwidth+spacing;
+        
+        for(ofxLaser::Projector* projector : laser.getProjectors()) {
+            
+            drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
+            x+=projectorpanelwidth+spacing;
+            
+        }
+    }
+}
+
+
+void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float projectorpanelwidth, float spacing, float x) {
+    
+    ImGuiWindowFlags window_flags = 0;
+    
+    window_flags |= ImGuiWindowFlags_NoMove;
+    window_flags |= ImGuiWindowFlags_NoResize;
+    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
+    
+    
+    ImGui::SetNextWindowSize(ImVec2(projectorpanelwidth,0), ImGuiCond_Appearing);
+    ImGui::SetNextWindowPos(ImVec2(x,spacing));
+    
+    
+    ImGui::Begin(projector->label.c_str(), NULL, window_flags);
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 8.0f); // 1 Spacing between items
+    
+    
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 5.0f)); // 1 Spacing between items
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(6.0f, 6.0f)); // 2 gap between element and label
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 10.0f)); // 3 Size of elements (padding around contents);
+    // increase the side of the slider grabber
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+    // change width of slider vs label
+    ImGui::PushItemWidth(140);
+    
+    UI::addCheckbox(projector->armed);
+    //UI::addFloatAsIntSlider(projector->intensity, 100);
+    ImGui::PushItemWidth(projectorpanelwidth-(spacing*2));
+    float multiplier = 100;
+    int value = projector->intensity*multiplier;
+    if (ImGui::SliderInt("##int", &value, projector->intensity.getMin()*multiplier, projector->intensity.getMax()*multiplier, "BRIGHTNESS %d")) {
+        projector->intensity.set((float)value/multiplier);
+        
+    }
+    ImGui::PopItemWidth();
+    
+    
+    ImGui::PopStyleVar(2);
+    UI::addIntSlider(projector->testPattern);
+    //UI::addButton(resetDac);
+    
+    
+    // THE DAC STATUS COLOUR - TO BE IMPROVED
+    ImGui::Separator();
+    {
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+      
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        ImU32 col = projector->getDacConnectedState() ?  ImGui::GetColorU32(ImVec4(0.0f, 1.0f, 0.0f, 1.0f)): ImGui::GetColorU32(ImVec4(1.0f, 0.0f, 0.0f, 1.0f));
+        
+        draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
+        ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
+       
+    }
+    
+    ImGui::SameLine();
+    ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(0,2));
+    ImGui::Text("DAC:");
+    ImGui::SameLine();
+    ImGui::Text("%s", projector->getDacLabel().c_str());
+    // ----------------------------------------------
+    
+    
+
+    ImGui::Separator();
+    ImGui::Text("OUTPUT SETTINGS");
+
+    // ZONES
+    UI::addCheckbox(projector->flipX);
+    UI::addCheckbox(projector->flipY);
+    
+    // FINE OUTPUT SETTINGS
+    bool treevisible = ImGui::TreeNode("Fine output adjustments");
+        
+    UI::toolTip("These affect all output zones for this projector and can be used to re-align projectors if they have moved slightly since setting them up");
+    if (treevisible){
+        UI::addFloatSlider(projector->rotation, "%.2f", 2.0);
+        if(projector->rotation!=0) {
+            ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            if (ImGui::Button("Reset")) projector->rotation = 0;
+        }
+        
+        UI::addFloat2Slider(projector->outputOffset, "%.2f", 2.0);
+        glm::vec2 zero2;
+        if(projector->outputOffset.get()!=zero2) {
+            ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+            if (ImGui::Button("Reset")) projector->outputOffset.set(zero2);
+        }
+        
+        ImGui::TreePop();
+    }
+
+   
+    
+    
+    
+    if(ImGui::TreeNode("Zone edge masks")){
+        for(size_t i = 0; i< projector->zones.size(); i++) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if(ImGui::TreeNode(projector->zones[i]->label.c_str())){
+                
+                UI::addFloatSlider(projector->bottomEdges[i]);
+                UI::addFloatSlider(projector->topEdges[i]);
+                UI::addFloatSlider(projector->leftEdges[i]);
+                UI::addFloatSlider(projector->rightEdges[i]);
+                
+                ImGui::TreePop();
+            }
+            
+            
+        }
+        ImGui::TreePop();
+        
+    }
+    
+    if(ImGui::TreeNode("Zone Warp Settings")){
+        for(size_t i = 0; i< projector->zones.size(); i++) {
+            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+            if(ImGui::TreeNode(projector->zones[i]->label.c_str())){
+                UI::addParameterGroup(projector->zoneTransforms[i]->params);
+                
+                ImGui::TreePop();
+            }
+            
+            
+        }
+        ImGui::TreePop();
+        
+    }
+    
+    if(ImGui::TreeNode("Mute Zones")){
+        for(size_t i = 0; i< projector->zonesMuted.size(); i++) {
+            UI::addCheckbox(projector->zonesMuted[i]);
+        }
+        ImGui::TreePop();
+    }
+    
+    if(ImGui::TreeNode("Solo Zones")){
+        for(size_t i = 0; i< projector->zonesSoloed.size(); i++) {
+            UI::addCheckbox(projector->zonesSoloed[i]);
+        }
+        ImGui::TreePop();
+    }
+    
+    // PROJECTOR PROFILE
+    ImGui::Separator();
+    ImGui::Text("PROJECTOR PROFILE");
+    
+    // TODO :
+    // check if the settings are different from the preset, if they are
+    // show a "save" button, also save as?
+    //
+    // when an option is selected, update all the params
+    
+    if (ImGui::BeginCombo("##combo", "LightSpace Unicorn RGB11000")) // The second parameter is the label previewed before opening the combo.
+    {
+        
+        if (ImGui::Selectable("LightSpace Unicorn RGB11000", true)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("OPT PD4", false)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("OPT PD25", false)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("LaserCube 2W", false)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("LaserCube 1W", false)) {
+            //item_current = items[n];
+        }
+        
+        //    if (is_selected)
+        //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+        ImGui::EndCombo();
+    }
+    
+    // SCANNER PROFILE SETTINGS
+    
+    
+    ImGui::Separator();
+    ImGui::Text("SCANNER SETTINGS");
+    
+    // TODO :
+    // check if the settings are different from the preset, if they are
+    // show a "save" button, also save as?
+    //
+    // when an option is selected, update all the params
+    
+    if (ImGui::BeginCombo("Scanner profile (placeholder)", "DT50")) // The second parameter is the label previewed before opening the combo.
+    {
+        
+        if (ImGui::Selectable("DT50", true)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("EMS8000", false)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("PT-A40HP", false)) {
+            //item_current = items[n];
+        }
+        if (ImGui::Selectable("LaserCube", false)) {
+            //item_current = items[n];
+        }
+        
+        //    if (is_selected)
+        //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+        ImGui::EndCombo();
+    }
+    
+    // SCANNER SETTINGS
+    UI::addFloatSlider(projector->colourChangeOffset);
+    UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
+    
+    
+    UI::addFloatSlider(projector->moveSpeed, "%.2f", 3.0f);
+    UI::toolTip("How quickly the mirrors move between shapes");
+    
+    UI::addIntSlider(projector->shapePreBlank);
+    UI::toolTip("The length of time that the laser is switched off and held at the beginning of a shape");
+    UI::addIntSlider(projector->shapePreOn);
+    UI::toolTip("The length of time that the laser is switched on and held at the beginning of a shape");
+    UI::addIntSlider(projector->shapePostOn);
+    UI::toolTip("The length of time that the laser is switched on and held at the end of a shape");
+    UI::addIntSlider(projector->shapePostBlank);
+    UI::toolTip("The length of time that the laser is switched off and held at the end of a shape");
+    
+    ImGui::Text("Scanner profiles");
+    UI::toolTip("There are three profiles for different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high quality setting is good for complex pointy shapes.");
+    
+    bool firsttreeopen = true;
+    for (auto & renderProfile : projector->renderProfiles) {
+        
+        RenderProfile& profile = renderProfile.second;
+        
+        string name =renderProfile.first;
+        ImGui::SetNextItemOpen(firsttreeopen, ImGuiCond_Once);
+        firsttreeopen = false;
+        
+        if(ImGui::TreeNode(profile.params.getName().c_str())){
+            
+            UI::addFloatSlider(profile.speed, "%.1f", 3.0f);
+            UI::addFloatSlider(profile.acceleration, "%.2f", 3.0f);
+            UI::addIntSlider(profile.dotMaxPoints);
+            UI::addFloatSlider(profile.cornerThreshold);
+            
+            ImGui::TreePop();
+        }
+        
+    }
+    
+    // POINT RATE
+    UI::addIntSlider(projector->pps);
+    
+    
+    
+    // COLOUR SETTINGS
+    ImGui::Separator();
+    ImGui::Text("COLOUR");
+   
+    if(ImGui::TreeNode("Colour calibration")){
+        
+        UI::addParameterGroup(projector->colourParams);
+        
+        ImGui::TreePop();
+    }
+    
+   
+    
+    ImGui::Separator();
+    ImGui::Text("ADVANCED SETTINGS");
+
+    // ADVANCED
+    UI::addCheckbox(projector->laserOnWhileMoving);
+    if(ImGui::TreeNode("Advanced")){
+        UI::addParameterGroup(projector->advancedParams);
+        ImGui::TreePop();
+    }
+    
+    ImGui::PopItemWidth();
+    ImGui::PopStyleVar(3);
+    ImGui::End();
+    
+}
+

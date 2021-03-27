@@ -314,34 +314,6 @@ bool QuadGui::loadSettings() {
 		}
 	}
 	
-	/// LEGACY XML settings ------------------------------------
-	string filename = saveLabel+".xml";
-	ofxXmlSettings xml;
-	if(!xml.loadFile(filename)) {
-		ofLog(OF_LOG_ERROR, "QuadGui::loadSettings - file not found : "+filename);
-		return false;
-		
-	}
-	
-	//cout << "Warp Pre load: " << filename << " " << dstPoints[0].x << ", " << dstPoints[0].y << endl;
-	
-	handles[0].x	= xml.getValue("quad:upperLeft:x", 0.0);
-	handles[0].y	= xml.getValue("quad:upperLeft:y", 0.0);
-	
-	handles[1].x	= xml.getValue("quad:upperRight:x", 1.0);
-	handles[1].y	= xml.getValue("quad:upperRight:y", 0.0);
-	
-    handles[2].x	= xml.getValue("quad:lowerLeft:x", 0.0);
-    handles[2].y	= xml.getValue("quad:lowerLeft:y", 1.0);
-    
-	handles[3].x	= xml.getValue("quad:lowerRight:x", 1.0);
-	handles[3].y	= xml.getValue("quad:lowerRight:y", 1.0);
-	
-	updateCentreHandle();
-	// convert to json
-	saveSettings();
-	
-	return true;
 }
 
 void QuadGui::saveSettings() {

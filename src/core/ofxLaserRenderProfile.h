@@ -27,7 +27,7 @@ namespace ofxLaser {
 			
 			params.setName(label);
 			params.add(speed.set("speed",2,1,40));
-			params.add(acceleration.set("acceleration",1,0.01,4));
+			params.add(acceleration.set("acceleration",1,0.01,10));
 			params.add(cornerThreshold.set("corner threshold",90,0,180));
 			params.add(dotMaxPoints.set("dot max points", 2, 0, 100));
 			

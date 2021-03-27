@@ -6,49 +6,29 @@
 void ofApp::setup(){
     
     
-    ImGuiIO& io = ImGui::GetIO();
-    // io.Fonts->AddFontDefault();
-    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
-    io.Fonts->Build();
-    
-    
-    ImGui::CreateContext();
-    //ImGuiIO& io = ImGui::GetIO();
-
-    io.DisplaySize = ImVec2((float)ofGetWidth(), (float)ofGetHeight());
-    io.MouseDrawCursor = false;
-
-    bool autoDraw = true;
-    imGui.engine.setup(autoDraw);
-
-   
-    ofxImGui::DefaultTheme* defaultTheme = new ofxImGui::DefaultTheme();
-    //setTheme((BaseTheme*)defaultTheme);
-    defaultTheme->setup();
-    
-    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui::StyleColorsDark();
-       
-    ImGui::GetIO().MouseDrawCursor = false;
-    
     laserWidth = 800;
     laserHeight = 800;
-    //laser.setup(laserWidth, laserHeight);
+    laser.setup(laserWidth, laserHeight);
     
     
     laser.addProjector(dac);
-    //laser.addProjector(dac2);
+    laser.addProjector(dac2);
     
-
+    
     // NB with laser dock you can pass a serial number,
     // with HeliosDAC you can pass a device name
-    //dac.setup("");
-    //dac2.setup("");
-
+    dac.setup("");
+    dac2.setup("");
+    
     // if you don't want to manage your own GUI for your app you can add extra
     // params to the laser GUI
     laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
-    laser.initGui(true);
+    ofParameter<glm::vec2> test1;
+    laser.addCustomParameter(test1.set("test1", glm::vec2(0,0), glm::vec2(-100,-100), glm::vec2(100,100)));
+    ofParameter<glm::vec3> test2;
+    laser.addCustomParameter(test2.set("test2", glm::vec3(0,0,0), glm::vec3(-100,-100,-100), glm::vec3(100,100,100)));
+    
+   laser.initGui(true);
     currentLaserEffect = 0;
     numLaserEffects = 8;
     
@@ -61,56 +41,56 @@ void ofApp::update(){
     float deltaTime = ofClamp(ofGetLastFrameTime(), 0, 0.2);
     elapsedTime+=deltaTime;
     
-    // prepares laser manager to receive new points
-    //laser.update();
     
-    ImGuiIO& io = ImGui::GetIO();
-    io.DeltaTime = deltaTime; // ofGetLastFrameTime();
-
-    // Update settings
-    // todo make dependent of OS
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
-    io.MouseDown[0] = ofGetMousePressed();
-    for (int i = 1; i < 5; i++) {
-        io.MouseDown[i] = imGui.engine.mousePressed[i];
-    }
-    ImGui::NewFrame();
+    // prepares laser manager to receive new points
+    laser.update();
+    
+   
+    
 }
 
 
 void ofApp::draw() {
     
-    ofBackground(ImGui::GetIO().MouseDown[0]?0:40);
+    //ofBackground(ImGui::GetIO().MouseDown[0]?0:40);
+    ofBackground(40,40,50);
     
     
     
-    ImGui::ShowStyleEditor() ;
-    ImGui::ShowDemoWindow();
     
-    auto mainSettings = ofxImGui::Settings();
-    mainSettings.windowSize.x = 400 ;
-    ImGui::SetNextWindowSize(mainSettings.windowSize, ImGuiCond_Appearing);
-   
-    ofxImGui::AddGroup(laser.getProjector(0).params, mainSettings);
-//
-//    int ypos = laserHeight+20;
-//    ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
-//    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
-//    ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
-//    ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 400, ypos+=30);
     
-    //showLaserEffect(currentLaserEffect);
+    //
+    //    int ypos = laserHeight+20;
+    //    ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
+    //    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
+    //    ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
+    //    ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 400, ypos+=30);
+    
+    showLaserEffect(currentLaserEffect);
     
     // sends points to the DAC
-   // laser.send();
+    laser.send();
     
-    //laser.drawUI();
-    
-
-   ImGui::Render();
+    laser.drawUI();
+   
+   
     
 }
 
+
+//
+//static void HelpMarker(const char* desc)
+//{
+//    ImGui::TextDisabled("(?)");
+//    if (ImGui::IsItemHovered())
+//    {
+//        ImGui::BeginTooltip();
+//        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+//        ImGui::TextUnformatted(desc);
+//        ImGui::PopTextWrapPos();
+//        ImGui::EndTooltip();
+//    }
+//}
 
 void ofApp :: showLaserEffect(int effectnum) {
     
@@ -305,12 +285,12 @@ void ofApp::keyPressed(int key){
 void ofApp::mousePressed(ofMouseEventArgs & mouse){
     //polyLines.push_back(ofPolyline());
     //drawingShape = true;
-
-    if(ImGui::GetIO().WantCaptureMouse) {
-        ofLogNotice("IMGUI MOUSE CAPTURE");
-        
-    }
-   
+    
+//    if(ImGui::GetIO().WantCaptureMouse) {
+//        ofLogNotice("IMGUI MOUSE CAPTURE");
+//
+//    }
+    
 }
 
 void ofApp::mouseReleased(int x, int y, int button) {
@@ -323,11 +303,11 @@ void ofApp::mouseReleased(int x, int y, int button) {
     
 }
 void ofApp::mouseMoved(ofMouseEventArgs &mouse){
-    ImGui::GetIO().MousePos = ImVec2((float)mouse.x, (float)mouse.y);
+    //ImGui::GetIO().MousePos = ImVec2((float)mouse.x, (float)mouse.y);
     
 }
 void ofApp::mouseDragged(ofMouseEventArgs &mouse){
-    ImGui::GetIO().MousePos = ImVec2((float)mouse.x, (float)mouse.y);
+    //ImGui::GetIO().MousePos = ImVec2((float)mouse.x, (float)mouse.y);
     
 }
 //--------------------------------------------------------------

@@ -18,7 +18,7 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) {
 	label = projectorlabel;
 	//maskRectangle.set(0,0,800,800);
 	
-	renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast"));
+	renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast")); // second argument is passed into constructor for the RenderProfile
 	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT, ofToString("Default"));
 	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High quality"));
 	
@@ -74,10 +74,10 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,0,6));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
 	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,50));
-	projectorparams.add(shapePreBlank.set("Blank points before", 1,0,8));
-	projectorparams.add(shapePreOn.set("On points before", 1,0,8));
-	projectorparams.add(shapePostOn.set("On points after", 1,0,8));
-	projectorparams.add(shapePostBlank.set("Blank points after", 1,0,8));
+	projectorparams.add(shapePreBlank.set("Hold off before", 1,0,8));
+	projectorparams.add(shapePreOn.set("Hold on before", 1,0,8));
+	projectorparams.add(shapePostOn.set("Hold on after", 1,0,8));
+	projectorparams.add(shapePostBlank.set("Hold off after", 1,0,8));
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
@@ -85,7 +85,7 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.add(rotation.set("Output rotation",0,-90,90));
 
 	
-	ofParameterGroup advanced;
+	ofParameterGroup& advanced = advancedParams;
 	advanced.setName("Advanced");
 	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
@@ -130,28 +130,28 @@ void Projector :: initGui(bool showAdvanced) {
     
 	params.add(renderparams);
 	
-	ofParameterGroup colourparams;
-	colourparams.setName("Colour calibration");
 	
-	colourparams.add(red100.set("red 100", 1,0,1));
-	colourparams.add(red75.set("red 75", 0.75,0,1));
-	colourparams.add(red50.set("red 50", 0.5,0,1));
-	colourparams.add(red25.set("red 25", 0.25,0,1));
-	colourparams.add(red0.set("red 0", 0,0,1));
+	colourParams.setName("Colour calibration");
 	
-	colourparams.add(green100.set("green 100", 1,0,1));
-	colourparams.add(green75.set("green 75", 0.75,0,1));
-	colourparams.add(green50.set("green 50", 0.5,0,1));
-	colourparams.add(green25.set("green 25", 0.25,0,1));
-	colourparams.add(green0.set("green 0", 0,0,1));
+    colourParams.add(red100.set("red 100", 1,0,1));
+    colourParams.add(red75.set("red 75", 0.75,0,1));
+    colourParams.add(red50.set("red 50", 0.5,0,1));
+    colourParams.add(red25.set("red 25", 0.25,0,1));
+    colourParams.add(red0.set("red 0", 0,0,1));
 	
-	colourparams.add(blue100.set("blue 100", 1,0,1));
-	colourparams.add(blue75.set("blue 75", 0.75,0,1));
-	colourparams.add(blue50.set("blue 50", 0.5,0,1));
-	colourparams.add(blue25.set("blue 25", 0.25,0,1));
-	colourparams.add(blue0.set("blue 0", 0,0,1));
+    colourParams.add(green100.set("green 100", 1,0,1));
+    colourParams.add(green75.set("green 75", 0.75,0,1));
+    colourParams.add(green50.set("green 50", 0.5,0,1));
+    colourParams.add(green25.set("green 25", 0.25,0,1));
+    colourParams.add(green0.set("green 0", 0,0,1));
 	
-	params.add(colourparams);
+    colourParams.add(blue100.set("blue 100", 1,0,1));
+    colourParams.add(blue75.set("blue 75", 0.75,0,1));
+    colourParams.add(blue50.set("blue 50", 0.5,0,1));
+    colourParams.add(blue25.set("blue 25", 0.25,0,1));
+    colourParams.add(blue0.set("blue 0", 0,0,1));
+	
+	params.add(colourParams);
 	
     zonesEnabled.resize(zones.size());
     
@@ -203,7 +203,7 @@ void Projector :: initGui(bool showAdvanced) {
 	// try loading the xml file for legacy reasons
 	//params.load(label+".xml");
 	//params.load(label+".json");
-	
+    loadSettings(); 
 	// error checking on blank shift for older config files
 	if(colourChangeOffset<0) colourChangeOffset = 0;
 	
@@ -225,25 +225,9 @@ void Projector :: initGui(bool showAdvanced) {
 	
 }
 
-void Projector :: drawGui() {
-    
-    auto mainSettings = ofxImGui::Settings();
-    
 
-    //if(ofxImGui::BeginWindow(label, mainSettings)) {
-        
-        ofxImGui::AddGroup(params, mainSettings);
-    ImGui::SameLine();
-       HelpMarker(
-           "- Load additional fonts with io.Fonts->AddFontFromFileTTF().\n"
-           "- The font atlas is built when calling io.Fonts->GetTexDataAsXXXX() or io.Fonts->Build().\n"
-           "- Read FAQ and docs/FONTS.txt for more details.\n"
-           "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
-     //   ofxImGui::EndWindow(mainSettings);
 
-    //}
-    
-}
+
 
 void Projector ::setArmed(bool& armed){
     dac->setActive(armed); 
@@ -336,6 +320,24 @@ void Projector::updateZoneMasks() {
 	}
 }
 
+
+string Projector::getDacLabel() {
+    if(dac!=nullptr) {
+        return dac->getLabel();
+    } else {
+        return "No DAC set up";
+    }
+}
+
+bool Projector::getDacConnectedState() {
+    
+    if(dac!=nullptr) {
+        return dac->getStatusColour()==ofColor::green;
+    } else {
+        return "No DAC set up";
+    }
+}
+/*
 void Projector::renderStatusBox(float x, float y, float w, float h) {
 	ofPushStyle();
 	ofPushMatrix();
@@ -390,6 +392,7 @@ void Projector::renderStatusBox(float x, float y, float w, float h) {
 	ofPopStyle();
 	
 }
+ */
 void Projector::drawWarpUI(float x, float y, float w, float h) {
 	
 	ofPushStyle();
@@ -1458,13 +1461,23 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 }
 
 
-void Projector::saveSettings(){
+bool Projector::loadSettings(){
+    ofJson json = ofLoadJson(label+".json");
+    //laserPatch.serialize(json);
+    if(json.empty()) {
+        return false;
+    } else {
+        ofDeserialize(json, params);
+        return true;
+    }
+}
+
+
+bool Projector::saveSettings(){
+    ofJson json;
+    ofSerialize(json, params);
+    return ofSavePrettyJson(label+".json", json);
+
     
-	//params.saveToFile(label+".json");
-	// not sure this is needed cos we save if we edit...
-//	for(size_t i = 0; i<zoneWarps.size(); i++) {
-//		zoneWarps[i]->saveSettings();
-//	}
-	
 }
 

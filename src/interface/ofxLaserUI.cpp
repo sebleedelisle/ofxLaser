@@ -29,9 +29,14 @@ void UI::setupGui() {
     }
     
     ImGuiIO& io = ImGui::GetIO();
-    // io.Fonts->AddFontDefault();
-    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
-    io.Fonts->Build();
+    //io.Fonts->AddFontDefault();
+    io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data,RobotoMedium_compressed_size, 13);
+//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
+//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
+//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);
+//
+//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Cousine-Regular.ttf", true).c_str(),13);
+//    io.Fonts->Build();
     
     
     ImGui::CreateContext();
@@ -56,6 +61,8 @@ void UI::setupGui() {
     // TODO remove on close down ? 
     ofEvents().mouseMoved.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
     ofEvents().mouseDragged.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
+    ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
+    ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
     // ofAddListener(ofEvents().mouseDragged, this, &Zone::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
 }
 
@@ -65,11 +72,8 @@ void UI::updateGui() {
     
     // Update settings
     // todo make dependent of OS
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
-    io.MouseDown[0] = ofGetMousePressed();
-    for (int i = 1; i < 5; i++) {
-        io.MouseDown[i] = imGui.engine.mousePressed[i];
-    }
+    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
+
 }
 
 void UI::startGui() {
@@ -77,7 +81,7 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     //ImGui::Show;
     
     
@@ -99,6 +103,65 @@ bool UI::addFloatSlider(ofParameter<float>& param, const char* format, float pow
         return false;
     }
 }
+
+bool UI::addFloat2Slider(ofParameter<glm::vec2>& parameter, const char* format, float power) {
+    
+    auto tmpRef = parameter.get();
+    if (ImGui::SliderFloat2(parameter.getName().c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
+        parameter.set(tmpRef);
+        return true;
+    }
+    return false;
+}
+
+bool UI::addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format, float power) {
+    
+    auto tmpRef = parameter.get();
+    if (ImGui::SliderFloat3(parameter.getName().c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
+        parameter.set(tmpRef);
+        return true;
+    }
+    return false;
+}
+
+bool UI::addColour(ofParameter<ofFloatColor>& parameter, bool alpha) {
+    
+    auto tmpRef = parameter.get();
+    if (alpha)
+    {
+        if (ImGui::ColorEdit4(parameter.getName().c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+        {
+            parameter.set(tmpRef);
+            return true;
+        }
+    }
+    else if (ImGui::ColorEdit3(parameter.getName().c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+    {
+        parameter.set(tmpRef);
+        return true;
+    }
+    
+    return false;
+}
+bool UI::addColour(ofParameter<ofColor>& parameter, bool alpha) {
+    
+    ofFloatColor tmpRef = parameter.get();
+    if (alpha)
+    {
+        if (ImGui::ColorEdit4(parameter.getName().c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+        {
+            parameter.set(tmpRef);
+            return true;
+        }
+    }
+    else if (ImGui::ColorEdit3(parameter.getName().c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+    {
+        parameter.set(tmpRef);
+        return true;
+    }
+    
+    return false;
+}
 bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier) {
     int value = param*multiplier;
     if (ImGui::SliderInt(param.getName().c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d")) {
@@ -117,6 +180,7 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
     }
 }
 
+
 bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     auto parameterBoolPtr = std::dynamic_pointer_cast<ofParameter<bool>>(param);
     if(parameterBoolPtr) {
@@ -131,6 +195,34 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     auto parameterInt = std::dynamic_pointer_cast<ofParameter<int>>(param);
     if(parameterInt) {
         return UI::addIntSlider(*parameterInt);
+    }
+    
+    auto parameterVec2 = std::dynamic_pointer_cast<ofParameter<glm::vec2>>(param);
+    if(parameterVec2) {
+        return UI::addFloat2Slider(*parameterVec2);
+    }
+    auto parameterVec3 = std::dynamic_pointer_cast<ofParameter<glm::vec3>>(param);
+    if(parameterVec3) {
+        return UI::addFloat3Slider(*parameterVec3);
+    }
+    
+    auto parameterFloatColour = std::dynamic_pointer_cast<ofParameter<ofFloatColor>>(param);
+    if (parameterFloatColour){
+        return UI::addColour(*parameterFloatColour);
+    }
+    
+    auto parameterColour = std::dynamic_pointer_cast<ofParameter<ofColor>>(param);
+    if (parameterColour){
+        return UI::addColour(*parameterColour);
+    }
+    
+    auto parameterString = std::dynamic_pointer_cast<ofParameter<string>>(param);
+    if (parameterString){
+        vector<string> lines = ofSplitString(parameterString->get(), "\n");
+        for(string& line : lines) {
+            ImGui::Text("%s", line.c_str()); 
+        }
+        return true;
     }
     // throw error here?
     return false;
