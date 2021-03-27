@@ -7,12 +7,11 @@
 #include "ofxLaserDacIDN.h"
 #include "ofxLaserDacHelios.h"
 
-#include "ofxGui.h"
 
 //#define USE_ETHERDREAM
 //#define USE_IDN
-//#define USE_LASERDOCK
-#define USE_HELIOS
+#define USE_LASERDOCK
+//#define USE_HELIOS
 
 class ofApp : public ofBaseApp{
 	
@@ -22,10 +21,10 @@ public:
 	void draw();
 	void exit();
 	
-	void keyPressed  (int key);
-	void mouseDragged(int x, int y, int button);
-	void mousePressed(int x, int y, int button);
-	void mouseReleased(int x, int y, int button);
+	void keyPressed(ofKeyEventArgs& e);
+	void mouseDragged(ofMouseEventArgs& e);
+	void mousePressed(ofMouseEventArgs& e);
+	void mouseReleased(ofMouseEventArgs& e);
 	
 	void showLaserEffect(int effectnum);
 	

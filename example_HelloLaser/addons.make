@@ -1,6 +1,4 @@
-ofxGui
 ofxKinect
-ofxXmlSettings
 ofxOpenCv
 ofxNetwork
 ofxPoco

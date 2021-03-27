@@ -26,14 +26,22 @@ void ofApp::setup(){
 #endif
 	
 	
-	
+    numLaserEffects = 9;
+    
 	// if you don't want to manage your own GUI for your app you can add extra
 	// params to the laser GUI
+    laser.addCustomParameter(currentLaserEffect.set("Current effect", 0, 0, numLaserEffects-1));
+   
 	laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
+    
+    ofParameter<string> description;
+    description.set("INSTRUCTIONS : \nTAB to toggle output editor \nF to toggle full screen \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
+    laser.addCustomParameter(description);
+    
     laser.initGui(true);
+    
     currentLaserEffect = 0;
-    numLaserEffects = 8;
-	 
+     
 	
 }
 
@@ -51,13 +59,7 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-	ofBackground(40);
-	
-	int ypos = laserHeight+20;
-	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
-    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
-	ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
-	ofDrawBitmapString("Mouse to draw polylines, 'C' to clear", 400, ypos+=30);
+	ofBackground(15,15,20);
     
     showLaserEffect(currentLaserEffect);
 
@@ -85,18 +87,19 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 1: {
 
 			// LASER LINES
-			int numlines = 10;
+			int numlines = 7;
 			
 			for(int i = 0; i<numlines; i++) {
 				
 				float progress =(float)i/(float)(numlines-1);
-
+                float hue =(float)i/(float)(numlines);
+                
 				float xpos =left + (width*progress);
 									
 				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
               
 				ofColor c;
-				c.setHsb(progress*255, 255, 255);
+				c.setHsb(hue*255, 255, 255);
                 
 				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
 		
@@ -110,17 +113,18 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 2: {
 			
 			// LASER LINES ANIMATING
-			int numlines = 10;
+			int numlines = 7;
 			
 			for(int i = 0; i<numlines; i++) {
 				
 				float progress =(float)i/(float)(numlines-1);
-				
+                float hue =(float)i/(float)(numlines);
+                
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
 				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
 				ofColor c;
-				c.setHsb(progress*255, 255, 255);
+				c.setHsb(hue*255, 255, 255);
 				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
 				
 			}
@@ -133,17 +137,18 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 3: {
 			
 			// LASER CIRCLES
-			int numCircles = 6;
+			int numCircles = 4;
 			
 			for(int i = 0; i<numCircles; i++) {
 				
 				float progress =(float)i/(float)(numCircles-1);
-				
+                float hue =(float)i/(float)(numCircles);
+                
 				float xpos =left + (width*progress);
 				
 				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor(255));
 				ofColor c;
-				c.setHsb(progress*255, 255, 255);
+				c.setHsb(hue*255, 255, 255);
 				
 				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
 				
@@ -156,17 +161,18 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 4: {
 			
 			// LASER CIRCLES ANIMATING
-			int numCircles = 6;
+			int numCircles = 4;
 			
 			for(int i = 0; i<numCircles; i++) {
 				
 				float progress =(float)i/(float)(numCircles-1);
+                float hue =(float)i/(float)(numCircles);
 				
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
 				laser.drawCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white);
 				ofColor c;
-				c.setHsb(progress*255, 255, 255);
+				c.setHsb(hue*255, 255, 255);
 				
 				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
 				
@@ -179,7 +185,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 		case 5: {
 			
 			// LASER PARTICLES
-			int numParticles = 20;
+			int numParticles = 12;
 			
 			for(int i = 0; i<numParticles; i++) {
 				
@@ -220,6 +226,42 @@ void ofApp :: showLaserEffect(int effectnum) {
 			break;
 			
 		}
+        case 7: {
+            
+            // 3D rotation
+            // you don't need to wrap your draw calls in
+            // laser.beginDraw() and laser.endDraw() unless
+            // you're doing 3D (it fixes the viewport)
+            
+            laser.beginDraw();
+            
+            float speed = 20;
+            ofPushMatrix();
+            ofTranslate(laserWidth/2,laserHeight/2);
+            ofRotateYDeg(ofGetElapsedTimef()*speed);
+            int hue = (int)(ofGetElapsedTimef()*32)%255; // 8 seconds to go around
+            ofColor c;
+            c.setHsb(hue, 255, 255);
+           
+            for(int j = 0; j<4; j++) {
+                ofPushMatrix();
+                ofRotateXDeg(j*90);
+                for(int i = 0; i<3; i++) {
+                    ofPushMatrix();
+                    ofRotateZDeg(i*90);
+                    laser.drawLine(glm::vec3(100,-100,100), glm::vec3(100, 100,100), c);
+                    ofPopMatrix();
+                }
+                ofPopMatrix();
+            }
+            ofPopMatrix();
+            
+            laser.endDraw();
+          
+            
+            break;
+            
+        }
 			
 	}
 
@@ -232,40 +274,44 @@ void ofApp :: showLaserEffect(int effectnum) {
 
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key){
-	if(key =='c') {
+void ofApp::keyPressed(ofKeyEventArgs& e){
+	if(e.key =='c') {
 		polyLines.clear();
-	} else if (key == OF_KEY_LEFT) {
+	} else if (e.key == OF_KEY_LEFT) {
 		currentLaserEffect--;
 		if(currentLaserEffect<0) currentLaserEffect = numLaserEffects-1;
-	} else if (key == OF_KEY_RIGHT) {
+	} else if (e.key == OF_KEY_RIGHT) {
 		currentLaserEffect++;
 		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
 	}
-	if(key=='f') {
+	if(e.key=='f') {
         ofToggleFullscreen();
 	}
-    if(key==OF_KEY_TAB) {
+    if(e.key==OF_KEY_TAB) {
         laser.nextProjector();
     }
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
+void ofApp::mouseDragged(ofMouseEventArgs& e){
 	if(!drawingShape) return;
 	
+    glm::vec2 mouse = e;
+    mouse-=glm::vec2(laser.guiSpacing, laser.guiSpacing);
+    mouse/=laser.previewScale;
+    
 	ofPolyline &poly = polyLines.back();
-	poly.addVertex(x, y);
+	poly.addVertex((ofPoint)mouse);
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
+void ofApp::mousePressed(ofMouseEventArgs& e){
 	polyLines.push_back(ofPolyline());
 	drawingShape = true;
 }
 
-void ofApp::mouseReleased(int x, int y, int button) {
+void ofApp::mouseReleased(ofMouseEventArgs& e) {
 	if(drawingShape) {
 		ofPolyline &poly = polyLines.back();
 		poly = poly.getSmoothed(2);
