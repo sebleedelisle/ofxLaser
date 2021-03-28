@@ -28,12 +28,12 @@ Features
 Supported Laser interfaces
 --------------------------
 USB : 
-* HeliosDAC 
+* HeliosDAC (beta)
 * Laserdock / Lasercube
 
 Network :
 * Etherdream
-* IDN (Ilda Digital Network standard)
+* IDN ILDA Digital Network standard (alpha)
 
 Roadmap
 -----------
@@ -43,7 +43,7 @@ Roadmap
 Licence
 -------
 The code in this repository is available under the [MIT License](https://secure.wikimedia.org/wikipedia/en/wiki/Mit_license).  
-Copyright (c) 2012-2019 Seb Lee-Delisle [seb.ly](http://seb.ly)
+Copyright (c) 2012-2019 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.co](https://seblee.co)
 
 Installation
 -------
@@ -54,7 +54,7 @@ First, pick the branch that matches your version of openFrameworks:
 * OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_9.10.1) 
 * OF 0.9.x : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
-Either clone out the source code using git:
+Either clone the source code using git:
 
 	> cd openFrameworks/addons/
 	> git clone https://github.com/sebleedelisle/ofxLaser.git
@@ -66,16 +66,16 @@ To run the examples, import them into the project generator, create a new projec
 
 Dependencies
 ------------
-ofxXmlSettings (comes with oF)  
-ofxGui (comes with oF)  
 ofxOpenCv (comes with oF)  
 ofxNetwork (comes with oF)  
 ofxPoco (comes with oF)  
 ofxSvg (comes with oF)  
 ofxKinect - (only used as an easy way to get libusb installed cross platform) (comes with oF) 
+ofxImGui - a cut down version included in the source code (with thanks to @jvcleave)
 
 Compatibility
 ------------
+openFrameworks 0.11.x
 openFrameworks 0.10.1 
 openFrameworks 0.9.8
 
