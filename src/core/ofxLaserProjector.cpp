@@ -18,9 +18,9 @@ Projector::Projector(string projectorlabel, DacBase& laserdac) {
 	label = projectorlabel;
 	//maskRectangle.set(0,0,800,800);
 	
-	renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast")); // second argument is passed into constructor for the RenderProfile
+    renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast")); // second argument is passed into constructor for the RenderProfile
 	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT, ofToString("Default"));
-	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High quality"));
+	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High detail"));
 	
 	numTestPatterns = 9;
     //guiIsVisible = true;
@@ -46,7 +46,7 @@ void Projector::setDefaultHandleSize(float size) {
 	
 }
 
-void Projector :: initGui(bool showAdvanced) {
+void Projector :: initGui() {
 
 	//gui = new ofxPanel();
     
@@ -69,15 +69,13 @@ void Projector :: initGui(bool showAdvanced) {
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	pps.addListener(this, &Projector::ppsChanged);
     
-	
-    
-	projectorparams.add(colourChangeOffset.set("Colour change offset", 0,0,6));
+	projectorparams.add(colourChangeOffset.set("Colour change offset", 2,0,6));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
-	projectorparams.add(moveSpeed.set("Move Speed", 5,0.1,50));
-	projectorparams.add(shapePreBlank.set("Hold off before", 1,0,8));
-	projectorparams.add(shapePreOn.set("Hold on before", 1,0,8));
-	projectorparams.add(shapePostOn.set("Hold on after", 1,0,8));
-	projectorparams.add(shapePostBlank.set("Hold off after", 1,0,8));
+	projectorparams.add(moveSpeed.set("Move Speed", 3.5,0.1,50));
+	projectorparams.add(shapePreBlank.set("Hold off before", 3,0,8));
+	projectorparams.add(shapePreOn.set("Hold on before", 0,0,8));
+	projectorparams.add(shapePostOn.set("Hold on after", 0,0,8));
+	projectorparams.add(shapePostBlank.set("Hold off after", 3,0,8));
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
@@ -94,10 +92,7 @@ void Projector :: initGui(bool showAdvanced) {
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
 
-	if(showAdvanced) {
-		projectorparams.add(advanced);
-	}
-	else speedMultiplier = 1;
+	projectorparams.add(advanced);
 	
 	params.add(projectorparams);
 	
@@ -113,20 +108,20 @@ void Projector :: initGui(bool showAdvanced) {
 	renderparams.add(fast.params);
 	renderparams.add(detail.params);
     
-    defaultProfile.speed = 10;
-    defaultProfile.acceleration = 2;
-    defaultProfile.cornerThreshold  = 60;
-    defaultProfile.dotMaxPoints = 20;
+    defaultProfile.speed = 3;
+    defaultProfile.acceleration = 0.5;
+    defaultProfile.cornerThreshold  = 40;
+    defaultProfile.dotMaxPoints = 10;
     
-    fast.speed = 20;
-    fast.acceleration = 4;
-    fast.cornerThreshold  = 90;
-    fast.dotMaxPoints = 10;
+    fast.speed = 6;
+    fast.acceleration = 1.2;
+    fast.cornerThreshold  = 20;
+    fast.dotMaxPoints = 5;
     
-    detail.speed = 5;
-    detail.acceleration = 1;
-    detail.cornerThreshold  = 20;
-    detail.dotMaxPoints = 40;
+    detail.speed = 2.5;
+    detail.acceleration = 0.75;
+    detail.cornerThreshold  = 15;
+    detail.dotMaxPoints = 20;
     
 	params.add(renderparams);
 	
@@ -203,7 +198,9 @@ void Projector :: initGui(bool showAdvanced) {
 	// try loading the xml file for legacy reasons
 	//params.load(label+".xml");
 	//params.load(label+".json");
-    loadSettings(); 
+    loadSettings();
+    
+    dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
 	if(colourChangeOffset<0) colourChangeOffset = 0;
 	
@@ -276,9 +273,10 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	zoneTransform.init(zone->rect); 
 	zoneTransform.setSrc(zone->rect);
 	ofRectangle destRect = zone->rect;
-	destRect.scale(800/srcwidth, 800/srcheight);
-	destRect.x*=800/srcwidth;
-	destRect.y*=800/srcheight;
+	destRect.scale(400/srcwidth, 400/srcheight);
+	destRect.x*=400/srcwidth;
+    destRect.x+=200;
+	destRect.y*=400/srcheight;
 	zoneTransform.setDst(destRect);
 	zoneTransform.scale = 1;
 	zoneTransform.offset.set(0,0);
@@ -526,23 +524,24 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 	ofNoFill();
 	//ofSetColor(255);
-	ofSetColor(MIN(255 * w / 800.0f, 255));
-	ofSetLineWidth(1);
+    ofSetColor(MIN(255 * w / 800.0f, 255));
+	ofSetLineWidth(0.5);
 	
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	previewPathMesh.draw();
 	
+    // draw the coloured line in the background
 	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor(ofMap(i,0,previewPathMesh.getNumVertices(), 200,20),0,200));
+		previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,255));
 	}
 
 	
 	
-	ofSetLineWidth(0.5);
+	ofSetLineWidth(2 * w / 800.0f);
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
 	
-	// draws the laser path
+	// draws the animated laser path
 	
 	if(previewPathMesh.getNumVertices()>0) {
 		

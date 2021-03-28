@@ -79,11 +79,6 @@ class Manager {
     bool loadSettings();
     bool saveSettings();
     
-    void updateScreenSize(ofResizeEventArgs &e);
-    void updateScreenSize();
-    void updateGuiPositions();
-    void showAdvancedPressed(bool& state);
-    
     void send();
     void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
     
@@ -106,7 +101,10 @@ class Manager {
     Projector& getProjector(int index = 0);
     int getNumProjectors() { return projectors.size(); };
     
-    void initGui(bool showAdvanced = false);
+    OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
+//    OF_DEPRECATED_MSG("Use Deg/Rad versions.", float getPitch() const);
+
+    void initGui();
     void addCustomParameter(ofAbstractParameter& param);
     //ofxPanel& getGui();
     

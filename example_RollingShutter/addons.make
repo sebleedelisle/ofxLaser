@@ -1,6 +1,6 @@
 ofxKinect
-ofxLaser
-ofxNetwork
 ofxOpenCv
+ofxNetwork
 ofxPoco
 ofxSvg
+ofxLaser

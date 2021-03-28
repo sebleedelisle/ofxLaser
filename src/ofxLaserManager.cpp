@@ -38,12 +38,9 @@ Manager :: Manager() {
 	currentProjector = -1;
 	guiIsVisible = true;
 	
-	ofAddListener(ofEvents().windowResized, this, &Manager::updateScreenSize, OF_EVENT_ORDER_BEFORE_APP);
-	
 }
 Manager :: ~Manager() {
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
-	ofRemoveListener(ofEvents().windowResized, this, &Manager::updateScreenSize);
 	saveSettings();
 }
 
@@ -69,12 +66,6 @@ void Manager::addProjector(DacBase& dac) {
 	}
 	
 	projector->setDefaultHandleSize(defaultHandleSize);
-	//Projector& proj = *projectors.back();
-	
-	//proj.gui->setPosition(width+320,10);
-	
-	//updateScreenSize();
-	
 }
 
 void Manager::addZone(const ofRectangle& rect) {
@@ -459,9 +450,7 @@ void Manager:: drawUI(bool expandPreview){
 				projectors[i]->hideWarpGui();
 			}
 			
-			
 		}
-		
 		
 	}
 	
@@ -585,15 +574,7 @@ void Manager :: renderPreview() {
     previewFbo.end();
     previewFbo.draw(previewOffset);
 }
-void Manager ::updateScreenSize(ofResizeEventArgs &e){
-	
-	updateScreenSize();
-}
 
-void Manager :: updateScreenSize() {
-	updateGuiPositions();
-	
-}
 bool Manager ::toggleGui(){
 	guiIsVisible = !guiIsVisible;
 	return guiIsVisible;
@@ -604,50 +585,7 @@ void Manager ::setGuiVisible(bool visible){
 bool Manager::isGuiVisible() {
 	return guiIsVisible;
 }
-void Manager :: updateGuiPositions() {
-//
-//
-//
-//	for(size_t i= 0; i<projectors.size(); i++) {
-//		int x = ofGetWidth()-(guiProjectorPanelWidth+guiSpacing);
-//		if(projectors.size()<=2){
-//			x = ofMap(i, 0, projectors.size(),ofGetWidth()-((guiProjectorPanelWidth+guiSpacing)*projectors.size()), ofGetWidth());
-//		}
-//
-//		//projectors[i]->gui->setPosition(x,dacStatusBoxHeight+(guiSpacing*2));
-//		//projectors[i]->gui->setPosition(x,(currentProjector>-1)?guiSpacing:dacStatusBoxHeight+(guiSpacing*2));
-//
-//	}
-//
-//	if(projectors.size() == 0) {
-//		ofLog(OF_LOG_WARNING, "ofxLaser::Manager - no projectors added");
-//		//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing), guiSpacing);
-//
-//	} else {
-//		if(showProjectorSettings) {
-//			if(projectors.size()>2) {
-//				//gui.setPosition(ofGetWidth()-(guiProjectorPanelWidth+guiSpacing) - guiSpacing- 220,guiSpacing);
-//			} else if(projectors.size()>0){
-//				//int x = projectors[0]->gui->getPosition().x-220-guiSpacing;
-//				int x = ofGetWidth()-220-220-guiSpacing;
-//				//gui.setPosition(x, guiSpacing);
-//			}
-//		} else {
-//			int x = ofGetWidth()-guiSpacing;
-//			//gui.setPosition(x-guiSpacing-gui.getWidth(), guiSpacing);
-//
-//		}
-//
-//	}
-}
 
-void Manager::showAdvancedPressed(bool& state){
-	//updateGuiPositions();
-}
-//
-//ofxPanel& Manager ::getGui(){
-//	return gui;
-//}
 
 int Manager :: getProjectorPointRate(unsigned int projectornum ){
 	return projectors.at(projectornum)->getPointRate();
@@ -669,7 +607,6 @@ void Manager::sendRawPoints(const std::vector<ofxLaser::Point>& points, int proj
 void Manager::nextProjector() {
 	currentProjector++;
 	if(currentProjector>=(int)projectors.size()) currentProjector=-1;
-	updateGuiPositions();
 	
 }
 
@@ -677,12 +614,14 @@ void Manager::nextProjector() {
 void Manager::previousProjector() {
 	currentProjector--;
 	if(currentProjector<-1) currentProjector=(int)projectors.size()-1;
-	updateGuiPositions();
 	
 }
+// DEPRECATED, showAdvanced parameter now redundant
+void Manager::initGui(bool showAdvanced) {
+    initGui();
+}
 
-void Manager::initGui(bool showExperimental) {
-	
+void Manager::initGui() {
 	
     ofxLaser::UI::setupGui();
    
@@ -705,22 +644,15 @@ void Manager::initGui(bool showExperimental) {
 		customParams.setName("Custom");
 		params.add(customParams);
 	}
-	
 
     loadSettings();
     
 	showPreview = true;
 	
-	//showProjectorSettings.addListener(this, &ofxLaser::Manager::showAdvancedPressed);
-	
-	
 	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->initGui(showExperimental);
+		projectors[i]->initGui();
 		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
 	}
-	
-	updateScreenSize();
-	
 	
 }
 
@@ -743,7 +675,6 @@ void Manager::armAllProjectorsListener() {
 }
 
 void Manager::disarmAllProjectorsListener(){
-	
 	doDisarmAll = true;
 }
 void Manager::armAllProjectors() {
@@ -774,8 +705,8 @@ bool Manager::loadSettings() {
         ofDeserialize(json, params);
         return true;
     }
-    
 }
+
 bool Manager::saveSettings() {
 	//gui.saveToFile("laserSettings.json");
     
@@ -960,7 +891,7 @@ void Manager::drawLaserGui() {
     ImGui::PushItemWidth(mainpanelwidth-(spacing*2));
     float multiplier = 100;
     int value = laser.masterIntensity*multiplier;
-    if (ImGui::SliderInt(laser.masterIntensity.getName().c_str(), &value, laser.masterIntensity.getMin()*multiplier, laser.masterIntensity.getMax()*multiplier, "GLOBAL BRIGHTNESS %d")) {
+    if (ImGui::SliderInt("##int", &value, laser.masterIntensity.getMin()*multiplier, laser.masterIntensity.getMax()*multiplier, "GLOBAL BRIGHTNESS %d")) {
         laser.masterIntensity.set((float)value/multiplier);
         
     }
@@ -996,12 +927,6 @@ void Manager::drawLaserGui() {
     
     
     ImGui::PopStyleVar(2);
-    
-    //    const void * ref1 = laser.testPattern.getInternalObject();
-    //    int* ref = (int*)ref1->value;
-    //    cout << laser.testPattern.getMin() << " " << ref << " " <<  endl;
-    //    ImGui::SliderInt(laser.testPattern.getName().c_str(), ref, laser.testPattern.getMin(), 10, "%d");
-    
     
     ImGui::PopItemWidth();
     ImGui::End();
@@ -1168,6 +1093,8 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         ImGui::TreePop();
     }
     
+    // TODO IMPLEMENT PROJECTOR PROFILES
+    /*
     // PROJECTOR PROFILE
     ImGui::Separator();
     ImGui::Text("PROJECTOR PROFILE");
@@ -1201,6 +1128,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
         ImGui::EndCombo();
     }
+    */
     
     // SCANNER PROFILE SETTINGS
     
@@ -1213,7 +1141,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     // show a "save" button, also save as?
     //
     // when an option is selected, update all the params
-    
+    /*
     if (ImGui::BeginCombo("Scanner profile (placeholder)", "DT50")) // The second parameter is the label previewed before opening the combo.
     {
         
@@ -1234,7 +1162,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
         ImGui::EndCombo();
     }
-    
+    */
     // SCANNER SETTINGS
     UI::addFloatSlider(projector->colourChangeOffset);
     UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
@@ -1253,7 +1181,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     UI::toolTip("The length of time that the laser is switched off and held at the end of a shape");
     
     ImGui::Text("Scanner profiles");
-    UI::toolTip("There are three profiles for different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high quality setting is good for complex pointy shapes.");
+    UI::toolTip("There are three profiles for different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
     
     bool firsttreeopen = true;
     for (auto & renderProfile : projector->renderProfiles) {

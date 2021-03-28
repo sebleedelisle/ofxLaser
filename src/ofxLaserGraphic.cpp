@@ -701,9 +701,7 @@ float Graphic :: getAngleBetweenPoints(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 }
 
 void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string renderProfile) {
-	
-	//laser.setTargetZone(targetZone); // only relevant if we're in OFXLASER_ZONE_MANUAL
-	
+		
 	for(size_t i= 0; i<polylines.size(); i++) {
 		ofColor col = colours[i];
 		col*=brightness;
@@ -711,11 +709,6 @@ void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string
 		
 	}
 	
-	//////// union test
-
-//	for(ofPolyline& poly:polylineMask) {
-//		laser.drawPoly(poly, ofColor::white);
-//	}
 }
 void Graphic :: clear() {
 	for(ofPolyline* poly : polylines) Factory::releasePolyline(poly);

@@ -36,9 +36,9 @@ void ofApp::setup(){
 	laser.addCustomParameter(timeSpeed.set("time speed", 1,0.01,2));
 	points.resize(pointsPerFrame);
 	
-    laser.initGui(true);
+    laser.initGui();
     currentLaserEffect = 0;
-    numLaserEffects = 8;
+    numLaserEffects = 7;
 		
 }
 
@@ -64,13 +64,9 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-	ofBackground(40);
+	ofBackground(15,15,20);
 	
-	int ypos = laserHeight+20;
-	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
-    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
-	ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
-	ofDrawBitmapString("[ and ] to sync to camera", 400, ypos+=30);
+	
     
     showLaserEffect(currentLaserEffect);
 
@@ -86,12 +82,26 @@ void ofApp::draw() {
 	}
 	
     laser.drawUI();
-	ofNoFill();
-	ofSetLineWidth(2);
-	mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
-	
-	mesh.draw();
-
+    
+    if(laser.currentProjector==-1) {
+        
+        int ypos = (laserHeight*laser.previewScale)+(laser.guiSpacing*2);
+        ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
+        ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
+        ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
+        ofDrawBitmapString("[ and ] to sync to camera", 400, ypos+=30);
+        
+        
+        ofNoFill();
+        ofSetLineWidth(2);
+        mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+        ofPushMatrix();
+        ofTranslate(laser.guiSpacing, laser.guiSpacing);
+        ofScale(laser.previewScale);
+        
+        mesh.draw();
+        ofPopMatrix();
+    }
 }
 
 
@@ -308,10 +318,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 			
 		}
 		case 6: {
+            points.clear();
 			for(int i = 0; i<pointsPerFrame; i++) {
 				ofxLaser::Point p;
 				p.set(400, 400);
-				float angle = ofMap(i, 0, pointsPerFrame, 0,PI*2);
+				float angle = ofMap(i, 0, pointsPerFrame, 0,PI*4);
 				
 				p.x+=cos(angle)*100;
 				p.y+=sin(angle)*100;
@@ -353,25 +364,3 @@ void ofApp::keyPressed(int key){
         laser.nextProjector();
     }
 }
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-	
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-	
-}
-
-void ofApp::mouseReleased(int x, int y, int button) {
-	
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::exit(){
-	laser.saveSettings();
-}
-

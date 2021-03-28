@@ -19,7 +19,6 @@ public:
 	void setup();
 	void update();
 	void draw();
-	void exit();
 	
 	void keyPressed(ofKeyEventArgs& e);
 	void mouseDragged(ofMouseEventArgs& e);
@@ -29,8 +28,13 @@ public:
 	void showLaserEffect(int effectnum);
 	
 	ofParameter<int> currentLaserEffect;
-	int numLaserEffects; 
-	
+    ofParameter<float>timeSpeed;
+    ofParameter<int> renderProfileIndex;
+    ofParameter<string> renderProfileLabel;
+    
+    int numLaserEffects;
+    float elapsedTime;
+    
 	ofxLaser::Manager laser;
 	
 #ifdef USE_ETHERDREAM
@@ -51,9 +55,7 @@ public:
 	int laserHeight;
     
 	std::vector<ofPolyline> polyLines;
-		
-	float elapsedTime; 
-
-    ofParameter<ofColor> color;
+	
+    ofParameter<ofColor> colour;
 };
 

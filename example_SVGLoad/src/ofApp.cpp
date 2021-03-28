@@ -47,7 +47,6 @@ void ofApp::setup(){
 		
 		ofLog(OF_LOG_NOTICE,file.getAbsolutePath());
 		fileNames.push_back(file.getFileName());
-		
     }
     
     // set up the laser manager
@@ -69,7 +68,17 @@ void ofApp::setup(){
     dac.setup(dacIp);
 #endif
 	
-	laser.addCustomParameter(scale.set("SVG scale", 1.3, 0.1,6));
+    laser.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
+    laser.addCustomParameter(currentSVGFilename.set("Filename"));
+	laser.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));
+    laser.addCustomParameter(rotate3D.set("Rotate 3D", true));
+    laser.addCustomParameter(renderProfileLabel);
+    laser.addCustomParameter(renderProfileIndex.set("Render Profile", 1, 0, 2));
+    
+    ofParameter<string> description;
+    description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
+    laser.addCustomParameter(description);
+    
     laser.initGui();
     
 	
@@ -86,43 +95,46 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-
-	ofBackground(40);
+	ofBackground(15,15,20);
+       
+    string renderProfile;
+    switch (renderProfileIndex) {
+        case 0 :
+            renderProfile = OFXLASER_PROFILE_DEFAULT;
+            break;
+        case 1 :
+            renderProfile = OFXLASER_PROFILE_DETAIL;
+            break;
+        case 2 :
+            renderProfile = OFXLASER_PROFILE_FAST;
+            break;
+    }
+    renderProfileLabel = "Render Profile : OFXLASER_PROFILE_" + renderProfile;
     
 	ofxLaser::Graphic& laserGraphic = laserGraphics[currentSVG];
 	
-	ofNoFill();
-	ofSetLineWidth(1);
-	ofDrawRectangle(0,0,laserWidth, laserHeight);
-    
-	int ypos = laserHeight+10;
-    int xpos = 360;
-	ofDrawBitmapString("Current SVG : "+ofToString(currentSVG) + " "+fileNames[currentSVG], xpos, ypos+=30);
+    currentSVGFilename = fileNames[currentSVG];
 	
-	ofDrawBitmapString("Left and Right Arrows to change current SVG", xpos, ypos+=30);
-    ofDrawBitmapString("'F' to toggle fullscreen", xpos, ypos+=20);
-    ofDrawBitmapString("'TAB' to toggle laser preview mode", xpos, ypos+=20);
-    ofDrawBitmapString("Adjust Render Profiles -> Default to affect laser speed", xpos, ypos+=20);
+    laser.beginDraw();
     
-   
-    int laserframerate = laser.getProjectorFrameRate(0); 
-    ofDrawBitmapString("Laser framerate  : " + ofToString(laserframerate), 20, 20);
-	ofDrawBitmapString("Render framerate : " + ofToString(ofGetFrameRate()), 20, 35);
-	
     ofPushMatrix();
 
     ofTranslate(400, 400);
-	ofScale(scale, scale); 
+	ofScale(scale, scale);
+    if(rotate3D) {
+        float angle = fmod(ofGetElapsedTimef()*30, 180)-90;
+        ofRotateYDeg(angle);
+    }
     if(laserGraphics.size()>currentSVG) {
-		laserGraphics[currentSVG].renderToLaser(laser, 1, OFXLASER_PROFILE_DEFAULT);
-	//	svgs[currentSVG].draw();
+		laserGraphics[currentSVG].renderToLaser(laser, 1, renderProfile);
     }
     ofPopMatrix();
+    
+    laser.endDraw();
+    
     laser.send();
     laser.drawUI();
 	
-	
-
 }
 
 
@@ -142,12 +154,4 @@ void ofApp::keyPressed(int key){
     
     if(key==OF_KEY_TAB) laser.nextProjector();
 
-}
-
-//--------------------------------------------------------------
-void ofApp::exit(){
-    laser.saveSettings();
-#ifndef USE_LASERDOCK
-    dac.close();
-#endif
 }

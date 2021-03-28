@@ -28,17 +28,21 @@ void ofApp::setup(){
 	
     numLaserEffects = 9;
     
-	// if you don't want to manage your own GUI for your app you can add extra
-	// params to the laser GUI
+	// if you don't want to manage your own GUI for your
+    // app you can add extra params to the laser GUI
+    laser.addCustomParameter(renderProfileLabel);
+    laser.addCustomParameter(renderProfileIndex.set("Render Profile", 0, 0, 2));
+    
     laser.addCustomParameter(currentLaserEffect.set("Current effect", 0, 0, numLaserEffects-1));
+    laser.addCustomParameter(timeSpeed.set("Animation speed", 1, 0, 2));
    
-	laser.addCustomParameter(color.set("color", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
+	laser.addCustomParameter(colour.set("Colour", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
     
     ofParameter<string> description;
     description.set("INSTRUCTIONS : \nTAB to toggle output editor \nF to toggle full screen \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
     laser.addCustomParameter(description);
     
-    laser.initGui(true);
+    laser.initGui();
     
     currentLaserEffect = 0;
      
@@ -49,7 +53,7 @@ void ofApp::setup(){
 void ofApp::update(){
     
 	float deltaTime = ofClamp(ofGetLastFrameTime(), 0, 0.2);
-	elapsedTime+=deltaTime;
+	elapsedTime += (deltaTime*timeSpeed);
     
     // prepares laser manager to receive new points
     laser.update();
@@ -75,6 +79,21 @@ void ofApp::draw() {
 void ofApp :: showLaserEffect(int effectnum) {
     
     
+    
+ string renderProfile;
+ switch (renderProfileIndex) {
+     case 0 :
+         renderProfile = OFXLASER_PROFILE_DEFAULT;
+         break;
+     case 1 :
+         renderProfile = OFXLASER_PROFILE_DETAIL;
+         break;
+     case 2 :
+         renderProfile = OFXLASER_PROFILE_FAST;
+         break;
+ }
+ renderProfileLabel = "Render Profile : OFXLASER_PROFILE_" + renderProfile;
+    
 	float left = laserWidth*0.1;
 	float top = laserHeight*0.1;
 	float right = laserWidth*0.9;
@@ -96,12 +115,12 @@ void ofApp :: showLaserEffect(int effectnum) {
                 
 				float xpos =left + (width*progress);
 									
-				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255), renderProfile);
               
 				ofColor c;
 				c.setHsb(hue*255, 255, 255);
                 
-				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c, renderProfile);
 		
 			}
 
@@ -122,10 +141,10 @@ void ofApp :: showLaserEffect(int effectnum) {
                 
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
-				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255));
+				laser.drawLine(ofPoint(xpos, top+height*0.1), ofPoint(xpos, top+height*0.4), ofColor(255), renderProfile);
 				ofColor c;
 				c.setHsb(hue*255, 255, 255);
-				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c);
+				laser.drawLine(ofPoint(xpos, top+height*0.6), ofPoint(xpos, top+height*0.9), c, renderProfile);
 				
 			}
 			
@@ -146,11 +165,11 @@ void ofApp :: showLaserEffect(int effectnum) {
                 
 				float xpos =left + (width*progress);
 				
-				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor(255));
+				laser.drawCircle(ofPoint(xpos, top+height*0.3),30, ofColor(255), renderProfile);
 				ofColor c;
 				c.setHsb(hue*255, 255, 255);
 				
-				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c, renderProfile);
 				
 			}
 			
@@ -170,11 +189,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) + (sin(elapsedTime*4+i*0.5)*width*0.05);
 				
-				laser.drawCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white);
+				laser.drawCircle(ofPoint(xpos, top+height*0.3), 30, ofColor::white, renderProfile);
 				ofColor c;
 				c.setHsb(hue*255, 255, 255);
 				
-				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c);
+				laser.drawCircle(ofPoint(xpos, top+height*0.7), 30, c, renderProfile);
 				
 			}
 			
@@ -193,10 +212,10 @@ void ofApp :: showLaserEffect(int effectnum) {
 				
 				float xpos =left + (width*progress) ;
 				
-				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255));
+				laser.drawDot(ofPoint(xpos, top+height*0.3), ofColor(255),1, renderProfile);
 				ofColor c;
 				c.setHsb(progress*255, 255, 255);
-				laser.drawDot(ofPoint(xpos, top+height*0.7), c);
+				laser.drawDot(ofPoint(xpos, top+height*0.7), c, 1,  renderProfile);
 				
 			}
 			
@@ -219,7 +238,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 				p.x+=laserWidth/2;
 				p.y+=laserHeight/2;
                 
-				laser.drawDot(p, c);
+				laser.drawDot(p, c, 1, renderProfile);
 				
 			}
 			
@@ -231,27 +250,31 @@ void ofApp :: showLaserEffect(int effectnum) {
             // 3D rotation
             // you don't need to wrap your draw calls in
             // laser.beginDraw() and laser.endDraw() unless
-            // you're doing 3D (it fixes the viewport)
+            // you're doing 3D (it fixes the viewport perspective)
             
             laser.beginDraw();
             
             float speed = 20;
             ofPushMatrix();
             ofTranslate(laserWidth/2,laserHeight/2);
-            ofRotateYDeg(ofGetElapsedTimef()*speed);
-            int hue = (int)(ofGetElapsedTimef()*32)%255; // 8 seconds to go around
+            ofRotateYDeg(elapsedTime*speed);
+            int hue = (int)(elapsedTime*32)%255; // 8 seconds to go around
             ofColor c;
             c.setHsb(hue, 255, 255);
-           
+            
+            ofPolyline poly;
+            
             for(int j = 0; j<4; j++) {
+                poly.clear();
                 ofPushMatrix();
                 ofRotateXDeg(j*90);
-                for(int i = 0; i<3; i++) {
-                    ofPushMatrix();
-                    ofRotateZDeg(i*90);
-                    laser.drawLine(glm::vec3(100,-100,100), glm::vec3(100, 100,100), c);
-                    ofPopMatrix();
-                }
+                
+                poly.addVertex(glm::vec3(100,-100,100));
+                poly.addVertex(glm::vec3(100, 100,100));
+                poly.addVertex(glm::vec3(-100, 100,100));
+                poly.addVertex(glm::vec3(-100, -100,100));
+                laser.drawPoly(poly, c, renderProfile);
+               
                 ofPopMatrix();
             }
             ofPopMatrix();
@@ -267,7 +290,7 @@ void ofApp :: showLaserEffect(int effectnum) {
 
 	// LASER POLYLINES
 	for(size_t i = 0; i<polyLines.size(); i++) {
-		laser.drawPoly(polyLines[i], color );
+		laser.drawPoly(polyLines[i], colour, renderProfile );
 	}
 	
 }
@@ -320,9 +343,3 @@ void ofApp::mouseReleased(ofMouseEventArgs& e) {
 	// TODO add dot if the line is super short
 	
 }
-
-//--------------------------------------------------------------
-void ofApp::exit(){
-	laser.saveSettings();
-}
-

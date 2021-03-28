@@ -82,7 +82,7 @@ bool DacLaserdock::connectToDevice(string serial) {
 	
 	device->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
 	
-	newPPS = maxPPS;
+    //newPPS = pps; // maxPPS;
 	// should ensure that pps get set
 	pps = 0;
 
@@ -292,11 +292,12 @@ void DacLaserdock :: threadedFunction(){
 		}
 		if(connected && (newPPS!=pps)) {
 			if (newPPS>maxPPS) {
-				newPPS = maxPPS;
+				newPPS = pps = maxPPS;
 			}
 			if(device->set_dac_rate(newPPS)) {
-				pps = newPPS;
-			}
+                pps = newPPS;
+            } else {
+            }
 		}
         
         // if resetFlag and connected then disconnect

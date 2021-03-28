@@ -9,8 +9,6 @@
 #include "ofxLaserDacEtherdream.h"
 #include "ofxLaserDacLaserdock.h"
 #include "ofxLaserDacIDN.h"
-
-#include "ofxGui.h"
 #include "ofxSvgExtra.h"
 #include "ofxLaserGraphic.h"
 
@@ -22,12 +20,15 @@ public:
 	void setup();
 	void update();
 	void draw();
-	void exit();
 	
 	void keyPressed  (int key);
 		
     ofParameter<int> currentSVG;
+    ofParameter<string> currentSVGFilename; 
     ofParameter<float> scale;
+    ofParameter<bool> rotate3D;
+    ofParameter<int> renderProfileIndex;
+    ofParameter<string> renderProfileLabel;
     
 	vector<ofxLaser::Graphic> laserGraphics;
 	vector<ofxSVGExtra> svgs; 

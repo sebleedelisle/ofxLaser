@@ -40,7 +40,7 @@ namespace ofxLaser {
 		Projector(string projectorlabel, DacBase& dac);
 		~Projector();
 		
-        void initGui(bool showAdvanced = false);
+        void initGui();
         
         bool loadSettings();
         bool saveSettings();

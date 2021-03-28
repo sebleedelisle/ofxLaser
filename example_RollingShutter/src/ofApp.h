@@ -5,10 +5,7 @@
 #include "ofxLaserDacEtherdream.h"
 #include "ofxLaserDacLaserdock.h"
 #include "ofxLaserDacIDN.h"
-
-#include "ofxGui.h"
-
-//#include "HeliosDac.h"
+#include "HeliosDac.h"
 
 #define USE_ETHERDREAM
 //#define USE_IDN
@@ -20,13 +17,9 @@ public:
 	void setup();
 	void update();
 	void draw();
-	void exit();
 	
 	void keyPressed  (int key);
-	void mouseDragged(int x, int y, int button);
-	void mousePressed(int x, int y, int button);
-	void mouseReleased(int x, int y, int button);
-	
+		
 	void showLaserEffect(int effectnum);
 	
 	ofParameter<int> currentLaserEffect;
