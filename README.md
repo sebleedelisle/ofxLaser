@@ -13,7 +13,7 @@ Features
 ----------
 * Can draw any vector shape to the laser with a simple function calls
 * Shapes are sorted in real-time to find the optimal path for the laser
-* Can control multiple lasers (limited only by CPU and network speed)
+* Can control multiple lasers (works fine with 8 etherdreams+ and is limited only by CPU and network speed)
 * Masking of individual areas with varying levels at source
 * Many calibration options for blanking - colour change offset, pre/post blanks, pre/post on points
 * Specify laser speed and acceleration for each shape using "render profiles" 
@@ -21,9 +21,9 @@ Features
 * Multiple zones can be sent to multiple projectors and individually warped for mapping onto separate planes
 * Colour calibration system to compensate for laser power to brightness curves
 * Full rewrite of the Etherdream library using Poco sockets, very reliable
-* Shapes take into account the current transformation matrix, so should work with ofTransform, ofRotate, and ofScale
-* Should work with 3D coordinates but needs further testing
-* Cross platform - mostly tested on OSX, but should work on Windows and Linux
+* Shapes take into account the current transformation matrix, so works with ofTransform, ofRotate, and ofScale
+* Works with 3D coordinates and shapes
+* Cross platform - developed on OSX, but also tested on Windows and Linux
 
 Supported Laser interfaces
 --------------------------
