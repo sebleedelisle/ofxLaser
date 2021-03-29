@@ -21,11 +21,11 @@ Manager * Manager::instance() {
 
 
 Manager :: Manager() {
-	ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
+	//ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
 	if(laserManager == NULL) {
 		laserManager = this;
 	} else {
-		ofLog(OF_LOG_WARNING, "Multiple ofxLaser::Manager instances created");
+		ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
 	}
 	width = 800;
 	height = 800;
@@ -40,7 +40,7 @@ Manager :: Manager() {
 	
 }
 Manager :: ~Manager() {
-	ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
+	//ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
 	saveSettings();
 }
 
