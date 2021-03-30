@@ -31,7 +31,7 @@ DacLaserdock:: ~DacLaserdock() {
 	
 }
 
-
+/*
 void DacLaserdock::setup(string serial) {
 	
 	serialNumber = serial;
@@ -46,11 +46,95 @@ void DacLaserdock::setup(string serial) {
 	maxPPS = 50000;
 
 }
+*/
 
+bool DacLaserdock::setup(libusb_device* usbdevice){
+    // should only ever be called once. If we need to connect to a different usb device
+    // we should delete and start over
+    
+    if (device!=nullptr) {
+        ofLogError("DacLaserdock::setLaserDockUsbDevice() - Laserdock device already set");
+        return false;
+    }
+    
+    LaserdockDevice* d = new LaserdockDevice(usbdevice);
+    if(d->status() != LaserdockDevice::Status::INITIALIZED) {
+        ofLogError("DacLaserdock::setLaserDockUsbDevice() - Laserdock device initialisation failed");
+        delete d;
+        return false;
+        
+    }
+    // WE ARE GOOD TO GO!!!!
+    
+    device = d;
+    
+    connected = true;
+    
+    device->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
+    
+    // should ensure that pps get set
+    pps = 0;
 
+    //
+//    cout << "Device Status:" << device->status() << endl;
+//    print_uint32("Firmware major version", device, &LaserdockDevice::version_major_number);
+//    print_uint32("Firmware minor version", device, &LaserdockDevice::version_minor_number);
+//    print_uint32("Max Dac Rate", device, &LaserdockDevice::max_dac_rate);
+//    print_uint32("Min Dac Value", device, &LaserdockDevice::min_dac_value);
+//    print_uint32("Max Dac Value", device, &LaserdockDevice::max_dac_value);
+//    device->set_dac_rate(1000);
+//    print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
+//    device->set_dac_rate(30000);
+//    print_uint32("Current Dac Rate", device, &LaserdockDevice::dac_rate);
+//
+//    print_uint32("Sample Element Count", device, &LaserdockDevice::sample_element_count);
+//    print_uint32("ISO packket sample count", device, &LaserdockDevice::iso_packet_sample_count);
+//    print_uint32("Bulky packet sample count", device, &LaserdockDevice::bulk_packet_sample_count);
+//    print_uint32("Ringbuffer sample count", device, &LaserdockDevice::ringbuffer_sample_count);
+//    print_uint32("Ringbuffer empty sample count", device, &LaserdockDevice::ringbuffer_empty_sample_count);
+//
+//    cout << "Serial number: " << device->serial_number() << endl;
+//
+//    cout << "Clearing ringbuffer: " << device->clear_ringbuffer() << endl;
+    
+    bool enabled = false ;
+    
+    if(!device->enable_output()){
+        cout << "Failed enabling output state" << endl;
+    }
+    
+    if(!device->get_output(&enabled)){
+        cout << "Failed reading output state" << endl;
+    } else
+    {
+        cout << "Output Enabled/Disabled: " << enabled << endl;
+    }
+    
+    device->runner_mode_enable(1);
+    device->runner_mode_enable(0);
+    device->runner_mode_run(1);
+    device->runner_mode_run(0);
+    
+    LaserdockSample * samples = (LaserdockSample*) calloc(sizeof(LaserdockSample), 7);
+    memset(samples, 0xFF, sizeof(LaserdockSample) * 7);
+    device->runner_mode_load(samples, 0, 7);
+
+    serialNumber.setName("Serial");
+    serialNumber.set(device->serial_number());
+    ofLogNotice("DacLaserdock : connecting to : " + ofToString(serialNumber));
+    
+    // TODO if failed, then delete device and don't start the thread
+    
+    startThread();
+    return true;
+}
+
+/*
 bool DacLaserdock::connectToDevice(string serial) {
 	
-	std::vector<std::unique_ptr<LaserdockDevice> > devices = lddmanager.get_laserdock_devices();
+    //*************************************** GET LASERDOCK DEVICE!
+	//std::vector<std::unique_ptr<LaserdockDevice> > devices = lddmanager.get_laserdock_devices();
+    std::vector<std::unique_ptr<LaserdockDevice> > devices;
 	LaserdockDevice* newdevice = nullptr;
 	if(devices.size()==0) {
 		
@@ -136,10 +220,10 @@ bool DacLaserdock::connectToDevice(string serial) {
 	ofLogNotice("DacLaserdock : connecting to : " + ofToString(serialNumber));
 	
 	//device->set_dac_rate(pps);
-	
+	// unreleased unique_ptrs are destroyed here
 	return true;
 }
-
+*/
 bool DacLaserdock:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
 	
@@ -315,6 +399,9 @@ void DacLaserdock :: threadedFunction(){
 			}
 		} else {
 			// try to reconnect!
+            //***********************************************
+            // HOW DO WE HANDLE DAC FAILURE???
+            /*
 			if(lock()){
 				if(!connectToDevice(serialNumber)) {
 					unlock();
@@ -325,6 +412,7 @@ void DacLaserdock :: threadedFunction(){
 					unlock();
 				}
 			};
+             */
 			
 		}
 	}

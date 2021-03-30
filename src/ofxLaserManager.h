@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxLaserDacAssigner.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserShape.h"
 #include "ofxLaserLine.h"
@@ -28,12 +29,7 @@ enum ofxLaserZoneMode {
     OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want
     OFXLASER_ZONE_AUTOMATIC, // non-overlapping zones assumed - shapes go in all zones that
     // contain it
-    OFXLASER_ZONE_OPTIMISE // automatically puts it in the best zone
-    
-    //OFXLASER_ZONE_OVERLAY // doubles up multiple lasers for improved brightness - actually not required cos
-    // AUTOMATIC does the same thing
-    
-    
+    OFXLASER_ZONE_OPTIMISE // automatically puts it in the best zone -- NOT CURRENTLY IMPLEMENTED
 };
 
 namespace ofxLaser {
@@ -50,7 +46,7 @@ class Manager {
     Manager();
     ~Manager();
     
-    void addProjector(DacBase& dac);
+    void addProjector();
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);
@@ -102,11 +98,9 @@ class Manager {
     int getNumProjectors() { return projectors.size(); };
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
-//    OF_DEPRECATED_MSG("Use Deg/Rad versions.", float getPitch() const);
 
     void initGui();
     void addCustomParameter(ofAbstractParameter& param);
-    //ofxPanel& getGui();
     
     void setDefaultHandleSize(float size);
     
@@ -117,7 +111,6 @@ class Manager {
     void setGuiVisible(bool visible);
     bool isGuiVisible();
     
-    
     Zone& getZone(int zonenum);
     int getNumZones();
     bool setTargetZone(unsigned int zone);
@@ -126,8 +119,12 @@ class Manager {
     // should be called before initGui
     bool setGuideImage(string filename);
     bool isProjectorArmed(unsigned int i);
-	 bool areAllLasersArmed();
+	bool areAllLasersArmed();
 
+    //--------------------------------------------------------
+    
+    DacAssigner& dacAssigner;
+    
     int width, height;
     int guiProjectorPanelWidth;
     int dacStatusBoxSmallWidth;
@@ -153,10 +150,7 @@ class Manager {
     
     float defaultHandleSize = 8;
     
-    
     ofParameter<float>masterIntensity;
-    //ofParameter<bool>showGuide;
-    //ofParameter<int>guideBrightness;
     ofImage guideImage;
     
     MaskManager laserMask;
@@ -194,8 +188,6 @@ private:
     //ofParameter<int> testPattern;
     
     ofPolyline tmpPoly; // to avoid generating polyline objects
-    
-    
     
 };
 }

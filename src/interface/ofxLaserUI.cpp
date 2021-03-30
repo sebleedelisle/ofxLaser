@@ -29,29 +29,21 @@ void UI::setupGui() {
     }
     
     ImGuiIO& io = ImGui::GetIO();
-    //io.Fonts->AddFontDefault();
     io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data,RobotoMedium_compressed_size, 13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);
-//
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Cousine-Regular.ttf", true).c_str(),13);
 //    io.Fonts->Build();
     
     
     ImGui::CreateContext();
-    //ImGuiIO& io = ImGui::GetIO();
     
     io.DisplaySize = ImVec2((float)ofGetWidth(), (float)ofGetHeight());
     io.MouseDrawCursor = false;
     
     bool autoDraw = true;
     imGui.engine.setup(autoDraw);
-    
-    
-    //ofxImGui::DefaultTheme* defaultTheme = new ofxImGui::DefaultTheme();
-    //setTheme((BaseTheme*)defaultTheme);
-    //defaultTheme->setup();
     
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui::StyleColorsDark();
@@ -63,7 +55,6 @@ void UI::setupGui() {
     ofEvents().mouseDragged.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
     ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
-    // ofAddListener(ofEvents().mouseDragged, this, &Zone::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
 }
 
 void UI::updateGui() {
@@ -81,10 +72,8 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    //ImGui::ShowDemoWindow();
-    //ImGui::Show;
-    
-    
+    ImGui::ShowDemoWindow();
+  
 }
 
 bool UI::addIntSlider(ofParameter<int>& param) {

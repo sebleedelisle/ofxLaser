@@ -37,7 +37,6 @@ class UI {
     static bool addColour(ofParameter<ofFloatColor>& parameter, bool alpha = false);
     static bool addColour(ofParameter<ofColor>& parameter, bool alpha = false);
 
-    
     static bool addParameter(shared_ptr<ofAbstractParameter>& param);
     
     static void addParameterGroup(ofParameterGroup& parameterGroup);
@@ -49,7 +48,7 @@ class UI {
     static bool mousePressed(ofMouseEventArgs &e) {
     
         ImGui::GetIO().MouseDown[e.button] = true;
-        cout << (ImGui::GetIO().WantCaptureMouse)<< endl; 
+        //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
         if(ImGui::GetIO().WantCaptureMouse) return true;
         else return false;
     }

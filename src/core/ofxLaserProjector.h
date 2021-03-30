@@ -37,10 +37,14 @@ namespace ofxLaser {
         
 		public :
 		
-		Projector(string projectorlabel, DacBase& dac);
+		Projector(string projectorlabel);
 		~Projector();
 		
         void initGui();
+        
+        void setDac(DacBase* dac);
+        DacBase* getDac();
+        bool removeDac();
         
         bool loadSettings();
         bool saveSettings();
@@ -98,6 +102,9 @@ namespace ofxLaser {
 		deque<Shape*> getTestPatternShapesForZone(int zoneindex);
 		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
 
+        //-----------------------------------------------
+        
+        DacBase emptyDac; 
 
 		vector<Zone*> zones;
 		vector<ZoneTransform*> zoneTransforms;

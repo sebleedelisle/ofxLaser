@@ -20,7 +20,7 @@ Manager * Manager::instance() {
 }
 
 
-Manager :: Manager() {
+Manager :: Manager() : dacAssigner(*DacAssigner::instance()) {
 	//ofLog(OF_LOG_NOTICE, "ofxLaser::Manager constructor");
 	if(laserManager == NULL) {
 		laserManager = this;
@@ -52,11 +52,11 @@ void Manager :: setup(int w, int h){
 }
 
 
-void Manager::addProjector(DacBase& dac) {
+void Manager::addProjector() {
 	
 	// create and add new projector object
 	
-	Projector* projector = new Projector("Projector"+ofToString((int)projectors.size()+1), dac);
+	Projector* projector = new Projector("Projector"+ofToString((int)projectors.size()+1));
 	projectors.push_back(projector);
 	// If we have no zones set up then create a big default zone.
 	if(zones.size()==0) {
@@ -812,7 +812,7 @@ bool Manager::areAllLasersArmed(){
 	for(Projector* projector : projectors) {
 		if(!projector->armed) return false;
 	}
-	return true;
+	return (projectors.size()==0)? false : true;
 	
 }
 
@@ -1009,19 +1009,59 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::Text("DAC:");
     ImGui::SameLine();
     ImGui::Text("%s", projector->getDacLabel().c_str());
+    
+    
+    
+    ImGui::PushItemWidth(projectorpanelwidth-spacing*2 - 80);
+    //dacAssigner.updateDacList();
+    const vector<DacData>& dacList = dacAssigner.getDacList();
+    
+    if (ImGui::BeginCombo("##combo", projector->getDacLabel().c_str())){ // The second parameter is the label previewed before opening the combo.
+    
+        for(const DacData& dacdata : dacList) {
+            
+            string itemlabel = dacdata.label;
+            
+            if(dacdata.assignedProjector!=nullptr) {
+                itemlabel += " > " + dacdata.assignedProjector->label;
+                //ImGui::pushC
+            }
+            
+            if (ImGui::Selectable(itemlabel.c_str(), true)) {
+                // then select dac
+                // TODO : show a warning yes / no if :
+                //      - we already are connected to a DAC
+                //      - the chosen DAC is already being used by another projector
+                dacAssigner.assignToProjector(dacdata.label, *projector);
+                
+            }
+        }
+        
+        //    if (is_selected)
+        //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+        ImGui::EndCombo();
+    }
+    ImGui::PopItemWidth();
+    ImGui::SameLine();
+    if(ImGui::Button("Refresh")) {
+        dacAssigner.updateDacList();
+        
+    }
+    
+    
     // ----------------------------------------------
     
     
 
     ImGui::Separator();
-    ImGui::Text("OUTPUT SETTINGS");
+    ImGui::Text("OUTPUT ZONE SETTINGS");
 
     // ZONES
     UI::addCheckbox(projector->flipX);
     UI::addCheckbox(projector->flipY);
     
     // FINE OUTPUT SETTINGS
-    bool treevisible = ImGui::TreeNode("Fine output adjustments");
+    bool treevisible = ImGui::TreeNode("Fine position adjustments");
         
     UI::toolTip("These affect all output zones for this projector and can be used to re-align projectors if they have moved slightly since setting them up");
     if (treevisible){

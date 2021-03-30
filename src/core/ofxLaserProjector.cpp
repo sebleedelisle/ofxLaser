@@ -11,9 +11,10 @@
 
 using namespace ofxLaser;
 
-Projector::Projector(string projectorlabel, DacBase& laserdac) {
+Projector::Projector(string projectorlabel) {
 	
-	dac = &laserdac;
+    dac = &emptyDac;
+    
 	laserHomePosition = ofPoint(400,400);
 	label = projectorlabel;
 	//maskRectangle.set(0,0,800,800);
@@ -36,6 +37,22 @@ Projector::~Projector() {
 	if(dac!=nullptr) dac->close();
 	//delete gui;
 }
+
+void Projector::setDac(DacBase* newdac){
+    dac = newdac;
+    newdac->setPointsPerSecond(pps);
+    
+}
+DacBase* Projector::getDac(){
+    return dac;
+    
+}
+bool Projector::removeDac(){
+    dac = &emptyDac; 
+    
+}
+
+
 
 void Projector::setDefaultHandleSize(float size) {
 	
@@ -320,10 +337,10 @@ void Projector::updateZoneMasks() {
 
 
 string Projector::getDacLabel() {
-    if(dac!=nullptr) {
+    if(dac!=&emptyDac) {
         return dac->getLabel();
     } else {
-        return "No DAC set up";
+        return "No DAC connected";
     }
 }
 

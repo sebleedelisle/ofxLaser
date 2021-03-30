@@ -9,23 +9,9 @@ void ofApp::setup(){
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
 	
-
-	laser.addProjector(dac);
-
-#if defined(USE_LASERDOCK) || defined(USE_HELIOS)
-	// NB with laser dock you can pass a serial number,
-	// with HeliosDAC you can pass a device name
-	dac.setup("");
-#else
-	// load the IP address of the Etherdream / IDN DAC
-	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
-	string dacIp = buffer.getText();
-	// if there's no file, then use the default IP address :
-	if(dacIp=="") dacIp ="10.0.1.130";
-	dac.setup(dacIp);
-#endif
-	
-	
+    laser.addProjector();
+    laser.addProjector();
+    
     numLaserEffects = 9;
     
 	// if you don't want to manage your own GUI for your
@@ -46,7 +32,6 @@ void ofApp::setup(){
     
     currentLaserEffect = 0;
      
-	
 }
 
 //--------------------------------------------------------------
@@ -57,7 +42,7 @@ void ofApp::update(){
     
     // prepares laser manager to receive new points
     laser.update();
-	
+    
 }
 
 

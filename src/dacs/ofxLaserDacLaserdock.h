@@ -11,7 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserDacBase.h"
 #include "ofxNetwork.h"
-#include "LaserdockDeviceManager.h"
+//#include "LaserdockDeviceManager.h"
 #include "LaserdockDevice.h"
 #include "libusb.h"
 
@@ -24,12 +24,14 @@ namespace ofxLaser {
 class DacLaserdock : public DacBase, ofThread{
 	public:
 	
-	DacLaserdock() : lddmanager(LaserdockDeviceManager::getInstance()) {};
+    DacLaserdock(){};// : lddmanager(LaserdockDeviceManager::getInstance()) {};
 	~DacLaserdock();
 	
-	void setup(string serial="");
-	bool connectToDevice(string serial="");
-    void reset(); 
+	//void setup(string serial="");
+	//bool connectToDevice(string serial="");
+    
+    bool setup(libusb_device* usbdevice);
+    void reset();
 	
 	bool sendFrame(const vector<Point>& points) ;
 	bool sendPoints(const vector<Point>& points) ;
@@ -56,7 +58,7 @@ class DacLaserdock : public DacBase, ofThread{
 
 	void setConnected(bool state);
 	
-	LaserdockDeviceManager &lddmanager;
+	//LaserdockDeviceManager &lddmanager;
 	LaserdockDevice * device = nullptr;
 	
 	LaserdockSample sendpoint, lastpoint;
