@@ -2,14 +2,6 @@
 
 #include "ofMain.h"
 #include "ofxLaserManager.h"
-#include "ofxLaserDacEtherdream.h"
-#include "ofxLaserDacLaserdock.h"
-#include "ofxLaserDacIDN.h"
-#include "HeliosDac.h"
-
-#define USE_ETHERDREAM
-//#define USE_IDN
-//#define USE_LASERDOCK
 
 class ofApp : public ofBaseApp{
 	
@@ -36,16 +28,6 @@ public:
 	int numLaserEffects; 
 	
 	ofxLaser::Manager laser;
-	
-#ifdef USE_ETHERDREAM
-	ofxLaser::DacEtherdream dac;
-#endif
-#ifdef USE_IDN
-	ofxLaser::DacIDN dac;
-#endif
-#ifdef USE_LASERDOCK
-	ofxLaser::DacLaserdock dac;
-#endif
 	
 	bool drawingShape = false;
 	int laserWidth;

@@ -93,6 +93,13 @@ void DacEtherdream :: close() {
 	socket.close();
 
 }
+
+bool DacEtherdream :: setup(string ip) {
+    ofLogError("DACs are no longer set up in code! Do it within the app instead");
+    throw; 
+    return false;
+}
+
 void DacEtherdream :: setup(string _id, string _ip) {
 	
 	pps = 0;

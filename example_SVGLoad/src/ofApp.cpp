@@ -55,19 +55,8 @@ void ofApp::setup(){
 	laserHeight = 800;
 	laser.setup(laserWidth, laserHeight);
 
-    laser.addProjector(dac);
-	
-#ifdef USE_LASERDOCK
-	dac.setup();
-#else
-    // load the IP address of the Etherdream / IDN DAC
-    ofBuffer buffer = ofBufferFromFile("dacIP.txt");
-    string dacIp = buffer.getText();
-	// if there's no file, then use the default IP address :
-    if(dacIp=="") dacIp ="10.0.1.12";
-    dac.setup(dacIp);
-#endif
-	
+    laser.addProjector();
+		
     laser.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
     laser.addCustomParameter(currentSVGFilename.set("Filename"));
 	laser.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));

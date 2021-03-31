@@ -59,6 +59,9 @@ class DacHelios : public DacBase, ofThread{
 	DacHelios();
 	~DacHelios();
 	
+    
+    OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());
+   
 	bool setup(libusb_device* usbdevice);
 	const vector<ofAbstractParameter*>& getDisplayData() override;
 		

@@ -31,6 +31,10 @@ class DacLaserdock : public DacBase, ofThread{
 	//bool connectToDevice(string serial="");
     
     bool setup(libusb_device* usbdevice);
+    OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());
+   
+   
+    
     void reset() override;
     void close() override;
     

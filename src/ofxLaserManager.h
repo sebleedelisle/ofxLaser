@@ -47,6 +47,8 @@ class Manager {
     ~Manager();
     
     void addProjector();
+    OF_DEPRECATED_MSG("DACs are no longer set up in code, use addProjector() and set up the dac within the app.", void addProjector(DacBase&));
+    
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);

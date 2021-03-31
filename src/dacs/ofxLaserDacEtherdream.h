@@ -103,7 +103,10 @@ namespace ofxLaser {
 		const vector<ofAbstractParameter*>& getDisplayData();
 		
 		void setup(string id, string ip);
-		//bool addPoints(const vector<dac_point> &points );
+        
+        OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup(string ip));
+       
+        
 		bool addPoint(const dac_point &point );
 		void closeWhileRunning();
 		void close();

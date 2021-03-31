@@ -51,7 +51,11 @@ void Manager :: setup(int w, int h){
     previewFbo.allocate(w, h, GL_RGBA, 3);
 }
 
-
+void Manager::addProjector(DacBase& dac) {
+    ofLogError("DACs are no longer set up in code! Use addProjector() with no parameters and set up the dacs within the app instead");
+    throw;
+    
+}
 void Manager::addProjector() {
 	
 	// create and add new projector object

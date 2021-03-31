@@ -16,19 +16,8 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 	startTime = 0;
 
-	laser.addProjector(dac);
+	laser.addProjector();
 
-#ifdef USE_LASERDOCK
-	dac.setup();
-#else
-	// load the IP address of the Etherdream / IDN DAC
-	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
-	string dacIp = buffer.getText();
-	// if there's no file, then use the default IP address :
-	if(dacIp=="") dacIp ="192.168.88.247";
-	dac.setup(dacIp);
-#endif
-	
 	laser.addCustomParameter(startOffset.set("start offset", 0, 0,500));
 	laser.addCustomParameter(endOffset.set("end offset", 0, 0,500));
 	laser.addCustomParameter(pointsPerFrame.set("points per frame", 1000, 900,1100));

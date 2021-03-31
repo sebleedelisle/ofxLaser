@@ -12,15 +12,12 @@ void ofApp::setup(){
 	laser.addZone(0,0,400,600);
 	laser.addZone(400,0,400,600);
 	
-	laser.addProjector(dac1);
-	laser.addProjector(dac2);
+	laser.addProjector();
+	laser.addProjector();
 
 	laser.addZoneToProjector(0,0);
 	laser.addZoneToProjector(1,1);
     
-	dac1.setup();
-	dac2.setup();
-	
     laser.initGui();
     laser.showZones = true;
 

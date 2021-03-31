@@ -20,7 +20,7 @@ namespace ofxLaser {
 		virtual bool sendPoints(const vector<Point>& points)  = 0;
 		virtual bool setPointsPerSecond(uint32_t pps)  = 0;
 		virtual string getLabel() = 0;
-		
+        
 		virtual ofColor getStatusColour() = 0;
 	
 		virtual const vector<ofAbstractParameter*>& getDisplayData();
