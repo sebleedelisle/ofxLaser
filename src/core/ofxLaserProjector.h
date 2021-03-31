@@ -146,6 +146,7 @@ namespace ofxLaser {
         ofParameter<float> speedMultiplier; 
 		ofParameter<float>intensity;
 		ofParameter<bool> resetDac;
+        ofParameter<string> dacId; 
 		
 		ofParameter<float> colourChangeOffset;
 		ofParameter<int> testPattern;

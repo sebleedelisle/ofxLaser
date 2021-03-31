@@ -51,7 +51,7 @@ class DacIDN : public DacBase, ofThread {
 	bool sendPoints(const vector<Point>& points);
 	bool setPointsPerSecond(uint32_t pps);
 	
-	string getLabel(){
+	string getId(){
 		return "IDN";
 	}
 	

@@ -1026,7 +1026,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 	else comboLabel = "No DACs discovered"; 
 	
 
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 14.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(14.0f, 14.0f));
    
     if (ImGui::BeginCombo("##combo", comboLabel.c_str())){ // The second parameter is the label previewed before opening the combo.
     
@@ -1036,6 +1036,15 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
             // get the dac label (usually type + unique ID)
             string itemlabel = dacdata.label;
             
+            ImGuiSelectableFlags selectableflags = 0;
+            
+            if(!dacdata.available) {
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+                itemlabel += " - no longer available";
+                selectableflags|=ImGuiSelectableFlags_Disabled;
+            } else {
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1);
+            }
             // if this dac is assigned to a projector, show which projector
             //  - this could be done at the other end?
             
@@ -1043,14 +1052,14 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
                 itemlabel += " > " + dacdata.assignedProjector->label;
             }
             
-            if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedProjector == projector))) {
+            if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedProjector == projector), selectableflags)) {
                 // then select dac
                 // TODO : show a warning yes / no if :
                 //      - we already are connected to a DAC
                 //      - the chosen DAC is already being used by another projector
                 dacAssigner.assignToProjector(dacdata.label, *projector);
             }
-            
+            ImGui::PopStyleVar();
         }
         
         //    if (is_selected)

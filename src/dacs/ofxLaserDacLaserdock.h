@@ -42,7 +42,7 @@ class DacLaserdock : public DacBase, ofThread{
 	bool sendPoints(const vector<Point>& points) override ;
 	bool setPointsPerSecond(uint32_t pps) override;
 	
-	string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
+	string getId() override{return "Laserdock " + ofToString(serialNumber);};
 	
 	// TODO return relevant colour
 	ofColor getStatusColour() override{

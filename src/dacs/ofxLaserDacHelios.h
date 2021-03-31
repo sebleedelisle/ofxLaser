@@ -79,7 +79,7 @@ class DacHelios : public DacBase, ofThread{
 	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
 	//string getLabel(){return "Helios";};
-    string getLabel() override{return "Helios " + ofToString(serialNumber);};
+    string getId() override{return "Helios " + ofToString(serialNumber);};
     
 	
 

@@ -41,6 +41,7 @@ Projector::~Projector() {
 void Projector::setDac(DacBase* newdac){
     dac = newdac;
     newdac->setPointsPerSecond(pps);
+    dacId = dac->getId();
     
 }
 DacBase* Projector::getDac(){
@@ -49,7 +50,7 @@ DacBase* Projector::getDac(){
 }
 bool Projector::removeDac(){
     dac = &emptyDac;
-    
+    dacId = "";
 }
 
 
@@ -78,7 +79,7 @@ void Projector :: initGui() {
     params.add(intensity.set("Intensity", 1,0,1));
 	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
 	params.add(resetDac.set("Reset DAC", false));
-	
+    params.add(dacId.set("dacId", ""));
     
     
 	ofParameterGroup projectorparams;
@@ -184,8 +185,6 @@ void Projector :: initGui() {
     
     params.add(zonesologroup);
 	
-	
-    
 	for(size_t i = 0; i<zones.size(); i++) {
 		
 		ofParameter<float>& leftEdge = leftEdges[i];
@@ -338,7 +337,7 @@ void Projector::updateZoneMasks() {
 
 string Projector::getDacLabel() {
     if(dac!=&emptyDac) {
-        return dac->getLabel();
+        return dac->getId();
     } else {
         return "No DAC connected";
     }

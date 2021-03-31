@@ -98,7 +98,7 @@ namespace ofxLaser {
 		bool sendFrame(const vector<Point>& points);
         bool sendPoints(const vector<Point>& points);
 		bool setPointsPerSecond(uint32_t newpps);
-		string getLabel();
+		string getId();
 		ofColor getStatusColour();
 		const vector<ofAbstractParameter*>& getDisplayData();
 		

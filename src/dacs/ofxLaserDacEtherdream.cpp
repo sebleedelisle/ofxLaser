@@ -782,7 +782,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 	}
 }
 
-string DacEtherdream ::getLabel(){
+string DacEtherdream ::getId(){
 	return "Etherdream "+id;
    // string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
 }

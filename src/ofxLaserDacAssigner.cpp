@@ -55,13 +55,40 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     //               (delete dac from projector?)
     //        if element in new list isn't in old list, add it!
     
-    dacDataList.clear();
+    vector<DacData> newdaclist;
     
     for(DacDetectorBase* dacDetector : dacDetectors) {
         vector<DacData> newdacs = dacDetector->updateDacList();
-        dacDataList.insert( dacDataList.end(), newdacs.begin(), newdacs.end() );
+        newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
         
     }
+    
+    for(DacData& dac : dacDataList) {
+        bool stillavailable = false;
+        for(DacData& newdac : newdaclist) {
+            if(newdac.id == dac.id) {
+                stillavailable = true;
+                break;
+            }
+        }
+        
+        dac.available = stillavailable;
+        
+    }
+    for(DacData& newdac : newdaclist) {
+        bool isnew = true;
+        for(DacData& dac : dacDataList) {
+            if(dac.id == newdac.id) {
+                isnew = false;
+                break;
+            }
+        }
+        
+        if(isnew) {
+            dacDataList.push_back(newdac);
+        }
+    }
+    
 
     return dacDataList; 
     
