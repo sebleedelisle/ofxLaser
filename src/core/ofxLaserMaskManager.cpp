@@ -1,6 +1,6 @@
 //
-//  ofxLaserMask.cpp
-//  LightningStrikesAberdeen
+//  ofxLaserMaskManager.cpp
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 02/02/2018.
 //

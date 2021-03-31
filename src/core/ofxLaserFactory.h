@@ -1,6 +1,6 @@
 //
 //  ofxLaserFactory.h
-//  LaserLightSynths2019
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 15/01/2019.
 //
@@ -9,8 +9,6 @@
 #pragma once
 #include "ofMain.h"
 #include "Poco/ObjectPool.h"
-
-//#include "ofxLaserShape.h"
 
 namespace ofxLaser {
 class Factory {
