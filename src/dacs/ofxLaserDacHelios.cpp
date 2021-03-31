@@ -48,6 +48,7 @@ void DacHelios::close() {
 
 bool DacHelios::setup(libusb_device* usbdevice) {
 
+    usbDevice = usbdevice; 
     libusb_device_handle* devHandle;
     int result = libusb_open(usbdevice, &devHandle);
     cout << "...libusb_open result : " << result << endl;

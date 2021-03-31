@@ -29,16 +29,19 @@ DacManagerHelios :: ~DacManagerHelios()  {
 vector<DacData> DacManagerHelios :: updateDacList(){
     
     vector<DacData> daclist;
+    
+  
     libusb_device **libusb_device_list;
     ssize_t cnt = libusb_get_device_list(NULL, &libusb_device_list);
     ssize_t i = 0;
 
-    // add data for dacs we already know about 
+   
+    // add data for dacs we already know about
     for(auto& dacpair : dacsById) {
         DacHelios* heliosdac = (DacHelios*) dacpair.second;
         DacData data(getType(), heliosdac->serialNumber);
         daclist.push_back(data);
-        
+
     }
     
     if (cnt < 0) {
@@ -47,20 +50,36 @@ vector<DacData> DacManagerHelios :: updateDacList(){
         libusb_free_device_list(libusb_device_list, 1); // probably not necessary
         return daclist;
     }
+    
 
     for (i = 0; i < cnt; i++) {
         
         // get the device from the array
         libusb_device *usbdevice = libusb_device_list[i];
-        
-        // checks to see if the device is a laserdock, and if so, returns the serial number.
-        string serialnumber = getHeliosSerialNumber(usbdevice);
-        
-        if(serialnumber!="") {
-            DacData data(getType(), serialnumber);
-            daclist.push_back(data);
+        bool dacalreadyinuse = false;
+        for(auto dacpair : dacsById) {
+            DacHelios* dac = (DacHelios*)dacpair.second; 
+            //dac->dacDevice;
+            if(dac->usbDevice == usbdevice) {
+                cout << "found dac already in use " << dac->serialNumber << endl;
+                DacData data(getType(), dac->serialNumber);
+                daclist.push_back(data);
+                dacalreadyinuse = true;
+                break;
+            }
         }
+        
+        if(!dacalreadyinuse) {
+            // checks to see if the device is a laserdock, and if so, returns the serial number.
+            string serialnumber;
+           // if(dacsById.size()==0)
+                serialnumber = getHeliosSerialNumber(usbdevice);
             
+            if(serialnumber!="") {
+                DacData data(getType(), serialnumber);
+                daclist.push_back(data);
+            }
+        }
     }
 
     
@@ -152,7 +171,7 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
         unsigned char idstring[256];
         struct libusb_device_handle *usbHandle;
         
-        ofLogNotice("Found HELIOS! : "+ofToString(devicedescriptor.iSerialNumber));
+     //   ofLogNotice("Found HELIOS! : "+ofToString(devicedescriptor.iSerialNumber));
         
         // open the device
         result = libusb_open(usbdevice, &usbHandle);
@@ -161,29 +180,26 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
             return "";
         }
         
+        
+        
         result = libusb_claim_interface(usbHandle, 0);
-        cout << "...libusb_claim_interface : " << result << endl;
+     //   cout << "...libusb_claim_interface : " << result << endl;
         // seems to return LIBUSB_ERROR_ACCESS if it's busy
         if (result < 0) {
             libusb_close(usbHandle);
             return "";
         }
-        
+       
         result = libusb_set_interface_alt_setting(usbHandle, 0, 1);
-        cout << "...libusb_set_interface_alt_setting : " << result << endl;
+      // cout << "...libusb_set_interface_alt_setting : " << result << endl;
+        //if ((result < 0) ||(dacsById.size()>0)) {
         if (result < 0) {
-			libusb_release_interface(usbHandle, 0);
+            libusb_release_interface(usbHandle, 0);
             libusb_close(usbHandle);
             return "";
         }
-//
-//        HeliosDacDevice* dacdevice = new HeliosDacDevice(devhandlecontrol);
-//        cout << "...new dac device " << dac->nameStr << endl;
-//        if(dac->nameStr.empty()) {
-//            ofLogError("new dac name is wrong!");
-//        }
-		
-		// TO GET THE NAME :
+
+        // TO GET THE NAME :
 		// Do we need to tell the Helios the SDK number and stuff?
 		// Send control command 0x05 (which presumably asks for the name
 		int actualLength = 0;
@@ -222,7 +238,7 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
 		
         //returnstring = dacdevice->nameStr;
         libusb_release_interface(usbHandle,0);
-        ofLogNotice("FOUND HELIOS NAME : "+returnstring);
+    //    ofLogNotice("FOUND HELIOS NAME : "+returnstring);
         // should close down the dac and also clean up the devhandle
         //delete dacdevice;
        

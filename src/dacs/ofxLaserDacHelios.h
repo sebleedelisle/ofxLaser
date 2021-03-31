@@ -92,6 +92,8 @@ class DacHelios : public DacBase, ofThread{
 	ofParameter<string> deviceName;
     
     string serialNumber;
+    HeliosDacDevice* dacDevice;
+    libusb_device* usbDevice;
     
 	private:
 	void threadedFunction() override;
@@ -117,7 +119,6 @@ class DacHelios : public DacBase, ofThread{
    
 	// ONLY to be accessed within thread
 	string deviceId;
-	HeliosDacDevice* dacDevice;
 	
 	
 };

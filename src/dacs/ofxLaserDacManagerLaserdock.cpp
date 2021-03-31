@@ -29,6 +29,7 @@ DacManagerLaserdock :: ~DacManagerLaserdock()  {
 vector<DacData> DacManagerLaserdock :: updateDacList(){
     
     vector<DacData> daclist;
+  
     libusb_device **libusb_device_list;
     ssize_t cnt = libusb_get_device_list(NULL, &libusb_device_list);
     ssize_t i = 0;
