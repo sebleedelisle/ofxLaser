@@ -7,24 +7,24 @@
 
 #pragma once
 #include "ofxLaserDacDetectorBase.h"
-#include "ofxLaserDacLaserdock.h"
+#include "ofxLaserDacHelios.h"
 #include <libusb.h>
 
-#define LASERDOCK_VIN 0x1fc9
-#define LASERDOCK_PIN 0x04d8
+#define HELIOS_VID    0x1209
+#define HELIOS_PID    0xE500
 
 namespace ofxLaser {
 
-class DacDetectorLaserdock : public DacDetectorBase{
+class DacDetectorHelios : public DacDetectorBase{
     
     public :
-    DacDetectorLaserdock();
-    ~DacDetectorLaserdock();
+    DacDetectorHelios();
+    ~DacDetectorHelios();
     virtual vector<DacData> updateDacList() override;
     virtual DacBase* getAndConnectToDac(const string& id) override;
     virtual bool disconnectAndDeleteDac(const string& id) override;
     virtual string getType() override {
-        return "Laserdock";
+        return "Helios";
     }
     virtual void exit() override;
 

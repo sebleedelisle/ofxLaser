@@ -46,19 +46,43 @@ void DacHelios::close() {
 	}
 }
 
+bool DacHelios::setup(libusb_device* usbdevice) {
 
-void DacHelios::setup(string name) {
-	
-	deviceName = name; // the parameter which shows the name
-	
-	ofLogNotice("DacHelios::setup "+name);
-	
-	connectToDevice(deviceName);
+    libusb_device_handle* devHandle;
+    int result = libusb_open(usbdevice, &devHandle);
+    cout << "...libusb_open result : " << result << endl;
+    
+    //libusb_get_device()
+    
+    if (result < 0) {
+ 
+        return false;
+    }
+    
+    result = libusb_claim_interface(devHandle, 0);
+    cout << "...libusb_claim_interface : " << result << endl;
+    // seems to return LIBUSB_ERROR_ACCESS if it's busy
+    if (result < 0) {
+        libusb_close(devHandle);
+        return false;
+    }
+    
+    result = libusb_set_interface_alt_setting(devHandle, 0, 1);
+    cout << "...libusb_set_interface_alt_setting : " << result << endl;
+    if (result < 0) {
+        libusb_close(devHandle);
+        return false;
+    }
+    
+    HeliosDacDevice* dac = new HeliosDacDevice(devHandle);
+    cout << "...new dac device " << dac->nameStr << endl;
+    if(dac->nameStr.empty()) {
+        ofLogError("new dac name is wrong!");
+    }
 
-	pointBufferDisplay.set("Point Buffer", 0,0,1799);
-	displayData.push_back(&deviceName);
-	displayData.push_back(&pointBufferDisplay);
-        
+    dacDevice = dac;
+    
+
     #ifndef _MSC_VER
             // only linux and osx
             //http://www.yonch.com/tech/82-linux-thread-priority
@@ -69,26 +93,39 @@ void DacHelios::setup(string name) {
             // windows implementation
             SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
     #endif
-    
-	startThread();
+
+    startThread();
 
 }
+//
+//void DacHelios::setup(string name) {
+//
+//	deviceName = name; // the parameter which shows the name
+//
+//	ofLogNotice("DacHelios::setup "+name);
+//
+//	connectToDevice(deviceName);
+//
+//	pointBufferDisplay.set("Point Buffer", 0,0,1799);
+//	displayData.push_back(&deviceName);
+//	displayData.push_back(&pointBufferDisplay);
+//
+//    #ifndef _MSC_VER
+//            // only linux and osx
+//            //http://www.yonch.com/tech/82-linux-thread-priority
+//            struct sched_param param;
+//            param.sched_priority = 60;
+//            pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+//    #else
+//            // windows implementation
+//            SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+//    #endif
+//
+//	startThread();
+//
+//}
 
 const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
-//	if(lock()) {
-//
-//		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
-//
-//		//int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
-//
-//		//pointBufferDisplay = bufferedPoints.size();
-//
-//		//latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
-//		//reconnectCount = prepareSendCount;
-//
-//		unlock();
-//	}
-	
 	return displayData;
 }
 
@@ -172,8 +209,8 @@ bool DacHelios::setPointsPerSecond(uint32_t newpps) {
 	
 };
 
-void DacHelios :: setActive(bool active){
-    newArmed = active;
+void DacHelios :: setArmed(bool _armed){
+    newArmed = _armed;
     
 }
 void DacHelios :: reset() {

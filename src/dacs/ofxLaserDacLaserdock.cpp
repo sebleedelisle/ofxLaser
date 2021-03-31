@@ -26,9 +26,19 @@ typedef bool (LaserdockDevice::*ReadMethodPtr)(uint32_t *);
 using namespace ofxLaser;
 
 DacLaserdock:: ~DacLaserdock() {
-	stopThread();
-	waitForThread(); 
-	
+ 	
+}
+void DacLaserdock :: close() {
+    if(isThreadRunning()) {
+        stopThread();
+        waitForThread();
+    }
+    if(device!=nullptr) {
+        delete device;
+        device = nullptr;
+    }
+
+    
 }
 
 /*

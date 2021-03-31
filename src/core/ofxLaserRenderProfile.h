@@ -7,7 +7,6 @@
 //
 #pragma once
 #include "ofMain.h"
-//#include "ofxGui.h"
 
 namespace ofxLaser {
 
@@ -33,11 +32,6 @@ namespace ofxLaser {
 			
 		}
 		
-		
-//		ofParameter<int> preBlankPoints;
-//		ofParameter<int> preOnPoints;
-//		ofParameter<int> postOnPoints;
-//		ofParameter<int> postBlankPoints;
 		ofParameter<float> speed;
 		ofParameter<float> acceleration;
 		ofParameter<float> cornerThreshold;

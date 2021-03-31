@@ -59,12 +59,12 @@ class DacHelios : public DacBase, ofThread{
 	DacHelios();
 	~DacHelios();
 	
-	void setup(string serial="");
+	bool setup(libusb_device* usbdevice);
 	const vector<ofAbstractParameter*>& getDisplayData();
 		
 	bool connectToDevice(string serial="");
     void reset();
-    void setActive(bool active);
+    void setArmed(bool armed);
 	void close();
 	
 	bool sendFrame(const vector<Point>& points) ;

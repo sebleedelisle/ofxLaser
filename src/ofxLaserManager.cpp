@@ -1010,31 +1010,37 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::SameLine();
     ImGui::Text("%s", projector->getDacLabel().c_str());
     
-    
+
+    // DAC LIST -------------------------------------------------------------
     
     ImGui::PushItemWidth(projectorpanelwidth-spacing*2 - 80);
-    //dacAssigner.updateDacList();
-    const vector<DacData>& dacList = dacAssigner.getDacList();
     
+    // get the dacs from the dacAssigner
+    const vector<DacData>& dacList = dacAssigner.getDacList();
+
     if (ImGui::BeginCombo("##combo", projector->getDacLabel().c_str())){ // The second parameter is the label previewed before opening the combo.
     
+        // add a combo box item for every element in the list
         for(const DacData& dacdata : dacList) {
             
+            // get the dac label (usually type + unique ID)
             string itemlabel = dacdata.label;
+            
+            // if this dac is assigned to a projector, show which projector
+            //  - this could be done at the other end?
             
             if(dacdata.assignedProjector!=nullptr) {
                 itemlabel += " > " + dacdata.assignedProjector->label;
-                //ImGui::pushC
             }
             
-            if (ImGui::Selectable(itemlabel.c_str(), true)) {
+            if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedProjector == projector))) {
                 // then select dac
                 // TODO : show a warning yes / no if :
                 //      - we already are connected to a DAC
                 //      - the chosen DAC is already being used by another projector
                 dacAssigner.assignToProjector(dacdata.label, *projector);
-                
             }
+            
         }
         
         //    if (is_selected)
@@ -1047,7 +1053,10 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         dacAssigner.updateDacList();
         
     }
-    
+    if(projector->dac != &projector->emptyDac) {
+        if(ImGui::Button("Disconnect DAC")) {            dacAssigner.disconnectDacFromProjector(*projector);
+        }
+    }
     
     // ----------------------------------------------
     

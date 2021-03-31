@@ -14,10 +14,21 @@ class DacDetectorBase {
     
     public :
     virtual vector<DacData> updateDacList() = 0;
+    DacBase* getDacById(string id) {
+        if(dacsById.count(id) == 1) {
+            return dacsById.at(id);
+        } else {
+            return nullptr;
+        }
+    
+    };
     virtual DacBase* getAndConnectToDac(const string& dacdata) = 0;
     virtual bool disconnectAndDeleteDac(const string& dacdata) = 0;
     virtual string getType() = 0; 
-
+    virtual void exit() = 0; 
+    
+    protected :
+    map<string, DacBase*>dacsById;
     private :
     
     

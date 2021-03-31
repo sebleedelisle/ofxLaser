@@ -48,7 +48,7 @@ DacBase* Projector::getDac(){
     
 }
 bool Projector::removeDac(){
-    dac = &emptyDac; 
+    dac = &emptyDac;
     
 }
 
@@ -244,7 +244,7 @@ void Projector :: initGui() {
 
 
 void Projector ::setArmed(bool& armed){
-    dac->setActive(armed); 
+    dac->setArmed(armed); 
 }
 
 void Projector :: minimiseGui() {

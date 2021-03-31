@@ -31,16 +31,17 @@ class DacLaserdock : public DacBase, ofThread{
 	//bool connectToDevice(string serial="");
     
     bool setup(libusb_device* usbdevice);
-    void reset();
+    void reset() override;
+    void close() override;
+    
+	bool sendFrame(const vector<Point>& points) override ;
+	bool sendPoints(const vector<Point>& points) override ;
+	bool setPointsPerSecond(uint32_t pps) override;
 	
-	bool sendFrame(const vector<Point>& points) ;
-	bool sendPoints(const vector<Point>& points) ;
-	bool setPointsPerSecond(uint32_t pps);
-	
-	string getLabel(){return "Laserdock " + ofToString(serialNumber);};
+	string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
 	
 	// TODO return relevant colour
-	ofColor getStatusColour(){
+	ofColor getStatusColour() override{
 		return connected ? ofColor::green :  ofColor::red;
 	}
 	
@@ -54,7 +55,7 @@ class DacLaserdock : public DacBase, ofThread{
 //	ofParameter<int> reconnectCount;
 	
 	private:
-	void threadedFunction();
+	void threadedFunction() override;
 
 	void setConnected(bool state);
 	

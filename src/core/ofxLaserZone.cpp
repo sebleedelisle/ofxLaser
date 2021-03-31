@@ -16,7 +16,6 @@ Zone::Zone() {
 }
 
 Zone::Zone(int _index, float x, float y, float w, float h) {
-	//ofLog(OF_LOG_NOTICE, "Zone(x, y, w, h) constructor") ;
 	index = _index;
 	set(x, y, w,h);
 	
@@ -48,8 +47,7 @@ void Zone::set(ofRectangle
 }
 
 bool Zone::update() {
-	//shapes.clear();
-	//previewPathMesh.clear();
+
 	if(isDirty) {
 		rect.set(handles[0], handles[1]);
 		isDirty = false;
@@ -67,7 +65,6 @@ bool Zone::addShape(Shape* s){
 	} else {
 		return false;
 	}
-	//ofLog(OF_LOG_NOTICE, "Zone.addShape size : " + ofToString(shapes.size()));
 	
 }
 
@@ -94,9 +91,7 @@ void Zone::draw() {
 	ofSetColor(255,0,255);
 	
 	ofDrawBitmapString(zonelabel, rect.getCenter()-ofPoint(textwidth/2, 5));
-//	ofDrawLine(rect.getTopLeft(), rect.getBottomRight());
-//	ofDrawLine(rect.getTopRight(), rect.getBottomLeft());
-//	//ofDrawBitmapString(rect.getCenter(), label);
+
 	ofPopStyle();
 	
 	handles[0].draw();

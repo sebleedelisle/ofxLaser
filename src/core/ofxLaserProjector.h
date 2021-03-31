@@ -8,12 +8,11 @@
 #pragma once
 
 #include "ofxLaserDacBase.h"
+#include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserZoneTransform.h"
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
-// #include "ofxGui.h"
-//#include "ofxImGui.h"
 #include "PennerEasing.h"
 
 namespace ofxLaser {
@@ -104,7 +103,7 @@ namespace ofxLaser {
 
         //-----------------------------------------------
         
-        DacBase emptyDac; 
+        DacEmpty emptyDac; 
 
 		vector<Zone*> zones;
 		vector<ZoneTransform*> zoneTransforms;
