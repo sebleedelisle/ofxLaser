@@ -1,6 +1,6 @@
 //
 //  ofxLaserQuadMask.h
-//  example_HelloLaser
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 01/02/2018.
 //

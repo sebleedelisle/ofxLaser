@@ -1,6 +1,6 @@
 //
 //  ofxLaserUI.cpp
-//  UIExperiment
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 23/03/2021.
 //

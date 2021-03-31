@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacEtherdream.hpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/11/2017.
 //

@@ -1,6 +1,6 @@
 //
 //  SVGLoader.cpp
-//  SVGPlayerFlux
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 22/02/2018.
 //

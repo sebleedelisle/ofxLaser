@@ -1,6 +1,6 @@
 //
 //  ofxLaserProjector.cpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 06/11/2017.
 //

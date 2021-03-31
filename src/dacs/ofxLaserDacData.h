@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacData.hpp
-//  example_HelloLaser
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //

@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacEmpty.h
-//  example_HelloLaser
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 30/03/2021.
 //

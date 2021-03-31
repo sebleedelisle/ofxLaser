@@ -1,6 +1,6 @@
 //
 //  ofxLaserRenderProfile.hpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 13/11/2017.
 //

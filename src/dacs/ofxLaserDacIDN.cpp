@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacIDN.cpp
-//  example_IDNTest
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 13/04/2018.
 //
