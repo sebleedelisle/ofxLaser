@@ -1,15 +1,15 @@
 //
-//  ofxLaserDacDetectorBase.cpp
+//  ofxLaserDacManagerBase.cpp
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
-#include "ofxLaserDacDetectorHelios.h"
+#include "ofxLaserDacManagerHelios.h"
 
 using namespace ofxLaser;
 
-DacDetectorHelios :: DacDetectorHelios()  {
+DacManagerHelios :: DacManagerHelios()  {
     int rc;
     rc = libusb_init(NULL);
     if (rc < 0)
@@ -19,14 +19,14 @@ DacDetectorHelios :: DacDetectorHelios()  {
     }
     
 }
-DacDetectorHelios :: ~DacDetectorHelios()  {
+DacManagerHelios :: ~DacManagerHelios()  {
 
     // TODO wait for all DACs threads to stop
     
     libusb_exit(NULL);
 }
 
-vector<DacData> DacDetectorHelios :: updateDacList(){
+vector<DacData> DacManagerHelios :: updateDacList(){
     
     vector<DacData> daclist;
     libusb_device **libusb_device_list;
@@ -43,7 +43,7 @@ vector<DacData> DacDetectorHelios :: updateDacList(){
     
     if (cnt < 0) {
         // LIBUSB ERROR
-        ofLogError("ofxDacDetectorHelios :: getDacList() - USB error code " + ofToString(cnt));
+        ofLogError("ofxDacManagerHelios :: getDacList() - USB error code " + ofToString(cnt));
         libusb_free_device_list(libusb_device_list, 1); // probably not necessary
         return daclist;
     }
@@ -71,14 +71,14 @@ vector<DacData> DacDetectorHelios :: updateDacList(){
 }
 
 
-DacBase* DacDetectorHelios :: getAndConnectToDac(const string& id){
+DacBase* DacManagerHelios :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
     
     DacHelios* dac = (DacHelios*) getDacById(id);
     
     if(dac!=nullptr) {
-        ofLogNotice("DacDetectorHelios :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
+        ofLogNotice("DacManagerHelios :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
         return dac;
     }
     
@@ -118,10 +118,10 @@ DacBase* DacDetectorHelios :: getAndConnectToDac(const string& id){
     return dac;
 }
 
-bool DacDetectorHelios :: disconnectAndDeleteDac(const string& id){
+bool DacManagerHelios :: disconnectAndDeleteDac(const string& id){
     
     if ( dacsById.count(id) == 0 ) {
-        ofLogError("DacDetectorHelios::disconnectAndDeleteDac("+id+") - dac not found");
+        ofLogError("DacManagerHelios::disconnectAndDeleteDac("+id+") - dac not found");
         return false;
     }
     DacHelios* dac = (DacHelios*) dacsById.at(id);
@@ -134,7 +134,7 @@ bool DacDetectorHelios :: disconnectAndDeleteDac(const string& id){
 }
 
 
-string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
+string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
     // make a descriptor object to store the data in
     struct libusb_device_descriptor devicedescriptor;
     // get the descriptor
@@ -143,7 +143,7 @@ string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
     
     int result = libusb_get_device_descriptor(usbdevice, &devicedescriptor);
     if (result < 0) {
-        ofLogError("DacDetectorHelios failed to get device descriptor for USB device - error code " + ofToString(result));
+        ofLogError("DacManagerHelios failed to get device descriptor for USB device - error code " + ofToString(result));
         // skip to the next one
         return "";
     }
@@ -157,7 +157,7 @@ string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
         // open the device
         result = libusb_open(usbdevice, &usbHandle);
         if(result!=0) {
-            ofLogError("DacDetectorHelios failed to open USB device - error code " + ofToString(result));
+            ofLogError("DacManagerHelios failed to open USB device - error code " + ofToString(result));
             return "";
         }
         
@@ -208,14 +208,14 @@ string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
 					memcpy(name, &receiveBytes[1], 31);
 					returnstring = name;
 				} else {
-					ofLogError("DacDetectorHelios Helios device didn't return valid name");
+					ofLogError("DacManagerHelios Helios device didn't return valid name");
 				}
 			} else {
-				ofLogError("DacDetectorHelios Helios device didn't give us its name properly");
+				ofLogError("DacManagerHelios Helios device didn't give us its name properly");
 			}
 			
 		} else {
-			ofLogError("DacDetectorHelios Helios device USB read error "+ofToString(transferResult));
+			ofLogError("DacManagerHelios Helios device USB read error "+ofToString(transferResult));
 		}
 
 		
@@ -234,6 +234,6 @@ string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
     
 }
 
-void DacDetectorHelios :: exit() {
+void DacManagerHelios :: exit() {
     
 }

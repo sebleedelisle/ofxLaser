@@ -1,30 +1,30 @@
 //
-//  ofxLaserDacDetectorBase.h
+//  ofxLaserDacManagerBase.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
 #pragma once
-#include "ofxLaserDacDetectorBase.h"
-#include "ofxLaserDacLaserdock.h"
+#include "ofxLaserDacManagerBase.h"
+#include "ofxLaserDacHelios.h"
 #include <libusb.h>
 
-#define LASERDOCK_VIN 0x1fc9
-#define LASERDOCK_PIN 0x04d8
+#define HELIOS_VID    0x1209
+#define HELIOS_PID    0xE500
 
 namespace ofxLaser {
 
-class DacDetectorLaserdock : public DacDetectorBase{
+class DacManagerHelios : public DacManagerBase{
     
     public :
-    DacDetectorLaserdock();
-    ~DacDetectorLaserdock();
+    DacManagerHelios();
+    ~DacManagerHelios();
     virtual vector<DacData> updateDacList() override;
     virtual DacBase* getAndConnectToDac(const string& id) override;
     virtual bool disconnectAndDeleteDac(const string& id) override;
     virtual string getType() override {
-        return "Laserdock";
+        return "Helios";
     }
     virtual void exit() override;
 
@@ -33,7 +33,7 @@ class DacDetectorLaserdock : public DacDetectorBase{
     // checks the usbdevice to see if it's a laserdock, and if it is,
     // it returns the serial number. If not it returns an empty string.
     
-    string getLaserdockSerialNumber(libusb_device* usbdevice);
+    string getHeliosSerialNumber(libusb_device* usbdevice);
 
     
     

@@ -1,12 +1,12 @@
 //
-//  ofxLaserDacDetectorBase.h
+//  ofxLaserDacManagerBase.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
 #pragma once
-#include "ofxLaserDacDetectorBase.h"
+#include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEtherdream.h"
 #include "ofxNetwork.h"
@@ -26,11 +26,11 @@ struct EtherdreamData {
 };
     
 
-class DacDetectorEtherdream : public DacDetectorBase, ofThread{
+class DacManagerEtherdream : public DacManagerBase, ofThread{
     
     public :
-    DacDetectorEtherdream();
-    ~DacDetectorEtherdream();
+    DacManagerEtherdream();
+    ~DacManagerEtherdream();
     
     virtual vector<DacData> updateDacList() override;
     virtual DacBase* getAndConnectToDac(const string& id) override;

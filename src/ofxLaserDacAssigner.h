@@ -7,8 +7,8 @@
 // The DacAssigner is a complex object that is responsible for keeping track
 // of available DACs and which projectors they are connected to.
 //
-// It keeps a collection of DacDetectors, one for each type of DAC that we
-// support. The DAC objects themselves are owned by the detectors, but
+// It keeps a collection of DacManagers, one for each type of DAC that we
+// support. The DAC objects themselves are owned by the managers, but
 // the DacAssigner is responsible for giving and taking them from
 // projectors.
 
@@ -18,10 +18,10 @@
 #include "ofxLaserDacBase.h"
 #include "ofxLaserProjector.h"
 #include "ofxLaserDacData.h"
-#include "ofxLaserDacDetectorBase.h"
-#include "ofxLaserDacDetectorLaserdock.h"
-#include "ofxLaserDacDetectorEtherdream.h"
-#include "ofxLaserDacDetectorHelios.h"
+#include "ofxLaserDacManagerBase.h"
+#include "ofxLaserDacManagerLaserdock.h"
+#include "ofxLaserDacManagerEtherdream.h"
+#include "ofxLaserDacManagerHelios.h"
 
 namespace ofxLaser {
 
@@ -44,9 +44,9 @@ class DacAssigner {
     DacData& getDacDataForLabel(const string& label);
     DacData& getDacDataForProjector(Projector& projector);
     
-    DacDetectorBase* getDetectorForType(string type); 
+    DacManagerBase* getManagerForType(string type); 
 
-    vector<DacDetectorBase*> dacDetectors;
+    vector<DacManagerBase*> dacManagers;
     vector<DacData> dacDataList;
     //vector<DacBase*> dacs; 
     DacData emptyDacData;

@@ -29,9 +29,9 @@ DacAssigner :: DacAssigner() {
         throw;
 	}
     
-    dacDetectors.push_back(new DacDetectorLaserdock());
-    dacDetectors.push_back(new DacDetectorHelios());
-    dacDetectors.push_back(new DacDetectorEtherdream());
+    dacManagers.push_back(new DacManagerLaserdock());
+    dacManagers.push_back(new DacManagerHelios());
+    dacManagers.push_back(new DacManagerEtherdream());
     updateDacList();
 	
 }
@@ -57,8 +57,8 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     
     vector<DacData> newdaclist;
     
-    for(DacDetectorBase* dacDetector : dacDetectors) {
-        vector<DacData> newdacs = dacDetector->updateDacList();
+    for(DacManagerBase* dacManager : dacManagers) {
+        vector<DacData> newdacs = dacManager->updateDacList();
         newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
         
     }
@@ -105,9 +105,9 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     
     if(&dacdata==&emptyDacData) return false;
 
-    // get detector for type
-    DacDetectorBase* detector = getDetectorForType(dacdata.type);
-    if(detector==nullptr) {
+    // get manager for type
+    DacManagerBase* manager = getManagerForType(dacdata.type);
+    if(manager==nullptr) {
         ofLogError("DacAssigner ::assignToProjector - invalid type " + dacdata.type);
         return false;
     }
@@ -124,7 +124,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
         // TODO remove data from dacdata in list - make sure we're using
         // references to the same objects
         
-        // ALERT!!!! THIS IS BAD. DAC SHOULD BE GOT FROM THE DAC DETECTORS
+        // ALERT!!!! THIS IS BAD. DAC SHOULD BE GOT FROM THE DAC MANAGERS
         dacToAssign = dacdata.assignedProjector->getDac();
         dacdata.assignedProjector->removeDac();
         dacdata.assignedProjector = nullptr;
@@ -132,7 +132,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     } else {
     
         // get dac from manager
-        dacToAssign = detector->getAndConnectToDac(dacdata.id);
+        dacToAssign = manager->getAndConnectToDac(dacdata.id);
         
     }
     // if success
@@ -154,16 +154,16 @@ bool DacAssigner :: disconnectDacFromProjector(Projector& projector) {
     if(dacData.assignedProjector!=nullptr) {
         dacData.assignedProjector = nullptr;
         projector.removeDac();
-        getDetectorForType(dacData.type)->disconnectAndDeleteDac(dacData.id);
+        getManagerForType(dacData.type)->disconnectAndDeleteDac(dacData.id);
         return true;
     } else {
         return false;
     }
 }
-DacDetectorBase* DacAssigner :: getDetectorForType(string type){
-    for(DacDetectorBase* detector : dacDetectors) {
-        if(detector->getType() == type) {
-            return detector;
+DacManagerBase* DacAssigner :: getManagerForType(string type){
+    for(DacManagerBase* manager : dacManagers) {
+        if(manager->getType() == type) {
+            return manager;
             
             break;
         }

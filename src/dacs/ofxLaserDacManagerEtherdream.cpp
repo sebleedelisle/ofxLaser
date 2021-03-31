@@ -1,15 +1,15 @@
 //
-//  ofxLaserDacDetectorBase.cpp
+//  ofxLaserDacManagerBase.cpp
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
-#include "ofxLaserDacDetectorEtherdream.h"
+#include "ofxLaserDacManagerEtherdream.h"
 
 using namespace ofxLaser;
 
-DacDetectorEtherdream :: DacDetectorEtherdream()  {
+DacManagerEtherdream :: DacManagerEtherdream()  {
     ofxUDPSettings settings;
     settings.bindPort = 7654;
     settings.blocking = false;
@@ -19,7 +19,7 @@ DacDetectorEtherdream :: DacDetectorEtherdream()  {
 
     
 }
-DacDetectorEtherdream :: ~DacDetectorEtherdream()  {
+DacManagerEtherdream :: ~DacManagerEtherdream()  {
     
     stopThread();
     waitForThread();
@@ -28,7 +28,7 @@ DacDetectorEtherdream :: ~DacDetectorEtherdream()  {
 
 }
 
-void DacDetectorEtherdream :: threadedFunction() {
+void DacManagerEtherdream :: threadedFunction() {
     
     while(isThreadRunning()) {
         
@@ -107,7 +107,7 @@ void DacDetectorEtherdream :: threadedFunction() {
      
 }
     
-vector<DacData> DacDetectorEtherdream :: updateDacList(){
+vector<DacData> DacManagerEtherdream :: updateDacList(){
     
     vector<DacData> daclist;
     
@@ -127,13 +127,13 @@ vector<DacData> DacDetectorEtherdream :: updateDacList(){
 }
 
 
-DacBase* DacDetectorEtherdream :: getAndConnectToDac(const string& id){
+DacBase* DacManagerEtherdream :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
     
     DacEtherdream* dac = (DacEtherdream*) getDacById(id);
     if(dac!=nullptr) {
-        ofLogNotice("DacDetectorEtherdream :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
+        ofLogNotice("DacManagerEtherdream :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
         return dac;
     }
     // todo check it exists!
@@ -145,11 +145,11 @@ DacBase* DacDetectorEtherdream :: getAndConnectToDac(const string& id){
     return dac;
 }
 
-bool DacDetectorEtherdream :: disconnectAndDeleteDac(const string& id){
+bool DacManagerEtherdream :: disconnectAndDeleteDac(const string& id){
     
     DacEtherdream* dac = (DacEtherdream*)getDacById(id);
     if(dac==nullptr) {
-        ofLogError("DacDetectorEtherdream::disconnectAndDeleteDac("+id+") - dac not found");
+        ofLogError("DacManagerEtherdream::disconnectAndDeleteDac("+id+") - dac not found");
         return false;
     }
    
@@ -163,6 +163,6 @@ bool DacDetectorEtherdream :: disconnectAndDeleteDac(const string& id){
 
 
 
-void DacDetectorEtherdream :: exit() {
+void DacManagerEtherdream :: exit() {
     
 }

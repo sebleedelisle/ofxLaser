@@ -1,15 +1,15 @@
 //
-//  ofxLaserDacDetectorBase.cpp
+//  ofxLaserDacManagerBase.cpp
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
-#include "ofxLaserDacDetectorLaserdock.h"
+#include "ofxLaserDacManagerLaserdock.h"
 
 using namespace ofxLaser;
 
-DacDetectorLaserdock :: DacDetectorLaserdock()  {
+DacManagerLaserdock :: DacManagerLaserdock()  {
     int rc;
     rc = libusb_init(NULL);
     if (rc < 0)
@@ -19,14 +19,14 @@ DacDetectorLaserdock :: DacDetectorLaserdock()  {
     }
     
 }
-DacDetectorLaserdock :: ~DacDetectorLaserdock()  {
+DacManagerLaserdock :: ~DacManagerLaserdock()  {
 
     // TODO wait for all DACs threads to stop
     
     libusb_exit(NULL);
 }
 
-vector<DacData> DacDetectorLaserdock :: updateDacList(){
+vector<DacData> DacManagerLaserdock :: updateDacList(){
     
     vector<DacData> daclist;
     libusb_device **libusb_device_list;
@@ -35,7 +35,7 @@ vector<DacData> DacDetectorLaserdock :: updateDacList(){
 
     if (cnt < 0) {
         // LIBUSB ERROR
-        ofLogError("ofxDacDetectorLaserdock :: getDacList() - USB error code " + ofToString(cnt));
+        ofLogError("ofxDacManagerLaserdock :: getDacList() - USB error code " + ofToString(cnt));
         libusb_free_device_list(libusb_device_list, 1);
         return daclist;
     }
@@ -65,14 +65,14 @@ vector<DacData> DacDetectorLaserdock :: updateDacList(){
 }
 
 
-DacBase* DacDetectorLaserdock :: getAndConnectToDac(const string& id){
+DacBase* DacManagerLaserdock :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
     
     DacLaserdock* dac = (DacLaserdock*) getDacById(id);
     
     if(dac!=nullptr) {
-        ofLogNotice("DacDetectorLaserdock :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
+        ofLogNotice("DacManagerLaserdock :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
         return dac;
     }
     
@@ -111,10 +111,10 @@ DacBase* DacDetectorLaserdock :: getAndConnectToDac(const string& id){
     return dac;
 }
 
-bool DacDetectorLaserdock :: disconnectAndDeleteDac(const string& id){
+bool DacManagerLaserdock :: disconnectAndDeleteDac(const string& id){
     
     if ( dacsById.count(id) == 0 ) {
-        ofLogError("DacDetectorLaserdock::disconnectAndDeleteDac("+id+") - dac not found");
+        ofLogError("DacManagerLaserdock::disconnectAndDeleteDac("+id+") - dac not found");
         return false;
     }
     DacLaserdock* dac = (DacLaserdock*) dacsById.at(id);
@@ -126,7 +126,7 @@ bool DacDetectorLaserdock :: disconnectAndDeleteDac(const string& id){
 }
 
 
-string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice) {
+string DacManagerLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice) {
     // make a descriptor object to store the data in
     struct libusb_device_descriptor devicedescriptor;
     // get the descriptor
@@ -135,7 +135,7 @@ string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice
     
     int result = libusb_get_device_descriptor(usbdevice, &devicedescriptor);
     if (result < 0) {
-        ofLogError("DacDetectorLaserdock failed to get device descriptor for USB device - error code " + ofToString(result));
+        ofLogError("DacManagerLaserdock failed to get device descriptor for USB device - error code " + ofToString(result));
         // skip to the next one
         return returnstring;
     }
@@ -149,7 +149,7 @@ string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice
         // open the device
         result = libusb_open(usbdevice, &devhandlecontrol);
         if(result!=0) {
-            ofLogError("DacDetectorLaserdock failed to open USB device - error code " + ofToString(result));
+            ofLogError("DacManagerLaserdock failed to open USB device - error code " + ofToString(result));
 			return returnstring;
         }
         
@@ -164,7 +164,7 @@ string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice
             //DacData data(getType(), serialnumber);
            // daclist.push_back(data);
         } else {
-            ofLogError("DacDetectorLaserdock failed to get serial number - error code " + ofToString(result));
+            ofLogError("DacManagerLaserdock failed to get serial number - error code " + ofToString(result));
         }
 		
 		
@@ -178,6 +178,6 @@ string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice
     
 }
 
-void DacDetectorLaserdock :: exit() {
+void DacManagerLaserdock :: exit() {
     
 }

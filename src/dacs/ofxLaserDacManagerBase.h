@@ -1,5 +1,5 @@
 //
-//  ofxLaserDacDetectorBase.h
+//  ofxLaserDacManagerBase.h
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 29/03/2021.
@@ -10,7 +10,7 @@
 
 namespace ofxLaser {
 
-class DacDetectorBase {
+class DacManagerBase {
     
     public :
     virtual vector<DacData> updateDacList() = 0;
