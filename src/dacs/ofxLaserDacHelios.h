@@ -11,7 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserDacBase.h"
 #include "HeliosDac.h"
-#include "ofxLaserDacHeliosManager.h"
+//#include "ofxLaserDacHeliosManager.h"
 
 #define HELIOS_MIN 0
 #define HELIOS_MAX 4095
@@ -60,34 +60,38 @@ class DacHelios : public DacBase, ofThread{
 	~DacHelios();
 	
 	bool setup(libusb_device* usbdevice);
-	const vector<ofAbstractParameter*>& getDisplayData();
+	const vector<ofAbstractParameter*>& getDisplayData() override;
 		
-	bool connectToDevice(string serial="");
-    void reset();
-    void setArmed(bool armed);
-	void close();
+	//bool connectToDevice(string serial="");
+    void reset() override;
+    void setArmed(bool armed) override;
+	void close() override;
 	
-	bool sendFrame(const vector<Point>& points) ;
-	bool sendPoints(const vector<Point>& points) ;
-	bool setPointsPerSecond(uint32_t pps);
+	bool sendFrame(const vector<Point>& points) override ;
+	bool sendPoints(const vector<Point>& points)  override;
+	bool setPointsPerSecond(uint32_t pps) override;
 	
 	DacHeliosFrame* getFrame();
 	DacHeliosFrame* releaseFrame(DacHeliosFrame* frame);
 	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
-	string getLabel(){return "Helios";};
+	//string getLabel(){return "Helios";};
+    string getLabel() override{return "Helios " + ofToString(serialNumber);};
+    
 	
 
-	ofColor getStatusColour(){
+	ofColor getStatusColour() override {
 		return connected ? ofColor::green :  ofColor::red;
 	}
 	
 	
 	ofParameter<int> pointBufferDisplay;
 	ofParameter<string> deviceName;
-	
+    
+    string serialNumber;
+    
 	private:
-	void threadedFunction();
+	void threadedFunction() override;
 
 	void setConnected(bool state);
 	
@@ -105,8 +109,9 @@ class DacHelios : public DacBase, ofThread{
                             // if armed status has changed and sends
                             // signal to DAC
 	
-	DacHeliosManager &heliosManager;
+	//DacHeliosManager &heliosManager;
 	
+   
 	// ONLY to be accessed within thread
 	string deviceId;
 	HeliosDacDevice* dacDevice;

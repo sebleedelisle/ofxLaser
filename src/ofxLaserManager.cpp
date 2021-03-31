@@ -1017,8 +1017,14 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     // get the dacs from the dacAssigner
     const vector<DacData>& dacList = dacAssigner.getDacList();
+	string comboLabel;
+	if(dacList.size()>0) comboLabel = projector->getDacLabel();
+	else comboLabel = "No DACs discovered"; 
+	
 
-    if (ImGui::BeginCombo("##combo", projector->getDacLabel().c_str())){ // The second parameter is the label previewed before opening the combo.
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 14.0f));
+   
+    if (ImGui::BeginCombo("##combo", comboLabel.c_str())){ // The second parameter is the label previewed before opening the combo.
     
         // add a combo box item for every element in the list
         for(const DacData& dacdata : dacList) {
@@ -1047,6 +1053,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
         ImGui::EndCombo();
     }
+    ImGui::PopStyleVar();
     ImGui::PopItemWidth();
     ImGui::SameLine();
     if(ImGui::Button("Refresh")) {

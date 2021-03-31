@@ -33,7 +33,7 @@ class DacDetectorLaserdock : public DacDetectorBase{
     // checks the usbdevice to see if it's a laserdock, and if it is,
     // it returns the serial number. If not it returns an empty string.
     
-    string getHeliosSerialNumber(libusb_device* usbdevice);
+    string getLaserdockSerialNumber(libusb_device* usbdevice);
 
     
     

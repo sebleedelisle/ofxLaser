@@ -9,7 +9,7 @@
 
 using namespace ofxLaser;
 
-DacHelios:: DacHelios() : heliosManager(DacHeliosManager::getInstance()) {
+DacHelios:: DacHelios() {//: heliosManager(DacHeliosManager::getInstance()) {
 	pps = 30000;
 	newPPS = 30000;
 	
@@ -35,15 +35,15 @@ void DacHelios::close() {
 	
 	if(isThreadRunning()) {
 		waitForThread(true); // also stops the thread
-		if(lock()) {
-			if(dacDevice!=nullptr) {
-				dacDevice->SetClosed();
-				dacDevice = nullptr;
-			}
-			unlock();
-		}
-		delete dacDevice;
+		
 	}
+    
+    if(dacDevice!=nullptr) {
+        dacDevice->SetClosed();
+        delete dacDevice;
+        dacDevice = nullptr;
+    }
+
 }
 
 bool DacHelios::setup(libusb_device* usbdevice) {
@@ -81,7 +81,7 @@ bool DacHelios::setup(libusb_device* usbdevice) {
     }
 
     dacDevice = dac;
-    
+    serialNumber = dacDevice->GetName();
 
     #ifndef _MSC_VER
             // only linux and osx
@@ -94,7 +94,10 @@ bool DacHelios::setup(libusb_device* usbdevice) {
             SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
     #endif
 
+    connected = true;
+    
     startThread();
+    return true;
 
 }
 //
@@ -129,27 +132,28 @@ const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
 	return displayData;
 }
 
-bool DacHelios::connectToDevice(string name) {
-	
-	dacDevice = heliosManager.getDacDeviceForName(name);
-	if(dacDevice!=nullptr) {
-		deviceId = deviceName = dacDevice->nameStr;
-		if(dacDevice->isClosed()) { // not sure why it should be but hey
-			ofLogError("HeliosDac device is closed before it's used!"+ name);
-			heliosManager.deleteDevice(dacDevice);
-			connected = false;
-			
-			dacDevice = nullptr;
-		} else {
-			connected = true;
-		}
-	} else {
-		connected = false;
-	}
-
-	return connected;
-	
-}
+//
+//bool DacHelios::connectToDevice(string name) {
+//	
+//	dacDevice = heliosManager.getDacDeviceForName(name);
+//	if(dacDevice!=nullptr) {
+//		deviceId = deviceName = dacDevice->nameStr;
+//		if(dacDevice->isClosed()) { // not sure why it should be but hey
+//			ofLogError("HeliosDac device is closed before it's used!"+ name);
+//			heliosManager.deleteDevice(dacDevice);
+//			connected = false;
+//			
+//			dacDevice = nullptr;
+//		} else {
+//			connected = true;
+//		}
+//	} else {
+//		connected = false;
+//	}
+//
+//	return connected;
+//	
+//}
 
 bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
@@ -287,7 +291,7 @@ void DacHelios :: threadedFunction(){
 				int result =  0;
 				int attempts = 0; 
 				if(dacDevice!=nullptr) {
-					while((attempts<10) && (result!=HELIOS_SUCCESS)) {
+					while((attempts<10) && (result!=HELIOS_SUCCESS) && isThreadRunning()) {
 						result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
 						attempts++; 
 						yield(); 
@@ -319,7 +323,7 @@ void DacHelios :: threadedFunction(){
 			
 			if(isThreadRunning()) {
 				if(lock()) {
-					if(connectToDevice(deviceName)) {
+					if(false) { // connectToDevice(deviceName)) { *****************************************************************
 						setConnected(true);
 					
 						unlock();
@@ -350,7 +354,7 @@ void DacHelios :: setConnected(bool state) {
 		if(!connected) {
 			//heliosManager.deviceDisconnected(deviceName);
 			armed = !newArmed;
-			heliosManager.deleteDevice(dacDevice);
+			//heliosManager.deleteDevice(dacDevice);
 			dacDevice = nullptr;
 		}
 		ofLogNotice("Helios Dac changed connection state : "+ofToString(connected));

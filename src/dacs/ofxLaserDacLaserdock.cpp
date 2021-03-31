@@ -30,8 +30,8 @@ DacLaserdock:: ~DacLaserdock() {
 }
 void DacLaserdock :: close() {
     if(isThreadRunning()) {
-        stopThread();
-        waitForThread();
+        // also stops the thread
+        waitForThread(true);
     }
     if(device!=nullptr) {
         delete device;

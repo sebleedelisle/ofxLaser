@@ -36,7 +36,7 @@ vector<DacData> DacDetectorLaserdock :: updateDacList(){
     if (cnt < 0) {
         // LIBUSB ERROR
         ofLogError("ofxDacDetectorLaserdock :: getDacList() - USB error code " + ofToString(cnt));
-        libusb_free_device_list(libusb_device_list, 1); // probably not necessary
+        libusb_free_device_list(libusb_device_list, 1);
         return daclist;
     }
 
@@ -46,8 +46,9 @@ vector<DacData> DacDetectorLaserdock :: updateDacList(){
         libusb_device *usbdevice = libusb_device_list[i];
         
         // checks to see if the device is a laserdock, and if so, returns the serial number.
-        string serialnumber = getHeliosSerialNumber(usbdevice);
+        string serialnumber = getLaserdockSerialNumber(usbdevice);
         
+		// if we found one, add it to the list! 
         if(serialnumber!="") {
             DacData data(getType(), serialnumber);
             daclist.push_back(data);
@@ -88,7 +89,7 @@ DacBase* DacDetectorLaserdock :: getAndConnectToDac(const string& id){
     for (i = 0; i < cnt; i++) {
         libusb_device *libusb_device = libusb_device_list[i];
         
-        if (getHeliosSerialNumber(libusb_device) == id) {
+        if (getLaserdockSerialNumber(libusb_device) == id) {
             // check serial number, if it matches, then make a dac with it!
             dac = new DacLaserdock();
             if(!dac->setup(libusb_device)){
@@ -125,7 +126,7 @@ bool DacDetectorLaserdock :: disconnectAndDeleteDac(const string& id){
 }
 
 
-string DacDetectorLaserdock :: getHeliosSerialNumber(libusb_device* usbdevice) {
+string DacDetectorLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice) {
     // make a descriptor object to store the data in
     struct libusb_device_descriptor devicedescriptor;
     // get the descriptor
@@ -149,7 +150,7 @@ string DacDetectorLaserdock :: getHeliosSerialNumber(libusb_device* usbdevice) {
         result = libusb_open(usbdevice, &devhandlecontrol);
         if(result!=0) {
             ofLogError("DacDetectorLaserdock failed to open USB device - error code " + ofToString(result));
-            return returnstring;
+			return returnstring;
         }
         
         // let's get the serial number from the device
@@ -165,6 +166,8 @@ string DacDetectorLaserdock :: getHeliosSerialNumber(libusb_device* usbdevice) {
         } else {
             ofLogError("DacDetectorLaserdock failed to get serial number - error code " + ofToString(result));
         }
+		
+		
         libusb_close(devhandlecontrol);
         
       

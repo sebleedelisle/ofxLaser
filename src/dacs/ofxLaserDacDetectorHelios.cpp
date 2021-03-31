@@ -33,6 +33,14 @@ vector<DacData> DacDetectorHelios :: updateDacList(){
     ssize_t cnt = libusb_get_device_list(NULL, &libusb_device_list);
     ssize_t i = 0;
 
+    // add data for dacs we already know about 
+    for(auto& dacpair : dacsById) {
+        DacHelios* heliosdac = (DacHelios*) dacpair.second;
+        DacData data(getType(), heliosdac->serialNumber);
+        daclist.push_back(data);
+        
+    }
+    
     if (cnt < 0) {
         // LIBUSB ERROR
         ofLogError("ofxDacDetectorHelios :: getDacList() - USB error code " + ofToString(cnt));
@@ -55,6 +63,8 @@ vector<DacData> DacDetectorHelios :: updateDacList(){
             
     }
 
+    
+    
     libusb_free_device_list(libusb_device_list, cnt);
     return daclist;
     
@@ -140,42 +150,81 @@ string DacDetectorHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
     
     if ((devicedescriptor.idVendor==HELIOS_VID)  && (devicedescriptor.idProduct==HELIOS_PID)) {
         unsigned char idstring[256];
-        struct libusb_device_handle *devhandlecontrol;
+        struct libusb_device_handle *usbHandle;
         
         ofLogNotice("Found HELIOS! : "+ofToString(devicedescriptor.iSerialNumber));
         
         // open the device
-        result = libusb_open(usbdevice, &devhandlecontrol);
+        result = libusb_open(usbdevice, &usbHandle);
         if(result!=0) {
             ofLogError("DacDetectorHelios failed to open USB device - error code " + ofToString(result));
             return "";
         }
         
-        result = libusb_claim_interface(devhandlecontrol, 0);
+        result = libusb_claim_interface(usbHandle, 0);
         cout << "...libusb_claim_interface : " << result << endl;
         // seems to return LIBUSB_ERROR_ACCESS if it's busy
         if (result < 0) {
-            libusb_close(devhandlecontrol);
+            libusb_close(usbHandle);
             return "";
         }
         
-        result = libusb_set_interface_alt_setting(devhandlecontrol, 0, 1);
+        result = libusb_set_interface_alt_setting(usbHandle, 0, 1);
         cout << "...libusb_set_interface_alt_setting : " << result << endl;
         if (result < 0) {
-            libusb_close(devhandlecontrol);
+			libusb_release_interface(usbHandle, 0);
+            libusb_close(usbHandle);
             return "";
         }
-        
-        HeliosDacDevice* dac = new HeliosDacDevice(devhandlecontrol);
-        cout << "...new dac device " << dac->nameStr << endl;
-        if(dac->nameStr.empty()) {
-            ofLogError("new dac name is wrong!");
-        }
-        returnstring = dac->nameStr;
-        libusb_release_interface(devhandlecontrol,0);
+//
+//        HeliosDacDevice* dacdevice = new HeliosDacDevice(devhandlecontrol);
+//        cout << "...new dac device " << dac->nameStr << endl;
+//        if(dac->nameStr.empty()) {
+//            ofLogError("new dac name is wrong!");
+//        }
+		
+		// TO GET THE NAME :
+		// Do we need to tell the Helios the SDK number and stuff?
+		// Send control command 0x05 (which presumably asks for the name
+		int actualLength = 0;
+		std::uint8_t ctrlCommand[2] = { 0x05, 0 };
+		
+		// note that the last param is the timeout in MS
+		int transferResult = libusb_interrupt_transfer(usbHandle, EP_INT_OUT, ctrlCommand, 2, &actualLength, 16);
+
+		// do an interrupt transfer to get the name
+		if (transferResult == LIBUSB_SUCCESS) {
+			std::uint8_t receiveBytes[32];
+			int transferResult = libusb_interrupt_transfer(usbHandle, EP_INT_IN, receiveBytes, 32, &actualLength, 32);
+			if(transferResult == LIBUSB_SUCCESS) {
+				// check that the first byte is 0x85 (presumably some
+				// kind of confirmation value
+				if(receiveBytes[0] == 0x85) {
+					// terminate the string with a null
+					receiveBytes[31] = '\0';
+					// and copy all but the first character into a
+					// new string
+					char name[32];
+					memcpy(name, &receiveBytes[1], 31);
+					returnstring = name;
+				} else {
+					ofLogError("DacDetectorHelios Helios device didn't return valid name");
+				}
+			} else {
+				ofLogError("DacDetectorHelios Helios device didn't give us its name properly");
+			}
+			
+		} else {
+			ofLogError("DacDetectorHelios Helios device USB read error "+ofToString(transferResult));
+		}
+
+		
+		
+        //returnstring = dacdevice->nameStr;
+        libusb_release_interface(usbHandle,0);
         ofLogNotice("FOUND HELIOS NAME : "+returnstring);
         // should close down the dac and also clean up the devhandle
-        delete dac;
+        //delete dacdevice;
        
       
     }
