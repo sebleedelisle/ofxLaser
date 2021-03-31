@@ -49,8 +49,14 @@ DacBase* Projector::getDac(){
     
 }
 bool Projector::removeDac(){
-    dac = &emptyDac;
-    dacId = "";
+	if (dac != &emptyDac) {
+		dac = &emptyDac;
+		dacId = "";
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 

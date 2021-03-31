@@ -35,7 +35,7 @@ void DacManagerEtherdream :: threadedFunction() {
         // LET'S ASSUME FOR NOW...
         // that every packet is a complete message from a single dac.
         
-        int packetSize = 50;
+        const int packetSize = 50;
         char udpMessage[packetSize];
         memset(udpMessage,0,sizeof(udpMessage));
         int numBytesReceived = udpConnection.Receive(udpMessage,packetSize); //returns number of bytes received
