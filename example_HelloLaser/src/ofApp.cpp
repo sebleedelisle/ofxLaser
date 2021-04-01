@@ -10,8 +10,9 @@ void ofApp::setup(){
 	laser.setup(laserWidth, laserHeight);
 	
     laser.addProjector();
-    laser.addProjector();
-    
+	laser.addProjector();
+	laser.addProjector();
+
     numLaserEffects = 9;
     
 	// if you don't want to manage your own GUI for your

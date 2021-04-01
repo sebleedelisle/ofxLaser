@@ -85,6 +85,7 @@ vector<DacData> DacManagerHelios :: updateDacList(){
     
     
     libusb_free_device_list(libusb_device_list, cnt);
+
     return daclist;
     
 }
@@ -162,7 +163,7 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
     
     int result = libusb_get_device_descriptor(usbdevice, &devicedescriptor);
     if (result < 0) {
-        ofLogError("DacManagerHelios failed to get device descriptor for USB device - error code " + ofToString(result));
+        ofLogError("DacManagerHelios :: getHeliosSerialNumber failed to get device descriptor for USB device - error code " + ofToString(result));
         // skip to the next one
         return "";
     }
@@ -176,7 +177,7 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
         // open the device
         result = libusb_open(usbdevice, &usbHandle);
         if(result!=0) {
-            ofLogError("DacManagerHelios failed to open USB device - error code " + ofToString(result));
+            ofLogError("DacManagerHelios :: getHeliosSerialNumber failed to open USB device - error code " + ofToString(result));
             return "";
         }
         
@@ -186,6 +187,8 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
      //   cout << "...libusb_claim_interface : " << result << endl;
         // seems to return LIBUSB_ERROR_ACCESS if it's busy
         if (result < 0) {
+			ofLogError("DacManagerHelios :: getHeliosSerialNumber failed to claim interface - error code " + ofToString(result));
+
             libusb_close(usbHandle);
             return "";
         }
@@ -194,6 +197,8 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
       // cout << "...libusb_set_interface_alt_setting : " << result << endl;
         //if ((result < 0) ||(dacsById.size()>0)) {
         if (result < 0) {
+			ofLogError("DacManagerHelios :: getHeliosSerialNumber libusb_set_interface_alt_setting failed - error code " + ofToString(result));
+
             libusb_release_interface(usbHandle, 0);
             libusb_close(usbHandle);
             return "";
@@ -237,8 +242,13 @@ string DacManagerHelios :: getHeliosSerialNumber(libusb_device* usbdevice) {
 		
 		
         //returnstring = dacdevice->nameStr;
-        libusb_release_interface(usbHandle,0);
-    //    ofLogNotice("FOUND HELIOS NAME : "+returnstring);
+        int res = libusb_release_interface(usbHandle,0);
+		if (res < 0) {
+			ofLogError("DacManagerHelios libusb_release_interface failed " + ofToString(res)); 
+		}
+
+		libusb_close(usbHandle);
+        ofLogNotice("FOUND HELIOS NAME : "+returnstring);
         // should close down the dac and also clean up the devhandle
         //delete dacdevice;
        

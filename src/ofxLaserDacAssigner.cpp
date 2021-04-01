@@ -89,7 +89,7 @@ const vector<DacData>& DacAssigner ::updateDacList(){
         }
     }
     
-
+	std::sort(dacDataList.begin(), dacDataList.end());
     return dacDataList; 
     
 }

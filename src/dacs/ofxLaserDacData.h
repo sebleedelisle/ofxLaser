@@ -31,12 +31,20 @@ class DacData {
         
     }
 
+	bool operator < (const DacData& rhs)  {
+		return label<rhs.label; 
+
+	}
+	bool operator > (const DacData& rhs) {
+		return label < rhs.label;
+
+	}
     string label;   // display label ie "Etherdream #efbd59" - maybe not necessary as we can compile this
     string type;    // type ie "Etherdream", "Helios" etc - should this be a class?
     string id;      // id is the Mac address or the serial number
     string address; // IP address for network DACs
     bool available; // is it still available? Useful for if a dac connects and then becomes unavailable
-    ofxLaser::Projector* assignedProjector; // which projector it's currently assigned to - could be problematic if the projectors are renumbered
+    ofxLaser::Projector* assignedProjector; // which projector it's currently assigned to 
     
     
 };
