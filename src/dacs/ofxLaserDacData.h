@@ -31,12 +31,12 @@ class DacData {
         
     }
 
-	bool operator < (const DacData& rhs)  {
+	inline bool operator < ( const DacData& rhs) const {
 		return label<rhs.label; 
 
 	}
-	bool operator > (const DacData& rhs) {
-		return label < rhs.label;
+	inline bool operator > (const DacData& rhs) const{
+		return label > rhs.label;
 
 	}
     string label;   // display label ie "Etherdream #efbd59" - maybe not necessary as we can compile this
