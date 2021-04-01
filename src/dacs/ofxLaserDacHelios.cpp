@@ -5,6 +5,24 @@
 //
 //
 
+// Helio Dac is an affordable open source USB laser controller 
+// It has a frame send functionality and you can't stream points
+// unless you put them in separate frames, which is probably fine. 
+// 
+// I've had issues using three or more of them on a single Windows 
+// machine, even following the official instructions to change the
+// USB drivers using Zadig
+// 
+// I think it's some kind of incompatability with some USB hubs, so 
+// if you have issues, try using different hubs, or put the controllers
+// on different USB buses. 
+// 
+// Unlike other DAC implementations in ofxLaser, I'm using the built-in 
+// functionality that replays frames until a new one is sent. This seems  
+// to help with the performance as I've found that any USB activity can 
+// cause short drop-outs otherwise. 
+
+
 #include "ofxLaserDacHelios.h"
 
 using namespace ofxLaser;
@@ -84,16 +102,18 @@ bool DacHelios::setup(libusb_device* usbdevice) {
     dacDevice = dac;
     serialNumber = dacDevice->GetName();
 
-    #ifndef _MSC_VER
-            // only linux and osx
-            //http://www.yonch.com/tech/82-linux-thread-priority
-            struct sched_param param;
-            param.sched_priority = 60;
-            pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
-    #else
-            // windows implementation
-            SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
-    #endif
+	// Not sure if we need this right now - it changes the thread priority. 
+	// Could be necessary on Raspberry Pi. 
+    //#ifndef _MSC_VER
+    //        // only linux and osx
+    //        //http://www.yonch.com/tech/82-linux-thread-priority
+    //        struct sched_param param;
+    //        param.sched_priority = 60;
+    //        pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+    //#else
+    //        // windows implementation
+    //        SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_LOWEST);
+    //#endif
 
     connected = true;
     
@@ -101,76 +121,28 @@ bool DacHelios::setup(libusb_device* usbdevice) {
     return true;
 
 }
-//
-//void DacHelios::setup(string name) {
-//
-//	deviceName = name; // the parameter which shows the name
-//
-//	ofLogNotice("DacHelios::setup "+name);
-//
-//	connectToDevice(deviceName);
-//
-//	pointBufferDisplay.set("Point Buffer", 0,0,1799);
-//	displayData.push_back(&deviceName);
-//	displayData.push_back(&pointBufferDisplay);
-//
-//    #ifndef _MSC_VER
-//            // only linux and osx
-//            //http://www.yonch.com/tech/82-linux-thread-priority
-//            struct sched_param param;
-//            param.sched_priority = 60;
-//            pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
-//    #else
-//            // windows implementation
-//            SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
-//    #endif
-//
-//	startThread();
-//
-//}
+
 
 const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
 	return displayData;
 }
 
-//
-//bool DacHelios::connectToDevice(string name) {
-//	
-//	dacDevice = heliosManager.getDacDeviceForName(name);
-//	if(dacDevice!=nullptr) {
-//		deviceId = deviceName = dacDevice->nameStr;
-//		if(dacDevice->isClosed()) { // not sure why it should be but hey
-//			ofLogError("HeliosDac device is closed before it's used!"+ name);
-//			heliosManager.deleteDevice(dacDevice);
-//			connected = false;
-//			
-//			dacDevice = nullptr;
-//		} else {
-//			connected = true;
-//		}
-//	} else {
-//		connected = false;
-//	}
-//
-//	return connected;
-//	
-//}
 
 bool DacHelios:: sendFrame(const vector<Point>& points){
 	if(!connected) return false;
 	// make a new frame object or reuse one if it already exists
 	DacHeliosFrame* frame = getFrame();
 	
-    int minSampleCount = pps * 0.01; // minimum frame length is 1/100 of a second
+    //int minSampleCount = pps * 0.01; // minimum frame length is 1/100 of a second
     
 	// add all points into the frame object
 	frameMode = true;
-    while(frame->numSamples<minSampleCount) {
+   // while(frame->numSamples<minSampleCount) {
         for(const ofxLaser::Point& p : points) {
             frame->addPoint(p);
         }
    
-    }
+   // }
 //    if ((((int)frame->numSamples-45) % 64) == 0) {
 //        Point p =points.back();
 //        p.setColour(0,0,0);
@@ -258,7 +230,9 @@ void DacHelios :: threadedFunction(){
 				if( (frameMode || nextFrame==nullptr) &&
 					 (framesChannel.tryReceive(newFrame)) ) {
 					if(nextFrame!=nullptr) {
-						nextFrame = releaseFrame(nextFrame);
+						// release the nextFrame back into the object pool 
+						// (also returns nullptr so clears the pointer as well)
+						nextFrame = deleteFrame(nextFrame);
 					}
 					nextFrame = newFrame;
 				}
@@ -283,7 +257,7 @@ void DacHelios :: threadedFunction(){
 			// currentFrame yet...
 			if(nextFrame!=nullptr) {
 				if(currentFrame!=nullptr) {
-					releaseFrame(currentFrame);
+					deleteFrame(currentFrame);
 				}
 				currentFrame = nextFrame;
 				nextFrame = nullptr;
@@ -293,14 +267,15 @@ void DacHelios :: threadedFunction(){
 				int attempts = 0; 
 				if(dacDevice!=nullptr) {
 					while((attempts<10) && (result!=HELIOS_SUCCESS) && isThreadRunning()) {
-						result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
-						attempts++; 
+					
+						result = dacDevice->SendFrame(pps, frameMode ? HELIOS_FLAGS_DEFAULT : HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+						attempts++;
 						yield(); 
 					}
 				}
-				// if we're not in frame mode then delete the points
-				if((result == HELIOS_SUCCESS) && (!frameMode) ) {
-					currentFrame=releaseFrame(currentFrame);
+				// if the frame was sent, delete it!
+				if(result == HELIOS_SUCCESS){ 
+					currentFrame=deleteFrame(currentFrame);
 				}
 				
 				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
@@ -319,7 +294,7 @@ void DacHelios :: threadedFunction(){
 		} else {
             
  
-			// TODO : handle reconnection better
+			// TODO : handle reconnection 
 			// try to reconnect!
 			
 			if(isThreadRunning()) {
@@ -331,7 +306,7 @@ void DacHelios :: threadedFunction(){
 					} else {
 						unlock();
 						// wait five seconds and try again
-						for(size_t i = 0; (i<10)&&(isThreadRunning()); i++ ) {
+						for(size_t i = 0; (i<100)&&(isThreadRunning()); i++ ) {
 							sleep(50);
 						}
 					}
@@ -364,7 +339,7 @@ void DacHelios :: setConnected(bool state) {
 	}
 }
 
-
+// object pooling system
 DacHeliosFrame* DacHelios :: getFrame() {
 	DacHeliosFrame* returnframe;
 	
@@ -379,7 +354,7 @@ DacHeliosFrame* DacHelios :: getFrame() {
 	}
 		
 }
-DacHeliosFrame* DacHelios :: releaseFrame(DacHeliosFrame* frame){
+DacHeliosFrame* DacHelios :: deleteFrame(DacHeliosFrame* frame){
 	//delete frame;
 	//
 	spareFrames.send(frame);

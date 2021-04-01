@@ -75,7 +75,7 @@ class DacHelios : public DacBase, ofThread{
 	bool setPointsPerSecond(uint32_t pps) override;
 	
 	DacHeliosFrame* getFrame();
-	DacHeliosFrame* releaseFrame(DacHeliosFrame* frame);
+	DacHeliosFrame* deleteFrame(DacHeliosFrame* frame);
 	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
 	//string getLabel(){return "Helios";};
