@@ -139,7 +139,7 @@ void Projector :: initGui() {
     
     fast.speed = 6;
     fast.acceleration = 1.2;
-    fast.cornerThreshold  = 20;
+    fast.cornerThreshold  = 80;
     fast.dotMaxPoints = 5;
     
     detail.speed = 2.5;
@@ -919,7 +919,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 	
 	if(sortedshapepoints.size()>0) {
 		if(smoothHomePosition) {
-			laserHomePosition += (sortedshapepoints.front()->getStart()-laserHomePosition)*0.01;
+			laserHomePosition += (sortedshapepoints.front()->getStart()-laserHomePosition)*0.05;
 		} else {
 			laserHomePosition = sortedshapepoints.back()->getEnd();
 		}

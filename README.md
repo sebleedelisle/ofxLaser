@@ -25,10 +25,10 @@ Features
 * Works with 3D coordinates and shapes
 * Cross platform - developed on OSX, but also tested on Windows and Linux
 
-Supported Laser interfaces
+Supported Laser controllers
 --------------------------
 USB : 
-* HeliosDAC (beta)
+* HeliosDAC 
 * Laserdock / Lasercube
 
 Network :
@@ -37,8 +37,6 @@ Network :
 
 Roadmap
 -----------
-* Automatic discovery of Etherdreams (currently requires the DAC IP address)
-* Automatic discovery of IDN DACs (currently requires the DAC IP address)
 
 Licence
 -------
@@ -70,8 +68,6 @@ ofxOpenCv (comes with oF)
 ofxNetwork (comes with oF)  
 ofxPoco (comes with oF)  
 ofxSvg (comes with oF)  
-ofxKinect - (only used as an easy way to get libusb installed cross platform) (comes with oF) 
-ofxImGui - a cut down version included in the source code (with thanks to @jvcleave)
 
 Compatibility
 ------------

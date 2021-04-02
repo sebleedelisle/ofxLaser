@@ -117,8 +117,11 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
         
         string id = ed.macAddress;
         
-        daclist.emplace_back(getType(), id, ed.ipAddress);
-        
+        // if we last got an update from the etherdream less
+        // than two seconds ago, add it to the list.
+        if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
+            daclist.emplace_back(getType(), id, ed.ipAddress);
+        }
         
     }
 
