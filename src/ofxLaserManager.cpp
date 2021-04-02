@@ -653,9 +653,18 @@ void Manager::initGui() {
     
 	showPreview = true;
 	
+    // TODO load the correct number of projectors
+    
 	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->initGui();
-		projectors[i]->armed.setName(ofToString(i+1)+" ARMED");
+        // also loads settings
+        Projector* projector = projectors[i];
+        projector->initGui();
+		projector->armed.setName(ofToString(i+1)+" ARMED");
+        
+        if(!projector->dacId->empty()) {
+            ofLogNotice("NEED TO RESERVE DAC"); 
+            dacAssigner.assignToProjector(projector->dacId, *projector);
+        }
 	}
 	
 }
@@ -1012,8 +1021,15 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(0,2));
     ImGui::Text("DAC:");
     ImGui::SameLine();
-    ImGui::Text("%s", projector->getDacLabel().c_str());
-    
+    // TODO add a method in projector that tells us if
+    // it's using the empty dac?
+    if((projector->dac == &projector->emptyDac) && (projector->dacId.get()!="") ) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+        ImGui::Text("Waiting for %s", projector->dacId.get().c_str());
+        ImGui::PopStyleVar();
+    } else {
+        ImGui::Text("%s", projector->getDacLabel().c_str());
+    }
 
     // DAC LIST -------------------------------------------------------------
     
@@ -1039,11 +1055,11 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
             ImGuiSelectableFlags selectableflags = 0;
             
             if(!dacdata.available) {
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+               // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
                 itemlabel += " - no longer available";
                 selectableflags|=ImGuiSelectableFlags_Disabled;
             } else {
-                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1);
+               //
             }
             // if this dac is assigned to a projector, show which projector
             //  - this could be done at the other end?
@@ -1059,7 +1075,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
                 //      - the chosen DAC is already being used by another projector
                 dacAssigner.assignToProjector(dacdata.label, *projector);
             }
-            ImGui::PopStyleVar();
+            //ImGui::PopStyleVar();
         }
         
         //    if (is_selected)

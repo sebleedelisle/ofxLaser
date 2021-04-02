@@ -217,10 +217,8 @@ void Projector :: initGui() {
 	}
 	
 
-	// try loading the xml file for legacy reasons
-	//params.load(label+".xml");
-	//params.load(label+".json");
     loadSettings();
+   
     
     dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
@@ -345,7 +343,7 @@ string Projector::getDacLabel() {
     if(dac!=&emptyDac) {
         return dac->getId();
     } else {
-        return "No DAC connected";
+        return "No DAC assigned";
     }
 }
 

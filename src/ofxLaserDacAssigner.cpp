@@ -46,50 +46,71 @@ const vector<DacData>& DacAssigner ::getDacList(){
 
 const vector<DacData>& DacAssigner ::updateDacList(){
     
-    // TODO - keep track of connected projectors!
-    // TODO - get list of dacs as a new vector
-    //        go through old list
-    //        if element in old list isn't in new list
-    //            if no projector attached, delete it
-    //            if projector attached, mark it as unavailable
-    //               (delete dac from projector?)
-    //        if element in new list isn't in old list, add it!
-    
+    // get a new list of dacdata
     vector<DacData> newdaclist;
     
     for(DacManagerBase* dacManager : dacManagers) {
+        // ask every dac manager for an updated list of DacData objects
+        // and insert them into our new vector.
         vector<DacData> newdacs = dacManager->updateDacList();
         newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
         
     }
     
-    for(DacData& dac : dacDataList) {
-        bool stillavailable = false;
-        for(DacData& newdac : newdaclist) {
-            if(newdac.id == dac.id) {
-                stillavailable = true;
+    // go through the existing list, check against the new
+    // list and if it can't find it any more, mark it as
+    // unavailable.
+    
+    for(DacData& dacdata : dacDataList) {
+        bool nowavailable = false;
+        for(DacData& newdacdata : newdaclist) {
+            // compare the new dac to the existing one
+            if(newdacdata.id == dacdata.id) {
+                
+                // Store the new dac's availability
+                // (the new dac should always be
+                // available but just in case...)
+                nowavailable = newdacdata.available;
+                
+                // We have a dacdata that is not available
+                // but has an assigned projector which means that
+                // the projector is waiting for that dac to
+                // become available.
+                // So let's get the dac and assign it to the projector!
+                if(!dacdata.available && (dacdata.assignedProjector!=nullptr)) {
+                    DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
+                    dacdata.assignedProjector->setDac(dacToAssign);
+                    dacdata.available = true;
+                }
                 break;
             }
         }
         
-        dac.available = stillavailable;
+        dacdata.available = nowavailable;
         
     }
-    for(DacData& newdac : newdaclist) {
+    
+    // now go through the new dac list again, and find
+    // dacs that are not already in the existing list
+    for(DacData& newdacdata : newdaclist) {
         bool isnew = true;
-        for(DacData& dac : dacDataList) {
-            if(dac.id == newdac.id) {
+        for(DacData& dacdata : dacDataList) {
+            if(dacdata.id == newdacdata.id) {
                 isnew = false;
                 break;
             }
         }
         
+        // if it's new, add it to the list
         if(isnew) {
-            dacDataList.push_back(newdac);
+            dacDataList.push_back(newdacdata);
         }
     }
     
+    // sort the list (the DacData class has overloaded operators
+    // that make the list sortable alphanumerically by their IDs
 	std::sort(dacDataList.begin(), dacDataList.end());
+    
     return dacDataList; 
     
 }
@@ -97,14 +118,31 @@ const vector<DacData>& DacAssigner ::updateDacList(){
 
 bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projector){
     
-    DacData& dacdata = getDacDataForLabel(daclabel);
+    DacData* dacdataptr = &getDacDataForLabel(daclabel);
+    
+    if(&emptyDacData==dacdataptr) {
+        
+        // no dacdata found! This usually means that we're loading
+        // and the new dac hasn't been found yet. So we need to reserve
+        // one.
+        
+        // extract the type and id out of the daclabel (perhaps make this
+        // a separate function?)
+        string dactype = daclabel.substr(0, daclabel.find(" "));
+        string dacid = daclabel.substr(daclabel.find(" ")+1, string::npos);
+        
+        dacDataList.emplace_back(dactype, dacid, "", &projector);
+        dacdataptr = &dacDataList.back();
+        dacdataptr->available = false;
+       
+        return false;
+        
+    }
+    DacData& dacdata = *dacdataptr;
     
     ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, projector.label);
     
-    // TODO perhaps check to see if the dacdata is def in the list still ?
-    
-    if(&dacdata==&emptyDacData) return false;
-
+  
     // get manager for type
     DacManagerBase* manager = getManagerForType(dacdata.type);
     if(manager==nullptr) {
@@ -113,18 +151,16 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     
     
-    // if projector already has a dac then delete it! ******************************
+    // if projector already has a dac then delete it!
     disconnectDacFromProjector(projector);
-    
     
     DacBase* dacToAssign = nullptr;
     
     if(dacdata.assignedProjector!=nullptr) {
         // remove from current projector
-        // TODO remove data from dacdata in list - make sure we're using
-        // references to the same objects
         
-        // ALERT!!!! THIS IS BAD. DAC SHOULD BE GOT FROM THE DAC MANAGERS
+        // Is this bad? Maybe better to get the dac
+        // from its manager?
         dacToAssign = dacdata.assignedProjector->getDac();
         dacdata.assignedProjector->removeDac();
         dacdata.assignedProjector = nullptr;
@@ -137,18 +173,26 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     // if success
     if(dacToAssign!=nullptr) {
-        //TODO better setDac in projector
+        // give the dac to the projector
         projector.setDac(dacToAssign);
-        // projector.setDac(dac)
+        // store a reference to the projector in the
+        // dacdata
         dacdata.assignedProjector = &projector;
-        //dacdata.available = false;
+        
+    } else {
+        // if we can't get a dac object for the label
+        // the dac must have disconnected since we updated
+        // the list!
+        // Maybe we should store the projector in the
+        // DacData anyway it can be connected if / when
+        // it's found?
+        dacdata.available = false;
+        return false;
     }
-    
-    //dacdata.assignedProjector = &projector
-    
     
     return true; 
 }
+
 bool DacAssigner :: disconnectDacFromProjector(Projector& projector) {
     DacData& dacData = getDacDataForProjector(projector);
     if(dacData.assignedProjector!=nullptr) {
@@ -178,6 +222,8 @@ DacData& DacAssigner ::getDacDataForLabel(const string& label){
             return dacData;
         }
     }
+    
+    
     return emptyDacData ;
 }
 
