@@ -1,7 +1,7 @@
 //
-//  ofxLaserDacBase.cpp
+//  ofxLaserDacLaserdock.cpp
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 03/03/2019
 //
 //
 
@@ -13,16 +13,17 @@ typedef bool (LaserdockDevice::*ReadMethodPtr)(uint32_t *);
 using namespace ofxLaser;
 
 DacLaserdock:: ~DacLaserdock() {
- 	
+    // close() stops the thread and deletes the dac device
+    close();
 }
 void DacLaserdock :: close() {
     if(isThreadRunning()) {
         // also stops the thread
         waitForThread(true);
     }
-    if(device!=nullptr) {
-        delete device;
-        device = nullptr;
+    if(dacDevice!=nullptr) {
+        delete dacDevice;
+        dacDevice = nullptr;
     }
 
     
@@ -33,25 +34,25 @@ bool DacLaserdock::setup(libusb_device* usbdevice){
     // should only ever be called once. If we need to connect to a different usb device
     // we should delete and start over
     
-    if (device!=nullptr) {
+    if (dacDevice!=nullptr) {
         ofLogError("DacLaserdock::setLaserDockUsbDevice() - Laserdock device already set");
         return false;
     }
     
-    LaserdockDevice* d = new LaserdockDevice(usbdevice);
-    if(d->status() != LaserdockDevice::Status::INITIALIZED) {
+    dacDevice = new LaserdockDevice(usbdevice);
+    if(dacDevice->status() != LaserdockDevice::Status::INITIALIZED) {
         ofLogError("DacLaserdock::setLaserDockUsbDevice() - Laserdock device initialisation failed");
-        delete d;
+        delete dacDevice;
         return false;
         
     }
     // WE ARE GOOD TO GO!!!!
     
-    device = d;
+    
     
     connected = true;
     
-    device->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
+    dacDevice->max_dac_rate(&maxPPS);// returns false if unsuccessful, should probably check that
     
     // should ensure that pps get set
     pps = 0;
@@ -80,28 +81,28 @@ bool DacLaserdock::setup(libusb_device* usbdevice){
     
     bool enabled = false ;
     
-    if(!device->enable_output()){
+    if(!dacDevice->enable_output()){
         cout << "Failed enabling output state" << endl;
     }
     
-    if(!device->get_output(&enabled)){
+    if(!dacDevice->get_output(&enabled)){
         cout << "Failed reading output state" << endl;
     } else
     {
         cout << "Output Enabled/Disabled: " << enabled << endl;
     }
     
-    device->runner_mode_enable(1);
-    device->runner_mode_enable(0);
-    device->runner_mode_run(1);
-    device->runner_mode_run(0);
+    dacDevice->runner_mode_enable(1);
+    dacDevice->runner_mode_enable(0);
+    dacDevice->runner_mode_run(1);
+    dacDevice->runner_mode_run(0);
     
     LaserdockSample * samples = (LaserdockSample*) calloc(sizeof(LaserdockSample), 7);
     memset(samples, 0xFF, sizeof(LaserdockSample) * 7);
-    device->runner_mode_load(samples, 0, 7);
+    dacDevice->runner_mode_load(samples, 0, 7);
 
     serialNumber.setName("Serial");
-    serialNumber.set(device->serial_number());
+    serialNumber.set(dacDevice->serial_number());
     ofLogNotice("DacLaserdock : connecting to : " + ofToString(serialNumber));
     
     // TODO if failed, then delete device and don't start the thread
@@ -227,8 +228,6 @@ void DacLaserdock :: threadedFunction(){
 	
 		int count = samples_per_packet;
 
-		
-		
 		while(!lock()){};
 
         if(resetFlag) {
@@ -264,7 +263,7 @@ void DacLaserdock :: threadedFunction(){
 			if (newPPS>maxPPS) {
 				newPPS = pps = maxPPS;
 			}
-			if(device->set_dac_rate(newPPS)) {
+			if(dacDevice->set_dac_rate(newPPS)) {
                 pps = newPPS;
             } else {
             }
@@ -273,17 +272,15 @@ void DacLaserdock :: threadedFunction(){
         // if resetFlag and connected then disconnect
 		unlock();
 
-		if(connected) {
-            
-            
-            
-			if(!device->send_samples(samples,samples_per_packet)){
+        // just keep trying to send !
+		//if(connected) {
+			if(!dacDevice->send_samples(samples,samples_per_packet)){
 				ofLog(OF_LOG_NOTICE, "send_samples failed");
 				setConnected(false);
 			} else {
 				setConnected(true);
 			}
-		} else {
+		//} else {
 			// try to reconnect!
             //***********************************************
             // HOW DO WE HANDLE DAC FAILURE???
@@ -300,7 +297,7 @@ void DacLaserdock :: threadedFunction(){
 			};
              */
 			
-		}
+		//}
 	}
 	
 	free(samples);

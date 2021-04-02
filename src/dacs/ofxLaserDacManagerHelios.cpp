@@ -39,7 +39,7 @@ vector<DacData> DacManagerHelios :: updateDacList(){
     // add data for dacs we already know about
     for(auto& dacpair : dacsById) {
         DacHelios* heliosdac = (DacHelios*) dacpair.second;
-        DacData data(getType(), heliosdac->serialNumber);
+        DacData data(getType(), heliosdac->dacName);
         daclist.push_back(data);
 
     }
@@ -61,8 +61,8 @@ vector<DacData> DacManagerHelios :: updateDacList(){
             DacHelios* dac = (DacHelios*)dacpair.second; 
             //dac->dacDevice;
             if(dac->usbDevice == usbdevice) {
-                cout << "found dac already in use " << dac->serialNumber << endl;
-                DacData data(getType(), dac->serialNumber);
+                cout << "found dac already in use " << dac->dacName << endl;
+                DacData data(getType(), dac->dacName);
                 daclist.push_back(data);
                 dacalreadyinuse = true;
                 break;

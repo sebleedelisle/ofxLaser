@@ -1,8 +1,8 @@
 //
-//  ofxLaserDacBase.hpp
+//  ofxLaserDacHelios.h
 //  ofxLaser
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 07/05/2020.
 //
 //
 
@@ -79,7 +79,7 @@ class DacHelios : public DacBase, ofThread{
 	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
 	//string getLabel(){return "Helios";};
-    string getId() override{return "Helios " + ofToString(serialNumber);};
+    string getId() override{return "Helios " + ofToString(dacName);};
     
 	
 
@@ -91,7 +91,7 @@ class DacHelios : public DacBase, ofThread{
 	ofParameter<int> pointBufferDisplay;
 	ofParameter<string> deviceName;
     
-    string serialNumber;
+    string dacName;
     HeliosDacDevice* dacDevice;
     libusb_device* usbDevice;
     
@@ -117,9 +117,6 @@ class DacHelios : public DacBase, ofThread{
 	//DacHeliosManager &heliosManager;
 	
    
-	// ONLY to be accessed within thread
-	string deviceId;
-	
 	
 };
 

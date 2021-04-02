@@ -1,8 +1,8 @@
 //
-//  ofxLaserDacBase.hpp
+//  ofxLaserDacLaserdock.hpp
 //  ofxLaser
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 03/03/2019.
 //
 //
 
@@ -63,8 +63,7 @@ class DacLaserdock : public DacBase, ofThread{
 
 	void setConnected(bool state);
 	
-	//LaserdockDeviceManager &lddmanager;
-	LaserdockDevice * device = nullptr;
+	LaserdockDevice * dacDevice = nullptr;
 	
 	LaserdockSample sendpoint, lastpoint;
 	deque<LaserdockSample*> bufferedPoints;
