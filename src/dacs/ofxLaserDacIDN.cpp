@@ -88,7 +88,7 @@ void DacIDN :: threadedFunction(){
 	while(isThreadRunning()) {
 		
 		// wait for the last frame to finish...
-		unsigned usWait = lastFrameDuration - (ofGetElapsedTimeMicros() - lastFrameTime);
+		unsigned long long usWait = lastFrameDuration - (ofGetElapsedTimeMicros() - lastFrameTime);
 		if((int)usWait > 0) sleep(usWait/1000);
 		
 		// and also wait until we have a new frame!

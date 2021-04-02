@@ -257,7 +257,7 @@ bool Zone :: mousePressed(ofMouseEventArgs &e){
 	
 	for(size_t i= 0; i<handles.size(); i++) {
 		if(handles[i].hitTest(mousePoint)) {
-			startDragging(i, mousePoint);
+			startDragging((int)i, mousePoint);
 			handleHit = true;
 		}
 		

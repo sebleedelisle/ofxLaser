@@ -123,7 +123,7 @@ void ZoneTransform::draw() {
 	
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
-		int y = i/(xDivisions+1);
+		int y = (int)i/(xDivisions+1);
 				
 		ofColor edge = ofColor(255);
 		ofColor inside  = editSubdivisions?ofColor(100,100,255):ofColor(0,0,255);
@@ -148,7 +148,7 @@ void ZoneTransform::draw() {
 	
 	if(selected) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
-			if((editSubdivisions) || (isCorner(i))) dstHandles[i].draw();
+			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw();
 		}
 	}
 	ofPopMatrix();
@@ -439,7 +439,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].hitTest(mousePoint)) {
 			
-			if(!editSubdivisions && !isCorner(i)) continue;
+			if(!editSubdivisions && !isCorner((int)i)) continue;
 			
 			dstHandles[i].startDrag(mousePoint);
 			handleHit = true;

@@ -815,13 +815,13 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 					
 					if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
 						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
-						nextDotIndex = j;
+						nextDotIndex = (int)j;
 						reversed = false;
 					}
 					
 					if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
 						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
-						nextDotIndex = j;
+						nextDotIndex = (int)j;
 						reversed = true;
 					}
 					
@@ -915,7 +915,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 	}
 	
 	dac->sendFrame(laserPoints);
-    numPoints = laserPoints.size();
+    numPoints = (int)laserPoints.size();
 	
 	if(sortedshapepoints.size()>0) {
 		if(smoothHomePosition) {
@@ -946,7 +946,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 		
 		// add testpattern points for this zone...
 		// get array of segmentpoints and append them
-		deque<Shape*> testPatternShapes = getTestPatternShapesForZone(i);
+		deque<Shape*> testPatternShapes = getTestPatternShapesForZone((int)i);
 		
 		zoneshapes.insert(zoneshapes.end(), testPatternShapes.begin(), testPatternShapes.end());
 		
@@ -1362,7 +1362,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			frontBuffer.resize(colourChangeIndexOffset);
 		}
 		
-		for(int i = (int)laserPoints.size()+rearBuffer.size()-1; i>=0; i--) {
+		for(int i = (int)(laserPoints.size()+rearBuffer.size())-1; i>=0; i--) {
 			
 			Point& p = (i<laserPoints.size()) ? laserPoints[i] : rearBuffer[i-laserPoints.size()];
 //

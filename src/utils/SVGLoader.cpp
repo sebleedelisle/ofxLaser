@@ -47,7 +47,7 @@ int SVGLoader:: startLoad(string path) {
 	
 	loadCount = 0;
 	
-	int size = files.size();
+	int size = (int)files.size();
 
 	SVGLoader::addToQueue(this); 
 	SVGLoader::startQueueLoading();
@@ -150,7 +150,7 @@ void SVGLoader::threadedFunction() {
 		}
 		file.close();
 		
-		loadCount=i+1;
+		loadCount=(int)i+1;
 		
 		loadedCount++;
 //		}
@@ -198,7 +198,7 @@ ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 		
 		ofxLaser::Graphic* returngraphic = &empty;
 		
-		if(index>=(int)frames.size()) index = frames.size()-1;
+		if(index>=(int)frames.size()) index = (int)frames.size()-1;
 		if(index<0) index = 0;
 		
 		if((frames.size()!=0) && (loadCount>index)) {

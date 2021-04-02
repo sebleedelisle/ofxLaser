@@ -97,7 +97,7 @@ class Manager {
     
     vector<Projector*>& getProjectors();
     Projector& getProjector(int index = 0);
-    int getNumProjectors() { return projectors.size(); };
+    int getNumProjectors() { return (int)projectors.size(); };
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
 

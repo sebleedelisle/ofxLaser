@@ -60,7 +60,7 @@ vector<DacData> DacManagerLaserdock :: updateDacList(){
         
     }
 
-    libusb_free_device_list(libusb_device_list, cnt);
+    libusb_free_device_list(libusb_device_list, (int)cnt);
     return daclist;
     
 }
@@ -105,7 +105,7 @@ DacBase* DacManagerLaserdock :: getAndConnectToDac(const string& id){
         }
     }
 
-    libusb_free_device_list(libusb_device_list, cnt);
+    libusb_free_device_list(libusb_device_list, (int)cnt);
     
     
     

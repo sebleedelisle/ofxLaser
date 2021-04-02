@@ -410,7 +410,7 @@ ofPath Graphic :: transformPath(ofPath& path) {
 		ofPolyline newpoly = poly;
 		transformPolyline(newpoly);
 		returnpath.moveTo(newpoly[0]);
-		for( size_t i= 1; i < newpoly.size(); ++i ) returnpath.lineTo( newpoly[i] );
+		for( size_t i= 1; i < newpoly.size(); ++i ) returnpath.lineTo( newpoly[(int)i] );
 	}
 	return returnpath;
 	
@@ -447,7 +447,7 @@ void Graphic ::  connectLineSegments() {
 		float smallestAngle = 360;
 		int closestIndex = -1;
 		
-		for(int j = i+1; j<polylines.size(); j++) {
+		for(int j = (int)i+1; j<polylines.size(); j++) {
 			
 			if(colours[i]!=colours[j]) continue; // check close?
 			
@@ -600,7 +600,7 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 		} else if(!startClosest1 && !startClosest2) {
 			
 			//ofLog(OF_LOG_NOTICE, "connecting new end to existing end");
-			for(int j=poly2Vertices.size()-1; j>=0; j--) {
+			for(int j=(int)poly2Vertices.size()-1; j>=0; j--) {
 				poly1.addVertex(poly2Vertices[j]);
 			}
 
@@ -609,7 +609,7 @@ bool Graphic :: joinPolylines(ofPolyline& poly1, ofPolyline &poly2) {
 		// new line end compared to existing line start
 		} else if(startClosest1 && !startClosest2) {
 			//ofLog(OF_LOG_NOTICE, "connecting new end to existing start");
-			for(int j=poly2Vertices.size()-1; j>=0; j--) {
+			for(int j=(int)poly2Vertices.size()-1; j>=0; j--) {
 				//ofLog(OF_LOG_NOTICE, " - inserting element "+ofToString(j)+" into poly1 : " + ofToString(poly2Vertices[j]));
 				poly1.insertVertex(poly2Vertices[j], 0);
 			}
