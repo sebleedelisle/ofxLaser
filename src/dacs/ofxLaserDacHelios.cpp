@@ -258,7 +258,11 @@ void DacHelios :: threadedFunction(){
                 // so if we're not, there's a danger that we could
                 // build up a huge buffer of frames. This should be checked
                 // in sendPoints, although
-				if( (frameMode || nextFrame==nullptr ) &&
+                //
+                // note that it's a while, not an if, so we keep pulling off
+                // frames as long as there is a new one - that way we
+                // don't get a build up of frames
+				while( (frameMode || nextFrame==nullptr ) &&
 					 (framesChannel.tryReceive(newFrame)) ) {
                     // we have a new frame, so delete the old one and store it
 					if(nextFrame!=nullptr) {

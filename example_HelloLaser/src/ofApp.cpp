@@ -295,10 +295,13 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
 	}
 	if(e.key=='f') {
         ofToggleFullscreen();
+       
 	}
     if(e.key==OF_KEY_TAB) {
         laser.nextProjector();
+       
     }
+   
 }
 
 //--------------------------------------------------------------

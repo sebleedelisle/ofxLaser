@@ -32,6 +32,8 @@ class UI {
 
    
     static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier);
+    static bool addFloatAsIntPercentage(ofParameter<float>& param); 
+
     static bool addCheckbox(ofParameter<bool>&param);
     
     static bool addColour(ofParameter<ofFloatColor>& parameter, bool alpha = false);
@@ -46,22 +48,48 @@ class UI {
         
     }
     static bool mousePressed(ofMouseEventArgs &e) {
-    
+        
         ImGui::GetIO().MouseDown[e.button] = true;
         //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
-        if(ImGui::GetIO().WantCaptureMouse) return true;
-        else return false;
+        if(ImGui::GetIO().WantCaptureMouse) {
+            ofLogNotice("ImGui captured mouse press");
+            return true;
+        }
+        else {
+            ofLogNotice("ImGui no capture mouse press"); 
+            return false;
+        }
     }
     static bool mouseReleased(ofMouseEventArgs &e) {
         ImGui::GetIO().MouseDown[e.button] = false;
         if(ImGui::GetIO().WantCaptureMouse) return true;
         else return false;
     }
+    static bool keyPressed(ofKeyEventArgs &e) {
+        ImGui::GetIO().KeysDown[e.key] = true;
+        if(ImGui::GetIO().WantCaptureKeyboard) {
+            
+            ofLogNotice("ImGui captured key press");
+            return true;
+        }
+        else {
+            ofLogNotice("ImGui no capture key press");
+            return false;
+        }
+    }
+    static bool keyReleased(ofKeyEventArgs &e) {
+        ImGui::GetIO().KeysDown[e.key] = false;
+        if(ImGui::GetIO().WantCaptureKeyboard) {
+          
+            return true;
+        }
+        else return false;
+    }
     static void render();
     
     static void toolTip(const char* desc)
     {
-        ImGui::SameLine();
+        ImGui::SameLine(0,3);
         ImGui::TextDisabled("(?)");
         if (ImGui::IsItemHovered())
         {

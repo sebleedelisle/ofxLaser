@@ -55,6 +55,8 @@ void UI::setupGui() {
     ofEvents().mouseDragged.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
     ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
+   // ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
+   // ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
 }
 
 void UI::updateGui() {
@@ -72,7 +74,7 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
   
 }
 
@@ -154,6 +156,16 @@ bool UI::addColour(ofParameter<ofColor>& parameter, bool alpha) {
 bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier) {
     int value = param*multiplier;
     if (ImGui::SliderInt(param.getName().c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d")) {
+        param.set((float)value/multiplier);
+        return true;
+    } else {
+        return false;
+    }
+}
+bool UI::addFloatAsIntPercentage(ofParameter<float>& param) {
+    float multiplier = 100.0f;
+    int value = param*multiplier;
+    if (ImGui::SliderInt(param.getName().c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d%%")) {
         param.set((float)value/multiplier);
         return true;
     } else {

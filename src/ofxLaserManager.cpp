@@ -313,10 +313,23 @@ void Manager::send(){
 }
 
 void Manager:: drawUI(bool expandPreview){
+    
+    drawPreviews(expandPreview);
+    
+    ofxLaser::UI::updateGui();
+    ofxLaser::UI::startGui();
+    
+    drawLaserGui();
+    ofxLaser::UI::render();
 	
-	// if expandPreview is true, then we expand the preview area to the
-	// maximum space that we have available.
-	
+}
+
+void Manager :: drawPreviews(bool expandPreview) {
+    
+    
+    // if expandPreview is true, then we expand the preview area to the
+    // maximum space that we have available.
+    
     
     // figure out the top and bottom section height
     
@@ -328,170 +341,164 @@ void Manager:: drawUI(bool expandPreview){
     // we're showing the previews then they go at the top
     
 
-	int lowerSectionHeight = 310;
+    int lowerSectionHeight = 310;
     
     int thirdOfHeight = (ofGetHeight()-(guiSpacing*3))/3;
   
     if(lowerSectionHeight>thirdOfHeight) lowerSectionHeight = thirdOfHeight;
-	
-	// showPreview determines whether we show the preview
-	// laser graphics on screen or not.
-	if(showPreview) {
-		
-		ofPushStyle();
-		
-		// work out the scale for the preview...
-		// default scale is 1 with an 8 pixel margin
-		previewScale = 1;
-		previewOffset = glm::vec2(guiSpacing,guiSpacing);
+    
+    // showPreview determines whether we show the preview
+    // laser graphics on screen or not.
+    if(showPreview) {
+        
+        ofPushStyle();
+        
+        // work out the scale for the preview...
+        // default scale is 1 with an 8 pixel margin
+        previewScale = 1;
+        previewOffset = glm::vec2(guiSpacing,guiSpacing);
         
         if(height>(thirdOfHeight*2)) {
             previewScale = (float)(thirdOfHeight*2) / (float)height;
         }
-		// but if we're viewing a projector warp ui
-		// then shrink the preview down and move it underneath
-		if(currentProjector>=0) {
+        // but if we're viewing a projector warp ui
+        // then shrink the preview down and move it underneath
+        if(currentProjector>=0) {
             int positionY = 800 + guiSpacing*2;
             if((thirdOfHeight*2)+(guiSpacing*2) < positionY ) {
                 positionY = (thirdOfHeight*2)+(guiSpacing*2);
                 
             }
-			previewOffset = glm::vec2(guiSpacing,positionY);
-			previewScale = (float)lowerSectionHeight/(float)height;
-			
-			
-			// but if we're expanding the preview, then work out the scale
-			// to fill the whole screen
-		} else if(expandPreview) {
-			previewOffset = glm::vec2(0,0);
-			previewScale = (float)ofGetWidth()/(float)width;
-			if(height*previewScale>ofGetHeight()) {
-				previewScale = (float)ofGetHeight()/(float)height;
-			}
-			
-		}
-		
-		renderPreview();
-		
-		// this renders the input zones in the graphics source space
-		for(size_t i= 0; i<zones.size(); i++) {
-			zones[i]->visible = showZones;
-			zones[i]->active = showZones && (currentProjector<0);
-			
-			zones[i]->offset.set(previewOffset);
-			zones[i]->scale = previewScale;
-			
-			zones[i]->draw();
-		}
-		
-		ofPushMatrix();
-		laserMask.setOffsetAndScale(previewOffset,previewScale);
-		laserMask.draw(showBitmapMask);
-		ofTranslate(previewOffset);
-		ofScale(previewScale, previewScale);
-		
-		
-		ofPopMatrix();
-		ofPopStyle();
+            previewOffset = glm::vec2(guiSpacing,positionY);
+            previewScale = (float)lowerSectionHeight/(float)height;
+            
+            
+            // but if we're expanding the preview, then work out the scale
+            // to fill the whole screen
+        } else if(expandPreview) {
+            previewOffset = glm::vec2(0,0);
+            previewScale = (float)ofGetWidth()/(float)width;
+            if(height*previewScale>ofGetHeight()) {
+                previewScale = (float)ofGetHeight()/(float)height;
+            }
+            
+        }
+        
+        renderPreview();
+        
+        // this renders the input zones in the graphics source space
+        for(size_t i= 0; i<zones.size(); i++) {
+            zones[i]->visible = showZones;
+            zones[i]->active = showZones && (currentProjector<0);
+            
+            zones[i]->offset.set(previewOffset);
+            zones[i]->scale = previewScale;
+            
+            zones[i]->draw();
+        }
+        
+        ofPushMatrix();
+        laserMask.setOffsetAndScale(previewOffset,previewScale);
+        laserMask.draw(showBitmapMask);
+        ofTranslate(previewOffset);
+        ofScale(previewScale, previewScale);
+        
+        
+        ofPopMatrix();
+        ofPopStyle();
         
        
         
-		
-	}
-	
-	
-	ofPushStyle();
-	
-	// if none of the projectors are selected then draw as many as we can on screen
-	if(currentProjector==-1) {
-		ofPushMatrix();
-		float scale = 1 ;
-		if((lowerSectionHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
-			scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(lowerSectionHeight+guiSpacing)*(float)projectors.size());
-			//ofScale(scale, scale);
-		}
-		
-		ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
-		
-		for(size_t i= 0; i<projectors.size(); i++) {
-			if((!expandPreview)&&(showPathPreviews)) {
-				ofFill();
-				ofSetColor(0);
-				ofRectangle projectorPreviewRect(((lowerSectionHeight*scale) +guiSpacing)*i,0,lowerSectionHeight*scale, lowerSectionHeight*scale);
-				ofDrawRectangle(projectorPreviewRect);
-				projectors[i]->drawLaserPath(projectorPreviewRect);
-			}
-			// disables the warp interfaces
-			projectors[i]->hideWarpGui();
-		}
-		
-		ofPopMatrix();
-		
-		// if we're not filling the preview to fit the screen, draw the projector
-		// gui elements
-		
-		
-	} else  {
-		// ELSE we have a currently selected projector, so draw the various UI elements
-		// for that...
-		
-		for(size_t i= 0; i<projectors.size(); i++) {
-			if((int)i==currentProjector) {
-				
-				ofFill();
-				ofSetColor(0);
+        
+    }
+    
+    
+    ofPushStyle();
+    
+    // if none of the projectors are selected then draw as many as we can on screen
+    if(currentProjector==-1) {
+        ofPushMatrix();
+        float scale = 1 ;
+        if((lowerSectionHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
+            scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(lowerSectionHeight+guiSpacing)*(float)projectors.size());
+            //ofScale(scale, scale);
+        }
+        
+        ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
+        
+        for(size_t i= 0; i<projectors.size(); i++) {
+            if((!expandPreview)&&(showPathPreviews)) {
+                ofFill();
+                ofSetColor(0);
+                ofRectangle projectorPreviewRect(((lowerSectionHeight*scale) +guiSpacing)*i,0,lowerSectionHeight*scale, lowerSectionHeight*scale);
+                ofDrawRectangle(projectorPreviewRect);
+                projectors[i]->drawLaserPath(projectorPreviewRect);
+            }
+            // disables the warp interfaces
+            projectors[i]->hideWarpGui();
+        }
+        
+        ofPopMatrix();
+        
+        // if we're not filling the preview to fit the screen, draw the projector
+        // gui elements
+        
+        
+    } else  {
+        // ELSE we have a currently selected projector, so draw the various UI elements
+        // for that...
+        
+        for(size_t i= 0; i<projectors.size(); i++) {
+            if((int)i==currentProjector) {
+                
+                ofFill();
+                ofSetColor(0);
                 float size = 800;
                 if(size>thirdOfHeight*2) size = thirdOfHeight*2;
                 if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
-				
-				ofDrawRectangle(guiSpacing,guiSpacing,size,size);
-				projectors[i]->showWarpGui();
-				projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
-				projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
-				
-				
-			} else {
-				projectors[i]->hideWarpGui();
-			}
-			
-		}
-		
-	}
-	
-	ofPopStyle();
-	
-
-	if((!expandPreview) && (guiIsVisible)) {
-		
-		// if this is the current projector or we have 2 or fewer projectors, then render the gui
-		if(!showProjectorSettings) {
-			
-	
-			
-			int w = dacStatusBoxSmallWidth;
-			int x = ofGetWidth() - 220; // gui.getPosition().x-w-guiSpacing;
-			
-			// draw all the status boxes but small
-			
-			for(size_t i= 0; i<projectors.size(); i++) {
-
-				//projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
-			}
-			
-			
-		}
-		
-		
-	}
+                
+                ofDrawRectangle(guiSpacing,guiSpacing,size,size);
+                projectors[i]->showWarpGui();
+                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
+                projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
+                
+                
+            } else {
+                projectors[i]->hideWarpGui();
+            }
+            
+        }
+        
+    }
     
-    ofxLaser::UI::updateGui();
-    ofxLaser::UI::startGui();
+    ofPopStyle();
     
-    drawLaserGui();
-    ofxLaser::UI::render();
-	
+
+    if((!expandPreview) && (guiIsVisible)) {
+        
+        // if this is the current projector or we have 2 or fewer projectors, then render the gui
+        if(!showProjectorSettings) {
+            
+    
+            
+            int w = dacStatusBoxSmallWidth;
+            int x = ofGetWidth() - 220; // gui.getPosition().x-w-guiSpacing;
+            
+            // draw all the status boxes but small
+            
+            for(size_t i= 0; i<projectors.size(); i++) {
+
+                //projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
+            }
+            
+            
+        }
+        
+        
+    }
+    
+    
 }
-
 void Manager :: renderPreview() {
     
 
@@ -1033,7 +1040,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 
     // DAC LIST -------------------------------------------------------------
     
-    ImGui::PushItemWidth(projectorpanelwidth-spacing*2 - 80);
+    ImGui::PushItemWidth(projectorpanelwidth-spacing*2);
     
     // get the dacs from the dacAssigner
     const vector<DacData>& dacList = dacAssigner.getDacList();
@@ -1041,10 +1048,10 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 	if(dacList.size()>0) comboLabel = projector->getDacLabel();
 	else comboLabel = "No DACs discovered"; 
 	
-
-    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(14.0f, 14.0f));
-   
-    if (ImGui::BeginCombo("##combo", comboLabel.c_str())){ // The second parameter is the label previewed before opening the combo.
+    
+  //  ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(14.0f, 14.0f));
+    
+    if (ImGui::ListBoxHeader("##listbox", MIN(5, dacList.size()))){ // The second parameter is the label previewed before opening the combo.
     
         // add a combo box item for every element in the list
         for(const DacData& dacdata : dacList) {
@@ -1080,20 +1087,22 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         
         //    if (is_selected)
         //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
-        ImGui::EndCombo();
+        //ImGui::EndCombo();
+        ImGui::ListBoxFooter();
     }
-    ImGui::PopStyleVar();
+    //ImGui::PopStyleVar();
     ImGui::PopItemWidth();
-    ImGui::SameLine();
-    if(ImGui::Button("Refresh")) {
-        dacAssigner.updateDacList();
-        
-    }
+    
     if(projector->dac != &projector->emptyDac) {
         if(ImGui::Button("Disconnect DAC")) {            dacAssigner.disconnectDacFromProjector(*projector);
         }
+        ImGui::SameLine();
     }
     
+    if(ImGui::Button("Refresh DAC list")) {
+        dacAssigner.updateDacList();
+        
+    }
     // ----------------------------------------------
     
     

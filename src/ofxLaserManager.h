@@ -61,6 +61,9 @@ class Manager {
     void setup(int width, int height);
     void update();
     void drawUI(bool fullscreen = false);
+    void drawPreviews(bool fullscreen = false);
+    
+    
     void renderPreview();
     
     void beginDraw() {
