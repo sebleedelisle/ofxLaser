@@ -322,28 +322,28 @@ bool Zone ::  loadSettings() {
 	
 	
 	// LEGACY XML settings
-	ofParameterGroup params;
-	vector<ofParameter<glm::vec3>> points;
-	points.resize(handles.size());
-	for(size_t i= 0; i<handles.size(); i++) {
-		params.add(points[i].set("point_"+ofToString(i),ofPoint()));
-		
-	}
-	
-	ofXml settings;
-	if(settings.load(label+".xml")){
-        
-        ofDeserialize( settings, params );
-
-		for(size_t i= 0; i<handles.size(); i++) {
-			handles[i].set(points[i]);
-		}
-		
-		isDirty = true;
-		saveSettings();
-		
-		return true;
-	}
+//	ofParameterGroup params;
+//	vector<ofParameter<glm::vec3>> points;
+//	points.resize(handles.size());
+//	for(size_t i= 0; i<handles.size(); i++) {
+//		params.add(points[i].set("point_"+ofToString(i),ofPoint()));
+//
+//	}
+//
+//	ofXml settings;
+//	if(settings.load(label+".xml")){
+//
+//        ofDeserialize( settings, params );
+//
+//		for(size_t i= 0; i<handles.size(); i++) {
+//			handles[i].set(points[i]);
+//		}
+//
+//		isDirty = true;
+//		saveSettings();
+//
+//		return true;
+//	}
 	return false;
 	
 

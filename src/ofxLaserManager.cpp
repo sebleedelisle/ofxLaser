@@ -659,6 +659,7 @@ void Manager::initGui() {
     loadSettings();
     
 	showPreview = true;
+    testPattern = 0; 
 	
     // TODO load the correct number of projectors
     
