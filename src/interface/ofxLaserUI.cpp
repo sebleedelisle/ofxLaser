@@ -65,8 +65,11 @@ void UI::updateGui() {
     
     // Update settings
     // todo make dependent of OS
+#ifdef TARGET_OSX
     ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
-
+#else
+    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+#endif
 }
 
 void UI::startGui() {
@@ -74,7 +77,7 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
   
 }
 
