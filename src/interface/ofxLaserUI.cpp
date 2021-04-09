@@ -51,8 +51,8 @@ void UI::setupGui() {
     ImGui::GetIO().MouseDrawCursor = false;
     
     // TODO remove on close down ? 
-    ofEvents().mouseMoved.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
-    ofEvents().mouseDragged.add(&UI::updateMouse,OF_EVENT_ORDER_APP);
+    ofEvents().mouseMoved.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
+    ofEvents().mouseDragged.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
    // ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);

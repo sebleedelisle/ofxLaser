@@ -43,9 +43,10 @@ class UI {
     
     static void addParameterGroup(ofParameterGroup& parameterGroup);
     
-    static void updateMouse(ofMouseEventArgs &e) {
-        ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
-        
+    static bool updateMouse(ofMouseEventArgs &e) {
+		ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+		//ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
+		return false; // propogate events 
     }
     static bool mousePressed(ofMouseEventArgs &e) {
         
