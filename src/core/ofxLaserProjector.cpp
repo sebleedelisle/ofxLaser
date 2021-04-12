@@ -16,21 +16,22 @@ Projector::Projector(string projectorlabel) {
     dac = &emptyDac;
     
 	laserHomePosition = ofPoint(400,400);
-	label = projectorlabel;
-	//maskRectangle.set(0,0,800,800);
-	
-    renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast")); // second argument is passed into constructor for the RenderProfile
+	id = projectorlabel;
+	 
+    // second argument is passed into constructor for the RenderProfile
+    renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast"));
 	renderProfiles.emplace(OFXLASER_PROFILE_DEFAULT, ofToString("Default"));
 	renderProfiles.emplace(OFXLASER_PROFILE_DETAIL, ofToString("High detail"));
 	
 	numTestPatterns = 9;
-    //guiIsVisible = true;
-	
+ 	
 	guiInitialised = false;
 	
 };
 
 Projector::~Projector() {
+    
+    // NOTE that the manager saves the projector settings when it closes 
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
 	pps.removeListener(this, &Projector::ppsChanged);
 	armed.removeListener(this, &ofxLaser::Projector::setArmed);
@@ -70,36 +71,26 @@ void Projector::setDefaultHandleSize(float size) {
 	
 }
 
-void Projector :: initGui() {
+void Projector :: initAndLoadSettings() {
 
-	//gui = new ofxPanel();
-    
-    
-	//params.setup(label, label+".json");
-	params.setName(label);
+	settings.setName(id);
 	
-	params.add(armed.set("ARMED", false));
-	armed.addListener(this, &ofxLaser::Projector::setArmed);
-    
-    
-    params.add(intensity.set("Intensity", 1,0,1));
-	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
-	params.add(resetDac.set("Reset DAC", false));
-    params.add(dacId.set("dacId", ""));
-    
+	settings.add(armed.set("ARMED", false));
+    settings.add(intensity.set("Intensity", 1,0,1));
+	settings.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+    settings.add(dacId.set("dacId", ""));
     
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
-	pps.addListener(this, &Projector::ppsChanged);
-    
+	 
 	projectorparams.add(colourChangeOffset.set("Colour change offset", 2,0,6));
 	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
-	projectorparams.add(moveSpeed.set("Move Speed", 3.5,0.1,50));
-	projectorparams.add(shapePreBlank.set("Hold off before", 3,0,8));
+	projectorparams.add(moveSpeed.set("Move Speed", 4.0 ,0.1,50));
+	projectorparams.add(shapePreBlank.set("Hold off before", 1,0,8));
 	projectorparams.add(shapePreOn.set("Hold on before", 0,0,8));
 	projectorparams.add(shapePostOn.set("Hold on after", 0,0,8));
-	projectorparams.add(shapePostBlank.set("Hold off after", 3,0,8));
+	projectorparams.add(shapePostBlank.set("Hold off after", 1,0,8));
 	
 	projectorparams.add(flipX.set("Flip X", false));
 	projectorparams.add(flipY.set("Flip Y",false));
@@ -118,7 +109,7 @@ void Projector :: initGui() {
 
 	projectorparams.add(advanced);
 	
-	params.add(projectorparams);
+	settings.add(projectorparams);
 	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
@@ -132,7 +123,7 @@ void Projector :: initGui() {
 	renderparams.add(fast.params);
 	renderparams.add(detail.params);
     
-    defaultProfile.speed = 3;
+    defaultProfile.speed = 4;
     defaultProfile.acceleration = 0.5;
     defaultProfile.cornerThreshold  = 40;
     defaultProfile.dotMaxPoints = 10;
@@ -147,7 +138,7 @@ void Projector :: initGui() {
     detail.cornerThreshold  = 15;
     detail.dotMaxPoints = 20;
     
-	params.add(renderparams);
+	settings.add(renderparams);
 	
 	
 	colourParams.setName("Colour calibration");
@@ -170,26 +161,26 @@ void Projector :: initGui() {
     colourParams.add(blue25.set("blue 25", 0.25,0,1));
     colourParams.add(blue0.set("blue 0", 0,0,1));
 	
-	params.add(colourParams);
-	
+	settings.add(colourParams);
+
     zonesEnabled.resize(zones.size());
-    
+
 	ofParameterGroup zonemutegroup;
 	zonemutegroup.setName("Mute Zones");
 	zonesMuted.resize(zones.size());
 	for(size_t i = 0; i<zones.size(); i++) {
 		zonemutegroup.add(zonesMuted[i].set(zones[i]->label, false));
 	}
-	params.add(zonemutegroup);
-    
+	settings.add(zonemutegroup);
+
     ofParameterGroup zonesologroup;
     zonesologroup.setName("Solo Zones");
     zonesSoloed.resize(zones.size());
     for(size_t i = 0; i<zones.size(); i++) {
         zonesologroup.add(zonesSoloed[i].set(zones[i]->label, false));
     }
-    
-    params.add(zonesologroup);
+
+    settings.add(zonesologroup);
 	
 	for(size_t i = 0; i<zones.size(); i++) {
 		
@@ -207,25 +198,27 @@ void Projector :: initGui() {
 		
 		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
 		
-		params.add(zonemaskgroup);
+		settings.add(zonemaskgroup);
 		
 		ofParameterGroup zonewarpgroup;
 		zonewarpgroup.setName(zones[i]->label+"warp");
 		zonewarpgroup.add(zoneTransforms[i]->params);
-		params.add(zonewarpgroup);
+		settings.add(zonewarpgroup);
 	
 	}
-	
+     
+     
+     
+    armed.addListener(this, &ofxLaser::Projector::setArmed);
+    pps.addListener(this, &Projector::ppsChanged);
+  
 
     loadSettings();
    
-    
     dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
 	if(colourChangeOffset<0) colourChangeOffset = 0;
-	
-	minimiseGui();
-	
+
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		zoneTransforms[i]->initGuiListeners();
 		zoneTransforms[i]->loadSettings(); 
@@ -235,8 +228,7 @@ void Projector :: initGui() {
 	testPattern = 0;
     for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
     
-    initListeners();
-    
+   
 	guiInitialised = true;
 
 	
@@ -248,21 +240,6 @@ void Projector :: initGui() {
 
 void Projector ::setArmed(bool& armed){
     dac->setArmed(armed); 
-}
-
-void Projector :: minimiseGui() {
-//	gui->minimizeAll();
-//	ofxGuiGroup* g;
-//	//	g = dynamic_cast <ofxGuiGroup *>(gui->getControl(projectorlabel));
-//	//	if(g) g->maximize();
-//	ofxGuiGroup* projsettings = dynamic_cast <ofxGuiGroup *>(gui->getControl("Projector settings"));
-//	if(projsettings) {
-//		projsettings->maximize();
-//    	g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Output position offset"));
-//    	if(g) g->minimize();
-//		g = dynamic_cast <ofxGuiGroup *>(projsettings->getControl("Advanced"));
-//		if(g) g->minimize();
-//	}
 }
 
 
@@ -283,7 +260,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	
 	zones.push_back(zone);
 	
-	zoneTransforms.push_back(new ZoneTransform(zone->index, "Warp"+label+"Zone"+ofToString(zone->index+1)));
+	zoneTransforms.push_back(new ZoneTransform(zone->index, "Warp"+id+"Zone"+ofToString(zone->index+1)));
 	ZoneTransform& zoneTransform = *zoneTransforms.back();
     
     zonesMuted.resize(zones.size());
@@ -306,9 +283,11 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	zoneMasks.emplace_back(zone->rect);
 	
 	leftEdges.push_back(0);
-	rightEdges.push_back(0);
+    //leftEdges.back().set("Left edge", 0, 0, 1));
+	rightEdges.push_back(1);
 	topEdges.push_back(0);
-	bottomEdges.push_back(0);
+	bottomEdges.push_back(1);
+    
 	
 	if(guiInitialised) {
 		ofLogWarning("Projector::addZone() - Please add zones before initialising the laser gui"); 
@@ -416,14 +395,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 	ofPushStyle();
 	ofNoFill();
 
-    float warpscale = w/800.0f ;
-//    ofPushMatrix();
-//	ofTranslate(x,y);
-//    ofScale(warpscale,warpscale);
-//
-//    ofPopMatrix();
-//
-	
+    float warpscale = w/800.0f;
 
 	// draw the handles for all the warp UIs
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
@@ -468,23 +440,6 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 		ofVertex(p);
 		ofEndShape(true);
 		
-//		ofNoFill();
-//		ofSetColor(0,0,255,200);
-//
-//		ofBeginShape();
-//		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-//		ofVertex(p);
-//		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-//		ofVertex(p);
-//		ofEndShape(true);
-		
-		
-		//ofPopMatrix();
-		
 	}
 	
 	ofPopMatrix();
@@ -502,14 +457,13 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 	ofSetColor(255);
 
-	ofDrawBitmapString(label.back(), x+w-20, y+20);
+	ofDrawBitmapString(id.back(), x+w-20, y+20);
 	ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
 	ofTranslate(x,y);
 	ofScale(w/800, h/800);
 
-	
 	ofTranslate(outputOffset);
 
 	ofPoint p;
@@ -583,68 +537,31 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 	ofPopMatrix();
 	
-//	ofNoFill();
-//	ofSetColor(255,0,0);
-//	ofDrawRectangle(x,y,w,h);
-//
-	
 }
 
 void Projector :: hideWarpGui() {
 	
 	// disable warps
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		
-		
 		ZoneTransform& warp = *zoneTransforms[i];
-		
 		warp.setVisible(false);
-		
 	}
-	
-	// move ui panel out the way
-	//gui->setPosition(ofGetWidth(), 8);
 	
 }
 void Projector :: showWarpGui() {
 	
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		
-		
 		ZoneTransform& warp = *zoneTransforms[i];
-		
 		warp.setVisible(false);
-		
 	}
 	
-	// move ui panel back into view
-	//gui->setPosition(ofGetWidth()-330, 8);
-	
 }
 
 
-void Projector :: initListeners() {
-    ofAddListener(ofEvents().mousePressed, this, &Projector::mousePressed, OF_EVENT_ORDER_APP);
-}
 
-bool Projector :: mousePressed(ofMouseEventArgs &e){
-    
-	return false;
-}
 
 void Projector::update(bool updateZones) {
 	
-	// updateZones will be true if any of the zones source points have changed.
-	
-	// todo should prob do this on a param changed message...
-	float x = round(((ofPoint)outputOffset).x*10)/10.0f;
-	float y = round(((ofPoint)outputOffset).y*10)/10.0f;
-	outputOffset = ofVec2f(x,y);
-
-	if(resetDac) {
-		resetDac = false; 
-		dac->reset();
-	}
     bool soloMode = false;
     for(size_t i = 0; i<zonesSoloed.size(); i++) {
         if(zonesSoloed[i]) {
@@ -778,12 +695,12 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		return;
 	}
 	
-	vector<ShapePoints> allzoneshapepoints;
+	vector<PointsForShape> allzoneshapepoints;
 
 	// TODO add speed multiplier to getPointsForMove function
 	getAllShapePoints(&allzoneshapepoints, pixels, speedMultiplier);
 	
-	vector<ShapePoints*> sortedshapepoints;
+	vector<PointsForShape*> sortedshapepoints;
 	
 	
 	// sort the point objects
@@ -796,7 +713,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		if(sortShapes) {
 			do {
 				
-				ShapePoints& shapePoints1 = allzoneshapepoints[currentIndex];
+				PointsForShape& shapePoints1 = allzoneshapepoints[currentIndex];
 				
 				shapePoints1.tested = true;
 				sortedshapepoints.push_back(&shapePoints1);
@@ -808,7 +725,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 				
 				for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
 					
-					ShapePoints& shapePoints2 = allzoneshapepoints[j];
+					PointsForShape& shapePoints2 = allzoneshapepoints[j];
 					if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
 					
 					shapePoints2.reversed = false;
@@ -848,7 +765,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		ofPoint currentPosition = laserHomePosition; // MUST be in projector space
 		
 		for(size_t j = 0; j<sortedshapepoints.size(); j++) {
-			ShapePoints& shapepoints = *sortedshapepoints[j];
+			PointsForShape& shapepoints = *sortedshapepoints[j];
 			if(shapepoints.size()==0) continue;
 			
 			if(currentPosition.distance(shapepoints.getStart())>2){
@@ -866,7 +783,7 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 
 			currentPosition = shapepoints.getEnd();
 			
-			ShapePoints* nextshapepoints = nullptr;
+			PointsForShape* nextshapepoints = nullptr;
 			
 			if(j<sortedshapepoints.size()-1) {
 				nextshapepoints = sortedshapepoints[j+1];
@@ -927,115 +844,151 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 }
 
 
-void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
+void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
 	
-	vector<ShapePoints>& allzoneshapepoints = *shapepointscontainer;
+	vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
 	
 	// temp vectors for storing the shapes in
-	vector<ShapePoints> zoneshapepoints;
-	vector<Point> shapepoints;
+	vector<PointsForShape> zonePointsForShapes;
+	vector<Point> shapePointBuffer;
 	
 	// go through each zone
 	for(size_t i = 0; i<zones.size(); i++) {
 		
 		if(!zonesEnabled[i]) continue;
+        
 		Zone& zone = *zones[i];
 		ZoneTransform& warp = *zoneTransforms[i];
 		ofRectangle& maskRectangle = zoneMasks[i];
-		deque<Shape*> zoneshapes = zone.shapes;
+        
+        // makes a copy so we don't mess it up if we add
+        // test shapes
+		deque<Shape*>* zoneshapes = &zone.shapes;
 		
-		// add testpattern points for this zone...
-		// get array of segmentpoints and append them
-		deque<Shape*> testPatternShapes = getTestPatternShapesForZone((int)i);
-		
-		zoneshapes.insert(zoneshapes.end(), testPatternShapes.begin(), testPatternShapes.end());
-		
-		zoneshapepoints.clear();
+        // get test pattern shapes - we have to do this even if
+        // we don't have a test pattern, so that the code at the end
+        // of this function can delete the shapes.
+        deque<Shape*> testPatternShapes = getTestPatternShapesForZone((int)i);
+        
+        if(testPattern>0) {
+            // create new deque and copy zone shapes into it
+            deque<Shape*> zoneShapesWithTestPatternShapes = zone.shapes;
+            // add testpattern points for this zone...
+            
+            zoneShapesWithTestPatternShapes.insert(zoneShapesWithTestPatternShapes.end(), testPatternShapes.begin(), testPatternShapes.end());
+            zoneshapes = &zoneShapesWithTestPatternShapes;
+        }
+        
+        deque<Shape*>& shapesInZone = *zoneshapes;
+        
+        // reuse the last vector of shapepoints
+		zonePointsForShapes.clear();
 		
 		// go through each shape in the zone
 		
-		for(size_t j = 0; j<zoneshapes.size(); j++)  {
+		for(size_t j = 0; j<shapesInZone.size(); j++)  {
 			
 			// get the points
-			Shape& shape = *(zoneshapes[j]);
+			Shape& shape = *(shapesInZone[j]);
 			
 			RenderProfile& renderProfile = getRenderProfile(shape.profileLabel);
 			
-			shapepoints.clear();
-			shape.appendPointsToVector(shapepoints, renderProfile, speedmultiplier);
+            // calculate the points for the shape and put them
+            // in the temporary point storage buffer.
+			shapePointBuffer.clear();
+			shape.appendPointsToVector(shapePointBuffer, renderProfile, speedmultiplier);
 			
+            // now we need to go through the shape and see if any of it is
+            // off the edge of the input zone. If it is we split the
+            // shape up into separate segments.
+            
 			bool offScreen = true;
-			
-			ShapePoints segmentpoints;
-			
+			PointsForShape segmentPoints;
+            segmentPoints.reversable = shape.reversable;
+            
 			//iterate through the points
-			for(int k = 0; k<shapepoints.size(); k++) {
+			for(int k = 0; k<shapePointBuffer.size(); k++) {
 				
-				Point& p = shapepoints[k];
+				Point& p = shapePointBuffer[k];
 				
-				// mask the points
+				// check each point against the mask
+				// are we outside the edge mask?
+                // NB can't use inside because I want points on the edge
 				
-				// are we outside the mask? NB can't use inside because I want points on the edge
-				//
-				
+                // if we are outside the mask area
 				if(p.x<maskRectangle.getLeft() ||
 				   p.x>maskRectangle.getRight() ||
 				   p.y<maskRectangle.getTop() ||
 				   p.y>maskRectangle.getBottom())  {
 					
-					if(!offScreen) {
+                    // and we're not already offscreen
+                    if(!offScreen) {
 						offScreen = true;
-						// if we already have points then add an inbetween point
+						// if we already have points then add an end point
+                        // for the shape that is on the edge of the mask
 						if(k>0) {
+                            
 							Point lastpoint = p;
 							
 							// TODO better point on edge rather than just clamp
 							lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
 							lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-							segmentpoints.push_back(lastpoint);
+							segmentPoints.push_back(lastpoint);
 							
-							// add this bunch to the collection
-							zoneshapepoints.push_back(segmentpoints); // should copy
+							// add this bunch to the collection for this zone
+							zonePointsForShapes.push_back(segmentPoints); // should copy
 							
 							//clear the vector and start again
-							segmentpoints.clear();
+							segmentPoints.clear();
 							
 						}
 					}
-					
+                    // otherwise if we are already off screen we don't need
+                    // to do anything except ignore this point
+				
+                // else if we are inside the mask rectangle
 				} else {
-					// we're on screen!
+                    
+					// and we're currently off screen
 					if(offScreen) {
-						
-						segmentpoints.clear();
+						// clear the points - do we need to if we
+                        // cleared them already at the end of the last one?
+						segmentPoints.clear();
 						offScreen = false;
+                        // if we have points already
 						if(k>0) {
-							Point lastpoint = shapepoints[k-1];
+                            
+                            // then figure out the position on the edge
+                            // of the mask
+							Point lastpoint = shapePointBuffer[k-1];
 							
 							// TODO better point on edge rather than just clamp
 							lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
 							lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-							
-							segmentpoints.push_back(lastpoint);
+                            
+                            // and add it to the beginning of the new segment
+                            segmentPoints.push_back(lastpoint);
 						}
 					}
-					segmentpoints.push_back(p);
+                    
+                    // either way, add this next point because we are on screen
+					segmentPoints.push_back(p);
 				}
 				
-				// create a point object for it
+			
 				
-			} // end shapepoints
-			// add the segment points to the points for the zone
-			if(segmentpoints.size()>0) {
-				zoneshapepoints.push_back(segmentpoints);
+			}
+			// add the final segment points to zone points
+			if(segmentPoints.size()>0) {
+				zonePointsForShapes.push_back(segmentPoints);
 			}
 			
 		} // end zoneshapes
 		
 		
 		// go through all the points and warp them into projector space
-		for(size_t j = 0; j<zoneshapepoints.size(); j++) {
-			ShapePoints& segmentpoints = zoneshapepoints[j];
+		for(size_t j = 0; j<zonePointsForShapes.size(); j++) {
+			PointsForShape& segmentpoints = zonePointsForShapes[j];
 			for(int k= 0; k<segmentpoints.size(); k++) {
 				
 				// Check against the mask image
@@ -1054,7 +1007,7 @@ void Projector ::getAllShapePoints(vector<ShapePoints>* shapepointscontainer, of
 		
 		
 		// add all the segments for the zone into the big container for all the segs
-		allzoneshapepoints.insert(allzoneshapepoints.end(), zoneshapepoints.begin(), zoneshapepoints.end());
+		allzoneshapepoints.insert(allzoneshapepoints.end(), zonePointsForShapes.begin(), zonePointsForShapes.end());
 		
 		// delete all the test pattern shapes
 		for(size_t j = 0; j<testPatternShapes.size(); j++) {
@@ -1257,43 +1210,24 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
 }
 
 
-void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>&points){
-	
-	ofPoint target = targetpoint;
-	ofPoint start = currentPosition;
-	
-	ofPoint v = target-start;
-	
-	float blanknum = v.length()/moveSpeed;// + movePointsPadding;
-	
-	for(int j = 0; j<blanknum; j++) {
-		
-		float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
-		
-		ofPoint c = (v* t) + start;
-		points.emplace_back(c, (laserOnWhileMoving && j%2==0) ? ofColor(255,0,0) : ofColor(0));
-		
-	}
-	
-}
 void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint){
-	
+
 	ofPoint target = targetpoint;
 	ofPoint start = currentPosition;
-	
+
 	ofPoint v = target-start;
-	
+
 	float blanknum = (v.length()/moveSpeed)/speedMultiplier;// + movePointsPadding;
-	
+
 	for(int j = 0; j<blanknum; j++) {
-		
+
 		float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
-		
+
 		ofPoint c = (v* t) + start;
 		addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor(0));
-		
+
 	}
-	
+
 }
 
 void Projector :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool useCalibration) {
@@ -1340,8 +1274,9 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 	frameCounter++;
 	
 	if(offsetColours) {
-	// the offset value is in time, so we convert it to a number of points.
+        // the offset value is in time, so we convert it to a number of points.
 		// this way we can change the PPS and this should still work
+        // TODO do we need to take into account the speed multiplier?
 		int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeOffset ;
 		
 		// we switch the front and rear buffers every frame, so we copy the
@@ -1365,16 +1300,6 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 		for(int i = (int)(laserPoints.size()+rearBuffer.size())-1; i>=0; i--) {
 			
 			Point& p = (i<laserPoints.size()) ? laserPoints[i] : rearBuffer[i-laserPoints.size()];
-//
-//			// if we're one of the new points at the end copy the position
-//			// from the last point
-//			if(i>=laserPoints.size()-colourChangeIndexOffset) {
-//				// copy the last positino in the original array
-//
-//				p = laserPoints[laserPoints.size()-1-colourChangeIndexOffset];
-//				//cout << (laserPoints.size()-1-colourChangeOffset) << " " << p << endl;
-//
-//			}
 
 			//now shift the colour from an earlier point
 			if(i>=colourChangeIndexOffset){
@@ -1392,57 +1317,36 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 	for(size_t i = 0; i<laserPoints.size(); i++) {
 		
 		ofxLaser::Point &p = laserPoints[i];
-		
-
-		//p.y+=outputOffset;
-//		ofColor maskPixelColour;
-//		if(useMaskBitmap) {
-//			maskPixelColour = maskBitmap.getColor(p.x/appWidth* (float)maskBitmap.getWidth(), p.y/appHeight * (float)maskBitmap.getHeight());
-//			
-//		}
-		
+    
 		
 		if(flipY) p.y= 800-p.y;
 		if(flipX) p.x= 800-p.x;
-		if(abs(rotation)>0.5) {
+		if(rotation!=0) {
 			p.x-=400;
 			p.y-=400;
-//			glm::vec3 v(p.x, p.y, 0);
-//			glm::vec3 axis(0.0f,0.0f,1.0f);
-//			v = glm::rotate(v,1.0f, axis);
-			auto vec = glm::vec3(p.x,p.y,0.0f);
-			float angle = ofDegToRad(rotation); // since glm version 0.9.6, rotations are in radians, not in degrees
+
+			glm::vec3 vec = glm::vec3(p.x,p.y,0);
+			float angle = ofDegToRad(rotation);
 			
-			//cout << vec << endl;
-			auto rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+			glm::vec2 rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
 			p.x=rotatedVec.x+400;
 			p.y=rotatedVec.y+400;
 
 		}
 		
 		// bounds check
-		if(p.x<0) p.x = p.r = p.g = p.b = 0;
-		else if(p.x>800) {
+        if(p.x<0) {
+            p.x = p.r = p.g = p.b = 0;
+        } else if(p.x>800) {
 			p.x = 800;
 			p.r = p.g = p.b = 0;
 		}
-		if(p.y<0) p.y = p.r = p.g = p.b = 0;
-		else if(p.y>800) {
+        if(p.y<0) {
+            p.y = p.r = p.g = p.b = 0;
+        } else if(p.y>800) {
 			p.y = 800;
 			p.r = p.g = p.b = 0;
 		}
-		
-//		if(showPostTransformPreview){
-//			ofPoint previewpoint(p.x, p.y);
-//			previewPathMesh.addVertex(previewpoint);
-//		}
-		
-//		ofFloatColor c(p.r / 255.0f, p.g / 255.0f, p.b / 255.0f);
-//		if(useMaskBitmap) {
-//			c.r*=((float)maskPixelColour.r/255.0);
-//			c.g*=((float)maskPixelColour.g/255.0);
-//			c.b*=((float)maskPixelColour.b/255.0);
-//		}
 		
 		if(p.useCalibration) {
 			p.r = calculateCalibratedBrightness(p.r, intensity*masterIntensity, red100, red75, red50, red25, red0);
@@ -1455,7 +1359,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			p.g = 0;
 			p.b = 0;
 		}
-	//	ildaPoints.push_back(ofxIlda::Point(p, c, pmin, pmax));
+	
 		
 	}
 	
@@ -1481,12 +1385,12 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 
 bool Projector::loadSettings(){
-    ofJson json = ofLoadJson(label+".json");
+    ofJson json = ofLoadJson("projectors/" + id+".json");
     //laserPatch.serialize(json);
     if(json.empty()) {
         return false;
     } else {
-        ofDeserialize(json, params);
+        ofDeserialize(json, settings);
         return true;
     }
 }
@@ -1494,8 +1398,8 @@ bool Projector::loadSettings(){
 
 bool Projector::saveSettings(){
     ofJson json;
-    ofSerialize(json, params);
-    return ofSavePrettyJson(label+".json", json);
+    ofSerialize(json, settings);
+    return ofSavePrettyJson("projectors/"+ id +".json", json);
 
     
 }

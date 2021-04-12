@@ -18,7 +18,8 @@
 namespace ofxLaser {
 
 	// a container than holds all the points for a shape
-	class ShapePoints : public vector<Point> {
+    // it extends a vector of ofxLaser::Point objects
+	class PointsForShape : public vector<Point> {
 		
 		public:
 		bool tested = false;
@@ -39,7 +40,7 @@ namespace ofxLaser {
 		Projector(string projectorlabel);
 		~Projector();
 		
-        void initGui();
+        void initAndLoadSettings();
         
         void setDac(DacBase* dac);
         DacBase* getDac();
@@ -49,15 +50,13 @@ namespace ofxLaser {
         bool saveSettings();
         
 		void setDefaultHandleSize(float size);
-        void initListeners();
-        bool mousePressed(ofMouseEventArgs &e);
-		
+     	
 		void update(bool updateZones);
 		void send(ofPixels* pixels = NULL, float masterIntensity = 1);
         
         void setArmed(bool& armed); 
         
-		void getAllShapePoints(vector<ShapePoints>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
+		void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
 		
         void sendRawPoints(const vector<Point>& points, int zonenum = 0, float masterIntensity =1);
@@ -86,7 +85,6 @@ namespace ofxLaser {
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
 		void addPoints(vector<ofxLaser::Point>&points, bool reversed = false);
 
-		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint, vector<Point>& points);
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);
 		void processPoints(float masterIntensity, bool offsetColours = true);
 		
@@ -95,8 +93,6 @@ namespace ofxLaser {
 		void updateZoneMasks();
 		void zoneMaskChanged(ofAbstractParameter& e);
 		void ppsChanged(int& e);
-		
-		void minimiseGui();
 		
 		deque<Shape*> getTestPatternShapesForZone(int zoneindex);
 		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
@@ -128,7 +124,7 @@ namespace ofxLaser {
 		const int max = 32767;
 		
 		ofPoint laserHomePosition;
-		string label;
+		string id;
 		float smoothedFrameRate = 0; 
 		vector<Point> laserPoints;
 		vector<Point> sparePoints;
@@ -145,8 +141,7 @@ namespace ofxLaser {
 		ofParameter<int> pps;
         ofParameter<float> speedMultiplier; 
 		ofParameter<float>intensity;
-		ofParameter<bool> resetDac;
-        ofParameter<string> dacId; 
+        ofParameter<string> dacId;
 		
 		ofParameter<float> colourChangeOffset;
 		ofParameter<int> testPattern;
@@ -198,7 +193,7 @@ namespace ofxLaser {
 		
 		//ofxPanel* gui;
         //bool guiIsVisible;
-        ofParameterGroup params;
+        ofParameterGroup settings;
         ofParameterGroup advancedParams; 
 		bool guiInitialised = false; 
 

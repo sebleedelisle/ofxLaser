@@ -82,7 +82,7 @@ class UI {
         ImGui::GetIO().KeysDown[e.key] = false;
         if(ImGui::GetIO().WantCaptureKeyboard) {
           
-            return true;
+            return false;
         }
         else return false;
     }

@@ -20,10 +20,10 @@ Circle::Circle(const ofPoint& center, const float radius, const ofColor& col, st
 	reversable = false;
 	colour = col;
 	
-	
 	polyline.clear();
 	ofPoint p;
-	for(int i = 0; i<360; i++) {
+    
+	for(int i = -1; i<=361; i++) {
 		p.set(radius, 0);
 		p.rotate(i, ofPoint(0,0,1));
 		p+=center;
@@ -78,6 +78,7 @@ void Circle::addPreviewToMesh(ofMesh& mesh){
 }
 
 bool Circle::intersectsRect(ofRectangle & rect) {
+    // TODO make this sensible!
 	return rect.intersects(startPos, endPos);
 	
 };

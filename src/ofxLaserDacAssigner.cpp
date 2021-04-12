@@ -140,7 +140,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     DacData& dacdata = *dacdataptr;
     
-    ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, projector.label);
+    ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, projector.id);
     
   
     // get manager for type
@@ -178,6 +178,15 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
         // store a reference to the projector in the
         // dacdata
         dacdata.assignedProjector = &projector;
+        
+        
+        // clear the reference to this projector from the other dac data
+        for(DacData& dacdataToCheck : dacDataList) {
+            if(&dacdata == &dacdataToCheck) continue;
+            else if(dacdataToCheck.assignedProjector == &projector) {
+                dacdataToCheck.assignedProjector = nullptr;
+            }
+        }
         
     } else {
         // if we can't get a dac object for the label

@@ -46,8 +46,10 @@ class Manager {
     Manager();
     ~Manager();
     
-    void addProjector();
-    OF_DEPRECATED_MSG("DACs are no longer set up in code, use addProjector() and set up the dac within the app.", void addProjector(DacBase&));
+    OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
+    OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector());
+   
+    bool deleteProjector(Projector* projector);
     
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
@@ -58,7 +60,7 @@ class Manager {
     void nextProjector();
     void previousProjector();
     
-    void setup(int width, int height);
+    void setCanvasSize(int width, int height);
     void update();
     void drawUI(bool fullscreen = false);
     void drawPreviews(bool fullscreen = false);
@@ -94,17 +96,26 @@ class Manager {
     
     void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
-    void drawLine(const ofPoint& start, const ofPoint& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
-    void drawDot(const ofPoint& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
-    void drawCircle(const ofPoint & centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     
+    void drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+
+    void drawDot(const glm::vec3& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawDot(const glm::vec2& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawDot(float x, float y, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+    
+    void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec2& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+   
     vector<Projector*>& getProjectors();
     Projector& getProjector(int index = 0);
     int getNumProjectors() { return (int)projectors.size(); };
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
 
-    void initGui();
+    void initAndLoadSettings();
     void addCustomParameter(ofAbstractParameter& param);
     
     void setDefaultHandleSize(float size);
@@ -155,7 +166,7 @@ class Manager {
     
     float defaultHandleSize = 8;
     
-    ofParameter<float>masterIntensity;
+    ofParameter<float>globalBrightness;
     ofImage guideImage;
     
     MaskManager laserMask;
@@ -168,20 +179,21 @@ class Manager {
     std::vector<Zone*> zones;
     
     ofParameterGroup params;
-      
-    
-    //ofxPanel gui;
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
-	 protected :
+    
+    protected :
 	  
     bool guiIsVisible;
-    //ofxButton armAllButton;
-    //ofxButton disarmAllButton;
+    bool initialised = false;
+    
     bool doArmAll = false;
     bool doDisarmAll = false;
     
 private:
+    
+    void createAndAddProjector();
+    
     int createDefaultZone();
     
     ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
