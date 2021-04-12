@@ -10,56 +10,35 @@
 #include "ofMain.h"
 #include "ofxLaserShape.h"
 #include "ofxLaserDot.h"
-#include "ofxLaserDragHandle.h"
-
+#include "ofxLaserQuadGui.h"
 namespace ofxLaser {
 
-	class Zone  {
+	class Zone : public QuadGui {
 		
 		public :
 		
 		Zone();
 		Zone(int index, float x, float y, float w, float h);
 		~Zone();
+        
+        virtual void set(float x, float y, float w, float h) override ;
 
-		void set(float x, float y, float w, float h);
-		void set(ofRectangle newrect);
-		void setHandleSize(float size); 
+		void setHandleSize(float size);
 		
 		bool update();
+        // the zone object stores shapes that intersect with it
 		bool addShape(Shape* s);
-		void draw();
+		//void draw();
 		
 		ofPoint& addSortedShapesToVector(vector<Shape*>& shapes, ofPoint& currentPosition);
-
-		void initListeners();
-		void removeListeners();
-		
-		bool mousePressed(ofMouseEventArgs &e);
-		bool mouseDragged(ofMouseEventArgs &e);
-		bool mouseReleased(ofMouseEventArgs &e);
-		void startDragging(int handleIndex, ofPoint clickPos);
-
-		bool loadSettings();
-		void saveSettings();
-		
-		void serialize(ofJson&json);
-		void deserialize(ofJson&jsonGroup);
-
-		
+	
 		ofRectangle rect;
 
 		deque<Shape*> shapes;
-		string label;
-		bool editable;
-		vector<DragHandle> handles;
-		ofPoint offset;
-		float scale = 1;
-		bool visible = true;
-		bool active = true; 
-		bool isDirty = true;
-		bool snapToPixels = true;
-		
+
+      //  bool editable;
+	
+    		
 		int index = 0;
 		
 		

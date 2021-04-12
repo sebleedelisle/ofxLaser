@@ -11,27 +11,7 @@
 using namespace ofxLaser;
 
 // static property / method
-ofMesh ZoneTransform::dashedLineMesh;
-
-void ZoneTransform::drawDashedLine(glm::vec3 p1, glm::vec3 p2) {
-	dashedLineMesh.clear();
-	
-	float l = glm::length(p2-p1);
-
-	for(float p = 0; p<l; p+=4) {
-		dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
-	}
-	ofPushStyle();
-	ofNoFill();
-	ofSetColor(0,100,255);
-	ofSetLineWidth(1);
-
-	dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
-	dashedLineMesh.draw();
-	ofPopStyle();
-
-}
-				 
+		 
 
 ZoneTransform::~ZoneTransform() {
 	if(initialised) removeListeners();
@@ -75,7 +55,6 @@ ZoneTransform::ZoneTransform(int _index, string filename) {
 
 void ZoneTransform::init(ofRectangle& srcRect) {
 	
-	//if(!loadSettings() ) {
 		float srcwidth = srcRect.getWidth();
 		float srcheight = srcRect.getHeight();
 		
@@ -87,10 +66,7 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 		setDst(destRect);
 		
 		updateDivisions();
-		
-	//} else {
-	//	setSrc(srcRect);
-	//}
+
 	
 }
 
@@ -102,7 +78,6 @@ void ZoneTransform::initGuiListeners(){
 
 void ZoneTransform::update(){
 	if(isDirty) {
-		
 		updateQuads();
 	}
 	isDirty = false;
@@ -134,7 +109,7 @@ void ZoneTransform::draw() {
 			} else {
 				ofSetColor(edge);
 			}
-			drawDashedLine(dstHandles[i], dstHandles[i+1]);
+			UI::drawDashedLine(dstHandles[i], dstHandles[i+1]);
 		}
 		if(y<yDivisions) {
 			if((x>0)&&(x<xDivisions)) {
@@ -142,13 +117,13 @@ void ZoneTransform::draw() {
 			} else {
 				ofSetColor(edge);
 			}
-			drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1]);
+            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1]);
 		}
 	}
 	
 	if(selected) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
-			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw();
+			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, scale);
 		}
 	}
 	ofPopMatrix();
@@ -259,6 +234,8 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 	srcCVPoints[2] = toCv(srcRect.getBottomLeft());
 	srcCVPoints[3] = toCv(srcRect.getBottomRight());
 	
+    cout << topleft << " " << topright << " " << bottomleft << " " << bottomright << endl;
+    
 	dstCVPoints[0] = toCv(topleft);
 	dstCVPoints[1] = toCv(topright);
 	dstCVPoints[2] = toCv(bottomleft);
@@ -283,8 +260,11 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 		
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		dstHandles[i].set(toOf(dstCVPoints[i]));
-	//	ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
-		
+        dstHandles[i].col = ofColor(100,100,255, 196);
+        dstHandles[i].overCol = ofColor(196,196,255, 255);
+       // ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstCVPoints[i].x)+","+ofToString(dstCVPoints[i].y));
+       // ofLog(OF_LOG_NOTICE," ------------------["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
+       
 	}
 	
 	
@@ -391,7 +371,8 @@ void ZoneTransform::updateQuads() {
 
 void ZoneTransform::initListeners() {
 	
-	ofAddListener(ofEvents().mousePressed, this, &ZoneTransform::mousePressed, OF_EVENT_ORDER_AFTER_APP);
+    ofAddListener(ofEvents().mouseMoved, this, &ZoneTransform::mouseMoved, OF_EVENT_ORDER_AFTER_APP);
+    ofAddListener(ofEvents().mousePressed, this, &ZoneTransform::mousePressed, OF_EVENT_ORDER_AFTER_APP);
 	ofAddListener(ofEvents().mouseReleased, this, &ZoneTransform::mouseReleased, OF_EVENT_ORDER_AFTER_APP);
 	ofAddListener(ofEvents().mouseDragged, this, &ZoneTransform::mouseDragged, OF_EVENT_ORDER_AFTER_APP);
 	
@@ -400,10 +381,22 @@ void ZoneTransform::initListeners() {
 
 void ZoneTransform :: removeListeners() {
 	
-	ofRemoveListener(ofEvents().mousePressed, this, &ZoneTransform::mousePressed, OF_EVENT_ORDER_AFTER_APP);
+    ofRemoveListener(ofEvents().mouseMoved, this, &ZoneTransform::mouseMoved, OF_EVENT_ORDER_AFTER_APP);
+    ofRemoveListener(ofEvents().mousePressed, this, &ZoneTransform::mousePressed, OF_EVENT_ORDER_AFTER_APP);
 	ofRemoveListener(ofEvents().mouseReleased, this, &ZoneTransform::mouseReleased, OF_EVENT_ORDER_AFTER_APP);
 	ofRemoveListener(ofEvents().mouseDragged, this, &ZoneTransform::mouseDragged, OF_EVENT_ORDER_AFTER_APP);
 	
+}
+
+bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
+    
+    
+    if(!visible) return false;
+
+    mousePos = e;
+    mousePos-=offset;
+    mousePos/=scale;
+
 }
 
 bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
@@ -411,12 +404,12 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	if(!visible) return false;
 
-	ofPoint mousePoint = e;
-	mousePoint-=offset;
-	mousePoint/=scale;
+	mousePos = e;
+    mousePos-=offset;
+    mousePos/=scale;
 	
 	
-	bool hit = hitTest(mousePoint);
+	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
 		return false;
@@ -437,11 +430,11 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 
 	
 	for(size_t i= 0; i<dstHandles.size(); i++) {
-		if(dstHandles[i].hitTest(mousePoint)) {
+		if(dstHandles[i].hitTest(mousePos)) {
 			
 			if(!editSubdivisions && !isCorner((int)i)) continue;
 			
-			dstHandles[i].startDrag(mousePoint);
+			dstHandles[i].startDrag(mousePos);
 			handleHit = true;
 			
 			if(!editSubdivisions) {
@@ -474,8 +467,8 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 				y = ((handleIndex/2)+1)%2;
 				int yhandleindex = x+(y*2);
 				
-				corners[xhandleindex]->startDrag(mousePoint, false,true, true);
-				corners[yhandleindex]->startDrag(mousePoint, true,false, true);
+				corners[xhandleindex]->startDrag(mousePos, false,true, true);
+				corners[yhandleindex]->startDrag(mousePos, true,false, true);
 				
 //				bottomLeft.startDrag(mousePoint, false,true, true);
 //				topRight.startDrag(mousePoint, true,false, true);
@@ -491,7 +484,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 		//centreHandle.startDrag(mousePoint);
 		handleHit = true;
 		for(size_t i= 0; i<dstHandles.size(); i++) {
-			dstHandles[i].startDrag(mousePoint);
+			dstHandles[i].startDrag(mousePos);
 		}
 
 
@@ -637,41 +630,6 @@ bool ZoneTransform::loadSettings() {
 		if(deserialize(json)) return true;
 	}
 	
-//	// LEGACY code! for old XML settings files
-//	ofFile file(saveLabel+".xml");
-//	if(!file.exists()) return false;
-//
-//	ofParameterGroup loadParams;
-//	ofxPanel gui;
-//	gui.add(params);
-//
-//	gui.loadFromFile(saveLabel+".xml");
-//
-//	ofxPanel gui2;
-//	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
-//	xDivisions = xDivisionsNew;
-//	yDivisions = yDivisionsNew;
-//
-//	dstHandles.resize(numhandles);
-//
-//
-//	for(int i = 0; i<numhandles; i++) {
-//		ofParameter<glm::vec2> p;
-//		p = dstHandles[i];
-//		p.setName("dstHandle"+ofToString(i));
-//		loadParams.add(p);
-//	}
-//	loadParams.setName("handles");
-//	gui2.add(loadParams);
-//
-//	gui2.loadFromFile(saveLabel+"-Points.xml");
-//	for(int i = 0; i<numhandles; i++) {
-//		dstHandles[i].set(loadParams.getVec2f("dstHandle"+ofToString(i)));
-//
-//	}
-//
-//	// save as json
-//	saveSettings();
 	
 
 	return true;

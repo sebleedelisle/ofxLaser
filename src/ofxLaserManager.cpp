@@ -43,6 +43,8 @@ Manager :: Manager() : dacAssigner(*DacAssigner::instance()) {
     
     if(projectors.size()==0) {
         createAndAddProjector();
+        //addZone(0,0,800,800);
+        
         showProjectorSettings = true;
     }
 	
@@ -156,7 +158,6 @@ void Manager::addZoneToProjector(unsigned int zonenum, unsigned int projnum) {
 	}
 	
 	projectors[projnum]->addZone(zones[zonenum], width, height);
-	//projectorGuis[projnum]->add(projectors[projnum].params);
 }
 
 int Manager::createDefaultZone() {
@@ -274,7 +275,7 @@ void Manager:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		zones[i]->visible= (currentProjector==-1);
+		zones[i]->setVisible(currentProjector==-1);
 		updateZoneRects = updateZoneRects | zones[i]->update(); // is this dangerous? Optimisation may stop the function being called.
 	}
 	
@@ -451,8 +452,8 @@ void Manager :: drawPreviews(bool expandPreview) {
         
         // this renders the input zones in the graphics source space
         for(size_t i= 0; i<zones.size(); i++) {
-            zones[i]->visible = showZones;
-            zones[i]->active = showZones && (currentProjector<0);
+            zones[i]->setVisible(showZones);
+           // zones[i]->setActive(showZones && (currentProjector<0));
             
             zones[i]->offset.set(previewOffset);
             zones[i]->scale = previewScale;
@@ -1279,7 +1280,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     if(ImGui::TreeNode("Zone edge masks")){
         for(size_t i = 0; i< projector->zones.size(); i++) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-            if(ImGui::TreeNode(projector->zones[i]->label.c_str())){
+            if(ImGui::TreeNode(projector->zones[i]->displayLabel.c_str())){
                 
                 UI::addFloatSlider(projector->bottomEdges[i]);
                 UI::addFloatSlider(projector->topEdges[i]);
@@ -1298,7 +1299,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     if(ImGui::TreeNode("Zone Warp Settings")){
         for(size_t i = 0; i< projector->zones.size(); i++) {
             ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-            if(ImGui::TreeNode(projector->zones[i]->label.c_str())){
+            if(ImGui::TreeNode(projector->zones[i]->displayLabel.c_str())){
                 UI::addParameterGroup(projector->zoneTransforms[i]->params);
                 
                 ImGui::TreePop();

@@ -13,9 +13,10 @@ QuadGui::QuadGui() {
     
     visible = true;
     isDirty=true;
-    selected = true;
+    selected = false;
     set(0,0,60,60);
     initialised = true;
+    lineColour.set(255); 
     
 }
 QuadGui::~QuadGui() {
@@ -35,24 +36,36 @@ void QuadGui::set (const ofRectangle& rect) {
 }
 
 void QuadGui::set(float x, float y, float w, float h) {
-	
+    
+    allHandles.clear();
+    
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
         
-        handles[i].set(xpos, ypos,5);
+        handles[i].set(xpos, ypos);
         allHandles.push_back(&handles[i]);
+        
     }
     
     centreHandle.set(x + (w/2.0f), y+(h/2.0f));
     allHandles.push_back(&centreHandle);
+    for(DragHandle* handle : allHandles) {
+        handle->overCol = ofColor::magenta;
+        handle->col = ofColor(255,0,255,128);
+    }
     
-    
+}
+
+void QuadGui::setConstrained(const ofRectangle &rect) {
+    constrainRect = rect;
+    constrained = true;
 }
 
 void QuadGui :: initListeners() {
     
     ofAddListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
+    ofAddListener(ofEvents().mouseMoved, this, &QuadGui::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseReleased, this, &QuadGui::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &QuadGui::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     
@@ -61,6 +74,7 @@ void QuadGui :: initListeners() {
 void QuadGui :: removeListeners() {
     
     ofRemoveListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
+    ofRemoveListener(ofEvents().mouseMoved, this, &QuadGui::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseReleased, this, &QuadGui::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseDragged, this, &QuadGui::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     
@@ -79,16 +93,18 @@ void QuadGui :: draw() {
 	ofPushStyle();
 	ofNoFill();
 	ofSetLineWidth(1);
-	
+	/*
 	if(isDirty) {
 		//updateHomography();
 		ofSetColor(ofColor::red);
-	}
+	}*/
+    
+    ofSetColor(lineColour);
     
 	glm::vec3 p1 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[1], 0.1);
 	glm::vec3 p2 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[2], 0.1);
     
-    if(selected) {
+    //if(selected) {
 		
         drawDashedLine(handles[1], handles[3]);
         drawDashedLine(handles[3], handles[2]);
@@ -96,29 +112,41 @@ void QuadGui :: draw() {
         drawDashedLine(handles[2], handles[0]);
         
         
-        drawDashedLine(p1,p2);
-    }
+     //   drawDashedLine(p1,p2);
+    //}
     
-	ofPopStyle();
-    if(selected) {
-        for(int i = 0; i<numHandles; i++) {
-            handles[i].draw();
-        }
-	
-        centreHandle.draw();
-    }
     
     float textwidth = displayLabel.size()*8;
-	ofDrawBitmapString(displayLabel, centreHandle-ofPoint(textwidth/2, 5));
+
+    ofFill();
+    ofPushMatrix();
+    ofTranslate(handles[1]-ofPoint(textwidth+24,0));
+    ofSetColor(0,150);
+    
+    ofDrawRectangle(0,0,textwidth+24,24);
+    ofSetColor(255,0,255);
+
+    ofDrawBitmapString(displayLabel, 6, 17);
+
+    ofPopMatrix();
+	ofPopStyle();
+    
+    if(selected) {
+        for(int i = 0; i<numHandles; i++) {
+           // handles[i].scale = scale;
+           
+            handles[i].draw(mousePos, scale);
+        }
+        centreHandle.draw(mousePos, scale);
+    }
+    
+  
 	
 	isDirty = false;
     ofPopMatrix();
 }
 void QuadGui::drawDashedLine(ofPoint p1, ofPoint p2) {
-	// TODO rewrite dashed line code :)
-	// ( GL_LINE_STIPPLE is deprecated)
-	
-	ofDrawLine(p1,p2);
+	UI::drawDashedLine(p1,p2);
 }
 
 
@@ -144,8 +172,8 @@ void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
     y = ((handleIndex/2)+1)%2;
     int yhandleindex = x+(y*2);
     
-    handles[xhandleindex].startDrag(clickPos, false,true, true);
-    handles[yhandleindex].startDrag(clickPos, true,false, true);
+    handles[xhandleindex].startDrag(clickPos, false, true, !lockPerpendicular);
+    handles[yhandleindex].startDrag(clickPos, true, false, !lockPerpendicular);
     
 	
 }
@@ -217,24 +245,37 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	return handleHit;
 	
 }
-
+bool QuadGui :: mouseMoved(ofMouseEventArgs &e){
+    mousePos = e;
+    mousePos-=offset;
+    mousePos/=scale;
+    
+}
 bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
 
 	if(!visible) return false;
 	if(!selected) return false;
 
-    ofPoint mousePoint = e;
-    mousePoint-=offset;
-    mousePoint/=scale;
+    mousePos = e;
+    mousePos-=offset;
+    mousePos/=scale;
     
 	ofRectangle bounds(centreHandle, 0, 0);
 	bool dragging = false;
 	for(int i = 0; i<numHandles; i++) {
-		if(handles[i].updateDrag(mousePoint)) dragging = true;
-		bounds.growToInclude(handles[i]);
+        DragHandle& handle = handles[i];
+        if(handle.updateDrag(mousePos)){
+            dragging = true;
+            if(constrained && (!constrainRect.inside(handle))) {
+                handle.x = ofClamp(handle.x, constrainRect.getLeft(), constrainRect.getRight());
+                handle.y = ofClamp(handle.y, constrainRect.getTop(), constrainRect.getBottom());
+            }
+
+            bounds.growToInclude(handle);
+        }
 	}
  	if(!dragging) {
-		dragging = centreHandle.updateDrag(mousePoint);
+		dragging = centreHandle.updateDrag(mousePos);
 	} else {
 		updateCentreHandle();
 		
@@ -260,7 +301,13 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 	for(int i = 0; i<allHandles.size(); i++) {
 		if(allHandles[i]->stopDrag()) wasDragging = true;
 	}
-	saveSettings();
+    if(wasDragging) {
+//        if(!reversable) {
+//            // TODO FIGURE OUT HOW TO UNWARP RECT!
+//
+//        }
+        saveSettings();
+    }
 	return wasDragging;
 	
 }
@@ -323,42 +370,7 @@ void QuadGui::saveSettings() {
 	serialize(json);
 	ofSavePrettyJson(saveLabel+".json", json);
 	
-	//
-//	ofxXmlSettings xml;
-//
-//	string filename = saveLabel+".xml";
-//
-//	xml.addTag("quad");
-//	xml.pushTag("quad");
-//
-//	xml.addTag("upperLeft");
-//	xml.pushTag("upperLeft");
-//	xml.addValue("x", handles[0].x);
-//	xml.addValue("y", handles[0].y);
-//	xml.popTag();
-//
-//	xml.addTag("upperRight");
-//	xml.pushTag("upperRight");
-//	xml.addValue("x", handles[1].x);
-//	xml.addValue("y", handles[1].y);
-//	xml.popTag();
-//
-//    xml.addTag("lowerLeft");
-//    xml.pushTag("lowerLeft");
-//    xml.addValue("x", handles[2].x);
-//    xml.addValue("y", handles[2].y);
-//    xml.popTag();
-//
-//	xml.addTag("lowerRight");
-//	xml.pushTag("lowerRight");
-//	xml.addValue("x", handles[3].x);
-//	xml.addValue("y", handles[3].y);
-//	xml.popTag();
-//
-//
-//	xml.saveFile(filename);
-//
-	
+
 }
 
 void QuadGui::setVisible(bool warpvisible) {

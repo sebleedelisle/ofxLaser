@@ -10,6 +10,7 @@
 #include "ofMain.h"
 #include "ofxLaserDragHandle.h"
 #include "ofxLaserPoint.h"
+#include "ofxLaserUI.h"
 
 namespace ofxLaser {
 class QuadGui {
@@ -21,7 +22,8 @@ class QuadGui {
     
     void setName(string savelabel = "QuadGui", string displaylabel = "");
 	void set(const ofRectangle& rect);
-	void set(float x, float y, float w, float h) ;
+	virtual void set(float x, float y, float w, float h) ;
+    void setConstrained(const ofRectangle& rect); 
 	
 	void draw();
 	
@@ -29,8 +31,9 @@ class QuadGui {
     void removeListeners();
     
 	bool mousePressed(ofMouseEventArgs &e);
-	bool mouseDragged(ofMouseEventArgs &e);
-	bool mouseReleased(ofMouseEventArgs &e);
+    bool mouseDragged(ofMouseEventArgs &e);
+    bool mouseMoved(ofMouseEventArgs &e);
+    bool mouseReleased(ofMouseEventArgs &e);
     
     void drawDashedLine(ofPoint p1, ofPoint p2); 
 	
@@ -45,8 +48,6 @@ class QuadGui {
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
-	
-	
 	void setVisible(bool warpvisible);
 	bool checkDirty(); 
 	
@@ -55,6 +56,13 @@ class QuadGui {
 	string saveLabel;
 	string displayLabel;
 	
+    bool lockPerpendicular = false;
+    bool constrained = false;
+    ofRectangle constrainRect;
+   // bool reversable = true;
+
+    ofColor lineColour; 
+    
 	const int numHandles = 4;
 	DragHandle handles[4];
 	DragHandle centreHandle;
@@ -65,7 +73,7 @@ class QuadGui {
 	
     ofPoint offset;
 	float scale = 1;
-	
+    ofPoint mousePos; 
     bool selected; 
     
 	protected :

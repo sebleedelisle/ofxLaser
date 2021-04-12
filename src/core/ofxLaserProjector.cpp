@@ -169,7 +169,7 @@ void Projector :: initAndLoadSettings() {
 	zonemutegroup.setName("Mute Zones");
 	zonesMuted.resize(zones.size());
 	for(size_t i = 0; i<zones.size(); i++) {
-		zonemutegroup.add(zonesMuted[i].set(zones[i]->label, false));
+		zonemutegroup.add(zonesMuted[i].set(zones[i]->displayLabel, false));
 	}
 	settings.add(zonemutegroup);
 
@@ -177,7 +177,7 @@ void Projector :: initAndLoadSettings() {
     zonesologroup.setName("Solo Zones");
     zonesSoloed.resize(zones.size());
     for(size_t i = 0; i<zones.size(); i++) {
-        zonesologroup.add(zonesSoloed[i].set(zones[i]->label, false));
+        zonesologroup.add(zonesSoloed[i].set(zones[i]->displayLabel, false));
     }
 
     settings.add(zonesologroup);
@@ -190,7 +190,7 @@ void Projector :: initAndLoadSettings() {
 		ofParameter<float>& bottomEdge = bottomEdges[i];
 		
 		ofParameterGroup zonemaskgroup;
-		zonemaskgroup.setName(zones[i]->label);
+		zonemaskgroup.setName(zones[i]->displayLabel);
 		zonemaskgroup.add(bottomEdge.set("Bottom Edge", 0,0,1));
 		zonemaskgroup.add(topEdge.set("Top Edge", 0,0,1));
 		zonemaskgroup.add(leftEdge.set("Left Edge", 0,0,1));
@@ -201,7 +201,7 @@ void Projector :: initAndLoadSettings() {
 		settings.add(zonemaskgroup);
 		
 		ofParameterGroup zonewarpgroup;
-		zonewarpgroup.setName(zones[i]->label+"warp");
+		zonewarpgroup.setName(zones[i]->displayLabel+"warp");
 		zonewarpgroup.add(zoneTransforms[i]->params);
 		settings.add(zonewarpgroup);
 	
@@ -267,8 +267,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
     zonesSoloed.resize(zones.size());
     zonesEnabled.resize(zones.size());
 
-	zoneTransform.init(zone->rect); 
-	zoneTransform.setSrc(zone->rect);
+	zoneTransform.init(zone->rect);
 	ofRectangle destRect = zone->rect;
 	destRect.scale(400/srcwidth, 400/srcheight);
 	destRect.x*=400/srcwidth;

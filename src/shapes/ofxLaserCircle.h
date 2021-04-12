@@ -16,7 +16,7 @@ namespace ofxLaser {
 	
 		public:
 		Circle(){};
-		Circle(const ofPoint& center, const float radius, const ofColor& col, string profilelabel);
+		Circle(const ofPoint& _centre, const float _radius, const ofColor& col, string profilelabel);
 		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
 		
 		virtual bool intersectsRect(ofRectangle & rect);
@@ -25,7 +25,8 @@ namespace ofxLaser {
 		protected:
 		
 		ofPolyline polyline; // to store the circle shape in once it's been projected
-
+        float radius;
+        glm::vec3 centre;
 		
 		private:
 

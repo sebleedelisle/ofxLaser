@@ -12,17 +12,27 @@ using namespace ofxLaser;
 
 Zone::Zone() {
 	ofLog(OF_LOG_NOTICE, "Zone() constructor") ;
-	editable = false;
+//	editable = false;
 }
 
-Zone::Zone(int _index, float x, float y, float w, float h) {
+Zone::Zone(int _index, float x, float y, float w, float h) : QuadGui::QuadGui() {
 	index = _index;
 	set(x, y, w,h);
 	
-	label = "Zone"+ofToString(index+1);
-	editable = false;
+	displayLabel = "Zone"+ofToString(index+1);
+    saveLabel = displayLabel; 
 	
-	initListeners();
+    lineColour.set(200,20,200);
+	
+    lockPerpendicular = true;
+    for(DragHandle& handle : handles) {
+        handle.gridSize = 1;
+        handle.snapToGrid = true;
+        
+    }
+    
+    setConstrained(rect); 
+   
 }
 
 
@@ -31,25 +41,16 @@ Zone::~Zone() {
 	
 }
 
-void Zone::set(float x, float y, float w, float h) {
-	set(ofRectangle(x,y,w,h));
-}
-void Zone::set(ofRectangle
-			   newrect) {
-	
-	if(newrect!=rect) {
-		rect.set(newrect);
-		handles.resize(2);
-		handles[0].set(rect.getTopLeft());
-		handles[1].set(rect.getBottomRight());
-		isDirty = true;
-	}
-}
 
+void Zone:: set(float x, float y, float w, float h) {
+    QuadGui::set(x, y, w, h);
+    rect.set(x,y,w,h); 
+
+}
 bool Zone::update() {
 
 	if(isDirty) {
-		rect.set(handles[0], handles[1]);
+		rect.set(handles[0], handles[3]);
 		isDirty = false;
 		return true;
 		
@@ -67,39 +68,36 @@ bool Zone::addShape(Shape* s){
 	}
 	
 }
-
-void Zone::draw() {
-	
-	if(!visible) return;
-	
-	ofPushMatrix();
-	ofTranslate(offset);
-	ofScale(scale, scale);
-	ofPushStyle();
-	ofSetColor(255,0,255); 
-	ofNoFill();
-	ofSetLineWidth(1);
-	ofDrawRectangle(rect);
-	
-	string zonelabel = label.substr(4,4);
-	float textwidth = zonelabel.size()*8;
-	
-	ofDisableBlendMode();
-	ofFill();
-	ofSetColor(0);
-	ofDrawRectangle(rect.getCenter()-ofPoint(textwidth/2+1,16),textwidth+1,14);
-	ofSetColor(255,0,255);
-	
-	ofDrawBitmapString(zonelabel, rect.getCenter()-ofPoint(textwidth/2, 5));
-
-	ofPopStyle();
-	
-	handles[0].draw();
-	handles[1].draw();
-	
-	ofPopMatrix();
-	
-}
+//
+//void Zone::draw() {
+//
+//	if(!visible) return;
+//
+//	ofPushMatrix();
+//	ofTranslate(offset);
+//	ofScale(scale, scale);
+//	ofPushStyle();
+//	ofSetColor(255,0,255); 
+//	ofNoFill();
+//	ofSetLineWidth(1);
+//	ofDrawRectangle(rect);
+//
+//	string zonelabel = displayLabel.substr(4,4);
+//	float textwidth = zonelabel.size()*8;
+//
+//	ofDisableBlendMode();
+//	ofFill();
+//	ofSetColor(0);
+//	ofDrawRectangle(rect.getCenter()-ofPoint(textwidth/2+1,16),textwidth+1,14);
+//	ofSetColor(255,0,255);
+//
+//	ofDrawBitmapString(zonelabel, rect.getCenter()-ofPoint(textwidth/2, 5));
+//
+//	ofPopStyle();
+//
+//	ofPopMatrix();
+//
+//}
 
 
 ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer, ofPoint& currentPosition){
@@ -191,201 +189,61 @@ ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer
 
 
 
-
-void Zone :: initListeners(){
-	
-	ofAddListener(ofEvents().mousePressed, this, &Zone::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
-	ofAddListener(ofEvents().mouseReleased, this, &Zone::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
-	ofAddListener(ofEvents().mouseDragged, this, &Zone::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
-	
-}
-
-void Zone :: removeListeners(){
-	
-	ofRemoveListener(ofEvents().mousePressed, this, &Zone::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
-	ofRemoveListener(ofEvents().mouseReleased, this, &Zone::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
-	ofRemoveListener(ofEvents().mouseDragged, this, &Zone::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
-	
-}
-
-void Zone :: startDragging(int handleIndex, ofPoint clickPos) {
-	if(!active) return;
-	
-	handles[handleIndex].snapToGrid = snapToPixels;
-	handles[handleIndex].gridSize = 1;
-	
-	handles[handleIndex].startDrag(clickPos);
-	
-	//	int x = ((handleIndex%2)+1)%2;
-	//	int y = handleIndex/2;
-	//
-	//
-	//	int xhandleindex = x+(y*2);
-	//
-	//	x = handleIndex%2;
-	//	y = ((handleIndex/2)+1)%2;
-	//	int yhandleindex = x+(y*2);
-	//
-	//	handles[xhandleindex].startDrag(clickPos, false,true, true);
-	//	handles[yhandleindex].startDrag(clickPos, true,false, true);
-	
-	
-}
-
-bool Zone :: mousePressed(ofMouseEventArgs &e){
-	
-	
-	if(!active) return false;
-	
-	bool handleHit = false;
-	
-	ofPoint mousePoint = e;
-	mousePoint-=offset;
-	mousePoint/=scale;
-	
-	//	if(centreHandle.hitTest(mousePoint)) {
-	//
-	//		centreHandle.startDrag(mousePoint);
-	//		handleHit = true;
-	//		for(int i = 0; i<numHandles; i++) {
-	//			handles[i].startDrag(mousePoint);
-	//		}
-	//
-	//
-	//
-	//	} else {
-	
-	for(size_t i= 0; i<handles.size(); i++) {
-		if(handles[i].hitTest(mousePoint)) {
-			startDragging((int)i, mousePoint);
-			handleHit = true;
-		}
-		
-	}
-	//}
-	
-	return handleHit;
-	
-}
-
-bool Zone :: mouseDragged(ofMouseEventArgs &e){
-	if(!active) return false;
-	ofPoint mousePoint = e;
-	mousePoint-=offset;
-	mousePoint/=scale;
-	
-	//ofRectangle bounds(centreHandle, 0, 0);
-	bool dragging = false;
-	for(size_t i= 0; i<handles.size(); i++) {
-		if(handles[i].updateDrag(mousePoint)) dragging = true;
-		//bounds.growToInclude(handles[i]);
-	}
-	
-	//	if(!dragging) {
-	//		dragging = centreHandle.updateDrag(mousePoint);
-	//	} else {
-	//		updateCentreHandle();
-	//
-	//	}
-	
-	isDirty |= dragging;
-	
-	
-	return dragging;
-	
-	
-}
-
-
-bool Zone :: mouseReleased(ofMouseEventArgs &e){
-	
-	bool wasDragging = false;
-	
-	for(size_t i= 0; i<handles.size(); i++) {
-		if(handles[i].stopDrag()) wasDragging = true;
-	}
-	if(wasDragging) saveSettings();
-	
-	return wasDragging;
-	
-}
-
-bool Zone ::  loadSettings() {
-	
-	
-	ofFile jsonfile(label+".json");
-	if(jsonfile.exists()) {
-		ofJson json = ofLoadJson(label+".json");
-		deserialize(json);
-		return true;
-	}
-	
-	
-	// LEGACY XML settings
-//	ofParameterGroup params;
-//	vector<ofParameter<glm::vec3>> points;
-//	points.resize(handles.size());
-//	for(size_t i= 0; i<handles.size(); i++) {
-//		params.add(points[i].set("point_"+ofToString(i),ofPoint()));
 //
-//	}
 //
-//	ofXml settings;
-//	if(settings.load(label+".xml")){
+//bool Zone ::  loadSettings() {
 //
-//        ofDeserialize( settings, params );
 //
-//		for(size_t i= 0; i<handles.size(); i++) {
-//			handles[i].set(points[i]);
-//		}
-//
-//		isDirty = true;
-//		saveSettings();
-//
+//	ofFile jsonfile(label+".json");
+//	if(jsonfile.exists()) {
+//		ofJson json = ofLoadJson(label+".json");
+//		deserialize(json);
 //		return true;
 //	}
-	return false;
-	
-
-}
-void Zone::deserialize(ofJson& jsonGroup) {
-	
-	ofJson& pointjson = jsonGroup["points"];
-	
-	for(int i = 0; i<handles.size(); i++) {
-		ofJson& point = pointjson[i];
-		handles[i].x = point[0];
-		handles[i].y = point[1];
-		handles[i].z = 0;
-		
-	}
-	
-	isDirty = true;
-	
-}
-void Zone :: saveSettings() {
-	ofJson json;
-	serialize(json);
-	ofSavePrettyJson(label+".json", json);
-
-	
-}
-
-
-void Zone :: serialize(ofJson&json) {
-	
-	ofJson& pointsjson = json["points"];
-	for(int i = 0; i<handles.size(); i++) {
-		DragHandle& pos = handles[i];
-		pointsjson.push_back({pos.x, pos.y});
-	}
-	cout << json.dump(3) << endl;
-	//deserialize(json);
-}
+//
+//
+//	return false;
+//
+//
+//}
+//void Zone::deserialize(ofJson& jsonGroup) {
+//
+//	ofJson& pointjson = jsonGroup["points"];
+//
+//	for(int i = 0; i<handles.size(); i++) {
+//		ofJson& point = pointjson[i];
+//		handles[i].x = point[0];
+//		handles[i].y = point[1];
+//		handles[i].z = 0;
+//
+//	}
+//
+//	isDirty = true;
+//
+//}
+//void Zone :: saveSettings() {
+//	ofJson json;
+//	serialize(json);
+//	ofSavePrettyJson(label+".json", json);
+//
+//
+//}
+//
+//
+//void Zone :: serialize(ofJson&json) {
+//
+//	ofJson& pointsjson = json["points"];
+//	for(int i = 0; i<handles.size(); i++) {
+//		DragHandle& pos = handles[i];
+//		pointsjson.push_back({pos.x, pos.y});
+//	}
+//	cout << json.dump(3) << endl;
+//	//deserialize(json);
+//}
 
 void Zone::setHandleSize(float size) {
-	for(DragHandle& handle : handles) {
-		handle.setSize(size);
-	}
+	//for(DragHandle& handle : handles) {
+	//	handle.setSize(size);
+	//}
 	
 }

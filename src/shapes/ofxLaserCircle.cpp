@@ -10,23 +10,23 @@
 
 using namespace ofxLaser;
 
-Circle::Circle(const ofPoint& center, const float radius, const ofColor& col, string profilelabel){
+Circle::Circle(const ofPoint& _centre, const float _radius, const ofColor& col, string profilelabel){
 	
 	// seems like an over-engineered way of doing it but it's the only
 	// way to ensure the transformations are taken into account.
 	
-	// TODO work out top, bottom, left and right points warped
-	
 	reversable = false;
 	colour = col;
+    radius = _radius;
+    centre = _centre;
 	
 	polyline.clear();
-	ofPoint p;
+	glm::vec3 p;
     
-	for(int i = -1; i<=361; i++) {
-		p.set(radius, 0);
-		p.rotate(i, ofPoint(0,0,1));
-		p+=center;
+	for(int angle = -1; angle<=361; angle++) {
+		p = glm::rotateZ(glm::vec3(radius, 0, 0), ofDegToRad(angle));
+		//p.rotate(i, ofPoint(0,0,1));
+		p+=centre;
 		p = ofxLaser::Manager::instance()->gLProject(p);
 		polyline.addVertex(p);
 	}
@@ -78,7 +78,29 @@ void Circle::addPreviewToMesh(ofMesh& mesh){
 }
 
 bool Circle::intersectsRect(ofRectangle & rect) {
-    // TODO make this sensible!
-	return rect.intersects(startPos, endPos);
+    
+    
+    const ofRectangle& bounds = polyline.getBoundingBox();
+    
+    if(rect.inside(bounds)) {
+       //cout << "fast out " << true << endl;
+        return true;
+        
+    }
+    if(!rect.intersects(bounds)) {
+       // cout << "fast out " << false << endl;
+        return false;
+    }
+    
+    vector<glm::vec3>& points = polyline.getVertices();
+    
+    for(glm::vec3& p : points) {
+        if(rect.inside(p)) {
+        //    cout << true << endl;
+            return true;
+        }
+    }
+   // cout << false << endl;
+    return false;
 	
 };

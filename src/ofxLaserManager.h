@@ -164,7 +164,7 @@ class Manager {
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;
     
-    float defaultHandleSize = 8;
+    float defaultHandleSize = 10;
     
     ofParameter<float>globalBrightness;
     ofImage guideImage;

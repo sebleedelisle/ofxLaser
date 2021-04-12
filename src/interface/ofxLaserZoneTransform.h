@@ -13,7 +13,7 @@
 #include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
-//#include "ofxGui.h"
+#include "ofxLaserUI.h"
 #include "ofxLaserWarper.h"
 
 namespace ofxLaser {
@@ -31,8 +31,9 @@ class ZoneTransform {
 	void initListeners();
 	void removeListeners();
 	
-	bool mousePressed(ofMouseEventArgs &e);
-	bool mouseDragged(ofMouseEventArgs &e);
+    bool mouseMoved(ofMouseEventArgs &e);
+    bool mousePressed(ofMouseEventArgs &e);
+    bool mouseDragged(ofMouseEventArgs &e);
 	bool mouseReleased(ofMouseEventArgs &e);
 
 	//void setName(string labelname, string filename);
@@ -110,6 +111,7 @@ class ZoneTransform {
 	
 	ofPoint offset;
 	float scale = 1;
+    ofPoint mousePos; 
 	
 	
 	protected :
@@ -122,10 +124,10 @@ class ZoneTransform {
 	int xDivisions;
 	int yDivisions;
 	
-	static ofMesh dashedLineMesh;
+	//static ofMesh dashedLineMesh;
 	
 	//TODO move to utils
-	static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
+	//static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
 	
 	
 	

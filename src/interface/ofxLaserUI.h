@@ -103,8 +103,9 @@ class UI {
     }
     
     
-    
-    
+    static ofMesh dashedLineMesh;
+
+    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2);
     
     
 };
