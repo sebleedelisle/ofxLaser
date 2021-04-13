@@ -54,6 +54,9 @@ class Manager {
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);
+    bool deleteZone(Zone* zone); 
+
+    void renumberZones(); 
     
     void addZoneToProjector(unsigned int zonenum, unsigned int projnum);
     
@@ -129,6 +132,7 @@ class Manager {
     
     Zone& getZone(int zonenum);
     int getNumZones();
+    Zone* getSelectedZone(); 
     bool setTargetZone(unsigned int zone);
     bool setZoneMode(ofxLaserZoneMode newmode);
     

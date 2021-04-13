@@ -15,13 +15,9 @@ Zone::Zone() {
 //	editable = false;
 }
 
-Zone::Zone(int _index, float x, float y, float w, float h) : QuadGui::QuadGui() {
-	index = _index;
+Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
+    setIndex(0);
 	set(x, y, w,h);
-	
-	displayLabel = "Zone"+ofToString(index+1);
-    saveLabel = displayLabel; 
-	
     lineColour.set(200,20,200);
 	
     lockPerpendicular = true;
@@ -31,10 +27,15 @@ Zone::Zone(int _index, float x, float y, float w, float h) : QuadGui::QuadGui() 
         
     }
     
-    setConstrained(rect); 
-   
+    setConstrained(rect);
 }
 
+void Zone:: setIndex(int _index)  {
+    index = _index;
+    displayLabel = "Zone "+ofToString(index+1);
+    saveLabel = "Zone"+ofToString(index);
+    
+}
 
 Zone::~Zone() {
 	removeListeners();
@@ -68,36 +69,7 @@ bool Zone::addShape(Shape* s){
 	}
 	
 }
-//
-//void Zone::draw() {
-//
-//	if(!visible) return;
-//
-//	ofPushMatrix();
-//	ofTranslate(offset);
-//	ofScale(scale, scale);
-//	ofPushStyle();
-//	ofSetColor(255,0,255); 
-//	ofNoFill();
-//	ofSetLineWidth(1);
-//	ofDrawRectangle(rect);
-//
-//	string zonelabel = displayLabel.substr(4,4);
-//	float textwidth = zonelabel.size()*8;
-//
-//	ofDisableBlendMode();
-//	ofFill();
-//	ofSetColor(0);
-//	ofDrawRectangle(rect.getCenter()-ofPoint(textwidth/2+1,16),textwidth+1,14);
-//	ofSetColor(255,0,255);
-//
-//	ofDrawBitmapString(zonelabel, rect.getCenter()-ofPoint(textwidth/2, 5));
-//
-//	ofPopStyle();
-//
-//	ofPopMatrix();
-//
-//}
+
 
 
 ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer, ofPoint& currentPosition){

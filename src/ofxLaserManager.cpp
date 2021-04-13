@@ -76,7 +76,7 @@ void Manager::createAndAddProjector() {
 	
 	// create and add new projector object
 	
-	Projector* projector = new Projector("Projector"+ofToString((int)projectors.size()+1));
+	Projector* projector = new Projector(projectors.size());
 	projectors.push_back(projector);
 	// If we have no zones set up then create a big default zone.
 	if(zones.size()==0) {
@@ -123,8 +123,11 @@ bool Manager :: deleteProjector(Projector* projector) {
     ofDirectory::removeDirectory("projectors/", true);
    
     // re-save remaining projectors
+    // TODO also update projectors' zoneTransform IDs ********************************************
+
     for(int i = 0; i<(int)projectors.size(); i++) {
-        projectors[i]->id = "Projector"+ofToString((int)i+1);
+        
+        projectors[i]->projectorIndex = i;
         projectors[i]->saveSettings();
         
     }
@@ -142,10 +145,36 @@ void Manager::addZone(const ofRectangle& rect) {
 void Manager :: addZone(float x, float y, float w, float h) {
 	if(w<=0) w = width;
 	if(h<=0) h = height;
-	zones.push_back(new Zone((int)zones.size(), x, y, w, h));
-	zones.back()->loadSettings();
-	
+	zones.push_back(new Zone( x, y, w, h));
+	//zones.back()->loadSettings();
+    renumberZones();
 }
+
+bool Manager :: deleteZone(Zone* zone) {
+    
+    vector<Zone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
+    if(it == zones.end()) return false;
+    
+   
+    zones.erase(it);
+    renumberZones();
+    
+    for(Projector* projector : projectors) {
+        projector->removeZone(zone);
+    }
+    delete zone;
+    
+    return true;
+    
+}
+
+void Manager :: renumberZones() {
+    for(int i = 0; i<zones.size(); i++ ) {
+        zones[i]->setIndex(i);
+    }
+    // TODO ************** RENUMBER ZONE TRANSFORM INDICES!
+}
+
 
 void Manager::addZoneToProjector(unsigned int zonenum, unsigned int projnum) {
 	if(projectors.size()<=projnum) {
@@ -903,6 +932,16 @@ int Manager::getNumZones() {
 	return (int)zones.size();
 }
 
+Zone* Manager::getSelectedZone() {
+    for(Zone* zone : zones) {
+        if(zone->selected) {
+            return zone;
+        }
+    }
+    return nullptr;
+    
+}
+
 bool Manager::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL
 	if(zone>=zones.size()) return false;
 	else if(zone<0) return false;
@@ -968,8 +1007,10 @@ void Manager::drawLaserGui() {
     // if we're also showing the projector settings, make space
     // TODO max 2 projectors
     if(laser.showProjectorSettings){
-        x-=(laser.getNumProjectors()*projectorpanelwidth);
-        x-=(spacing*laser.getNumProjectors());
+        int numProjectors =laser.getNumProjectors();
+        if(numProjectors>2) numProjectors = 1;
+        x-=(numProjectors*projectorpanelwidth);
+        x-=(spacing*numProjectors);
     }
     
     // set the main window size and position
@@ -1032,7 +1073,11 @@ void Manager::drawLaserGui() {
     if(ImGui::Button("ADD PROJECTOR")) {
         createAndAddProjector();
     }
-    
+    ImGui::SameLine();
+    if(ImGui::Button("ADD ZONE")) {
+        addZone();
+        showZones = true;
+    }
 
     for(int i = 0; i<laser.getNumProjectors(); i++) {
         ofxLaser::Projector& projector = laser.getProjector(i);
@@ -1045,6 +1090,77 @@ void Manager::drawLaserGui() {
     
     // mainSettings.windowBlock = true;
     UI::addParameterGroup(laser.interfaceParams);
+    
+    Zone* zone = getSelectedZone();
+    if((currentProjector==-1) && (zone!=nullptr)) {
+        ImGui::Separator();
+        ImGui::Text("%s Settings", zone->displayLabel.c_str());
+        for(Projector* projector : projectors) {
+            bool checked = projector->hasZone(zone);
+            //string label = "Projector " + ofToString(projector->index);
+            if(ImGui::Checkbox(projector->getLabel().c_str(), &checked)) {
+                ofLogNotice("Checkbox " + ofToString(checked));
+                if(checked) {
+                    projector->addZone(zone, width, height);
+                } else {
+                    projector->removeZone(zone);
+                }
+                
+            }
+            
+        }
+        // TODO store red colour somewhere
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
+        
+        // the arm and disarm buttons
+        //int buttonwidth = (mainpanelwidth-(spacing*3))/2;
+        if(ImGui::Button("DELETE ZONE")) {
+            ImGui::OpenPopup("Delete Zone?");
+        }
+        
+        ImGui::PopStyleColor(3);
+        ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.0f, 0.0f,0.0f,0.4f)); //
+        if (ImGui::BeginPopupModal("Delete Zone?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Are you sure? All the zone settings will be deleted.\n\n");
+            ImGui::Separator();
+
+            //static int dummy_i = 0;
+            //ImGui::Combo("Combo", &dummy_i, "Delete\0Delete harder\0");
+
+    //        static bool dont_ask_me_next_time = false;
+    //        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+    //        ImGui::Checkbox("Don't ask me next time", &dont_ask_me_next_time);
+    //        ImGui::PopStyleVar();
+
+            
+            ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
+            
+            if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+                deleteZone(zone);
+                
+            }
+            ImGui::PopStyleColor(3);
+            
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+                
+            }
+            ImGui::EndPopup();
+        }
+
+         
+        ImGui::PopStyleColor(1);
+        
+        
+    }
     
     
     if(laser.customParams.size()>0) {
@@ -1065,13 +1181,20 @@ void Manager::drawLaserGui() {
     
     if(laser.showProjectorSettings) {
         x+=mainpanelwidth+spacing;
-        
-        for(ofxLaser::Projector* projector : laser.getProjectors()) {
-            
-            drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
-            x+=projectorpanelwidth+spacing;
+        if(projectors.size()<3) {
+            for(ofxLaser::Projector* projector : laser.getProjectors()) {
+                
+                drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
+                x+=projectorpanelwidth+spacing;
+                
+            }
+        } else {
+            int projectorIndexToShow = currentProjector;
+            if(projectorIndexToShow ==-1) projectorIndexToShow = 0;
+            drawProjectorPanel(&getProjector(projectorIndexToShow), projectorpanelwidth, spacing, x);
             
         }
+        
     }
 }
 
@@ -1089,7 +1212,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::SetNextWindowPos(ImVec2(x,spacing));
     
     
-    ImGui::Begin(projector->id.c_str(), NULL, window_flags);
+    ImGui::Begin(projector->getLabel().c_str(), NULL, window_flags);
     
     ImGui::PushStyleVar(ImGuiStyleVar_IndentSpacing, 8.0f); // 1 Spacing between items
     
@@ -1199,7 +1322,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
             
             if(dacdata.assignedProjector!=nullptr) {
                 ImGui::SameLine(projectorpanelwidth - 100);
-                string label =" > " + dacdata.assignedProjector->id;
+                string label =" > " + dacdata.assignedProjector->getLabel();
                 ImGui::Text("%s",label.c_str());
             }
             
@@ -1396,7 +1519,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     }
     */
     // SCANNER SETTINGS
-    UI::addFloatSlider(projector->colourChangeOffset);
+    UI::addFloatSlider(projector->colourChangeShift);
     UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
     
     
@@ -1474,6 +1597,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     if(ImGui::Button("DELETE PROJECTOR")) {
         ImGui::OpenPopup("Delete?");
     }
+    
     ImGui::PopStyleColor(3);
     ImGui::PushStyleColor(ImGuiCol_ModalWindowDimBg, ImVec4(0.0f, 0.0f,0.0f,0.4f)); //
     if (ImGui::BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))

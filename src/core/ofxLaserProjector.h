@@ -37,11 +37,14 @@ namespace ofxLaser {
         
 		public :
 		
-		Projector(string projectorlabel);
+		Projector(int _index);
 		~Projector();
 		
         void initAndLoadSettings();
         
+        string getLabel() {
+            return "Projector " + ofToString(projectorIndex+1);
+        }
         void setDac(DacBase* dac);
         DacBase* getDac();
         bool removeDac();
@@ -56,6 +59,7 @@ namespace ofxLaser {
         
         void setArmed(bool& armed); 
         
+        // adds all the shape points to the vector passed in
 		void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
 		
@@ -68,20 +72,49 @@ namespace ofxLaser {
             else return pps;
         }
 		
-        
+        // DAC
         
         string getDacLabel() ;
         bool getDacConnectedState();
-		//void renderStatusBox(float x=0, float y=0, float w=300, float h=100);
 		
+        // Zones
+        
 		void addZone(Zone* zone, float srcwidth, float srcheight);
+        bool hasZone(Zone* zone);
+        bool removeZone(Zone* zone); 
 		void drawLaserPath(ofRectangle rect);
 		void drawLaserPath(float x=0, float y=0, float w=800, float h=800);
 		void drawWarpUI(float x=0, float y=0, float w=800, float h=800);
 		void hideWarpGui();
 		void showWarpGui();
 
-		void addPoint(ofxLaser::Point p);
+        
+        vector<Zone*> zones;
+        vector<ZoneTransform*> zoneTransforms;
+        vector<ofRectangle> zoneMasks;
+        
+        vector<ofParameter<float>>leftEdges;
+        vector<ofParameter<float>>rightEdges;
+        vector<ofParameter<float>>topEdges;
+        vector<ofParameter<float>>bottomEdges;
+        
+        //ofRectangle maskRectangle;
+        
+        vector<ofParameter<bool>> zonesMuted;
+        vector<ofParameter<bool>> zonesSoloed;
+        vector<bool> zonesEnabled;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+		
+        // Managing points
+        void addPoint(ofxLaser::Point p);
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
 		void addPoints(vector<ofxLaser::Point>&points, bool reversed = false);
 
@@ -95,26 +128,17 @@ namespace ofxLaser {
 		void ppsChanged(int& e);
 		
 		deque<Shape*> getTestPatternShapesForZone(int zoneindex);
-		float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
+		
+        float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
 
         //-----------------------------------------------
         
+        
+        int projectorIndex; 
+        
         DacEmpty emptyDac; 
 
-		vector<Zone*> zones;
-		vector<ZoneTransform*> zoneTransforms;
-		vector<ofRectangle> zoneMasks;
-		
-		vector<ofParameter<float>>leftEdges;
-		vector<ofParameter<float>>rightEdges;
-		vector<ofParameter<float>>topEdges;
-		vector<ofParameter<float>>bottomEdges;
-		
-		//ofRectangle maskRectangle;
-		
-        vector<ofParameter<bool>> zonesMuted;
-        vector<ofParameter<bool>> zonesSoloed;
-        vector<bool> zonesEnabled;
+	
 		
 		float defaultHandleSize = 8;
 
@@ -124,8 +148,7 @@ namespace ofxLaser {
 		const int max = 32767;
 		
 		ofPoint laserHomePosition;
-		string id;
-		float smoothedFrameRate = 0; 
+		float smoothedFrameRate = 0;
 		vector<Point> laserPoints;
 		vector<Point> sparePoints;
 		vector<Point> sparePoints2;
@@ -134,16 +157,15 @@ namespace ofxLaser {
         int numPoints;
 		ofMesh previewPathMesh;
 		
-		bool offScreen; // keeps track of whether we are going outside the mask
-		Point offScreenPoint; // marks the position where we left the mask
-		
 		ofParameter<bool> armed;
 		ofParameter<int> pps;
         ofParameter<float> speedMultiplier; 
 		ofParameter<float>intensity;
+        // used to keep track of the dac that we're connected to
+        // (particularly when loading / saving)
         ofParameter<string> dacId;
 		
-		ofParameter<float> colourChangeOffset;
+		ofParameter<float> colourChangeShift;
 		ofParameter<int> testPattern;
 		int numTestPatterns; 
 		ofParameter<bool> flipX;
@@ -165,7 +187,6 @@ namespace ofxLaser {
 		ofParameter<bool> smoothHomePosition; 
 
 		ofParameter<bool> laserOnWhileMoving = false;
-		
 		
 		map<string, RenderProfile> renderProfiles;
 

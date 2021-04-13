@@ -11,12 +11,12 @@
 
 using namespace ofxLaser;
 
-Projector::Projector(string projectorlabel) {
-	
+Projector::Projector(int _index) {
+    projectorIndex = _index;
     dac = &emptyDac;
     
 	laserHomePosition = ofPoint(400,400);
-	id = projectorlabel;
+	//id = projectorlabel;
 	 
     // second argument is passed into constructor for the RenderProfile
     renderProfiles.emplace(OFXLASER_PROFILE_FAST, ofToString("Fast"));
@@ -73,7 +73,8 @@ void Projector::setDefaultHandleSize(float size) {
 
 void Projector :: initAndLoadSettings() {
 
-	settings.setName(id);
+    // TODO is this used for anything other than display?
+	settings.setName(ofToString(projectorIndex));
 	
 	settings.add(armed.set("ARMED", false));
     settings.add(intensity.set("Intensity", 1,0,1));
@@ -84,8 +85,7 @@ void Projector :: initAndLoadSettings() {
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	 
-	projectorparams.add(colourChangeOffset.set("Colour change offset", 2,0,6));
-	projectorparams.add(laserOnWhileMoving.set("Laser on while moving", false));
+	projectorparams.add(colourChangeShift.set("Colour change Shift", 2,0,6));
 	projectorparams.add(moveSpeed.set("Move Speed", 4.0 ,0.1,50));
 	projectorparams.add(shapePreBlank.set("Hold off before", 1,0,8));
 	projectorparams.add(shapePreOn.set("Hold on before", 0,0,8));
@@ -99,7 +99,8 @@ void Projector :: initAndLoadSettings() {
 
 	
 	ofParameterGroup& advanced = advancedParams;
-	advanced.setName("Advanced");
+    advanced.setName("Advanced");
+    advanced.add(laserOnWhileMoving.set("Laser on while moving", false));
 	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
 	advanced.add(sortShapes.set("Optimise shape draw order", true));
@@ -217,7 +218,7 @@ void Projector :: initAndLoadSettings() {
    
     dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
-	if(colourChangeOffset<0) colourChangeOffset = 0;
+	if(colourChangeShift<0) colourChangeShift = 0;
 
 	for(size_t i = 0; i<zoneTransforms.size(); i++) {
 		zoneTransforms[i]->initGuiListeners();
@@ -260,7 +261,7 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 	
 	zones.push_back(zone);
 	
-	zoneTransforms.push_back(new ZoneTransform(zone->index, "Warp"+id+"Zone"+ofToString(zone->index+1)));
+	zoneTransforms.push_back(new ZoneTransform(projectorIndex, zone->index));
 	ZoneTransform& zoneTransform = *zoneTransforms.back();
     
     zonesMuted.resize(zones.size());
@@ -292,6 +293,44 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 		ofLogWarning("Projector::addZone() - Please add zones before initialising the laser gui"); 
 		zoneTransform.loadSettings();
 	}
+}
+
+bool Projector :: hasZone(Zone* zone){
+    for(Zone* zoneToCheck : zones) {
+        if(zone == zoneToCheck) return true;
+    }
+    return false;
+    
+}
+bool Projector :: removeZone(Zone* zone){
+   // if(std::find(zones.begin(), zones.end(), zone) != zones.end()) {
+    vector<Zone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
+    if(it == zones.end()) return false;
+    
+    // TODO ***** CHECK THIS
+    // get the index for the zone
+    int i = it-zones.begin();
+    zones.erase(it);
+    delete zoneTransforms[i];
+    zoneTransforms.erase(zoneTransforms.begin()+i);
+    zonesMuted.erase(zonesMuted.begin()+i);
+    zonesSoloed.erase(zonesSoloed.begin()+i);
+    zoneMasks.erase(zoneMasks.begin()+i);
+    leftEdges.erase(leftEdges.begin()+i);
+    rightEdges.erase(rightEdges.begin()+i);
+    topEdges.erase(topEdges.begin()+i);
+    bottomEdges.erase(bottomEdges.begin()+i);
+    
+    for(int i = 0; i<zones.size(); i++) {
+        zoneTransforms[i]->zoneIndex = zones[i]->index;
+        
+    }
+    
+    
+    return true;
+    
+    
+    
 }
 
 void Projector::zoneMaskChanged(ofAbstractParameter& e) {
@@ -456,7 +495,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 	ofSetColor(255);
 
-	ofDrawBitmapString(id.back(), x+w-20, y+20);
+	ofDrawBitmapString(ofToString(projectorIndex+1), x+w-20, y+20);
 	ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
@@ -1276,7 +1315,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
         // the offset value is in time, so we convert it to a number of points.
 		// this way we can change the PPS and this should still work
         // TODO do we need to take into account the speed multiplier?
-		int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeOffset ;
+		int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeShift ;
 		
 		// we switch the front and rear buffers every frame, so we copy the
 		// rear points to the front
@@ -1306,10 +1345,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 			} else {
 				p.copyColourFromPoint(frontBuffer[i-colourChangeIndexOffset+frontBuffer.size()]);
 			}
-			
 		}
-		
-		
 	}
 
 	
@@ -1384,7 +1420,7 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 
 
 bool Projector::loadSettings(){
-    ofJson json = ofLoadJson("projectors/" + id+".json");
+    ofJson json = ofLoadJson("projectors/" + ofToString(projectorIndex)+".json");
     //laserPatch.serialize(json);
     if(json.empty()) {
         return false;
@@ -1398,7 +1434,7 @@ bool Projector::loadSettings(){
 bool Projector::saveSettings(){
     ofJson json;
     ofSerialize(json, settings);
-    return ofSavePrettyJson("projectors/"+ id +".json", json);
+    return ofSavePrettyJson("projectors/"+ ofToString(projectorIndex) +".json", json);
 
     
 }

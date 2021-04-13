@@ -18,11 +18,13 @@ ZoneTransform::~ZoneTransform() {
 }
 
 
-ZoneTransform::ZoneTransform(int _index, string filename) {
+ZoneTransform::ZoneTransform(int projectorindex, int zoneindex) {
 
-	saveLabel = filename;
+    
+	//saveLabel = filename;
 	//displayLabel = labelname;
-	index = _index;
+    projectorIndex = projectorindex;
+    zoneIndex = zoneindex;
 
 	scale = 1;
 	offset.set(0,0);
@@ -36,7 +38,8 @@ ZoneTransform::ZoneTransform(int _index, string filename) {
 	srcPoints.resize(4);
 	editSubdivisions = false;
 	
-	params.setName("ZoneTransform");
+    // TODO is this used for anything but display?
+	params.setName("Zone Transform");
 
 	params.add(xDivisionsNew.set("x divisions", 1,1,6));
 	params.add(yDivisionsNew.set("y divisions", 1,1,6));
@@ -92,7 +95,7 @@ void ZoneTransform::draw() {
 	ofPushMatrix();
 	ofTranslate(offset);
 	ofScale(scale, scale);
-	string label =ofToString(index+1);
+	string label =ofToString(zoneIndex+1);
 	ofSetColor(150,150,255);
 	ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
 	
@@ -583,7 +586,7 @@ void ZoneTransform::saveSettings() {
 	
 	ofJson json;
 	serialize(json);
-	ofSavePrettyJson(saveLabel+".json", json);
+	ofSavePrettyJson(getSaveLabel()+".json", json);
 
 }
 
@@ -624,9 +627,9 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 }
 bool ZoneTransform::loadSettings() {
 	//ofLogNotice("ZoneTransform::loadSettings()");
-	ofFile jsonfile(saveLabel+".json");
+	ofFile jsonfile(getSaveLabel()+".json");
 	if(jsonfile.exists()) {
-		ofJson json = ofLoadJson(saveLabel+".json");
+		ofJson json = ofLoadJson(getSaveLabel()+".json");
 		if(deserialize(json)) return true;
 	}
 	

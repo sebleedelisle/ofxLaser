@@ -140,7 +140,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     DacData& dacdata = *dacdataptr;
     
-    ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, projector.id);
+    ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, ofToString(projector.projectorIndex));
     
   
     // get manager for type

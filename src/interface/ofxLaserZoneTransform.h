@@ -22,7 +22,7 @@ class ZoneTransform {
 	
 	public :
 	
-	ZoneTransform(int index, string filename);
+	ZoneTransform(int projectorindex, int zoneindex);
 	~ZoneTransform();
 	
 	void init(ofRectangle& srcRect);
@@ -65,6 +65,11 @@ class ZoneTransform {
 	vector<ofPoint> getCorners();
 	bool isCorner(int index);
 	
+    string getSaveLabel() {
+        return "Projector"+ofToString(projectorIndex)+"Zone"+ofToString(zoneIndex);
+        
+    }
+    
 	bool loadSettings();
 	void saveSettings();
 	void serialize(ofJson&json);
@@ -104,9 +109,10 @@ class ZoneTransform {
 	
 	DragHandle moveHandle;
 	
-	string saveLabel;
-	string displayLabel;
-	int index; 
+	//string saveLabel;
+	//string displayLabel;
+	int zoneIndex;
+    int projectorIndex; 
 	
 	
 	ofPoint offset;
