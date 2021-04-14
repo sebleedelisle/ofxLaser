@@ -24,10 +24,8 @@ QuadGui::~QuadGui() {
     
 }
 
-void QuadGui::setName (string savelabel, string displaylabel) {
-    saveLabel = savelabel;
+void QuadGui::setName (string displaylabel) {
     displayLabel = displaylabel;
-    
 }
 
 
@@ -116,21 +114,22 @@ void QuadGui :: draw() {
     //}
     
     
-    float textwidth = displayLabel.size()*8;
+    if(!displayLabel.empty()) {
+        float textwidth = displayLabel.size()*8;
 
-    ofFill();
-    ofPushMatrix();
-    ofTranslate(handles[1]-ofPoint(textwidth+24,0));
-    ofSetColor(0,150);
-    
-    ofDrawRectangle(0,0,textwidth+24,24);
-    ofSetColor(255,0,255);
+        ofFill();
+        ofPushMatrix();
+        ofTranslate(handles[1]-ofPoint(textwidth+24,0));
+        ofSetColor(0,150);
+        
+        ofDrawRectangle(0,0,textwidth+24,24);
+        ofSetColor(255,0,255);
 
-    ofDrawBitmapString(displayLabel, 6, 17);
+        ofDrawBitmapString(displayLabel, 6, 17);
 
-    ofPopMatrix();
-	ofPopStyle();
-    
+        ofPopMatrix();
+        ofPopStyle();
+    }
     if(selected) {
         for(int i = 0; i<numHandles; i++) {
            // handles[i].scale = scale;
@@ -306,7 +305,7 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 //            // TODO FIGURE OUT HOW TO UNWARP RECT!
 //
 //        }
-        saveSettings();
+        //saveSettings();
     }
 	return wasDragging;
 	
@@ -327,7 +326,7 @@ void QuadGui::updateCentreHandle() {
 
 void QuadGui::serialize(ofJson&json) {
 	//ofSerialize(json,params);
-	ofJson& handlesjson = json["handles"];
+	ofJson& handlesjson = json["quadgui"];
 	for(int i = 0; i<4; i++) {
 		DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
@@ -338,7 +337,7 @@ void QuadGui::serialize(ofJson&json) {
 
 bool QuadGui::deserialize(ofJson& jsonGroup) {
 	
-	ofJson& handlejson = jsonGroup["handles"];
+	ofJson& handlejson = jsonGroup["quadgui"];
 	
 	for(int i = 0; i<4; i++) {
 		ofJson& point = handlejson[i];
@@ -347,30 +346,8 @@ bool QuadGui::deserialize(ofJson& jsonGroup) {
 		handles[i].z = 0;
 		
 	}
+    updateCentreHandle();
 	return true; 
-}
-
-bool QuadGui::loadSettings() {
-
-	ofFile jsonfile(saveLabel+".json");
-	if(jsonfile.exists()) {
-		ofJson json = ofLoadJson(saveLabel+".json");
-		if(deserialize(json)) {
-			updateCentreHandle();
-			return true;
-		}
-	}
-	
-}
-
-void QuadGui::saveSettings() {
-
-	
-	ofJson json;
-	serialize(json);
-	ofSavePrettyJson(saveLabel+".json", json);
-	
-
 }
 
 void QuadGui::setVisible(bool warpvisible) {

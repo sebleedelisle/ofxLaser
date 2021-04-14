@@ -10,10 +10,10 @@
 
 using namespace ofxLaser;
 
-Zone::Zone() {
-	ofLog(OF_LOG_NOTICE, "Zone() constructor") ;
-//	editable = false;
-}
+//Zone::Zone() {
+//	ofLog(OF_LOG_NOTICE, "Zone() constructor") ;
+////	editable = false;
+//}
 
 Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
     setIndex(0);
@@ -32,8 +32,8 @@ Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
 
 void Zone:: setIndex(int _index)  {
     index = _index;
-    displayLabel = "Zone "+ofToString(index+1);
-    saveLabel = "Zone"+ofToString(index);
+    setName("Zone "+ofToString(index+1));
+   
     
 }
 

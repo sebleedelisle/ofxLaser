@@ -167,6 +167,7 @@ class Manager {
     ofParameter<bool> useBitmapMask;
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;
+    ofParameter<int> numLasers; // << not used except for load / save
     
     float defaultHandleSize = 10;
     

@@ -43,6 +43,57 @@ class UI {
     
     static void addParameterGroup(ofParameterGroup& parameterGroup);
     
+    static void startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false) {
+        ImGuiWindowFlags window_flags = flags;
+        window_flags |= ImGuiWindowFlags_NoNav;
+        //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
+        //      if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar;
+        //      if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
+        //
+        //
+        //      if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
+        //      if (no_nav)             window_flags |= ImGuiWindowFlags_NoNav;
+        //      if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground;
+        //      if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+        //      if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
+        //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
+        
+        
+        // set the main window size and position
+        ImGui::SetNextWindowSize(size, ImGuiCond_Once);
+        ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_Once);
+        
+        // start the main window!
+        ImGui::Begin(name.c_str(), NULL, window_flags);
+        
+        
+    }
+    static void endWindow() {
+        ImGui::End();
+    }
+    
+    static void secondaryColourButtonStart() {
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
+        
+    }
+    
+    static void secondaryColourButtonEnd() {
+        ImGui::PopStyleColor(3);
+    }
+    
+    static void largeItemStart() {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f)); // 3 Size of elements (padding around contents);
+        // increase the side of the slider grabber
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+        
+    }
+    static void largeItemEnd() {
+        
+        ImGui::PopStyleVar(2);
+    }
+    
     static bool updateMouse(ofMouseEventArgs &e) {
 		ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
 		//ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
@@ -53,11 +104,11 @@ class UI {
         ImGui::GetIO().MouseDown[e.button] = true;
         //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
         if(ImGui::GetIO().WantCaptureMouse) {
-            ofLogNotice("ImGui captured mouse press");
+            //ofLogNotice("ImGui captured mouse press");
             return true;
         }
         else {
-            ofLogNotice("ImGui no capture mouse press"); 
+            //ofLogNotice("ImGui no capture mouse press");
             return false;
         }
     }
@@ -70,18 +121,18 @@ class UI {
         ImGui::GetIO().KeysDown[e.key] = true;
         if(ImGui::GetIO().WantCaptureKeyboard) {
             
-            ofLogNotice("ImGui captured key press");
+            //ofLogNotice("ImGui captured key press");
             return true;
         }
         else {
-            ofLogNotice("ImGui no capture key press");
+            //ofLogNotice("ImGui no capture key press");
             return false;
         }
     }
     static bool keyReleased(ofKeyEventArgs &e) {
+        // TODO check but I think this happens twice...
         ImGui::GetIO().KeysDown[e.key] = false;
         if(ImGui::GetIO().WantCaptureKeyboard) {
-          
             return false;
         }
         else return false;

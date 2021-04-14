@@ -22,11 +22,14 @@ class ZoneTransform {
 	
 	public :
 	
-	ZoneTransform(int projectorindex, int zoneindex);
+	ZoneTransform();
 	~ZoneTransform();
-	
+    
+    void update();
+    void draw(string label);
+    
 	void init(ofRectangle& srcRect);
-	void initGuiListeners();
+
 	
 	void initListeners();
 	void removeListeners();
@@ -56,8 +59,6 @@ class ZoneTransform {
 	
 	void setHandleSize(float size);
 	
-	void update();
-	void draw();
 	
 	bool hitTest(ofPoint mousePoint);
 	
@@ -65,13 +66,13 @@ class ZoneTransform {
 	vector<ofPoint> getCorners();
 	bool isCorner(int index);
 	
-    string getSaveLabel() {
-        return "Projector"+ofToString(projectorIndex)+"Zone"+ofToString(zoneIndex);
-        
-    }
+//    string getSaveLabel() {
+//        return "Projector"+ofToString(projectorIndex)+"Zone"+ofToString(zoneIndex);
+//
+//    }
     
-	bool loadSettings();
-	void saveSettings();
+	//bool loadSettings();
+	//void saveSettings();
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
@@ -111,8 +112,8 @@ class ZoneTransform {
 	
 	//string saveLabel;
 	//string displayLabel;
-	int zoneIndex;
-    int projectorIndex; 
+	//int zoneIndex;
+    //int projectorIndex;
 	
 	
 	ofPoint offset;

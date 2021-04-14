@@ -13,18 +13,14 @@ using namespace ofxLaser;
 // static property / method
 		 
 
-ZoneTransform::~ZoneTransform() {
-	if(initialised) removeListeners();
-}
 
-
-ZoneTransform::ZoneTransform(int projectorindex, int zoneindex) {
+ZoneTransform::ZoneTransform() {
 
     
 	//saveLabel = filename;
 	//displayLabel = labelname;
-    projectorIndex = projectorindex;
-    zoneIndex = zoneindex;
+    //projectorIndex = projectorindex;
+    //zoneIndex = zoneindex;
 
 	scale = 1;
 	offset.set(0,0);
@@ -32,13 +28,12 @@ ZoneTransform::ZoneTransform(int projectorindex, int zoneindex) {
 	visible = true;
 	isDirty = true;
 	selected = false;
-	initialised = true;
 	
 	dstHandles.resize(4);
 	srcPoints.resize(4);
 	editSubdivisions = false;
 	
-    // TODO is this used for anything but display?
+    // Used for serialize / deserialize
 	params.setName("Zone Transform");
 
 	params.add(xDivisionsNew.set("x divisions", 1,1,6));
@@ -52,9 +47,19 @@ ZoneTransform::ZoneTransform(int projectorindex, int zoneindex) {
 	setDst(ofRectangle(100,100,200,200));
     //setDivisions(3,3);
 	
-	
+    xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
+    yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
 
 }
+
+
+ZoneTransform::~ZoneTransform() {
+    removeListeners();
+    xDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
+    yDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
+    
+}
+
 
 void ZoneTransform::init(ofRectangle& srcRect) {
 	
@@ -62,10 +67,16 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 		float srcheight = srcRect.getHeight();
 		
 		setSrc(srcRect);
-		ofRectangle destRect = srcRect;
-		destRect.scale(800/srcwidth, 800/srcheight);
-		destRect.x*=800/srcwidth;
-		destRect.y*=800/srcheight;
+    
+        // TODO - better default???
+
+        ofRectangle destRect(200,200,400,400);
+    
+     
+        //= srcRect;
+		//destRect.scale(srcwidth/800, srcheight/800);
+		//destRect.x*=srcwidth/800;
+		//destRect.y*=srcheight/800;
 		setDst(destRect);
 		
 		updateDivisions();
@@ -73,11 +84,6 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 	
 }
 
-void ZoneTransform::initGuiListeners(){
-	xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
-	yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
-	
-}
 
 void ZoneTransform::update(){
 	if(isDirty) {
@@ -90,12 +96,12 @@ void ZoneTransform :: setVisible(bool warpvisible){
 	visible = warpvisible;
 }
 
-void ZoneTransform::draw() {
+void ZoneTransform::draw(string label) {
 	
 	ofPushMatrix();
 	ofTranslate(offset);
 	ofScale(scale, scale);
-	string label =ofToString(zoneIndex+1);
+	
 	ofSetColor(150,150,255);
 	ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
 	
@@ -237,7 +243,7 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 	srcCVPoints[2] = toCv(srcRect.getBottomLeft());
 	srcCVPoints[3] = toCv(srcRect.getBottomRight());
 	
-    cout << topleft << " " << topright << " " << bottomleft << " " << bottomright << endl;
+    //cout << topleft << " " << topright << " " << bottomleft << " " << bottomright << endl;
     
 	dstCVPoints[0] = toCv(topleft);
 	dstCVPoints[1] = toCv(topright);
@@ -541,14 +547,14 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	if(!visible) return false;
 	if(!selected) return false;
 	
-	
 	bool wasDragging = false;
 	
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].stopDrag()) wasDragging = true;
 	}
 	
-	saveSettings();
+    // TODO mark as dirty so auto save ********************
+	//saveSettings();
 	return wasDragging;
 	
 }
@@ -579,16 +585,16 @@ bool ZoneTransform::hitTest(ofPoint mousePoint) {
 	return poly.inside(mousePoint);
 	
 }
-
-void ZoneTransform::saveSettings() {
-	
-	//ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
-	
-	ofJson json;
-	serialize(json);
-	ofSavePrettyJson(getSaveLabel()+".json", json);
-
-}
+//
+//void ZoneTransform::saveSettings() {
+//
+//	//ofLog(OF_LOG_NOTICE, "ZoneTransform::saveSettings");
+//
+//	ofJson json;
+//	serialize(json);
+//	ofSavePrettyJson(getSaveLabel()+".json", json);
+//
+//}
 
 void ZoneTransform::serialize(ofJson&json) {
 	ofSerialize(json,params);
@@ -625,18 +631,18 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	//updateDivisions();
 	return true; 
 }
-bool ZoneTransform::loadSettings() {
-	//ofLogNotice("ZoneTransform::loadSettings()");
-	ofFile jsonfile(getSaveLabel()+".json");
-	if(jsonfile.exists()) {
-		ofJson json = ofLoadJson(getSaveLabel()+".json");
-		if(deserialize(json)) return true;
-	}
-	
-	
-
-	return true;
-}
+//bool ZoneTransform::loadSettings() {
+//	//ofLogNotice("ZoneTransform::loadSettings()");
+//	ofFile jsonfile(getSaveLabel()+".json");
+//	if(jsonfile.exists()) {
+//		ofJson json = ofLoadJson(getSaveLabel()+".json");
+//		if(deserialize(json)) return true;
+//	}
+//
+//
+//
+//	return true;
+//}
 void ZoneTransform::setHandleSize(float size) {
 	for(DragHandle& handle : dstHandles) {
 		handle.setSize(size);

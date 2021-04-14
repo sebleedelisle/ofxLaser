@@ -5,6 +5,13 @@
 //  Created by Seb Lee-Delisle on 02/02/2018.
 //
 
+// ************************ TODO MASK SYSTEM BROKEN **************************
+//      - create subclass of QuadGui which stores the mask level (and index number?)
+//      - create serialize / deserialize methods
+//      - fix load and save settings
+//      - add interface to add and remove masks.
+//      - add dirty flag to QuadGui so we know to save it
+
 #include "ofxLaserMaskManager.h"
 
 
@@ -98,8 +105,11 @@ QuadMask& MaskManager::addQuadMask(float level) {
     quads.push_back(quad);
     quad->maskLevel= level;
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
-    quad->setName("maskquad"+ofToString(quads.size()),ofToString(quads.size()));
-    quad->loadSettings();
+    quad->setName(ofToString(quads.size()));
+
+    // TODO Load / save quad masks
+
+    //quad->loadSettings();
 	quad->offset = offset;
 	quad->scale = scale; 
     return *quad;
@@ -172,17 +182,41 @@ vector<ofPolyline*>  MaskManager::getLaserMaskShapes(){
 	
 }
 
+
+// *************************************** BROKEN ********************************************
+
 bool MaskManager::loadSettings() {
-    for(int i = 0; i<quads.size(); i++) {
-        quads[i]->loadSettings();
-		
+//    for(int i = 0; i<quads.size(); i++) {
+//        quads[i]->loadSettings();
+//
+//    }
+    ofFile jsonfile("Masks.json");
+    if(jsonfile.exists()) {
+        ofJson json = ofLoadJson("Masks.json");
+        
+        for(ofJson& jsonGroup : json) {
+            
+            
+        }
+        
+        dirty = true;
+
     }
-	dirty = true; 
+    
     return true;
 }
 bool MaskManager::saveSettings() {
+    
+    if(quads.size()==0) return false; // maybe also delete masks file? 
+    ofJson json;
+    
+    
     for(int i = 0; i<quads.size(); i++) {
-        quads[i]->saveSettings();
+        ofJson jsonGroup; quads[i]->serialize(jsonGroup);
+        json.push_back(jsonGroup);
     }
+    
+    ofSavePrettyJson("Masks.json", json);
+    
     return true;
 }

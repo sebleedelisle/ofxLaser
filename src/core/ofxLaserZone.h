@@ -17,8 +17,8 @@ namespace ofxLaser {
 		
 		public :
 		
-		Zone();
-		Zone(float x, float y, float w, float h);
+		//Zone();
+		Zone(float x=0, float y=0, float w=800, float h=800);
 		~Zone();
         
         virtual void set(float x, float y, float w, float h) override ;

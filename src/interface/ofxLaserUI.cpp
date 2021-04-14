@@ -35,7 +35,14 @@ void UI::setupGui() {
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Cousine-Regular.ttf", true).c_str(),13);
 //    io.Fonts->Build();
-    
+    ImGui::StyleColorsDark();
+   
+    ImGui::GetStyle().WindowRounding = 1.0f;
+    ImGui::GetStyle().IndentSpacing = 4.0f;
+    ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f,0.0f,0.4f);
+   // ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDarkening]
+    ImGui::GetStyle().ItemSpacing = ImVec2(8.0f,5.0f);
+    ImGui::GetStyle().ItemInnerSpacing = ImVec2(6.0f,6.0f);
     
     ImGui::CreateContext();
     
@@ -46,7 +53,7 @@ void UI::setupGui() {
     imGui.engine.setup(autoDraw);
     
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui::StyleColorsDark();
+    
     
     ImGui::GetIO().MouseDrawCursor = false;
     

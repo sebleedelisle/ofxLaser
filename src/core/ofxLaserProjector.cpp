@@ -65,27 +65,28 @@ bool Projector::removeDac(){
 void Projector::setDefaultHandleSize(float size) {
 	
 	defaultHandleSize = size;
-	for(ZoneTransform* zonetrans : zoneTransforms) {
-		zonetrans->setHandleSize(defaultHandleSize);
-	}
+	//for(ZoneTransform* zonetrans : zoneTransforms) {
+	//	zonetrans->setHandleSize(defaultHandleSize);
+	//}
 	
 }
 
-void Projector :: initAndLoadSettings() {
+void Projector :: init() {
 
     // TODO is this used for anything other than display?
-	settings.setName(ofToString(projectorIndex));
+	params.setName(ofToString(projectorIndex));
 	
-	settings.add(armed.set("ARMED", false));
-    settings.add(intensity.set("Intensity", 1,0,1));
-	settings.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
-    settings.add(dacId.set("dacId", ""));
+	params.add(armed.set("ARMED", false));
+    params.add(intensity.set("Intensity", 1,0,1));
+	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+    params.add(dacId.set("dacId", ""));
+    
     
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
 	 
-	projectorparams.add(colourChangeShift.set("Colour change Shift", 2,0,6));
+	projectorparams.add(colourChangeShift.set("Colour change shift", 2,0,6));
 	projectorparams.add(moveSpeed.set("Move Speed", 4.0 ,0.1,50));
 	projectorparams.add(shapePreBlank.set("Hold off before", 1,0,8));
 	projectorparams.add(shapePreOn.set("Hold on before", 0,0,8));
@@ -110,7 +111,7 @@ void Projector :: initAndLoadSettings() {
 
 	projectorparams.add(advanced);
 	
-	settings.add(projectorparams);
+	params.add(projectorparams);
 	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
@@ -139,7 +140,7 @@ void Projector :: initAndLoadSettings() {
     detail.cornerThreshold  = 15;
     detail.dotMaxPoints = 20;
     
-	settings.add(renderparams);
+	params.add(renderparams);
 	
 	
 	colourParams.setName("Colour calibration");
@@ -162,51 +163,51 @@ void Projector :: initAndLoadSettings() {
     colourParams.add(blue25.set("blue 25", 0.25,0,1));
     colourParams.add(blue0.set("blue 0", 0,0,1));
 	
-	settings.add(colourParams);
+	params.add(colourParams);
 
-    zonesEnabled.resize(zones.size());
+    //zonesEnabled.resize(projectorZones.size());
 
-	ofParameterGroup zonemutegroup;
-	zonemutegroup.setName("Mute Zones");
-	zonesMuted.resize(zones.size());
-	for(size_t i = 0; i<zones.size(); i++) {
-		zonemutegroup.add(zonesMuted[i].set(zones[i]->displayLabel, false));
-	}
-	settings.add(zonemutegroup);
+	//ofParameterGroup zonemutegroup;
+	//zonemutegroup.setName("Mute Zones");
+	//zonesMuted.resize(projectorZones.size());
+	//for(size_t i = 0; i<projectorZones.size(); i++) {
+	//	zonemutegroup.add(zonesMuted[i].set(projectorZones[i]->displayLabel, false));
+	//}
+	//settings.add(zonemutegroup);
 
-    ofParameterGroup zonesologroup;
-    zonesologroup.setName("Solo Zones");
-    zonesSoloed.resize(zones.size());
-    for(size_t i = 0; i<zones.size(); i++) {
-        zonesologroup.add(zonesSoloed[i].set(zones[i]->displayLabel, false));
-    }
-
-    settings.add(zonesologroup);
+//    ofParameterGroup zonesologroup;
+//    zonesologroup.setName("Solo Zones");
+//    zonesSoloed.resize(projectorZones.size());
+//    for(size_t i = 0; i<projectorZones.size(); i++) {
+//        zonesologroup.add(zonesSoloed[i].set(projectorZones[i]->displayLabel, false));
+//    }
+//
+//    settings.add(zonesologroup);
 	
-	for(size_t i = 0; i<zones.size(); i++) {
-		
-		ofParameter<float>& leftEdge = leftEdges[i];
-		ofParameter<float>& rightEdge = rightEdges[i];
-		ofParameter<float>& topEdge = topEdges[i];
-		ofParameter<float>& bottomEdge = bottomEdges[i];
-		
-		ofParameterGroup zonemaskgroup;
-		zonemaskgroup.setName(zones[i]->displayLabel);
-		zonemaskgroup.add(bottomEdge.set("Bottom Edge", 0,0,1));
-		zonemaskgroup.add(topEdge.set("Top Edge", 0,0,1));
-		zonemaskgroup.add(leftEdge.set("Left Edge", 0,0,1));
-		zonemaskgroup.add(rightEdge.set("Right Edge", 0,0,1));
-		
-		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
-		
-		settings.add(zonemaskgroup);
-		
-		ofParameterGroup zonewarpgroup;
-		zonewarpgroup.setName(zones[i]->displayLabel+"warp");
-		zonewarpgroup.add(zoneTransforms[i]->params);
-		settings.add(zonewarpgroup);
-	
-	}
+//	for(size_t i = 0; i<projectorZones.size(); i++) {
+//
+//		ofParameter<float>& leftEdge = leftEdges[i];
+//		ofParameter<float>& rightEdge = rightEdges[i];
+//		ofParameter<float>& topEdge = topEdges[i];
+//		ofParameter<float>& bottomEdge = bottomEdges[i];
+//
+//		ofParameterGroup zonemaskgroup;
+//		zonemaskgroup.setName(projectorZones[i]->displayLabel);
+//		zonemaskgroup.add(bottomEdge.set("Bottom Edge", 0,0,1));
+//		zonemaskgroup.add(topEdge.set("Top Edge", 0,0,1));
+//		zonemaskgroup.add(leftEdge.set("Left Edge", 0,0,1));
+//		zonemaskgroup.add(rightEdge.set("Right Edge", 0,0,1));
+//
+//		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
+//
+//		settings.add(zonemaskgroup);
+//
+//		ofParameterGroup zonewarpgroup;
+//		zonewarpgroup.setName(projectorZones[i]->displayLabel+"warp");
+//		zonewarpgroup.add(zoneTransforms[i]->params);
+//		settings.add(zonewarpgroup);
+//
+//	}
      
      
      
@@ -214,20 +215,20 @@ void Projector :: initAndLoadSettings() {
     pps.addListener(this, &Projector::ppsChanged);
   
 
-    loadSettings();
+    //loadSettings();
    
     dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
 	if(colourChangeShift<0) colourChangeShift = 0;
 
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		zoneTransforms[i]->initGuiListeners();
-		zoneTransforms[i]->loadSettings(); 
-	}
+//	for(size_t i = 0; i<zoneTransforms.size(); i++) {
+//		zoneTransforms[i]->initGuiListeners();
+//		zoneTransforms[i]->loadSettings();
+//	}
 	
 	armed = false;
 	testPattern = 0;
-    for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
+    //for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
     
    
 	guiInitialised = true;
@@ -254,95 +255,88 @@ void Projector:: ppsChanged(int& e){
 
 void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
 
-	if(std::find(zones.begin(), zones.end(), zone) != zones.end()) {
+	if(hasZone(zone)) {
 		ofLog(OF_LOG_ERROR, "Projector::addZone(...) - Projector already contains zone");
 		return;
 	}
-	
-	zones.push_back(zone);
-	
-	zoneTransforms.push_back(new ZoneTransform(projectorIndex, zone->index));
-	ZoneTransform& zoneTransform = *zoneTransforms.back();
     
-    zonesMuted.resize(zones.size());
-    zonesSoloed.resize(zones.size());
-    zonesEnabled.resize(zones.size());
+    ProjectorZone* projectorZone = new ProjectorZone(*zone);
+    projectorZones.push_back(projectorZone);
+    
+    // initialise zoneTransform
+    projectorZone->zoneTransform.init(zone->rect);
+    //    ofRectangle destRect = zone->rect;
+    //    destRect.scale(400/srcwidth, 400/srcheight);
+    //    destRect.x*=400/srcwidth;
+    //    destRect.x+=200;
+    //    destRect.y*=400/srcheight;
+    //    zoneTransform.setDst(destRect);
+    projectorZone->zoneMask = zone->rect;
+    
 
-	zoneTransform.init(zone->rect);
-	ofRectangle destRect = zone->rect;
-	destRect.scale(400/srcwidth, 400/srcheight);
-	destRect.x*=400/srcwidth;
-    destRect.x+=200;
-	destRect.y*=400/srcheight;
-	zoneTransform.setDst(destRect);
-	zoneTransform.scale = 1;
-	zoneTransform.offset.set(0,0);
-	
-	//warp.updateHomography();
-	
-	zoneMasks.emplace_back(zone->rect);
-	
-	leftEdges.push_back(0);
-    //leftEdges.back().set("Left edge", 0, 0, 1));
-	rightEdges.push_back(1);
-	topEdges.push_back(0);
-	bottomEdges.push_back(1);
-    
-	
-	if(guiInitialised) {
-		ofLogWarning("Projector::addZone() - Please add zones before initialising the laser gui"); 
-		zoneTransform.loadSettings();
-	}
+     
 }
 
 bool Projector :: hasZone(Zone* zone){
-    for(Zone* zoneToCheck : zones) {
-        if(zone == zoneToCheck) return true;
+    for(ProjectorZone* projectorZone : projectorZones) {
+        if(zone == &projectorZone->zone) return true;
     }
     return false;
     
 }
 bool Projector :: removeZone(Zone* zone){
-   // if(std::find(zones.begin(), zones.end(), zone) != zones.end()) {
-    vector<Zone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
-    if(it == zones.end()) return false;
+
+    
+    ProjectorZone* projectorZone = getProjectorZoneForZone(zone);
+    if(projectorZone==nullptr) return false;
+    
+    vector<ProjectorZone*>::iterator it = std::find(projectorZones.begin(), projectorZones.end(), projectorZone);
+   // if(it == projectorZones.end()) return false;
     
     // TODO ***** CHECK THIS
     // get the index for the zone
-    int i = it-zones.begin();
-    zones.erase(it);
-    delete zoneTransforms[i];
-    zoneTransforms.erase(zoneTransforms.begin()+i);
-    zonesMuted.erase(zonesMuted.begin()+i);
-    zonesSoloed.erase(zonesSoloed.begin()+i);
-    zoneMasks.erase(zoneMasks.begin()+i);
-    leftEdges.erase(leftEdges.begin()+i);
-    rightEdges.erase(rightEdges.begin()+i);
-    topEdges.erase(topEdges.begin()+i);
-    bottomEdges.erase(bottomEdges.begin()+i);
-    
-    for(int i = 0; i<zones.size(); i++) {
-        zoneTransforms[i]->zoneIndex = zones[i]->index;
-        
-    }
-    
+//    int i = it-projectorZones.begin();
+//    projectorZones.erase(it);
+//    delete zoneTransforms[i];
+//    zoneTransforms.erase(zoneTransforms.begin()+i);
+//    zonesMuted.erase(zonesMuted.begin()+i);
+//    zonesSoloed.erase(zonesSoloed.begin()+i);
+//    zoneMasks.erase(zoneMasks.begin()+i);
+//    leftEdges.erase(leftEdges.begin()+i);
+//    rightEdges.erase(rightEdges.begin()+i);
+//    topEdges.erase(topEdges.begin()+i);
+//    bottomEdges.erase(bottomEdges.begin()+i);
+//
+//    for(int i = 0; i<projectorZones.size(); i++) {
+//        zoneTransforms[i]->zoneIndex = projectorZones[i]->index;
+//
+//    }
+//
+    projectorZones.erase(it);
+    delete projectorZone;
     
     return true;
     
     
     
 }
-
-void Projector::zoneMaskChanged(ofAbstractParameter& e) {
-	updateZoneMasks();
-}
+//
+//void Projector::zoneMaskChanged(ofAbstractParameter& e) {
+//	updateZoneMasks();
+//}
 
 void Projector::updateZoneMasks() {
 	
+    for(ProjectorZone* projectorZone : projectorZones) {
+        
+        projectorZone->updateZoneMask();
+    }
+    
+    /*
 	for(size_t i = 0; i<zoneMasks.size(); i++) {
 		
 		ofRectangle& zoneMask = zoneMasks[i];
-		Zone& zone = *zones[i];
+		Zone& zone = *projectorZones[i];
 		
 		ofParameter<float>& leftEdge = leftEdges[i];
 		ofParameter<float>& rightEdge = rightEdges[i];
@@ -352,7 +346,7 @@ void Projector::updateZoneMasks() {
 		zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
 		zoneMask.setWidth(zone.rect.getWidth()*(1-leftEdge-rightEdge));
 		zoneMask.setHeight(zone.rect.getHeight()*(1-topEdge-bottomEdge));
-	}
+	}*/
 }
 
 
@@ -360,7 +354,7 @@ string Projector::getDacLabel() {
     if(dac!=&emptyDac) {
         return dac->getId();
     } else {
-        return "No DAC assigned";
+        return "No laser controller assigned";
     }
 }
 
@@ -369,7 +363,7 @@ bool Projector::getDacConnectedState() {
     if(dac!=nullptr) {
         return dac->getStatusColour()==ofColor::green;
     } else {
-        return "No DAC set up";
+        return "No laser controller set up";
     }
 }
 /*
@@ -433,58 +427,19 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
 	ofPushStyle();
 	ofNoFill();
 
-    float warpscale = w/800.0f;
+    float scale = w/800.0f;
+    ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
+    for(ProjectorZone* projectorZone : projectorZones) {
+        if(!projectorZone->enabled) continue;
+        projectorZone->setScale(scale);
+        projectorZone->setOffset(offset);
+        projectorZone->draw();
+        
+        
+    }
 
-	// draw the handles for all the warp UIs
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		if(!zonesEnabled[i]) continue;
-		ZoneTransform& warp = *zoneTransforms[i];
-		warp.offset = ofPoint(x,y) + (ofPoint(outputOffset)*warpscale);
-		warp.scale = warpscale;
-		warp.draw();
-	}
-	
-	ofPushMatrix();
-	ofTranslate(x,y);
-	ofScale(warpscale,warpscale);
-	ofTranslate(outputOffset);
-	
-	// go through and draw blue rectangles around the warper
-	ofPoint p;
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-
-		ZoneTransform& warp = *zoneTransforms[i];
-		
-		warp.setVisible(zonesEnabled[i]);
-		
-		if(!zonesEnabled[i]) continue;
-		
-		ofRectangle& mask = zoneMasks[i];
-		
-		//ofPushMatrix();
-		//ofTranslate();
-		ofEnableAlphaBlending();
-		ofFill();
-		ofSetColor(0,0,255,30);
-		
-		ofBeginShape();
-		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-		ofVertex(p);
-		ofEndShape(true);
-		
-	}
-	
-	ofPopMatrix();
-	ofPopStyle();
-	
-	//drawLaserPath(0,0,warpscale*800,warpscale*800);
-	
+   
+    ofPopStyle();
 }
 
 void Projector :: drawLaserPath(ofRectangle rect) {
@@ -506,35 +461,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 	ofPoint p;
 
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		ZoneTransform& warp = *zoneTransforms[i];
-
-		warp.setVisible(zonesEnabled[i]);
-
-		if(!zonesEnabled[i]) continue;
-
-		ofRectangle& mask = zoneMasks[i];
-
-
-		ofNoFill();
-		ofSetColor(50,50,255,150);
-
-		ofBeginShape();
-		p = warp.getWarpedPoint((ofPoint)mask.getTopLeft());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getTopRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomRight());
-		ofVertex(p);
-		p = warp.getWarpedPoint((ofPoint)mask.getBottomLeft());
-		ofVertex(p);
-		ofEndShape(true);
-
-
-	}
-
-
-	ofNoFill();
+  	ofNoFill();
 	//ofSetColor(255);
     ofSetColor(MIN(255 * w / 800.0f, 255));
 	ofSetLineWidth(0.5);
@@ -579,19 +506,16 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 
 void Projector :: hideWarpGui() {
 	
-	// disable warps
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		ZoneTransform& warp = *zoneTransforms[i];
-		warp.setVisible(false);
-	}
+    for(ProjectorZone* projectorZone : projectorZones) {
+        projectorZone->setVisible(false);
+    }
+	
 	
 }
 void Projector :: showWarpGui() {
-	
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		ZoneTransform& warp = *zoneTransforms[i];
-		warp.setVisible(false);
-	}
+    for(ProjectorZone* projectorZone : projectorZones) {
+        projectorZone->setVisible(true);
+    }
 	
 }
 
@@ -601,38 +525,39 @@ void Projector :: showWarpGui() {
 void Projector::update(bool updateZones) {
 	
     bool soloMode = false;
-    for(size_t i = 0; i<zonesSoloed.size(); i++) {
-        if(zonesSoloed[i]) {
+    for(ProjectorZone* projectorZone : projectorZones) {
+        if(projectorZone->soloed) {
             soloMode = true;
             break;
         }
     }
+    
     if(soloMode) {
-        for(size_t i = 0; i<zonesEnabled.size(); i++ ) {
-            zonesEnabled[i] = zonesSoloed[i];
+        for(ProjectorZone* projectorZone : projectorZones) {
+            projectorZone->enabled = projectorZone->soloed;
         }
         
     } else {
-        for(size_t i = 0; i<zonesEnabled.size(); i++ ) {
-            zonesEnabled[i] = !zonesMuted[i];
+        for(ProjectorZone* projectorZone : projectorZones) {
+            projectorZone->enabled = !projectorZone->muted;
         }
     }
     
     
 	laserPoints.clear();
 	previewPathMesh.clear();
-	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-		zoneTransforms[i]->update();
+    for(ProjectorZone* projectorZone : projectorZones) {
+		projectorZone->update();
 	}
 	
 	// if any of the source rectangles have changed then update all the warps
 	if(updateZones) {
-		for(size_t i = 0; i<zoneTransforms.size(); i++) {
-			ZoneTransform& warp = *zoneTransforms[i];
-			warp.setSrc(zones[i]->rect);
-			warp.updateHomography();
-			updateZoneMasks();
-		}
+        for(ProjectorZone* projectorZone : projectorZones) {
+            ZoneTransform& warp = projectorZone->zoneTransform;
+            warp.setSrc(projectorZone->zone.rect);
+            warp.updateHomography();
+            updateZoneMasks();
+        }
 	}
 	
 	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.2;
@@ -640,13 +565,13 @@ void Projector::update(bool updateZones) {
 }
 
 
-void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, int zonenum, float masterIntensity ){
+void Projector::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, float masterIntensity ){
     
      //ofLog(OF_LOG_NOTICE, "ofxLaser::Projector::sendRawPoints(...) point count : "+ofToString(points.size()));
     
-    Zone& zone = *zones.at(zonenum);
-    ofRectangle& maskRectangle = zoneMasks.at(zonenum);
-    ZoneTransform& warp = *zoneTransforms.at(zonenum);
+    ProjectorZone& projectorZone = *getProjectorZoneForZone(zone);
+    ofRectangle& maskRectangle = projectorZone.zoneMask;
+    ZoneTransform& warp = projectorZone.zoneTransform;
     bool offScreen = true;
     
     vector<Point>segmentpoints;
@@ -846,17 +771,17 @@ void Projector::send(ofPixels* pixels, float masterIntensity) {
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
 	}
 	int targetNumPoints;
+    
 	// TODO add system to speed up if too much stuff to draw
 	if (syncToTargetFramerate) {
-		//targetFramerate = round(targetFramerate * 100) / 100.0f;
+		
 		targetNumPoints = round((float)pps / targetFramerate);
-		// TODO : CHANGE TO PARAMETER
+		
 		if(syncShift!=0) {
 			targetNumPoints+=syncShift;
 			if(!ofGetMousePressed()) syncShift = 0;
 		}
-		//if (ofGetKeyPressed(OF_KEY_LEFT)) targetNumPoints -= 10;
-		//if (ofGetKeyPressed(OF_KEY_RIGHT)) targetNumPoints += 10;
+		
 		while (laserPoints.size() < targetNumPoints) {
 			addPoint(laserHomePosition, ofColor::black);
 		}
@@ -891,13 +816,14 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
 	vector<Point> shapePointBuffer;
 	
 	// go through each zone
-	for(size_t i = 0; i<zones.size(); i++) {
-		
-		if(!zonesEnabled[i]) continue;
+	//for(int i = 0; i<(int)projectorZones.size(); i++) {
+    for(ProjectorZone* projectorZone : projectorZones) {
+        //ProjectorZone* projectorZone = projectorZones[i];
+		if(!projectorZone->enabled) continue;
         
-		Zone& zone = *zones[i];
-		ZoneTransform& warp = *zoneTransforms[i];
-		ofRectangle& maskRectangle = zoneMasks[i];
+		Zone& zone = projectorZone->zone;
+        ZoneTransform& warp = projectorZone->zoneTransform;
+		ofRectangle& maskRectangle = projectorZone->zoneMask;
         
         // makes a copy so we don't mess it up if we add
         // test shapes
@@ -906,7 +832,7 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
         // get test pattern shapes - we have to do this even if
         // we don't have a test pattern, so that the code at the end
         // of this function can delete the shapes.
-        deque<Shape*> testPatternShapes = getTestPatternShapesForZone((int)i);
+        deque<Shape*> testPatternShapes = getTestPatternShapesForZone(*projectorZone);
         
         if(testPattern>0) {
             // create new deque and copy zone shapes into it
@@ -1073,12 +999,12 @@ RenderProfile& Projector::getRenderProfile(string profilelabel) {
 	
 }
 
-deque<Shape*> Projector ::getTestPatternShapesForZone(int zoneindex) {
+deque<Shape*> Projector ::getTestPatternShapesForZone(ProjectorZone& projectorZone) {
 	
 	deque<Shape*> shapes;
-	Zone& zone = *zones[zoneindex];
+	Zone& zone = projectorZone.zone;
 	
-	ofRectangle& maskRectangle = zoneMasks[zoneindex];
+	ofRectangle& maskRectangle = projectorZone.zoneMask;
 	
 	if(testPattern==1) {
 		
@@ -1419,13 +1345,33 @@ float Projector::calculateCalibratedBrightness(float value, float intensity, flo
 }
 
 
-bool Projector::loadSettings(){
-    ofJson json = ofLoadJson("projectors/" + ofToString(projectorIndex)+".json");
-    //laserPatch.serialize(json);
+bool Projector::loadSettings(vector<Zone*>& zones){
+    ofJson json = ofLoadJson("projectors/projector" + ofToString(projectorIndex)+".json");
+    ofDeserialize(json, params);
+
+    //cout << json.dump(3) << endl;
+    
+    //vector<int>projectorzonenums = json["projectorzones"];
+    ofJson zoneNumJson = json["projectorzones"];
+    //cout << zoneNumJson.dump(3) << endl;
+    
+    // TODO lots of error checking!
+    // load the ProjectorZones settings files
+    
+    for(auto jsonitem : zoneNumJson) {
+        cout << (int) jsonitem << endl;
+        int zoneNum = (int)jsonitem;
+        ProjectorZone* projectorZone = new ProjectorZone(*zones[zoneNum]);
+        projectorZones.push_back(projectorZone);
+        ofJson projectorZoneJson = ofLoadJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(zoneNum) + ".json");
+
+        projectorZone->deserialize(projectorZoneJson);
+        
+    }
+
     if(json.empty()) {
         return false;
     } else {
-        ofDeserialize(json, settings);
         return true;
     }
 }
@@ -1433,9 +1379,30 @@ bool Projector::loadSettings(){
 
 bool Projector::saveSettings(){
     ofJson json;
-    ofSerialize(json, settings);
-    return ofSavePrettyJson("projectors/"+ ofToString(projectorIndex) +".json", json);
+    ofSerialize(json, params);
 
+
+    
+    vector<int>projectorzonenums;
+    for(ProjectorZone* projectorZone : projectorZones) {
+        projectorzonenums.push_back(projectorZone->zone.index);
+    }
+    
+    json["projectorzones"] = projectorzonenums;
+
+    
+    bool success = ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +".json", json);
+
+    
+    for(ProjectorZone* projectorZone : projectorZones) {
+        ofJson projectorzonejson;
+        projectorZone->serialize(projectorzonejson);
+        
+        success &= ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(projectorZone->zone.index) + ".json", projectorzonejson);
+    }
+    
+    
+    return success;
     
 }
 

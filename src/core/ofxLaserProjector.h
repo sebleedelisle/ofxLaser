@@ -10,7 +10,7 @@
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
-#include "ofxLaserZoneTransform.h"
+#include "ofxLaserProjectorZone.h"
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 #include "PennerEasing.h"
@@ -33,6 +33,8 @@ namespace ofxLaser {
 		}
 	};
 
+  
+
 	class Projector {
         
 		public :
@@ -40,7 +42,7 @@ namespace ofxLaser {
 		Projector(int _index);
 		~Projector();
 		
-        void initAndLoadSettings();
+        void init();
         
         string getLabel() {
             return "Projector " + ofToString(projectorIndex+1);
@@ -49,7 +51,7 @@ namespace ofxLaser {
         DacBase* getDac();
         bool removeDac();
         
-        bool loadSettings();
+        bool loadSettings(vector<Zone*>& zones);
         bool saveSettings();
         
 		void setDefaultHandleSize(float size);
@@ -63,7 +65,7 @@ namespace ofxLaser {
 		void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
 		
-        void sendRawPoints(const vector<Point>& points, int zonenum = 0, float masterIntensity =1);
+        void sendRawPoints(const vector<Point>& points, Zone* zone, float masterIntensity =1);
         int getPointRate() {
             return pps; 
         };
@@ -89,30 +91,16 @@ namespace ofxLaser {
 		void showWarpGui();
 
         
-        vector<Zone*> zones;
-        vector<ZoneTransform*> zoneTransforms;
-        vector<ofRectangle> zoneMasks;
+        vector<ProjectorZone*> projectorZones;
+   
+        ProjectorZone* getProjectorZoneForZone(Zone* zone) {
+            for(ProjectorZone* projectorZone : projectorZones) {
+                if(&projectorZone->zone == zone) return projectorZone;
+            }
+            return nullptr;
+
+        }
         
-        vector<ofParameter<float>>leftEdges;
-        vector<ofParameter<float>>rightEdges;
-        vector<ofParameter<float>>topEdges;
-        vector<ofParameter<float>>bottomEdges;
-        
-        //ofRectangle maskRectangle;
-        
-        vector<ofParameter<bool>> zonesMuted;
-        vector<ofParameter<bool>> zonesSoloed;
-        vector<bool> zonesEnabled;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-		
         // Managing points
         void addPoint(ofxLaser::Point p);
 		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
@@ -124,10 +112,10 @@ namespace ofxLaser {
 		RenderProfile& getRenderProfile(string profilelabel);
 		
 		void updateZoneMasks();
-		void zoneMaskChanged(ofAbstractParameter& e);
+		
 		void ppsChanged(int& e);
 		
-		deque<Shape*> getTestPatternShapesForZone(int zoneindex);
+		deque<Shape*> getTestPatternShapesForZone(ProjectorZone& zone);
 		
         float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
 
@@ -214,7 +202,7 @@ namespace ofxLaser {
 		
 		//ofxPanel* gui;
         //bool guiIsVisible;
-        ofParameterGroup settings;
+        ofParameterGroup params;
         ofParameterGroup advancedParams; 
 		bool guiInitialised = false; 
 

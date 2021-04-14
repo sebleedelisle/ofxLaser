@@ -20,7 +20,7 @@ class QuadGui {
     QuadGui();
     ~QuadGui();
     
-    void setName(string savelabel = "QuadGui", string displaylabel = "");
+    void setName(string displaylabel = "");
 	void set(const ofRectangle& rect);
 	virtual void set(float x, float y, float w, float h) ;
     void setConstrained(const ofRectangle& rect); 
@@ -43,8 +43,8 @@ class QuadGui {
 	
 	void updateCentreHandle(); 
 	
-	bool loadSettings();
-	void saveSettings();
+	//bool loadSettings();
+	//void saveSettings();
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
@@ -53,7 +53,7 @@ class QuadGui {
 	
 	bool isVisible() { return visible; };
 	
-	string saveLabel;
+	//string saveLabel;
 	string displayLabel;
 	
     bool lockPerpendicular = false;
