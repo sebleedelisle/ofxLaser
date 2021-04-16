@@ -27,10 +27,13 @@ public:
     
     virtual bool deleteQuadMask(QuadMask* mask); 
     
-    bool loadSettings();
-    bool saveSettings();
-	void setOffsetAndScale(ofPoint offset, float scale); 
+    virtual void serialize(ofJson&json);
+    virtual bool deserialize(ofJson&jsonGroup);
+
+    void setOffsetAndScale(ofPoint offset, float scale);
 	
+    
+    
 	vector<ofPolyline*> getLaserMaskShapes();
     QuadMask& addQuadMask(int level=100);
     

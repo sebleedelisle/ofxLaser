@@ -35,16 +35,22 @@ class QuadGui {
     bool mouseMoved(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     
-    bool hitTest(ofPoint mousepoint);
+
+    
+    // non optimised hit test in screen space
+    // (takes into account the offset and scale)
+    bool hitTestScreen(ofPoint mousepoint);
+    
+    // optimised hit test for checking many laser points
+    bool hitTest(const ofPoint& p);
 
 	void startDragging(int handleIndex, glm::vec3 clickPos);
 	
-	void updateCentreHandle(); 
-	
-	//bool loadSettings();
-	//void saveSettings();
-	void serialize(ofJson&json);
-	bool deserialize(ofJson&jsonGroup);
+	void updateCentreHandle();
+    void updatePoly(); 
+
+	virtual void serialize(ofJson&json);
+	virtual bool deserialize(ofJson&jsonGroup);
 
 	void setVisible(bool warpvisible);
 	bool checkDirty(); 
@@ -65,7 +71,9 @@ class QuadGui {
 	DragHandle handles[4];
 	DragHandle centreHandle;
 	vector<DragHandle*> allHandles;
-
+    ofPolyline quadPoly;
+    ofRectangle boundingBox; 
+    
 	float width;
 	float height;
 	

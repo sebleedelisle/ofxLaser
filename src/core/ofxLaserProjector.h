@@ -103,7 +103,7 @@ namespace ofxLaser {
         
         // Managing points
         void addPoint(ofxLaser::Point p);
-		void addPoint(ofPoint p, ofFloatColor c, float pointIntensity = 1, bool useCalibration = true);
+		void addPoint(ofPoint p, ofFloatColor c, bool useCalibration = true);
 		void addPoints(vector<ofxLaser::Point>&points, bool reversed = false);
 
 		void addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint);

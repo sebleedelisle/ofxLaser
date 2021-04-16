@@ -42,10 +42,12 @@ bool MaskManager  ::update() {
         }
     }
     firstUpdate = false;
+    bool wasDirty = dirty;
     if(dirty) {
-        saveSettings();
+        dirty = false;
+        //saveSettings();
     }
-    return dirty;
+    return wasDirty;
 }
 
 bool MaskManager  ::draw() {
@@ -137,41 +139,65 @@ vector<ofPolyline*>  MaskManager  ::getLaserMaskShapes(){
     
 }
 
+void MaskManager::serialize(ofJson&json) {
+    ofJson maskJson;// = json["maskmanager"];
+    for(int i = 0; i<(int)quads.size(); i++) {
+        quads[i]->serialize(maskJson[ofToString(i)]);
+    }
+    json["maskmanager"] = maskJson;
+    //cout << maskJson.dump(3) << endl;
+    //cout << json.dump(3) << endl;
+}
+
+bool MaskManager::deserialize(ofJson& jsonGroup) {
+    ofJson maskJson = jsonGroup["maskmanager"];
+    while(quads.size()>0) {
+        delete quads.back();
+        quads.pop_back();
+    }
+    for(auto quadjson : maskJson) {
+        addQuadMask();
+        quads.back()->deserialize(quadjson);
+    }
+    return true;
+}
+
+
 
 // *************************************** BROKEN ********************************************
-
-bool MaskManager  ::loadSettings() {
-    //    for(int i = 0; i<quads.size(); i++) {
-    //        quads[i]->loadSettings();
-    //
-    //    }
-    ofFile jsonfile("Masks.json");
-    if(jsonfile.exists()) {
-        ofJson json = ofLoadJson("Masks.json");
-        
-        for(ofJson& jsonGroup : json) {
-            
-            
-        }
-        
-        dirty = true;
-        
-    }
-    
-    return true;
-}
-bool MaskManager  ::saveSettings() {
-    
-    if(quads.size()==0) return false; // maybe also delete masks file?
-    ofJson json;
-    
-    
-    for(int i = 0; i<quads.size(); i++) {
-        ofJson jsonGroup; quads[i]->serialize(jsonGroup);
-        json.push_back(jsonGroup);
-    }
-    
-    ofSavePrettyJson("Masks.json", json);
-    
-    return true;
-}
+//
+//bool MaskManager  ::loadSettings() {
+//    //    for(int i = 0; i<quads.size(); i++) {
+//    //        quads[i]->loadSettings();
+//    //
+//    //    }
+//    ofFile jsonfile("Masks.json");
+//    if(jsonfile.exists()) {
+//        ofJson json = ofLoadJson("Masks.json");
+//        
+//        for(ofJson& jsonGroup : json) {
+//            
+//            
+//        }
+//        
+//        dirty = true;
+//        
+//    }
+//    
+//    return true;
+//}
+//bool MaskManager  ::saveSettings() {
+//    
+//    if(quads.size()==0) return false; // maybe also delete masks file?
+//    ofJson json;
+//    
+//    
+//    for(int i = 0; i<quads.size(); i++) {
+//        ofJson jsonGroup; quads[i]->serialize(jsonGroup);
+//        json.push_back(jsonGroup);
+//    }
+//    
+//    ofSavePrettyJson("Masks.json", json);
+//    
+//    return true;
+//}

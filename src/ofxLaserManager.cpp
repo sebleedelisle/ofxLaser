@@ -898,7 +898,8 @@ bool Manager::saveSettings() {
         savesuccess &= projectors[i]->saveSettings();
 //        savesuccess &= projectors[i]->saveZoneSettings();
 	}
-    savesuccess &= laserMask.saveSettings();
+    // TODO add laserMask saving to laser settings
+    //savesuccess &= laserMask.saveSettings();
     
     // Save zones :
     ofJson zoneJson;
@@ -1282,7 +1283,10 @@ void Manager::drawLaserGui() {
         if(ImGui::Button("ADD MASK")) {
             maskManager.addQuadMask();
         }
-        ImGui::Separator();
+        ImDrawList*   draw_list = ImGui::GetWindowDrawList();
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        draw_list->AddLine(ImVec2(p.x - 9999, p.y), ImVec2(p.x + 9999, p.y),  ImGui::GetColorU32(ImGuiCol_Border));
+        ImGui::Dummy(ImVec2(0.0f, 2.0f));
         for(QuadMask* mask : maskManager.quads){
             string label = "##"+mask->displayLabel;
             ImGui::Text("%s", mask->displayLabel.c_str());

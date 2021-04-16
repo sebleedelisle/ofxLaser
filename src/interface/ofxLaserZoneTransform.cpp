@@ -34,7 +34,7 @@ ZoneTransform::ZoneTransform() {
 	editSubdivisions = false;
 	
     // Used for serialize / deserialize
-	params.setName("Zone Transform");
+	params.setName("ZoneTransformParams");
 
 	params.add(xDivisionsNew.set("x divisions", 1,1,6));
 	params.add(yDivisionsNew.set("y divisions", 1,1,6));
@@ -609,22 +609,27 @@ void ZoneTransform::serialize(ofJson&json) {
 
 bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	//ofLogNotice("ZoneTransform::deserialize()");
-	ofJson& paramjson = jsonGroup["ZoneTransform"];
-	ofDeserialize(paramjson, params);
-	ofJson& handlejson = jsonGroup["handles"];
+    // note that ofDeserialize looks for the json group
+    // with the same name as the parameterGroup
+	ofDeserialize(jsonGroup, params);
+    //cout << paramjson.dump(3) << endl;
+    
 	
 	// number of handles could be different now
 	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
 	xDivisions = xDivisionsNew;
 	yDivisions = yDivisionsNew;
 	dstHandles.resize(numhandles);
-	
+    
+    ofJson& handlejson = jsonGroup["handles"];
+    
 	if((int)handlejson.size()>=numhandles) {
 		for(int i = 0; i<numhandles; i++) {
 			ofJson& point = handlejson[i];
 			dstHandles[i].x = point[0];
 			dstHandles[i].y = point[1];
 			dstHandles[i].z = 0;
+            cout << "setting handle " << i << " : " << dstHandles[i] << endl;
 			
 		}
 	}

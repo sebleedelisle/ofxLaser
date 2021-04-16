@@ -14,9 +14,16 @@ QuadGui::QuadGui() {
     visible = true;
     isDirty=true;
     selected = false;
+    
+    for(int i = 0; i<=numHandles; i++) {
+        quadPoly.addVertex(0,0,0);
+    }
+    
     set(0,0,60,60);
     initialised = true;
-    lineColour.set(255); 
+    lineColour.set(255);
+   
+    updatePoly();
     
 }
 QuadGui::~QuadGui() {
@@ -52,6 +59,7 @@ void QuadGui::set(float x, float y, float w, float h) {
         handle->overCol = ofColor::magenta;
         handle->col = ofColor(255,0,255,128);
     }
+    updatePoly();
     
 }
 
@@ -173,20 +181,19 @@ void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
     
 	
 }
-bool QuadGui :: hitTest(ofPoint mousePoint) {
+bool QuadGui :: hitTestScreen(ofPoint mousePoint) {
     
     mousePoint-=offset;
     mousePoint/=scale;
     
-    ofPolyline poly;
+    if(!boundingBox.inside(mousePoint)) return false;
+    return(quadPoly.inside(mousePoint));
 
-	poly.addVertex(handles[0]);
-    poly.addVertex(handles[1]);
-    poly.addVertex(handles[3]);
-    poly.addVertex(handles[2]);
-
-    poly.close();
-    return(poly.inside(mousePoint));
+}
+bool QuadGui :: hitTest(const ofPoint& p) {
+    
+    if(!boundingBox.inside(p)) return false;
+    else return(quadPoly.inside(p));
 
 }
 
@@ -196,10 +203,10 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
         
 	if(!visible) return false;
 
-    bool hit = hitTest(e);
+    bool hit = hitTestScreen(e);
     if((hit) &&(!selected)) {
         selected = true;
-        return false;
+        return true;
     }
     
         
@@ -274,7 +281,7 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
 		dragging = centreHandle.updateDrag(mousePos);
 	} else {
 		updateCentreHandle();
-		
+        updatePoly();
 	}
 	
 	isDirty |= dragging;
@@ -284,7 +291,18 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
 	
 	
 }
-
+void QuadGui :: updatePoly() {
+    vector<glm::vec3>& vertices = quadPoly.getVertices(); 
+   
+    vertices[0] = (handles[0]);
+    vertices[1] = (handles[1]);
+    vertices[2] = (handles[3]);
+    vertices[3] = (handles[2]);
+    vertices[4] = (handles[0]);
+   
+    boundingBox = quadPoly.getBoundingBox();
+    
+}
 
 bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 	
@@ -323,7 +341,7 @@ void QuadGui::updateCentreHandle() {
 
 void QuadGui::serialize(ofJson&json) {
 	//ofSerialize(json,params);
-	ofJson& handlesjson = json["quadgui"];
+	ofJson& handlesjson = json["quadguihandles"];
 	for(int i = 0; i<4; i++) {
 		DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
@@ -333,17 +351,19 @@ void QuadGui::serialize(ofJson&json) {
 }
 
 bool QuadGui::deserialize(ofJson& jsonGroup) {
-	
-	ofJson& handlejson = jsonGroup["quadgui"];
+	// TODO ERROR CHECKIGN!
+	ofJson& handlejson = jsonGroup["quadguihandles"];
 	
 	for(int i = 0; i<4; i++) {
 		ofJson& point = handlejson[i];
+  
 		handles[i].x = point[0];
 		handles[i].y = point[1];
 		handles[i].z = 0;
 		
 	}
     updateCentreHandle();
+    updatePoly();
 	return true; 
 }
 

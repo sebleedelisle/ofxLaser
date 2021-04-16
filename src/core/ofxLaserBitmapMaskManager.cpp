@@ -32,10 +32,10 @@ BitmapMaskManager ::~BitmapMaskManager() {
 
 bool BitmapMaskManager ::update() {
     
-    dirty = MaskManager::update();
+    bool isdirty = MaskManager::update();
     
     firstUpdate = false;
-    if(dirty) {
+    if(isdirty) {
         fbo.begin();
 		ofDisableBlendMode();
         ofBackground(255);
@@ -62,9 +62,9 @@ bool BitmapMaskManager ::update() {
         
         fbo.end();
         fbo.readToPixels(pixels);
-        saveSettings();
+        //saveSettings();
     }
-    return dirty;
+    return isdirty;
 }
 
 bool BitmapMaskManager ::draw(bool showBitmap) {

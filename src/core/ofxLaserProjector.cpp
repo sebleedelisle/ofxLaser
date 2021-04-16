@@ -948,8 +948,16 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
 					p.g*=brightness;
 					p.b*=brightness;
 				}
-				
-				segmentpoints[k] = warp.getWarpedPoint(segmentpoints[k]);
+                Point& p = segmentpoints[k];
+                p = warp.getWarpedPoint(p);
+                
+                // check if it's in any of the masks!
+                for(QuadMask* mask : maskManager.quads){
+                    if(mask->hitTest(p)) {
+                        p.multiplyColour(ofMap(mask->maskLevel,100,0,0,1));
+                    }
+                }
+                
 			}
 		}
 		
@@ -1179,10 +1187,10 @@ void Projector :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPo
 
 }
 
-void Projector :: addPoint(ofPoint p, ofFloatColor c, float pointIntensity, bool useCalibration) {
+void Projector :: addPoint(ofPoint p, ofFloatColor c, bool useCalibration) {
 	
 	
-	addPoint(ofxLaser::Point(p, c, pointIntensity, useCalibration));
+	addPoint(ofxLaser::Point(p, c, useCalibration));
 	
 }
 void Projector :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
@@ -1334,6 +1342,8 @@ bool Projector::loadSettings(vector<Zone*>& zones){
     ofJson json = ofLoadJson("projectors/projector" + ofToString(projectorIndex)+".json");
     ofDeserialize(json, params);
 
+    maskManager.deserialize(json); 
+    
     //cout << json.dump(3) << endl;
     
     //vector<int>projectorzonenums = json["projectorzones"];
@@ -1375,7 +1385,8 @@ bool Projector::saveSettings(){
     
     json["projectorzones"] = projectorzonenums;
 
-    
+    maskManager.serialize(json);
+    //cout << json.dump(3) << endl;
     bool success = ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +".json", json);
 
     

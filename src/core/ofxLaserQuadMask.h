@@ -8,16 +8,14 @@
 #pragma once 
 #include "ofxLaserQuadGui.h"
 
-
-
 namespace ofxLaser {
 class QuadMask : public QuadGui{
     
     public :
-    QuadMask() : QuadGui() {
-        maskLevel.set("Reduction amount", 100, 0,100);
-    };
+    QuadMask();
 
+    virtual void serialize(ofJson&json) override;
+    virtual bool deserialize(ofJson&jsonGroup) override;
 
     ofParameter<int> maskLevel;
 
