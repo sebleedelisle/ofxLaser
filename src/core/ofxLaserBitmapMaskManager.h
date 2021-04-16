@@ -14,13 +14,13 @@
 
 namespace ofxLaser {
     
-class MaskManager {
+class BitmapMaskManager {
     
 public:
     
-    MaskManager();
-    ~MaskManager();
-    
+    BitmapMaskManager {
+     ~BitmapMaskManager {
+     
     void init(int width, int height);
     bool update();
     bool draw(bool showBitmap = false); 

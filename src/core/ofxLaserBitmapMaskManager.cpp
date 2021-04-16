@@ -17,11 +17,15 @@
 
 using namespace ofxLaser;
 
-MaskManager::MaskManager() {
+BitmapMaskManager {
+   ::BitmapMaskManager {
+   () {
     
 }
 
-MaskManager::~MaskManager() {
+BitmapMaskManager {
+   ::~BitmapMaskManager {
+   () {
     
     if(fbo.isAllocated()) fbo.clear();
     while(quads.size()>0) {
@@ -30,7 +34,8 @@ MaskManager::~MaskManager() {
     }
 }
 
-bool MaskManager::update() {
+bool BitmapMaskManager {
+   ::update() {
     
     dirty = false;
     for(int i = 0; i<quads.size(); i++) {
@@ -74,7 +79,8 @@ bool MaskManager::update() {
     return dirty;
 }
 
-bool MaskManager::draw(bool showBitmap) {
+bool BitmapMaskManager {
+   ::draw(bool showBitmap) {
     
     if(showBitmap) {
         ofPushStyle();
@@ -100,7 +106,8 @@ bool MaskManager::draw(bool showBitmap) {
 //    }
 }
 
-QuadMask& MaskManager::addQuadMask(float level) {
+QuadMask& BitmapMaskManager {
+   ::addQuadMask(float level) {
     QuadMask* quad = new QuadMask();
     quads.push_back(quad);
     quad->maskLevel= level;
@@ -115,7 +122,8 @@ QuadMask& MaskManager::addQuadMask(float level) {
     return *quad;
 }
 
-void MaskManager::init(int w, int h){
+void BitmapMaskManager {
+   ::init(int w, int h){
 	width = w;
 	height = h; 
 	maskBitmap.load("LaserMask.png");
@@ -139,7 +147,8 @@ void MaskManager::init(int w, int h){
     
 }
 
-void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
+void BitmapMaskManager {
+   ::setOffsetAndScale(ofPoint newoffset, float newscale){
 	if((offset == newoffset) && (newscale==scale)) return;
 	offset = newoffset;
 	scale = newscale;
@@ -151,16 +160,19 @@ void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
 	
 }
 
-float MaskManager::getBrightness(int x, int y) {
+float BitmapMaskManager {
+   ::getBrightness(int x, int y) {
     ofFloatColor c = pixels.getColor(x,y);
     return c.getBrightness();
     
 }
-ofPixels* MaskManager::getPixels() {
+ofPixels* BitmapMaskManager {
+   ::getPixels() {
     return &pixels;
 }
 
-vector<ofPolyline*>  MaskManager::getLaserMaskShapes(){
+vector<ofPolyline*>  BitmapMaskManager {
+   ::getLaserMaskShapes(){
 	
 	vector<ofPolyline*> polylines;
 	for(int i = 0 ;i<quads.size(); i++) {
@@ -185,7 +197,8 @@ vector<ofPolyline*>  MaskManager::getLaserMaskShapes(){
 
 // *************************************** BROKEN ********************************************
 
-bool MaskManager::loadSettings() {
+bool BitmapMaskManager {
+   ::loadSettings() {
 //    for(int i = 0; i<quads.size(); i++) {
 //        quads[i]->loadSettings();
 //
@@ -205,7 +218,8 @@ bool MaskManager::loadSettings() {
     
     return true;
 }
-bool MaskManager::saveSettings() {
+bool BitmapMaskManager {
+   ::saveSettings() {
     
     if(quads.size()==0) return false; // maybe also delete masks file? 
     ofJson json;
