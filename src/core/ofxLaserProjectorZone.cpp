@@ -19,10 +19,10 @@ ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
     params.add(soloed.set("solo", false));
     
     zoneMaskGroup.setName(getLabel());
-    zoneMaskGroup.add(bottomEdge.set("Bottom Edge", 0,0,1));
-    zoneMaskGroup.add(topEdge.set("Top Edge", 0,0,1));
-    zoneMaskGroup.add(leftEdge.set("Left Edge", 0,0,1));
-    zoneMaskGroup.add(rightEdge.set("Right Edge", 0,0,1));
+    zoneMaskGroup.add(bottomEdge.set("Bottom", 0,0,1));
+    zoneMaskGroup.add(topEdge.set("Top", 0,0,1));
+    zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
+    zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
     ofAddListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
     params.add(zoneMaskGroup); 
    

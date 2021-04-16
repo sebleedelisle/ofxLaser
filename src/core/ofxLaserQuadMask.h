@@ -5,6 +5,7 @@
 //  Created by Seb Lee-Delisle on 01/02/2018.
 //
 
+#pragma once 
 #include "ofxLaserQuadGui.h"
 
 

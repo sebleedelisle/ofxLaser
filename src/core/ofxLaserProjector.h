@@ -7,6 +7,7 @@
 //
 #pragma once
 
+//#include "ofxLaserManager.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
@@ -14,6 +15,7 @@
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 #include "PennerEasing.h"
+#include "ofxLaserMaskManager.h"
 
 namespace ofxLaser {
 
@@ -33,9 +35,7 @@ namespace ofxLaser {
 		}
 	};
 
-  
-
-	class Projector {
+  	class Projector {
         
 		public :
 		
@@ -126,7 +126,7 @@ namespace ofxLaser {
         
         DacEmpty emptyDac; 
 
-	
+        MaskManager maskManager; 
 		
 		float defaultHandleSize = 8;
 
@@ -159,6 +159,7 @@ namespace ofxLaser {
 		ofParameter<bool> flipX;
 		ofParameter<bool> flipY;
 		ofParameter<float> rotation;
+        ofParameter<bool>hideContentDuringTestPattern;
         ofParameter<glm::vec2> outputOffset;
         
 		ofParameter<float>targetFramerate;

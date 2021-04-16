@@ -17,7 +17,7 @@
 #include "ofxLaserCircle.h"
 #include "ofxLaserProjector.h"
 #include "ofxLaserDacBase.h"
-#include "ofxLaserMaskManager.h"
+#include "ofxLaserBitmapMaskManager.h"
 #include "ofxLaserUI.h"
 
 #define OFXLASER_PROFILE_FAST "FAST"
@@ -174,7 +174,7 @@ class Manager {
     ofParameter<float>globalBrightness;
     ofImage guideImage;
     
-    MaskManager laserMask;
+    BitmapMaskManager laserMask;
     
     ofFbo previewFbo;
     glm::vec2 previewOffset;

@@ -59,7 +59,18 @@ class ZoneTransform {
 	
 	void setHandleSize(float size);
 	
-	
+    bool getSelected() {return selected;};
+    float getRight() {
+        float right = 0;
+        for(DragHandle& handle : dstHandles) {
+            if(handle.x>right) right = handle.x;
+        }
+        right*=scale; 
+        right+=offset.x;
+        
+        return right;
+    }
+    
 	bool hitTest(ofPoint mousePoint);
 	
 	void resetFromCorners();

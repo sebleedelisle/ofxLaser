@@ -119,9 +119,13 @@ bool Manager :: deleteProjector(Projector* projector) {
     // disconnect dac
     dacAssigner.disconnectDacFromProjector(*projector);
 
-     
+    vector<Projector*> :: iterator it = find(projectors.begin(), projectors.end(), projector);
+    int index = it-projectors.begin();
+    // hopefully should renumber current projector OK
+    if(currentProjector==index) currentProjector =-1;
+    else if(currentProjector>index) currentProjector--;
     // remove projector from projector array
-    projectors.erase(find(projectors.begin(), projectors.end(), projector));
+    projectors.erase(it);
     
     // delete zones that are only assigned to this projector *************************
     if(deleteZones) {
@@ -1025,7 +1029,7 @@ void Manager::drawLaserGui() {
     // auto mainSettings = ofxImGui::Settings();
     
     int mainpanelwidth = 270;
-    int projectorpanelwidth = 320;
+    int projectorpanelwidth = 280;
     int spacing = 8;
     
 //    ImGuiWindowFlags window_flags = 0;
@@ -1042,8 +1046,9 @@ void Manager::drawLaserGui() {
     // if we're also showing the projector settings, make space
     // TODO max 2 projectors
     if(laser.showProjectorSettings){
-        int numProjectors =laser.getNumProjectors();
-        if(numProjectors>2) numProjectors = 1;
+        //int numProjectors =laser.getNumProjectors();
+        //if(numProjectors>2) numProjectors = 1;
+        int numProjectors = 1;
         x-=(numProjectors*projectorpanelwidth);
         x-=(spacing*numProjectors);
     }
@@ -1204,29 +1209,33 @@ void Manager::drawLaserGui() {
     
     if(laser.showProjectorSettings) {
         x+=mainpanelwidth+spacing;
-        if(projectors.size()<3) {
-            for(ofxLaser::Projector* projector : laser.getProjectors()) {
-                
-                drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
-                x+=projectorpanelwidth+spacing;
-                
-            }
-        } else {
+        // CODE THAT DOES A MAXIMUM OF 2 PROJECTOR SETTINGS
+//        if(projectors.size()<3) {
+//            for(ofxLaser::Projector* projector : laser.getProjectors()) {
+//
+//                drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
+//                x+=projectorpanelwidth+spacing;
+//
+//            }
+//        } else {
             int projectorIndexToShow = currentProjector;
             if(projectorIndexToShow ==-1) projectorIndexToShow = 0;
             drawProjectorPanel(&getProjector(projectorIndexToShow), projectorpanelwidth, spacing, x);
             
-        }
+        //}
         
     }
     
-    
+    // Show projector zone settings mute / solo / etc
     if(currentProjector!=-1)  {
         
+        
+        // PROJECTOR ZONE SETTINGS
         Projector* projector = projectors[currentProjector];
         
+        glm::vec2 projectorZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
-        UI::startWindow("Mute / Solo zones", ImVec2(x-width-spacing,spacing), ImVec2(0,0), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(0,0), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
     
         
         for(ProjectorZone* projectorZone : projector->projectorZones) {
@@ -1234,7 +1243,7 @@ void Manager::drawLaserGui() {
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->enabled?0.5f:1.0f);
             
             string muteLabel = "M##"+projectorZone->getLabel();
-            if(ImGui::Button(muteLabel.c_str(), ImVec2(30,30))) {
+            if(ImGui::Button(muteLabel.c_str(), ImVec2(20,20))) {
                 projectorZone->muted = !projectorZone->muted;
             };
             ImGui::PopStyleVar();
@@ -1242,7 +1251,7 @@ void Manager::drawLaserGui() {
             ImGui::SameLine();
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->soloed?1.0f:0.5f);
             string soloLabel = "S##"+projectorZone->getLabel();
-            if(ImGui::Button(soloLabel.c_str(), ImVec2(30,30))){
+            if(ImGui::Button(soloLabel.c_str(), ImVec2(20,20))){
                 projectorZone->soloed = !projectorZone->soloed;
             }
             ImGui::PopStyleVar();
@@ -1250,10 +1259,7 @@ void Manager::drawLaserGui() {
             ImGui::Text("%s",projectorZone->getLabel().c_str());
             
         }
-        
-        UI::endWindow();
-        
-        UI::startWindow("Add / remove Zones", ImVec2(x-width-spacing,spacing), ImVec2(0,0), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize );
+
         for(Zone* zone : zones) {
             bool checked = projector->hasZone(zone);
             
@@ -1266,14 +1272,41 @@ void Manager::drawLaserGui() {
                 }
                 
             }
-            
-            
-            
-            
         }
+        
+        UI::addCheckbox(projector->hideContentDuringTestPattern);
         
         UI::endWindow();
         
+        
+        // Projector Masks
+        
+        
+        
+        
+        
+        for(ProjectorZone* projectorZone : projector->projectorZones) {
+        
+            if(projectorZone->zoneTransform.getSelected()) {
+                ImVec2 pos(projectorZone->zoneTransform.getRight(),projectorZone->zoneTransform.getCentre().y);
+                ImVec2 size(200,0);
+                UI::startWindow(projectorZone->getLabel()+"##"+projector->getLabel(),pos, size, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+
+
+                UI::addParameterGroup(projectorZone->zoneTransform.params);
+                ImGui::Text("Edge masks");
+                UI::addFloatSlider(projectorZone->bottomEdge);
+                UI::addFloatSlider(projectorZone->topEdge);
+                UI::addFloatSlider(projectorZone->leftEdge);
+                UI::addFloatSlider(projectorZone->rightEdge);
+                
+                UI::endWindow();
+            }
+        }
+        
+       
+        
+       
         
         
         
@@ -1482,43 +1515,43 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 
    
     
-    
-    
-    if(ImGui::TreeNode("Zone edge masks")){
-        //for(size_t i = 0; i< projector->projectorZones.size(); i++) {
-        for(ProjectorZone* projectorZone : projector->projectorZones) {
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
-
-                UI::addFloatSlider(projectorZone->bottomEdge);
-                UI::addFloatSlider(projectorZone->topEdge);
-                UI::addFloatSlider(projectorZone->leftEdge);
-                UI::addFloatSlider(projectorZone->rightEdge);
-
-                ImGui::TreePop();
-            }
-            
-            
-        }
-        ImGui::TreePop();
-        
-    }
-    
-    if(ImGui::TreeNode("Zone Warp Settings")){
-        for(ProjectorZone* projectorZone : projector->projectorZones) {
-            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
-                UI::addParameterGroup(projectorZone->zoneTransform.params);
-
-                ImGui::TreePop();
-            }
-            
-            
-        }
-        ImGui::TreePop();
-        
-    }
-    
+//
+//
+//    if(ImGui::TreeNode("Zone edge masks")){
+//        //for(size_t i = 0; i< projector->projectorZones.size(); i++) {
+//        for(ProjectorZone* projectorZone : projector->projectorZones) {
+//            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+//            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
+//
+//                UI::addFloatSlider(projectorZone->bottomEdge);
+//                UI::addFloatSlider(projectorZone->topEdge);
+//                UI::addFloatSlider(projectorZone->leftEdge);
+//                UI::addFloatSlider(projectorZone->rightEdge);
+//
+//                ImGui::TreePop();
+//            }
+//
+//
+//        }
+//        ImGui::TreePop();
+//
+//    }
+//
+//    if(ImGui::TreeNode("Zone Warp Settings")){
+//        for(ProjectorZone* projectorZone : projector->projectorZones) {
+//            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+//            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
+//                UI::addParameterGroup(projectorZone->zoneTransform.params);
+//
+//                ImGui::TreePop();
+//            }
+//
+//
+//        }
+//        ImGui::TreePop();
+//
+//    }
+//
     
     // TODO IMPLEMENT PROJECTOR PROFILES
     /*

@@ -26,6 +26,11 @@ Projector::Projector(int _index) {
 	numTestPatterns = 9;
  	
 	guiInitialised = false;
+    maskManager.init(800,800);
+    maskManager.addQuadMask();
+    maskManager.addQuadMask();
+    maskManager.addQuadMask();
+    
 	
 };
 
@@ -81,7 +86,7 @@ void Projector :: init() {
 	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
     params.add(dacId.set("dacId", ""));
     
-    
+    hideContentDuringTestPattern.set("Test pattern only", true);
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
 	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
@@ -165,50 +170,6 @@ void Projector :: init() {
 	
 	params.add(colourParams);
 
-    //zonesEnabled.resize(projectorZones.size());
-
-	//ofParameterGroup zonemutegroup;
-	//zonemutegroup.setName("Mute Zones");
-	//zonesMuted.resize(projectorZones.size());
-	//for(size_t i = 0; i<projectorZones.size(); i++) {
-	//	zonemutegroup.add(zonesMuted[i].set(projectorZones[i]->displayLabel, false));
-	//}
-	//settings.add(zonemutegroup);
-
-//    ofParameterGroup zonesologroup;
-//    zonesologroup.setName("Solo Zones");
-//    zonesSoloed.resize(projectorZones.size());
-//    for(size_t i = 0; i<projectorZones.size(); i++) {
-//        zonesologroup.add(zonesSoloed[i].set(projectorZones[i]->displayLabel, false));
-//    }
-//
-//    settings.add(zonesologroup);
-	
-//	for(size_t i = 0; i<projectorZones.size(); i++) {
-//
-//		ofParameter<float>& leftEdge = leftEdges[i];
-//		ofParameter<float>& rightEdge = rightEdges[i];
-//		ofParameter<float>& topEdge = topEdges[i];
-//		ofParameter<float>& bottomEdge = bottomEdges[i];
-//
-//		ofParameterGroup zonemaskgroup;
-//		zonemaskgroup.setName(projectorZones[i]->displayLabel);
-//		zonemaskgroup.add(bottomEdge.set("Bottom Edge", 0,0,1));
-//		zonemaskgroup.add(topEdge.set("Top Edge", 0,0,1));
-//		zonemaskgroup.add(leftEdge.set("Left Edge", 0,0,1));
-//		zonemaskgroup.add(rightEdge.set("Right Edge", 0,0,1));
-//
-//		ofAddListener(zonemaskgroup.parameterChangedE(), this, &Projector::zoneMaskChanged);
-//
-//		settings.add(zonemaskgroup);
-//
-//		ofParameterGroup zonewarpgroup;
-//		zonewarpgroup.setName(projectorZones[i]->displayLabel+"warp");
-//		zonewarpgroup.add(zoneTransforms[i]->params);
-//		settings.add(zonewarpgroup);
-//
-//	}
-     
      
      
     armed.addListener(this, &ofxLaser::Projector::setArmed);
@@ -233,6 +194,7 @@ void Projector :: init() {
    
 	guiInitialised = true;
 
+    //masks.resize(5); 
 	
 }
 
@@ -437,7 +399,8 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
         
         
     }
-
+    maskManager.setOffsetAndScale(offset,scale);
+    maskManager.draw();
    
     ofPopStyle();
 }
@@ -484,15 +447,28 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 	if(previewPathMesh.getNumVertices()>0) {
 		
-		float time = previewPathMesh.getNumVertices()/50.0f;
+        // 100 points per second
+		float time = previewPathMesh.getNumVertices()/100.0f;
 		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
-		ofPoint p = previewPathMesh.getVertex(pointindex);
-		ofSetColor(255);
-		ofDrawCircle(p, 3);
-		ofFill();
-		Point& lp =laserPoints[pointindex];
-		ofSetColor(lp.getColour()*255);
-		ofDrawCircle(p, 3);
+        
+        Point& lp =laserPoints[pointindex];
+        ofPoint p = previewPathMesh.getVertex(pointindex);
+        ofColor c = lp.getColour()*255;
+        
+        if(c==ofColor::black) {
+            ofSetColor(200);
+            ofDrawCircle(p, 3);
+        } else {
+            ofFill();
+            c.setBrightness(255);
+            ofSetColor(c);
+            ofDrawCircle(p, 4);
+            ofNoFill();
+            ofSetLineWidth(2); 
+            c.setBrightness(128);
+            ofSetColor(c);
+            ofDrawCircle(p, 6);
+        }
 	}
 	
 
@@ -561,7 +537,7 @@ void Projector::update(bool updateZones) {
 	}
 	
 	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.2;
-
+    maskManager.update();
 }
 
 
@@ -825,8 +801,8 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
         ZoneTransform& warp = projectorZone->zoneTransform;
 		ofRectangle& maskRectangle = projectorZone->zoneMask;
         
-        // makes a copy so we don't mess it up if we add
-        // test shapes
+        // doesn't make a copy, just a pointer to the original shapes in the zone
+        // CHECK - is this OK ?
 		deque<Shape*>* zoneshapes = &zone.shapes;
 		
         // get test pattern shapes - we have to do this even if
@@ -834,15 +810,21 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
         // of this function can delete the shapes.
         deque<Shape*> testPatternShapes = getTestPatternShapesForZone(*projectorZone);
         
+        // define this here so we don't lose scope
+        deque<Shape*> zoneShapesWithTestPatternShapes;
+        
         if(testPattern>0) {
-            // create new deque and copy zone shapes into it
-            deque<Shape*> zoneShapesWithTestPatternShapes = zone.shapes;
-            // add testpattern points for this zone...
+            // copy zone shapes into it
+            if(!hideContentDuringTestPattern) zoneShapesWithTestPatternShapes = zone.shapes;
             
+            // add testpattern points for this zone...
             zoneShapesWithTestPatternShapes.insert(zoneShapesWithTestPatternShapes.end(), testPatternShapes.begin(), testPatternShapes.end());
             zoneshapes = &zoneShapesWithTestPatternShapes;
         }
         
+        
+        // so this is either going to be the test pattern shapes or
+        // a reference to the zone shapes
         deque<Shape*>& shapesInZone = *zoneshapes;
         
         // reuse the last vector of shapepoints
@@ -977,6 +959,7 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
 		for(size_t j = 0; j<testPatternShapes.size(); j++) {
 			delete testPatternShapes[j];
 		}
+
 		testPatternShapes.clear();
 		
 	} // end zones
@@ -1011,12 +994,12 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(ProjectorZone& projectorZo
 		ofRectangle& rect = maskRectangle;
 		
 		ofColor col = ofColor(0,255,0);
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
 
 			
 	} else if(testPattern==2) {
@@ -1026,13 +1009,13 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(ProjectorZone& projectorZo
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 		for(float y = 0; y<=1.1; y+=0.333333333) {
 			
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_DEFAULT));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
 		}
 		
 		for(float x =0 ; x<=1.1; x+=0.3333333333) {
 			
 			
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_DEFAULT ));
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
 			
 		}
 		
