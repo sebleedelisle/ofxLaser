@@ -24,14 +24,15 @@ public:
     virtual void init(int width, int height);
     virtual bool update();
     virtual bool draw();
-   
+    
+    virtual bool deleteQuadMask(QuadMask* mask); 
     
     bool loadSettings();
     bool saveSettings();
 	void setOffsetAndScale(ofPoint offset, float scale); 
 	
 	vector<ofPolyline*> getLaserMaskShapes();
-    QuadMask& addQuadMask(float level=1);
+    QuadMask& addQuadMask(int level=100);
     
     vector<QuadMask*> quads;
     

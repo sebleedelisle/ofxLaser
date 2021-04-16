@@ -104,10 +104,10 @@ void QuadGui :: draw() {
     
     //if(selected) {
 		
-        drawDashedLine(handles[1], handles[3]);
-        drawDashedLine(handles[3], handles[2]);
-        drawDashedLine(handles[0], handles[1]);
-        drawDashedLine(handles[2], handles[0]);
+    UI::drawDashedLine(handles[1], handles[3]);
+    UI::drawDashedLine(handles[3], handles[2]);
+    UI::drawDashedLine(handles[0], handles[1]);
+    UI::drawDashedLine(handles[2], handles[0]);
         
         
      //   drawDashedLine(p1,p2);
@@ -143,9 +143,6 @@ void QuadGui :: draw() {
 	
 	isDirty = false;
     ofPopMatrix();
-}
-void QuadGui::drawDashedLine(ofPoint p1, ofPoint p2) {
-	UI::drawDashedLine(p1,p2);
 }
 
 

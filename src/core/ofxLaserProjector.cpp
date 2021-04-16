@@ -27,9 +27,7 @@ Projector::Projector(int _index) {
  	
 	guiInitialised = false;
     maskManager.init(800,800);
-    maskManager.addQuadMask();
-    maskManager.addQuadMask();
-    maskManager.addQuadMask();
+   
     
 	
 };
@@ -235,7 +233,11 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
     //    zoneTransform.setDst(destRect);
     projectorZone->zoneMask = zone->rect;
     
-
+    std::sort(projectorZones.begin(), projectorZones.end(), [](const ProjectorZone* a, const ProjectorZone* b) -> bool
+    {
+        
+        return (a->getZoneIndex()<b->getZoneIndex()); // a.mProperty > b.mProperty;
+    });
      
 }
 
@@ -1368,7 +1370,7 @@ bool Projector::saveSettings(){
     
     vector<int>projectorzonenums;
     for(ProjectorZone* projectorZone : projectorZones) {
-        projectorzonenums.push_back(projectorZone->zone.index);
+        projectorzonenums.push_back(projectorZone->getZoneIndex());
     }
     
     json["projectorzones"] = projectorzonenums;
@@ -1381,7 +1383,7 @@ bool Projector::saveSettings(){
         ofJson projectorzonejson;
         projectorZone->serialize(projectorzonejson);
         
-        success &= ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(projectorZone->zone.index) + ".json", projectorzonejson);
+        success &= ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(projectorZone->getZoneIndex()) + ".json", projectorzonejson);
     }
     
     

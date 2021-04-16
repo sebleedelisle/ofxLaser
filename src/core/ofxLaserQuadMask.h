@@ -14,10 +14,12 @@ namespace ofxLaser {
 class QuadMask : public QuadGui{
     
     public :
-    QuadMask() : QuadGui() {};
+    QuadMask() : QuadGui() {
+        maskLevel.set("Reduction amount", 100, 0,100);
+    };
 
 
-    float maskLevel = 1; 
+    ofParameter<int> maskLevel;
 
     
 };

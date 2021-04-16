@@ -14,7 +14,7 @@ ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
     zoneTransform.init(zone.rect);
     
     // TODO make params object for serialisation / deserialisation?
-    params.setName("projectorZone"+ofToString(zone.index));
+    params.setName("projectorZone"+ofToString(zone.getIndex()));
     params.add(muted.set("mute", false));
     params.add(soloed.set("solo", false));
     
@@ -43,7 +43,7 @@ void ProjectorZone :: setVisible(bool visible) {
 }
 void ProjectorZone :: draw() {
      
-    zoneTransform.draw(ofToString(zone.index+1));
+    zoneTransform.draw(ofToString(zone.getIndex()+1));
 
     if(!enabled) return;
    
@@ -80,7 +80,7 @@ void ProjectorZone :: draw() {
 }
 
 string ProjectorZone :: getLabel() {
-    return ofToString(zone.index+1);
+    return ofToString(zone.getIndex()+1);
 }
 void ProjectorZone :: setScale(float _scale) {
     scale = _scale;

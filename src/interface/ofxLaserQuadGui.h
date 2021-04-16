@@ -35,8 +35,6 @@ class QuadGui {
     bool mouseMoved(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     
-    void drawDashedLine(ofPoint p1, ofPoint p2); 
-	
     bool hitTest(ofPoint mousepoint);
 
 	void startDragging(int handleIndex, glm::vec3 clickPos);

@@ -23,6 +23,7 @@ namespace ofxLaser {
         
         virtual void set(float x, float y, float w, float h) override ;
         void setIndex(int _index);
+        int getIndex(){ return index; };
 		void setHandleSize(float size);
 		
 		bool update();
@@ -38,7 +39,7 @@ namespace ofxLaser {
 
       //  bool editable;
 	
-    		
+        protected : 
 		int index = 0;
 		
 		

@@ -23,6 +23,9 @@ class ProjectorZone {
     void draw();
     
     string getLabel();
+    const int getZoneIndex() const {
+        return zone.getIndex();
+    };
     void setScale(float _scale) ;
     void setOffset(ofPoint _offset);
     void zoneMaskChanged(ofAbstractParameter& e) ;
@@ -47,8 +50,6 @@ class ProjectorZone {
     
     float scale;
     ofPoint offset;
-    
-    
     
 };
 

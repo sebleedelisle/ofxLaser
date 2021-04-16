@@ -49,22 +49,22 @@ bool MaskManager  ::update() {
 }
 
 bool MaskManager  ::draw() {
-    
-    
+
     for(int i= 0; i<quads.size(); i++) {
         quads[i]->draw();
     }
     
     return true;
-    
 }
 
-QuadMask& MaskManager::addQuadMask(float level) {
+QuadMask& MaskManager::addQuadMask(int level) {
     QuadMask* quad = new QuadMask();
     quads.push_back(quad);
     quad->maskLevel= level;
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
     quad->setName(ofToString(quads.size()));
+    quad->lineColour = ofColor::red;
+
     
     // TODO Load / save quad masks
     
@@ -93,6 +93,27 @@ void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
     
 }
 
+
+
+ bool MaskManager :: deleteQuadMask(QuadMask* mask) {
+    
+     vector<QuadMask*> :: iterator it = find(quads.begin(), quads.end(), mask);
+     if(it==quads.end()) {
+         return false;
+     }
+     
+     quads.erase(it);
+     delete mask;
+     
+     for(int i = 0; i<(int)quads.size(); i++) {
+         quads[i]->displayLabel = ofToString(i+1);
+         
+     }
+     
+     return true;
+    
+    
+}
 
 vector<ofPolyline*>  MaskManager  ::getLaserMaskShapes(){
     

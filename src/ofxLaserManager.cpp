@@ -515,9 +515,6 @@ void Manager :: drawPreviews(bool expandPreview) {
         ofPopMatrix();
         ofPopStyle();
         
-       
-        
-        
     }
     
     
@@ -1235,9 +1232,13 @@ void Manager::drawLaserGui() {
         
         glm::vec2 projectorZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
-        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(0,0), ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(300,0));
     
-        
+        ImGui::Columns(3, "Projector zones columns");
+        ImGui::SetColumnWidth(0, 80.0f);
+        ImGui::SetColumnWidth(1, 80.0f);
+        ImGui::SetColumnWidth(2, 140.0f);
+        // MUTE SOLO
         for(ProjectorZone* projectorZone : projector->projectorZones) {
             
             ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->enabled?0.5f:1.0f);
@@ -1259,7 +1260,8 @@ void Manager::drawLaserGui() {
             ImGui::Text("%s",projectorZone->getLabel().c_str());
             
         }
-
+        ImGui::NextColumn();
+       // ImGui::SetCursorPosX(200);
         for(Zone* zone : zones) {
             bool checked = projector->hasZone(zone);
             
@@ -1273,16 +1275,50 @@ void Manager::drawLaserGui() {
                 
             }
         }
+        ImGui::NextColumn();
         
+        
+        MaskManager& maskManager = projector->maskManager;
+        if(ImGui::Button("ADD MASK")) {
+            maskManager.addQuadMask();
+        }
+        ImGui::Separator();
+        for(QuadMask* mask : maskManager.quads){
+            string label = "##"+mask->displayLabel;
+            ImGui::Text("%s", mask->displayLabel.c_str());
+            ImGui::SameLine();
+            ImGui::PushItemWidth(40);
+            int level = mask->maskLevel;
+            if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) {
+                mask->maskLevel = level;
+            }
+            
+            ImGui::PopItemWidth();
+            ImGui::SameLine();
+            string buttonlabel = "DELETE "+mask->displayLabel+"##mask";
+            if(ImGui::Button(buttonlabel.c_str())) {
+                maskManager.deleteQuadMask(mask);
+                
+            }
+            
+        }
+        
+        
+        
+        
+        
+        
+        
+        ImGui::Columns();
+        ImGui::Separator();
+        UI::addIntSlider(projector->testPattern);
         UI::addCheckbox(projector->hideContentDuringTestPattern);
+        UI::toolTip("Disable this if you want to see the laser content at the same time as the text patterns");
         
         UI::endWindow();
         
         
         // Projector Masks
-        
-        
-        
         
         
         for(ProjectorZone* projectorZone : projector->projectorZones) {
