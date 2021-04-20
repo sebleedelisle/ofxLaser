@@ -8,6 +8,7 @@
 #pragma once
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacLaserdock.h"
+
 #include <libusb.h>
 
 #define LASERDOCK_VIN 0x1fc9

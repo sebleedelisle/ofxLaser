@@ -9,20 +9,19 @@
 #pragma once
 
 #include "ofMain.h"
+#include "constants.h"
 #include "ofxLaserDacAssigner.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserShape.h"
 #include "ofxLaserLine.h"
 #include "ofxLaserPolyline.h"
 #include "ofxLaserCircle.h"
-#include "ofxLaserProjector.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserBitmapMaskManager.h"
 #include "ofxLaserUI.h"
+#include "ofxLaserProjector.h"
 
-#define OFXLASER_PROFILE_FAST "FAST"
-#define OFXLASER_PROFILE_DEFAULT "DEFAULT"
-#define OFXLASER_PROFILE_DETAIL "DETAIL"
+
 
 
 enum ofxLaserZoneMode {

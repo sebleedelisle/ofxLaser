@@ -1669,23 +1669,23 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
     
     
-    UI::addFloatSlider(projector->moveSpeed, "%.2f", 3.0f);
+    UI::addFloatSlider(projector->scannerSettings.moveSpeed, "%.2f", 3.0f);
     UI::toolTip("How quickly the mirrors move between shapes");
     
-    UI::addIntSlider(projector->shapePreBlank);
+    UI::addIntSlider(projector->scannerSettings.shapePreBlank);
     UI::toolTip("The length of time that the laser is switched off and held at the beginning of a shape");
-    UI::addIntSlider(projector->shapePreOn);
+    UI::addIntSlider(projector->scannerSettings.shapePreOn);
     UI::toolTip("The length of time that the laser is switched on and held at the beginning of a shape");
-    UI::addIntSlider(projector->shapePostOn);
+    UI::addIntSlider(projector->scannerSettings.shapePostOn);
     UI::toolTip("The length of time that the laser is switched on and held at the end of a shape");
-    UI::addIntSlider(projector->shapePostBlank);
+    UI::addIntSlider(projector->scannerSettings.shapePostBlank);
     UI::toolTip("The length of time that the laser is switched off and held at the end of a shape");
     
     ImGui::Text("Scanner profiles");
     UI::toolTip("There are three profiles for different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
     
     bool firsttreeopen = true;
-    for (auto & renderProfile : projector->renderProfiles) {
+    for (auto & renderProfile : projector->scannerSettings.renderProfiles) {
         
         RenderProfile& profile = renderProfile.second;
         

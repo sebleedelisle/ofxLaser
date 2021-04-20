@@ -7,15 +7,17 @@
 //
 #pragma once
 
-//#include "ofxLaserManager.h"
+#include "constants.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserProjectorZone.h"
-#include "ofxLaserRenderProfile.h"
 #include "ofxLaserManualShape.h"
 #include "PennerEasing.h"
 #include "ofxLaserMaskManager.h"
+#include "ofxLaserScannerSettings.h"
+#include "ofxLaserLine.h"
+
 
 namespace ofxLaser {
 
@@ -34,6 +36,7 @@ class PointsForShape : public vector<Point> {
         return reversed?this->front() : this->back();
     }
 };
+
 
 class Projector {
     
@@ -152,40 +155,41 @@ class Projector {
     int numPoints;
     ofMesh previewPathMesh;
     ofEventListener paramsChangedListener;
+    
+    ofParameterGroup params;
     ofParameter<bool> armed;
     ofParameter<int> pps;
     ofParameter<float> speedMultiplier;
     ofParameter<float>intensity;
+    
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)
     ofParameter<string> dacId;
     
     ofParameter<float> colourChangeShift;
+    
     ofParameter<int> testPattern;
+    ofParameter<bool>hideContentDuringTestPattern;
+ 
     int numTestPatterns;
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
     ofParameter<float> rotation;
-    ofParameter<bool>hideContentDuringTestPattern;
     ofParameter<glm::vec2> outputOffset;
     
+    ScannerSettings scannerSettings; 
+    
+    // advanced settings
+    ofParameterGroup advancedParams;
     ofParameter<float>targetFramerate;
     ofParameter<bool>syncToTargetFramerate;
     ofParameter<int>syncShift;
     ofParameter<bool>sortShapes;
-    
-    ofParameter<float> moveSpeed = 5;
-    ofParameter<int> shapePreBlank = 0;
-    ofParameter<int> shapePostBlank = 0;
-    ofParameter<int> shapePreOn = 0;
-    ofParameter<int> shapePostOn = 0;
-    
     ofParameter<bool> smoothHomePosition;
-
     ofParameter<bool> laserOnWhileMoving = false;
+ 
     
-    map<string, RenderProfile> renderProfiles;
-
+   
     // would probably be sensible to move these settings out into a colour
     // calibration object.
     ofParameterGroup colourParams;
@@ -208,11 +212,8 @@ class Projector {
     ofParameter<float>blue25;
     ofParameter<float>blue0;
     
-    //ofxPanel* gui;
-    //bool guiIsVisible;
-    ofParameterGroup params;
-    ofParameterGroup advancedParams;
-    bool guiInitialised = false;
+
+     bool guiInitialised = false;
     
     float lastSaveTime = 0; 
 

@@ -6,8 +6,12 @@
 //
 #pragma once
 
-#include "ofxLaserProjector.h"
+#include "ofMain.h"
+//#include "ofxLaserProjector.h"
 
+namespace ofxLaser {
+
+class Projector; 
 class DacData {
 
     public :
@@ -48,3 +52,4 @@ class DacData {
     
     
 };
+}
