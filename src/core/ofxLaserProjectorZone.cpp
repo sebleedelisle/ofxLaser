@@ -24,7 +24,8 @@ ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
     zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
     zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
     ofAddListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
-    params.add(zoneMaskGroup); 
+    params.add(zoneMaskGroup);
+    isDirty = true;
    
 }
 ProjectorZone :: ~ProjectorZone() {
@@ -33,10 +34,14 @@ ProjectorZone :: ~ProjectorZone() {
     ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
 }
 
-void ProjectorZone :: update() {
-    zoneTransform.update();
-   
+bool ProjectorZone :: update() {
+    
+    bool wasDirty = isDirty;
+    wasDirty = zoneTransform.update() | wasDirty;
+    isDirty = false;
+    return wasDirty;
 }
+
 void ProjectorZone :: setVisible(bool visible) {
     zoneTransform.setVisible(visible);
     
@@ -99,6 +104,7 @@ void ProjectorZone :: updateZoneMask() {
     zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
     zoneMask.setWidth(zone.rect.getWidth()*(1-leftEdge-rightEdge));
     zoneMask.setHeight(zone.rect.getHeight()*(1-topEdge-bottomEdge));
+    isDirty = true; 
 }
 
 

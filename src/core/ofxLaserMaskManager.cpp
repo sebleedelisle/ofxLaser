@@ -5,12 +5,6 @@
 //  Created by Seb Lee-Delisle on 02/02/2018.
 //
 
-// ************************ TODO MASK SYSTEM BROKEN **************************
-//      - create subclass of QuadGui which stores the mask level (and index number?)
-//      - create serialize / deserialize methods
-//      - fix load and save settings
-//      - add interface to add and remove masks.
-//      - add dirty flag to QuadGui so we know to save it
 
 #include "ofxLaserMaskManager.h"
 
@@ -36,12 +30,12 @@ bool MaskManager  ::update() {
     for(int i = 0; i<quads.size(); i++) {
         
         dirty = quads[i]->checkDirty() | dirty;
-        if(firstUpdate) {
-            quads[i]->draw();
-            
-        }
+//        if(firstUpdate) {
+//            quads[i]->draw();
+//            
+//        }
     }
-    firstUpdate = false;
+   // firstUpdate = false;
     bool wasDirty = dirty;
     if(dirty) {
         dirty = false;
@@ -67,10 +61,6 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quad->setName(ofToString(quads.size()));
     quad->lineColour = ofColor::red;
 
-    
-    // TODO Load / save quad masks
-    
-    //quad->loadSettings();
     quad->offset = offset;
     quad->scale = scale;
     return *quad;
@@ -79,8 +69,6 @@ QuadMask& MaskManager::addQuadMask(int level) {
 void MaskManager  ::init(int w, int h){
     width = w;
     height = h;
-    
-    
 }
 
 void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
@@ -140,10 +128,17 @@ vector<ofPolyline*>  MaskManager  ::getLaserMaskShapes(){
 }
 
 void MaskManager::serialize(ofJson&json) {
-    ofJson maskJson;// = json["maskmanager"];
+    
+    // create an empty json object
+    ofJson maskJson;
+    
     for(int i = 0; i<(int)quads.size(); i++) {
+        // create node with the index of the label and
+        // serialize the quad data into it
         quads[i]->serialize(maskJson[ofToString(i)]);
     }
+    // create a node called "maskmanager" and put the quad
+    // data in
     json["maskmanager"] = maskJson;
     //cout << maskJson.dump(3) << endl;
     //cout << json.dump(3) << endl;
@@ -155,49 +150,14 @@ bool MaskManager::deserialize(ofJson& jsonGroup) {
         delete quads.back();
         quads.pop_back();
     }
+   // cout << maskJson.size() << endl;
+    bool success = true;
     for(auto quadjson : maskJson) {
+        cout << quadjson.dump(3) << endl; 
         addQuadMask();
-        quads.back()->deserialize(quadjson);
+        success &= quads.back()->deserialize(quadjson);
     }
-    return true;
+    return success;
 }
 
 
-
-// *************************************** BROKEN ********************************************
-//
-//bool MaskManager  ::loadSettings() {
-//    //    for(int i = 0; i<quads.size(); i++) {
-//    //        quads[i]->loadSettings();
-//    //
-//    //    }
-//    ofFile jsonfile("Masks.json");
-//    if(jsonfile.exists()) {
-//        ofJson json = ofLoadJson("Masks.json");
-//        
-//        for(ofJson& jsonGroup : json) {
-//            
-//            
-//        }
-//        
-//        dirty = true;
-//        
-//    }
-//    
-//    return true;
-//}
-//bool MaskManager  ::saveSettings() {
-//    
-//    if(quads.size()==0) return false; // maybe also delete masks file?
-//    ofJson json;
-//    
-//    
-//    for(int i = 0; i<quads.size(); i++) {
-//        ofJson jsonGroup; quads[i]->serialize(jsonGroup);
-//        json.push_back(jsonGroup);
-//    }
-//    
-//    ofSavePrettyJson("Masks.json", json);
-//    
-//    return true;
-//}

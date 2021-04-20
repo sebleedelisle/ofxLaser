@@ -18,7 +18,7 @@ class ProjectorZone {
     ProjectorZone(Zone& _zone) ;
     ~ProjectorZone();
     
-    void update() ;
+    bool update() ;
     void setVisible(bool visible);
     void draw();
     
@@ -47,6 +47,7 @@ class ProjectorZone {
     
     ofParameterGroup params; 
     ofParameterGroup zoneMaskGroup;
+    bool isDirty; 
     
     float scale;
     ofPoint offset;

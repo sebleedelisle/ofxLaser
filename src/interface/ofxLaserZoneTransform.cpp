@@ -49,15 +49,20 @@ ZoneTransform::ZoneTransform() {
 	
     xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
+    
+    ofAddListener(params.parameterChangedE(), this, &ZoneTransform::paramChanged);
 
 }
 
-
+void ZoneTransform :: paramChanged(ofAbstractParameter& e) {
+    isDirty= true; 
+    
+}
 ZoneTransform::~ZoneTransform() {
     removeListeners();
     xDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
     yDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
-    
+    ofRemoveListener(params.parameterChangedE(), this, &ZoneTransform::paramChanged);
 }
 
 
@@ -85,11 +90,16 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 }
 
 
-void ZoneTransform::update(){
+bool ZoneTransform::update(){
 	if(isDirty) {
 		updateQuads();
-	}
-	isDirty = false;
+        
+        isDirty = false;
+        return true;
+    } else {
+        return false;
+    }
+	
 
 }
 void ZoneTransform :: setVisible(bool warpvisible){
@@ -533,7 +543,7 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 //		
 //	}
 	
-	isDirty |= (dragCount>0);
+	//isDirty |= (dragCount>0);
 	if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
 	
 	return dragCount>0;
@@ -555,6 +565,7 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	
     // TODO mark as dirty so auto save ********************
 	//saveSettings();
+    isDirty|=wasDragging;
 	return wasDragging;
 	
 }
@@ -614,7 +625,6 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	ofDeserialize(jsonGroup, params);
     //cout << paramjson.dump(3) << endl;
     
-	
 	// number of handles could be different now
 	int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
 	xDivisions = xDivisionsNew;
@@ -633,21 +643,12 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 			
 		}
 	}
-	//updateDivisions();
+	//updateDivisions(); //< SHOULD BE called automatically I think
+    
 	return true; 
 }
-//bool ZoneTransform::loadSettings() {
-//	//ofLogNotice("ZoneTransform::loadSettings()");
-//	ofFile jsonfile(getSaveLabel()+".json");
-//	if(jsonfile.exists()) {
-//		ofJson json = ofLoadJson(getSaveLabel()+".json");
-//		if(deserialize(json)) return true;
-//	}
-//
-//
-//
-//	return true;
-//}
+
+
 void ZoneTransform::setHandleSize(float size) {
 	for(DragHandle& handle : dstHandles) {
 		handle.setSize(size);

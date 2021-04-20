@@ -38,6 +38,8 @@ Projector::~Projector() {
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
 	pps.removeListener(this, &Projector::ppsChanged);
 	armed.removeListener(this, &ofxLaser::Projector::setArmed);
+    ofRemoveListener(params.parameterChangedE(), this, &Projector::paramsChanged);
+   
 	if(dac!=nullptr) dac->close();
 	//delete gui;
 }
@@ -79,9 +81,12 @@ void Projector :: init() {
     // TODO is this used for anything other than display?
 	params.setName(ofToString(projectorIndex));
 	
-	params.add(armed.set("ARMED", false));
-    params.add(intensity.set("Intensity", 1,0,1));
-	params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+//    params.add(armed.set("ARMED", false));
+    params.add(intensity.set("Brightness", 1,0,1));
+//    params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+    armed.set("ARMED", false);
+    testPattern.set("Test Pattern", 0,0,numTestPatterns);
+    
     params.add(dacId.set("dacId", ""));
     
     hideContentDuringTestPattern.set("Test pattern only", true);
@@ -96,8 +101,8 @@ void Projector :: init() {
 	projectorparams.add(shapePostOn.set("Hold on after", 0,0,8));
 	projectorparams.add(shapePostBlank.set("Hold off after", 1,0,8));
 	
-	projectorparams.add(flipX.set("Flip X", false));
-	projectorparams.add(flipY.set("Flip Y",false));
+	projectorparams.add(flipX.set("Flip Horizontal", false));
+	projectorparams.add(flipY.set("Flip Vertical",false));
 	projectorparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	projectorparams.add(rotation.set("Output rotation",0,-90,90));
 
@@ -189,6 +194,7 @@ void Projector :: init() {
 	testPattern = 0;
     //for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
     
+    ofAddListener(params.parameterChangedE(), this, &Projector::paramsChanged);
    
 	guiInitialised = true;
 
@@ -503,7 +509,9 @@ void Projector :: showWarpGui() {
 void Projector::update(bool updateZones) {
 	
     bool soloMode = false;
+    bool needsSave = false;
     for(ProjectorZone* projectorZone : projectorZones) {
+        
         if(projectorZone->soloed) {
             soloMode = true;
             break;
@@ -522,24 +530,32 @@ void Projector::update(bool updateZones) {
     }
     
     
-	laserPoints.clear();
-	previewPathMesh.clear();
-    for(ProjectorZone* projectorZone : projectorZones) {
-		projectorZone->update();
-	}
-	
-	// if any of the source rectangles have changed then update all the warps
-	if(updateZones) {
+    // if any of the source rectangles have changed then update all the warps
+    // (shouldn't need anything saving)
+    if(updateZones) {
         for(ProjectorZone* projectorZone : projectorZones) {
             ZoneTransform& warp = projectorZone->zoneTransform;
             warp.setSrc(projectorZone->zone.rect);
             warp.updateHomography();
             updateZoneMasks();
         }
+    }
+    
+    needsSave = maskManager.update() | needsSave;
+    
+    
+	laserPoints.clear();
+	previewPathMesh.clear();
+    bool projectorZoneChanged = false;
+    for(ProjectorZone* projectorZone : projectorZones) {
+        projectorZoneChanged |= projectorZone->update();
 	}
 	
+    needsSave |= projectorZoneChanged;
+	
 	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.2;
-    maskManager.update();
+    if(needsSave) saveSettings();
+ 
 }
 
 
@@ -1342,7 +1358,7 @@ bool Projector::loadSettings(vector<Zone*>& zones){
     ofJson json = ofLoadJson("projectors/projector" + ofToString(projectorIndex)+".json");
     ofDeserialize(json, params);
 
-    maskManager.deserialize(json); 
+    bool success = maskManager.deserialize(json);
     
     //cout << json.dump(3) << endl;
     
@@ -1350,9 +1366,7 @@ bool Projector::loadSettings(vector<Zone*>& zones){
     ofJson zoneNumJson = json["projectorzones"];
     //cout << zoneNumJson.dump(3) << endl;
     
-    // TODO lots of error checking!
-    // load the ProjectorZones settings files
-    
+    // if the json node isn't found then this should do nothing
     for(auto jsonitem : zoneNumJson) {
         cout << (int) jsonitem << endl;
         int zoneNum = (int)jsonitem;
@@ -1360,11 +1374,11 @@ bool Projector::loadSettings(vector<Zone*>& zones){
         projectorZones.push_back(projectorZone);
         ofJson projectorZoneJson = ofLoadJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(zoneNum) + ".json");
 
-        projectorZone->deserialize(projectorZoneJson);
+        success &= projectorZone->deserialize(projectorZoneJson);
         
     }
 
-    if(json.empty()) {
+    if(json.empty() || (!success)) {
         return false;
     } else {
         return true;
@@ -1373,11 +1387,12 @@ bool Projector::loadSettings(vector<Zone*>& zones){
 
 
 bool Projector::saveSettings(){
+    // update the projector index if necessary
+    params.setName(ofToString(projectorIndex));
+    
     ofJson json;
     ofSerialize(json, params);
 
-
-    
     vector<int>projectorzonenums;
     for(ProjectorZone* projectorZone : projectorZones) {
         projectorzonenums.push_back(projectorZone->getZoneIndex());
@@ -1397,7 +1412,7 @@ bool Projector::saveSettings(){
         success &= ofSavePrettyJson("projectors/projector"+ ofToString(projectorIndex) +"zone" + ofToString(projectorZone->getZoneIndex()) + ".json", projectorzonejson);
     }
     
-    
+    lastSaveTime = ofGetElapsedTimef(); 
     return success;
     
 }

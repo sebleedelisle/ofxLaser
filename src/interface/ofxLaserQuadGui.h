@@ -25,7 +25,7 @@ class QuadGui {
 	virtual void set(float x, float y, float w, float h) ;
     void setConstrained(const ofRectangle& rect); 
 	
-	void draw();
+	virtual void draw();
 	
     void initListeners();
     void removeListeners();
@@ -37,7 +37,7 @@ class QuadGui {
     
 
     
-    // non optimised hit test in screen space
+    // hit test in screen space
     // (takes into account the offset and scale)
     bool hitTestScreen(ofPoint mousepoint);
     
@@ -65,7 +65,9 @@ class QuadGui {
     ofRectangle constrainRect;
    // bool reversable = true;
 
-    ofColor lineColour; 
+    ofColor lineColour;
+    ofColor labelColour;
+    ofColor handleColour;
     
 	const int numHandles = 4;
 	DragHandle handles[4];

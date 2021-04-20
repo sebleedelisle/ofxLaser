@@ -16,7 +16,8 @@ class QuadMask : public QuadGui{
 
     virtual void serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;
-
+    virtual void draw() override;
+    
     ofParameter<int> maskLevel;
 
     

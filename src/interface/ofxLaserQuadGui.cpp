@@ -22,6 +22,8 @@ QuadGui::QuadGui() {
     set(0,0,60,60);
     initialised = true;
     lineColour.set(255);
+    handleColour.set(255);
+    labelColour.set(255);
    
     updatePoly();
     
@@ -49,6 +51,9 @@ void QuadGui::set(float x, float y, float w, float h) {
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
         
         handles[i].set(xpos, ypos);
+        handles[i].col = handleColour*0.5;
+        handles[i].overCol = handleColour;
+        
         allHandles.push_back(&handles[i]);
         
     }
@@ -131,12 +136,12 @@ void QuadGui :: draw() {
         ofSetColor(0,150);
         
         ofDrawRectangle(0,0,textwidth+24,24);
-        ofSetColor(255,0,255);
+        ofSetColor(labelColour);
 
         ofDrawBitmapString(displayLabel, 6, 17);
 
         ofPopMatrix();
-        ofPopStyle();
+       
     }
     if(selected) {
         for(int i = 0; i<numHandles; i++) {
@@ -148,7 +153,7 @@ void QuadGui :: draw() {
     }
     
   
-	
+    ofPopStyle();
 	isDirty = false;
     ofPopMatrix();
 }
@@ -284,7 +289,7 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
         updatePoly();
 	}
 	
-	isDirty |= dragging;
+	//isDirty |= dragging;
 	
 	
 	return dragging;
@@ -322,6 +327,8 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 //        }
         //saveSettings();
     }
+    
+    isDirty |= wasDragging;
 	return wasDragging;
 	
 }
@@ -340,31 +347,36 @@ void QuadGui::updateCentreHandle() {
 
 
 void QuadGui::serialize(ofJson&json) {
-	//ofSerialize(json,params);
-	ofJson& handlesjson = json["quadguihandles"];
+	
+    // adds json node for the handles, which is an array
+    ofJson& handlesjson = json["quadguihandles"];
 	for(int i = 0; i<4; i++) {
 		DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
-	//cout << json.dump(3) << endl;
-	//deserialize(json);
+
 }
 
 bool QuadGui::deserialize(ofJson& jsonGroup) {
-	// TODO ERROR CHECKIGN!
-	ofJson& handlejson = jsonGroup["quadguihandles"];
 	
-	for(int i = 0; i<4; i++) {
-		ofJson& point = handlejson[i];
-  
-		handles[i].x = point[0];
-		handles[i].y = point[1];
-		handles[i].z = 0;
-		
-	}
-    updateCentreHandle();
-    updatePoly();
-	return true; 
+    ofJson& handlejson = jsonGroup["quadguihandles"];
+	
+    if(handlejson.size()>=4) {
+        for(int i = 0; i<4; i++) {
+            ofJson& point = handlejson[i];
+      
+            handles[i].x = point[0];
+            handles[i].y = point[1];
+            handles[i].z = 0;
+            
+        }
+        updateCentreHandle();
+        updatePoly();
+        return true;
+    } else {
+        return false;
+    }
+    
 }
 
 void QuadGui::setVisible(bool warpvisible) {

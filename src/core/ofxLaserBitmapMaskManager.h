@@ -43,7 +43,7 @@ public:
 //    bool dirty;
 //	ofPoint offset;
 //	float scale = 1;
-//    bool firstUpdate = true;
+    bool firstUpdate = true;
     
 };
 }

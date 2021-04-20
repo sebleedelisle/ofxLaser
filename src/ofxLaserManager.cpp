@@ -564,9 +564,9 @@ void Manager :: drawPreviews(bool expandPreview) {
                 
                 ofDrawRectangle(guiSpacing,guiSpacing,size,size);
                 projectors[i]->showWarpGui();
-                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
                 projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
-                
+                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
+               
                 
             } else {
                 projectors[i]->hideWarpGui();
@@ -1373,6 +1373,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     UI::startWindow(projector->getLabel(), ImVec2(x, spacing), ImVec2(projectorpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize, true);
     
+   
     
     UI::largeItemStart();
     // change width of slider vs label
@@ -1780,6 +1781,20 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     
     ImGui::PopItemWidth();
+    
+    
+    // draw a flashing dot during saving
+    if(projector->getSaveStatus() && (ofGetElapsedTimeMillis()%300)<150) {
+        ImDrawList*   draw_list = ImGui::GetWindowDrawList();
+        ImVec2 p = ImGui::GetWindowPos();
+        p.x+=ImGui::GetContentRegionAvailWidth();
+        p.y+=30;// + ImGui::GetScrollY();
+       // if(ImGui::GetScrollY()>0) p.x-=14;
+        //ImGui::GetContentRegionAvailWidth()
+        //cout << ImGui::GetScrollY() << " " <<p.x << " " << p.y << endl;
+        draw_list->AddCircleFilled(p, 4, ImGui::GetColorU32(ImGuiCol_Border));
+    }
+    
     
     //ImGui::End();
     UI::endWindow();

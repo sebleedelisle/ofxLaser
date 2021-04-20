@@ -25,7 +25,7 @@ class ZoneTransform {
 	ZoneTransform();
 	~ZoneTransform();
     
-    void update();
+    bool update();
     void draw(string label);
     
 	void init(ofRectangle& srcRect);
@@ -38,6 +38,7 @@ class ZoneTransform {
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseDragged(ofMouseEventArgs &e);
 	bool mouseReleased(ofMouseEventArgs &e);
+    void paramChanged(ofAbstractParameter& e);
 
 	//void setName(string labelname, string filename);
 	
