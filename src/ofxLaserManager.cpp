@@ -1716,7 +1716,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
    
     if(ImGui::TreeNode("Colour calibration")){
         
-        UI::addParameterGroup(projector->colourParams);
+        UI::addParameterGroup(projector->colourSettings.params);
         
         ImGui::TreePop();
     }

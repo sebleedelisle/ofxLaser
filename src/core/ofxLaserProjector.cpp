@@ -117,27 +117,7 @@ void Projector :: init() {
 	   
 	
 	
-	colourParams.setName("Colour calibration");
-	
-    colourParams.add(red100.set("red 100", 1,0,1));
-    colourParams.add(red75.set("red 75", 0.75,0,1));
-    colourParams.add(red50.set("red 50", 0.5,0,1));
-    colourParams.add(red25.set("red 25", 0.25,0,1));
-    colourParams.add(red0.set("red 0", 0,0,1));
-	
-    colourParams.add(green100.set("green 100", 1,0,1));
-    colourParams.add(green75.set("green 75", 0.75,0,1));
-    colourParams.add(green50.set("green 50", 0.5,0,1));
-    colourParams.add(green25.set("green 25", 0.25,0,1));
-    colourParams.add(green0.set("green 0", 0,0,1));
-	
-    colourParams.add(blue100.set("blue 100", 1,0,1));
-    colourParams.add(blue75.set("blue 75", 0.75,0,1));
-    colourParams.add(blue50.set("blue 50", 0.5,0,1));
-    colourParams.add(blue25.set("blue 25", 0.25,0,1));
-    colourParams.add(blue0.set("blue 0", 0,0,1));
-	
-	params.add(colourParams);
+	params.add(colourSettings.params);
 
      
      
@@ -1286,10 +1266,11 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 		}
 		
 		if(p.useCalibration) {
-			p.r = calculateCalibratedBrightness(p.r, intensity*masterIntensity, red100, red75, red50, red25, red0);
-			p.g = calculateCalibratedBrightness(p.g, intensity*masterIntensity, green100, green75, green50, green25, green0);
-			p.b = calculateCalibratedBrightness(p.b, intensity*masterIntensity, blue100, blue75, blue50, blue25, blue0);
-		}
+            colourSettings.processColour(p, intensity*masterIntensity);
+        } else {
+            
+            
+        }
 		
 		if(!armed) {
 			p.r = 0;
@@ -1303,22 +1284,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 }
 
 
-float Projector::calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0){
-	value/=255.0f;
-	value *=intensity;
-	if(value<0.001) {
-		return 0;
-	} else if(value<0.25) {
-		return ofMap(value, 0, 0.25, level0, level25) *255;
-	} else if(value<0.5) {
-		return ofMap(value, 0.25, 0.5,level25, level50) *255;
-	} else if(value<0.75) {
-		return ofMap(value, 0.5, 0.75,level50, level75) *255;
-	} else {
-		return ofMap(value, 0.75, 1,level75, level100) *255;
-	}
-	
-}
+
 
 
 bool Projector::loadSettings(vector<Zone*>& zones){

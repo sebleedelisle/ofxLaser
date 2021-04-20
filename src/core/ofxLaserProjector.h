@@ -17,6 +17,7 @@
 #include "ofxLaserMaskManager.h"
 #include "ofxLaserScannerSettings.h"
 #include "ofxLaserLine.h"
+#include "ofxLaserColourSettings.h"
 
 
 namespace ofxLaser {
@@ -127,7 +128,7 @@ class Projector {
     
     deque<Shape*> getTestPatternShapesForZone(ProjectorZone& zone);
     
-    float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
+
 
     //-----------------------------------------------
     
@@ -178,7 +179,7 @@ class Projector {
     ofParameter<glm::vec2> outputOffset;
     
     ScannerSettings scannerSettings; 
-    
+    ColourSettings colourSettings; 
     // advanced settings
     ofParameterGroup advancedParams;
     ofParameter<float>targetFramerate;
@@ -189,31 +190,8 @@ class Projector {
     ofParameter<bool> laserOnWhileMoving = false;
  
     
-   
-    // would probably be sensible to move these settings out into a colour
-    // calibration object.
-    ofParameterGroup colourParams;
     
-    ofParameter<float>red100;
-    ofParameter<float>red75;
-    ofParameter<float>red50;
-    ofParameter<float>red25;
-    ofParameter<float>red0;
-    
-    ofParameter<float>green100;
-    ofParameter<float>green75;
-    ofParameter<float>green50;
-    ofParameter<float>green25;
-    ofParameter<float>green0;
-    
-    ofParameter<float>blue100;
-    ofParameter<float>blue75;
-    ofParameter<float>blue50;
-    ofParameter<float>blue25;
-    ofParameter<float>blue0;
-    
-
-     bool guiInitialised = false;
+    bool guiInitialised = false;
     
     float lastSaveTime = 0; 
 

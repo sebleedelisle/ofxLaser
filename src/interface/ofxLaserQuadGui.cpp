@@ -161,6 +161,7 @@ void QuadGui :: draw() {
 
 bool QuadGui::checkDirty() {
 	if(isDirty) {
+        isDirty = false; 
 		return true;
 	} else {
 		return false;
