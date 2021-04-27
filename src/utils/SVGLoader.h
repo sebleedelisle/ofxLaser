@@ -66,7 +66,7 @@ class SVGLoader : public ofThread{
 	
 	ofxSVGExtra svg;
 
-	int loadCount;
+	volatile int loadCount;
 	
 	void replaceAll( string& content, string toFind, string toReplace);
 

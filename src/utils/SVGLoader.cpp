@@ -149,11 +149,13 @@ void SVGLoader::threadedFunction() {
 
 		}
 		file.close();
-		
+        lock();
 		loadCount=(int)i+1;
-		
+        unlock();
+        
 		loadedCount++;
-//		}
+       
+
 	
 	}
 	dir.close();
