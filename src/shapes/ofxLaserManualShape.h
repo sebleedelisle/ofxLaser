@@ -48,7 +48,10 @@ class ManualShape : public Shape{
 		}
 	}
 
-		
+    bool intersectsRect(ofRectangle & rect) {
+        return true;
+    }
+    
 	vector<ofPoint> points;
 	vector<ofColor> colours;
 	bool useCalibration;

@@ -7,8 +7,8 @@
 //
 
 #pragma once
-#include "ofxLaserManager.h"
 #include "ofxLaserFactory.h"
+#include "ofxLaserShape.h"
 
 namespace ofxLaser {
 	class Polyline : public Shape {

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ofxLaserShape.h"
-#include "ofxLaserManager.h"
 
 namespace ofxLaser {
 	class Circle :public Shape {
@@ -22,10 +21,11 @@ namespace ofxLaser {
 		virtual bool intersectsRect(ofRectangle & rect);
 		
 		void addPreviewToMesh(ofMesh& mesh);
+        ofPolyline polyline; // to store the circle shape in once it's been projected
+  
 		protected:
 		
-		ofPolyline polyline; // to store the circle shape in once it's been projected
-        float radius;
+	    float radius;
         glm::vec3 centre;
 		
 		private:

@@ -9,7 +9,7 @@
 #include "ofxLaserCircle.h"
 
 using namespace ofxLaser;
-
+//class Manager;
 Circle::Circle(const ofPoint& _centre, const float _radius, const ofColor& col, string profilelabel){
 	
 	// seems like an over-engineered way of doing it but it's the only
@@ -23,11 +23,12 @@ Circle::Circle(const ofPoint& _centre, const float _radius, const ofColor& col, 
 	polyline.clear();
 	glm::vec3 p;
     
+    // TODO fade out overlap
 	for(int angle = -1; angle<=361; angle++) {
 		p = glm::rotateZ(glm::vec3(radius, 0, 0), ofDegToRad(angle));
 		//p.rotate(i, ofPoint(0,0,1));
 		p+=centre;
-		p = ofxLaser::Manager::instance()->gLProject(p);
+        // projection is now done within the laser manager
 		polyline.addVertex(p);
 	}
 	
