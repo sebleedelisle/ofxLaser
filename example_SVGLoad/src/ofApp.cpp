@@ -49,13 +49,6 @@ void ofApp::setup(){
 		fileNames.push_back(file.getFileName());
     }
     
-    // set up the laser manager
-    
-	laserWidth = 800;
-	laserHeight = 800;
-	laser.setup(laserWidth, laserHeight);
-
-    laser.addProjector();
 		
     laser.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
     laser.addCustomParameter(currentSVGFilename.set("Filename"));
@@ -68,7 +61,7 @@ void ofApp::setup(){
     description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
     laser.addCustomParameter(description);
     
-    laser.initGui();
+   // laser.initGui();
     
 	
     currentSVG = 0;

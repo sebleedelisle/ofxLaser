@@ -20,7 +20,7 @@
 #include "ofxLaserBitmapMaskManager.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserProjector.h"
-
+#include "ofxLaserPresetManager.h"
 
 
 
@@ -160,9 +160,9 @@ class Manager {
     
     ofParameter<bool> showProjectorSettings;
     
-    ofParameter<bool> showZones;
-    ofParameter<bool> showPreview;
-    ofParameter<bool> showPathPreviews;
+    ofParameter<bool> editInputZones;
+    ofParameter<bool> showInputPreview;
+    ofParameter<bool> showOutputPreviews;
     ofParameter<bool> useBitmapMask;
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;

@@ -38,7 +38,7 @@ void UI::setupGui() {
     ImGui::StyleColorsDark();
    
     ImGui::GetStyle().WindowRounding = 1.0f;
-    ImGui::GetStyle().IndentSpacing = 4.0f;
+    ImGui::GetStyle().IndentSpacing = 0.0f;
     ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f,0.0f,0.4f);
    // ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDarkening]
     ImGui::GetStyle().ItemSpacing = ImVec2(8.0f,5.0f);
@@ -89,8 +89,35 @@ void UI::startGui() {
   
 }
 
+bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip, const char* format, float power){
+    
+    UI::addFloatSlider(param, format, power);
+    if(tooltip!="") UI::toolTip(tooltip);
+    //cout << param.getName()<< " " << param << " " << resetParam.getName() << " " << resetParam << endl; 
+    if(param!=resetParam) {
+        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+        if (ImGui::Button("R")) param.set(resetParam);
+    }
+    
+}
+bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip){
+    
+    UI::addIntSlider(param);
+    if(tooltip!="") UI::toolTip(tooltip);
+    if(param!=resetParam) {
+        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+        if (ImGui::Button("R")) param.set(resetParam);
+    }
+    
+}
+
 bool UI::addIntSlider(ofParameter<int>& param) {
-    if(ImGui::SliderInt(param.getName().c_str(), (int*)&param.get(), param.getMin(), param.getMax(), "%d")){
+    
+    string label = param.getName();
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    if(ImGui::SliderInt(label.c_str(), (int*)&param.get(), param.getMin(), param.getMax(), "%d")){
         param.set(ofClamp(param.get(), param.getMin(), param.getMax()));
         return true;
     } else {
@@ -98,7 +125,11 @@ bool UI::addIntSlider(ofParameter<int>& param) {
     }
 }
 bool UI::addFloatSlider(ofParameter<float>& param, const char* format, float power) {
-    if(ImGui::SliderFloat(param.getName().c_str(), (float*)&param.get(), param.getMin(), param.getMax(),format, power)){
+    string label = param.getName();
+    ofParameterGroup parent = param.getFirstParent();
+    label = label+"##"+parent.getName();
+
+    if(ImGui::SliderFloat(label.c_str(), (float*)&param.get(), param.getMin(), param.getMax(),format, power)){
         param.set(ofClamp(param.get(), param.getMin(), param.getMax()));
         return true;
     } else {

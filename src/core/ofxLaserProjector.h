@@ -18,6 +18,7 @@
 #include "ofxLaserScannerSettings.h"
 #include "ofxLaserLine.h"
 #include "ofxLaserColourSettings.h"
+#include "ofxLaserCircle.h"
 
 
 namespace ofxLaser {
@@ -71,7 +72,8 @@ class Projector {
     void send(ofPixels* pixels = NULL, float masterIntensity = 1);
     
     void setArmed(bool& armed);
-    
+   
+   
     // adds all the shape points to the vector passed in
     void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 

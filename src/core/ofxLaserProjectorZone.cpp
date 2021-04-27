@@ -39,6 +39,7 @@ bool ProjectorZone :: update() {
     bool wasDirty = isDirty;
     wasDirty = zoneTransform.update() | wasDirty;
     isDirty = false;
+    
     return wasDirty;
 }
 

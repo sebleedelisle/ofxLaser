@@ -34,18 +34,23 @@ Manager :: Manager() : dacAssigner(*DacAssigner::instance()) {
 	guiSpacing = 8;
 	dacStatusBoxHeight = 88;
 	dacStatusBoxSmallWidth = 160;
-	showPreview = true;
-	showZones = false;
+	showInputPreview = true;
+	editInputZones = false;
 	currentProjector = -1;
 	guiIsVisible = true;
     
     initAndLoadSettings();
     
+    // if no projectors loaded make one and add a zone
     if(projectors.size()==0) {
         createAndAddProjector();
         //addZone(0,0,800,800);
-        
+        if(zones.size()==0) createDefaultZone();
+        for(Projector* projector : projectors) {
+            projector->addZone(zones[0],800,800);
+        }
         showProjectorSettings = true;
+        
     }
 	
 }
@@ -299,6 +304,11 @@ void Manager::drawCircle(const glm::vec2& pos, const float& radius, const ofColo
 void Manager::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col,string profileName){
 	ofxLaser::Circle* c = new ofxLaser::Circle(centre,radius, col, profileName);
 	c->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    ofPolyline& polyline = c->polyline;
+     
+    for(glm::vec3& v : polyline.getVertices()) {
+        v = gLProject(v);
+    }
 	shapes.push_back(c);
 	
 }
@@ -457,7 +467,7 @@ void Manager :: drawPreviews(bool expandPreview) {
     
     // showPreview determines whether we show the preview
     // laser graphics on screen or not.
-    if(showPreview) {
+    if(showInputPreview) {
         
         ofPushStyle();
         
@@ -496,7 +506,7 @@ void Manager :: drawPreviews(bool expandPreview) {
         
         // this renders the input zones in the graphics source space
         for(size_t i= 0; i<zones.size(); i++) {
-            zones[i]->setVisible(showZones);
+            zones[i]->setVisible(editInputZones);
            // zones[i]->setActive(showZones && (currentProjector<0));
             
             zones[i]->offset.set(previewOffset);
@@ -532,7 +542,7 @@ void Manager :: drawPreviews(bool expandPreview) {
         ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
         
         for(size_t i= 0; i<projectors.size(); i++) {
-            if((!expandPreview)&&(showPathPreviews)) {
+            if((!expandPreview)&&(showOutputPreviews)) {
                 ofFill();
                 ofSetColor(0);
                 ofRectangle projectorPreviewRect(((lowerSectionHeight*scale) +guiSpacing)*i,0,lowerSectionHeight*scale, lowerSectionHeight*scale);
@@ -747,19 +757,19 @@ void Manager::initAndLoadSettings() {
     ofxLaser::UI::setupGui();
    
 	params.setName("Laser");
-	params.add(globalBrightness.set("Master Intensity", 0.1,0,1));
+	params.add(globalBrightness.set("Global brightness", 0.1,0,1));
 	params.add(showProjectorSettings.set("Edit Projector", false));
 	params.add(testPattern.set("Test Pattern", 0,0,9));
 	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 	
 	interfaceParams.setName("Interface");
-	interfaceParams.add(showZones.set("Show zones", false));
-	interfaceParams.add(showPreview.set("Show preview", true));
-	interfaceParams.add(showPathPreviews.set("Show path previews", true));
-	interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
-	interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
-	interfaceParams.add(laserMasks.set("Laser mask shapes", false));
-	
+	interfaceParams.add(editInputZones.set("Edit input zones", false));
+	interfaceParams.add(showInputPreview.set("Show preview", true));
+	interfaceParams.add(showOutputPreviews.set("Show path previews", true));
+	//interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
+	//interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
+	//interfaceParams.add(laserMasks.set("Laser mask shapes", false));
+    useBitmapMask = showBitmapMask = laserMasks = false;
 	params.add(interfaceParams);
 	
 	customParams.setName("Custom");
@@ -768,7 +778,7 @@ void Manager::initAndLoadSettings() {
 	
     loadSettings();
     
-	showPreview = true;
+	showInputPreview = true;
     testPattern = 0;
     initialised = true;
 	
@@ -867,10 +877,10 @@ bool Manager::loadSettings() {
     
     
     if(zones.size()==0) {
-        createDefaultZone();
-        for(Projector* projector : projectors) {
-            projector->addZone(zones[0],800,800);
-        }
+//        createDefaultZone();
+//        for(Projector* projector : projectors) {
+//            projector->addZone(zones[0],800,800);
+//        }
     } else {
         renumberZones();
     }
@@ -964,8 +974,8 @@ bool Manager::setGuideImage(string filename){
 }
 
 bool Manager::togglePreview(){
-	showPreview = !showPreview;
-	return showPreview;
+	showInputPreview = !showInputPreview;
+	return showInputPreview;
 };
 
 
@@ -1107,7 +1117,7 @@ void Manager::drawLaserGui() {
     ImGui::SameLine();
     if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
         addZone();
-        showZones = true;
+        editInputZones = true;
     }
     // END BIG BUTTONS
     UI::largeItemEnd();
@@ -1124,7 +1134,7 @@ void Manager::drawLaserGui() {
     UI::addParameterGroup(laser.interfaceParams);
     
     
-    if(showZones && (currentProjector ==-1)) {
+    if(editInputZones && (currentProjector ==-1)) {
         
         ImGui::Separator();
         
@@ -1371,7 +1381,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 //
 //    ImGui::Begin(projector->getLabel().c_str(), NULL, window_flags);
     
-    UI::startWindow(projector->getLabel(), ImVec2(x, spacing), ImVec2(projectorpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize, true);
+    UI::startWindow(projector->getLabel(), ImVec2(x, spacing), ImVec2(projectorpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, true);
     
    
     
@@ -1512,7 +1522,20 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 
     ImGui::Separator();
     ImGui::Text("OUTPUT / ZONE SETTINGS");
-
+    
+    UI::largeItemStart();
+    ImGui::PushItemWidth(190);
+    UI::addFloatAsIntPercentage(projector->speedMultiplier);
+    UI::toolTip("Scanner speed adjustment (NB this works mathematically, it doesn't change the point rate)");
+    ImGui::PopItemWidth();
+    ImGui::PushItemWidth(170);
+    UI::addFloatSlider(projector->colourChangeShift);
+    UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
+    ImGui::PopItemWidth();
+    UI::largeItemEnd();
+    
+   
+ 
     // ZONES
     UI::addCheckbox(projector->flipX);
     UI::addCheckbox(projector->flipY);
@@ -1556,43 +1579,6 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 
    
     
-//
-//
-//    if(ImGui::TreeNode("Zone edge masks")){
-//        //for(size_t i = 0; i< projector->projectorZones.size(); i++) {
-//        for(ProjectorZone* projectorZone : projector->projectorZones) {
-//            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-//            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
-//
-//                UI::addFloatSlider(projectorZone->bottomEdge);
-//                UI::addFloatSlider(projectorZone->topEdge);
-//                UI::addFloatSlider(projectorZone->leftEdge);
-//                UI::addFloatSlider(projectorZone->rightEdge);
-//
-//                ImGui::TreePop();
-//            }
-//
-//
-//        }
-//        ImGui::TreePop();
-//
-//    }
-//
-//    if(ImGui::TreeNode("Zone Warp Settings")){
-//        for(ProjectorZone* projectorZone : projector->projectorZones) {
-//            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-//            if(ImGui::TreeNode(projectorZone->getLabel().c_str())){
-//                UI::addParameterGroup(projectorZone->zoneTransform.params);
-//
-//                ImGui::TreePop();
-//            }
-//
-//
-//        }
-//        ImGui::TreePop();
-//
-//    }
-//
     
     // TODO IMPLEMENT PROJECTOR PROFILES
     /*
@@ -1637,77 +1623,195 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::Separator();
     ImGui::Text("SCANNER SETTINGS");
     
+    
+    PresetManager& presetManager = *PresetManager::instance();
     // TODO :
     // check if the settings are different from the preset, if they are
     // show a "save" button, also save as?
     //
     // when an option is selected, update all the params
-    /*
-    if (ImGui::BeginCombo("Scanner profile (placeholder)", "DT50")) // The second parameter is the label previewed before opening the combo.
-    {
+    const vector<string>& presets = presetManager.getPresetNames();
+    string label =projector->scannerSettings.getLabel();
+    ScannerSettings& currentPreset = *presetManager.getPreset(label);
+   
+    
+    bool presetEdited = (projector->scannerSettings!=currentPreset);
+    if (presetEdited){
+        label+="(edited)";
         
-        if (ImGui::Selectable("DT50", true)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("EMS8000", false)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("PT-A40HP", false)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("LaserCube", false)) {
-            //item_current = items[n];
-        }
         
-        //    if (is_selected)
-        //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+    }
+   
+    
+    if (ImGui::BeginCombo("##Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
+
+        for(const string presetName : presets) {
+
+            if (ImGui::Selectable(presetName.c_str(), presetName == projector->scannerSettings.getLabel())) {
+                //get the preset and make a copy of it
+                // uses operator overloading to create a clone
+                projector->scannerSettings = *presetManager.getPreset(presetName);
+            }
+        }
+     
         ImGui::EndCombo();
     }
-    */
-    // SCANNER SETTINGS
-    UI::addFloatSlider(projector->colourChangeShift);
-    UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
-    
-    
-    UI::addFloatSlider(projector->scannerSettings.moveSpeed, "%.2f", 3.0f);
-    UI::toolTip("How quickly the mirrors move between shapes");
-    
-    UI::addIntSlider(projector->scannerSettings.shapePreBlank);
-    UI::toolTip("The length of time that the laser is switched off and held at the beginning of a shape");
-    UI::addIntSlider(projector->scannerSettings.shapePreOn);
-    UI::toolTip("The length of time that the laser is switched on and held at the beginning of a shape");
-    UI::addIntSlider(projector->scannerSettings.shapePostOn);
-    UI::toolTip("The length of time that the laser is switched on and held at the end of a shape");
-    UI::addIntSlider(projector->scannerSettings.shapePostBlank);
-    UI::toolTip("The length of time that the laser is switched off and held at the end of a shape");
-    
-    ImGui::Text("Scanner profiles");
-    UI::toolTip("There are three profiles for different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
-    
-    bool firsttreeopen = true;
-    for (auto & renderProfile : projector->scannerSettings.renderProfiles) {
-        
-        RenderProfile& profile = renderProfile.second;
-        
-        string name =renderProfile.first;
-        ImGui::SetNextItemOpen(firsttreeopen, ImGuiCond_Once);
-        firsttreeopen = false;
-        
-        if(ImGui::TreeNode(profile.params.getName().c_str())){
-            
-            UI::addFloatSlider(profile.speed, "%.1f", 3.0f);
-            UI::addFloatSlider(profile.acceleration, "%.2f", 3.0f);
-            UI::addIntSlider(profile.dotMaxPoints);
-            UI::addFloatSlider(profile.cornerThreshold);
-            
-            ImGui::TreePop();
-        }
-        
+    ImGui::SameLine();
+    if(ImGui::Button("EDIT")) {
+        ImGui::OpenPopup("Edit Scanner Preset");
     }
     
-    // POINT RATE
-    UI::addIntSlider(projector->pps);
+//    ImGui::SetNextWindowPos,
+    ImGui::SetNextWindowSize({760,0});
+    // centre popup
+ 
+    ImGui::SetNextWindowPos({(float)ofGetWidth()/2, (float)ofGetHeight()/2}, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    // SCANNER PRESET POPUP
     
+    if (ImGui::BeginPopup("Edit Scanner Preset", 0))
+    {
+        ImGui::Text("SCANNER SETTINGS - %s",projector->getLabel().c_str());
+        ImGui::Separator();
+        if (ImGui::BeginCombo("Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
+
+            for(const string presetName : presets) {
+
+                if (ImGui::Selectable(presetName.c_str(), presetName == projector->scannerSettings.getLabel())) {
+                    //get the preset and make a copy of it
+                    // uses operator overloading to create a clone
+                    projector->scannerSettings = *presetManager.getPreset(presetName);
+                }
+            }
+         
+            ImGui::EndCombo();
+        }
+        
+        ImGui::SameLine();
+      
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * (presetEdited ? 1.0f : 0.5f));
+        if(ImGui::Button("SAVE")) {
+            if(presetEdited)ImGui::OpenPopup("Save Preset");
+            
+        }
+        ImGui::PopStyleVar();
+        
+        if (ImGui::BeginPopupModal("Save Preset", 0)){
+            string presetlabel = projector->scannerSettings.getLabel();
+
+            ImGui::Text("Are you sure you want to overwrite the preset %s", presetlabel.c_str());
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                PresetManager::addPreset(presetlabel, projector->scannerSettings);
+                ImGui::CloseCurrentPopup();
+                
+            }
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+                
+            }
+            ImGui::EndPopup();
+            
+            
+        }
+        static char newPresetLabel[255]; // = presetlabel.c_str();
+        
+    
+        ImGui::SameLine();
+        if(ImGui::Button("SAVE AS")){
+            strcpy(newPresetLabel, projector->scannerSettings.getLabel().c_str());
+            ImGui::OpenPopup("Save Preset As");
+            
+        };
+        
+        if (ImGui::BeginPopupModal("Save Preset As", 0)){
+            //string presetlabel = projector->scannerSettings.getLabel();
+            
+            if(ImGui::InputText("1", newPresetLabel, IM_ARRAYSIZE(newPresetLabel))){
+                //presetlabel = buf;
+                //PresetManager::addPreset(presetlabel, projector->scannerSettings);
+                
+            }
+            
+            ImGui::Separator();
+
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                string presetlabel = newPresetLabel;
+                // TODO CHECK PRESET EXISTS AND ADD POP UP
+                PresetManager::addPreset(presetlabel, projector->scannerSettings);
+                ImGui::CloseCurrentPopup();
+                
+            }
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+                
+            }
+            ImGui::EndPopup();
+            
+            
+        }
+        
+        
+        UI::addResettableFloatSlider(projector->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
+
+        ImGui::Columns(2);
+        UI::addResettableIntSlider(projector->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
+     
+        UI::addResettableIntSlider(projector->scannerSettings.shapePreOn, currentPreset.shapePreOn, "The length of time that the laser is switched on and held at the beginning of a shape");
+        ImGui::NextColumn();
+       
+        UI::addResettableIntSlider(projector->scannerSettings.shapePostBlank, currentPreset.shapePostBlank,"The length of time that the laser is switched off and held at the end of a shape" );
+        UI::addResettableIntSlider(projector->scannerSettings.shapePostOn, currentPreset.shapePostOn,"The length of time that the laser is switched on and held at the end of a shape" );
+
+        ImGui::Columns(1);
+        
+        ImGui::Text("Render profiles");
+        UI::toolTip("Every scanner setting has three profiles for rendering different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
+
+        ImGui::Separator();
+        //bool firsttreeopen = true;
+        ImGui::Columns(3);
+        ImGui::SetColumnWidth(0, 250);
+        ImGui::SetColumnWidth(1, 250);
+        ImGui::SetColumnWidth(1, 250);
+       
+
+        for (auto & renderProfilePair : projector->scannerSettings.renderProfiles) {
+            ImGui::PushItemWidth(120);
+            string name =renderProfilePair.first;
+            RenderProfile& profile = renderProfilePair.second;
+           
+            RenderProfile& resetProfile = currentPreset.renderProfiles.at(name);
+            
+            ImGui::Text("%s", name.c_str());
+            UI::addResettableFloatSlider(profile.speed,resetProfile.speed, "",  "%.1f", 3.0f);
+            UI::addResettableFloatSlider(profile.acceleration,resetProfile.acceleration, "",  "%.2f", 3.0f);
+            UI::addResettableIntSlider(profile.dotMaxPoints, resetProfile.dotMaxPoints);
+            UI::addResettableFloatSlider(profile.cornerThreshold, resetProfile.cornerThreshold);
+            
+            ImGui::PopItemWidth();
+            ImGui::NextColumn();
+        }
+        
+        ImGui::Columns(1);
+        ImGui::Separator();
+
+       
+        
+        ImGui::SetItemDefaultFocus();
+       // ImGui::SameLine();
+        if (ImGui::Button("Close", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::EndPopup();
+    }
+
     
     
     // COLOUR SETTINGS
@@ -1727,8 +1831,22 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::Text("ADVANCED SETTINGS");
 
     // ADVANCED
-    UI::addCheckbox(projector->laserOnWhileMoving);
+  
+    
     if(ImGui::TreeNode("Advanced")){
+        // POINT RATE
+        ImGui::PushItemWidth(projectorpanelwidth-60);
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f);
+        int ppsslider = projector->pps;
+        string ppsstring = "Point rate : " + ofToString(ppsslider);
+        if(ImGui::SliderInt("##Point rate", &ppsslider, projector->pps.getMin(), projector->pps.getMax(), ppsstring.c_str())){
+            projector->pps.set(ppsslider/100*100);
+          
+        }
+        UI::toolTip("The actual points sent to the projector - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
+        ImGui::PopItemWidth();
+        ImGui::PopStyleVar(1);
+        
         UI::addParameterGroup(projector->advancedParams);
         ImGui::TreePop();
     }
@@ -1791,7 +1909,6 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         p.y+=30;// + ImGui::GetScrollY();
        // if(ImGui::GetScrollY()>0) p.x-=14;
         //ImGui::GetContentRegionAvailWidth()
-        //cout << ImGui::GetScrollY() << " " <<p.x << " " << p.y << endl;
         draw_list->AddCircleFilled(p, 4, ImGui::GetColorU32(ImGuiCol_Border));
     }
     

@@ -32,7 +32,12 @@ class UI {
 
    
     static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier);
-    static bool addFloatAsIntPercentage(ofParameter<float>& param); 
+    static bool addFloatAsIntPercentage(ofParameter<float>& param);
+    
+    static bool addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip="", const char* format="%.2f", float power = 1.0f);
+    static bool addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip="");
+
+    
 
     static bool addCheckbox(ofParameter<bool>&param);
     
@@ -139,6 +144,10 @@ class UI {
     }
     static void render();
     
+    static void toolTip(string& str) {
+        toolTip(str.c_str());
+    }
+  
     static void toolTip(const char* desc)
     {
         ImGui::SameLine(0,3);

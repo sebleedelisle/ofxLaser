@@ -543,7 +543,7 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 //		
 //	}
 	
-	//isDirty |= (dragCount>0);
+	isDirty |= (dragCount>0);
 	if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
 	
 	return dragCount>0;

@@ -40,9 +40,12 @@ Projector::~Projector() {
 }
 
 void Projector::setDac(DacBase* newdac){
-    dac = newdac;
-    newdac->setPointsPerSecond(pps);
-    dacId = dac->getId();
+    if(dac!=newdac) {
+        dac = newdac;
+        newdac->setPointsPerSecond(pps);
+        dacId = dac->getId();
+        armed = false; // automatically calls setArmed because of listener on parameter
+    }
     
 }
 DacBase* Projector::getDac(){
@@ -87,9 +90,11 @@ void Projector :: init() {
     hideContentDuringTestPattern.set("Test pattern only", true);
 	ofParameterGroup projectorparams;
 	projectorparams.setName("Projector settings");
-	projectorparams.add(pps.set("Points per second", 30000,1000,80000));
+	
+    projectorparams.add(speedMultiplier.set("Speed", 1,0.12,2));
+    
 	 
-	projectorparams.add(colourChangeShift.set("Colour change shift", 2,0,6));
+	projectorparams.add(colourChangeShift.set("Colour shift", 2,0,6));
 		
 	projectorparams.add(flipX.set("Flip Horizontal", false));
 	projectorparams.add(flipY.set("Flip Vertical",false));
@@ -99,8 +104,8 @@ void Projector :: init() {
 	
 	ofParameterGroup& advanced = advancedParams;
     advanced.setName("Advanced");
+    projectorparams.add(pps.set("Points per second", 30000,1000,80000));
     advanced.add(laserOnWhileMoving.set("Laser on while moving", false));
-	advanced.add(speedMultiplier.set("Speed multiplier", 1,0.01,2));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
 	advanced.add(sortShapes.set("Optimise shape draw order", true));
 	advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
@@ -202,32 +207,12 @@ bool Projector :: hasZone(Zone* zone){
 }
 bool Projector :: removeZone(Zone* zone){
 
-    
     ProjectorZone* projectorZone = getProjectorZoneForZone(zone);
     if(projectorZone==nullptr) return false;
     
     vector<ProjectorZone*>::iterator it = std::find(projectorZones.begin(), projectorZones.end(), projectorZone);
-   // if(it == projectorZones.end()) return false;
-    
-    // TODO ***** CHECK THIS
-    // get the index for the zone
-//    int i = it-projectorZones.begin();
-//    projectorZones.erase(it);
-//    delete zoneTransforms[i];
-//    zoneTransforms.erase(zoneTransforms.begin()+i);
-//    zonesMuted.erase(zonesMuted.begin()+i);
-//    zonesSoloed.erase(zonesSoloed.begin()+i);
-//    zoneMasks.erase(zoneMasks.begin()+i);
-//    leftEdges.erase(leftEdges.begin()+i);
-//    rightEdges.erase(rightEdges.begin()+i);
-//    topEdges.erase(topEdges.begin()+i);
-//    bottomEdges.erase(bottomEdges.begin()+i);
-//
-//    for(int i = 0; i<projectorZones.size(); i++) {
-//        zoneTransforms[i]->zoneIndex = projectorZones[i]->index;
-//
-//    }
-//
+
+    // TODO Check cleanup
     projectorZones.erase(it);
     delete projectorZone;
     
@@ -236,10 +221,7 @@ bool Projector :: removeZone(Zone* zone){
     
     
 }
-//
-//void Projector::zoneMaskChanged(ofAbstractParameter& e) {
-//	updateZoneMasks();
-//}
+
 
 void Projector::updateZoneMasks() {
 	
@@ -958,173 +940,173 @@ deque<Shape*> Projector ::getTestPatternShapesForZone(ProjectorZone& projectorZo
 	
 	deque<Shape*> shapes;
     new Line(ofPoint(0,0), ofPoint(100,0),ofColor::red, OFXLASER_PROFILE_FAST);
-//	Zone& zone = projectorZone.zone;
-//
-//	ofRectangle& maskRectangle = projectorZone.zoneMask;
-//
-//	if(testPattern==1) {
-//
-//		ofRectangle& rect = maskRectangle;
-//
-//		ofColor col = ofColor(0,255,0);
-//		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
-//		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-//		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-//		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
-//		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-//		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-//
-//
-//	} else if(testPattern==2) {
-//
-//		ofRectangle& rect = zone.rect;
-//
-//		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-//		for(float y = 0; y<=1.1; y+=0.333333333) {
-//
-//			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
-//		}
-//
-//		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-//
-//
-//			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
-//
-//		}
-//
-//		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
-//		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/6, ofFloatColor(0,1,0), OFXLASER_PROFILE_DEFAULT));
-//
-//
-//
-//	}else if(testPattern==3) {
-//
-//		ofRectangle& rect = zone.rect;
-//
-//		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-//
-//		for(float y = 0; y<=1.1; y+=0.333333333) {
-//
-//			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//		}
-//		shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//		shapes.push_back(new Line(rect.getBottomLeft(), glm::mix(rect.getTopLeft(), rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//		shapes.push_back(new Line( glm::mix(rect.getTopRight(), rect.getBottomRight(), 1.0f/3.0f), mix(rect.getTopRight(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//
-//	} else if(testPattern==4) {
-//
-//		ofRectangle& rect = zone.rect;
-//
-//		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-//
-//		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-//			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
-//
-//		}
-//
-//		shapes.push_back(new Line(rect.getTopLeft(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//		shapes.push_back(new Line(rect.getTopRight(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//		shapes.push_back(new Line(glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 1.0f/3.0f), glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-//
-//
-//	} else if((testPattern>=5) && (testPattern<=8)) {
-//		ofColor c;
-//
-//		ofRectangle rect = maskRectangle;
-//
-//		rect.scaleFromCenter(0.5, 0.1);
-//		vector<ofPoint> points;
-//		vector<ofColor> colours;
-//
-//		ofPoint currentPosition = rect.getTopLeft();
-//
-//		for(int row = 0; row<5; row ++ ) {
-//
-//
-//			float y =rect.getTop() + (rect.getHeight()*row/4);
-//
-//			ofPoint left = ofPoint(rect.getLeft(), y);
-//
-//			ofPoint right = ofPoint(rect.getRight(), y);
-//
-//			int moveIterations = currentPosition.distance(left)/1;
-//
-//			for(int i = 0; i<moveIterations; i++) {
-//				points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
-//				colours.push_back(ofColor(0));
-//
-//			}
-//			currentPosition = right;
-//
-//			if(testPattern == 5) c.set(255,0,0);
-//			else if(testPattern == 6) c.set(0,255,0);
-//			else if(testPattern == 7) c.set(0,0,255);
-//			else if(testPattern == 8) c.set(255,255,255);
-//
-//			switch (row) {
-//				case 0 :
-//					c.r *= red100;
-//					c.g *= green100;
-//					c.b *= blue100;
-//					break;
-//				case 1 :
-//					c.r *= red75;
-//					c.g *= green75;
-//					c.b *= blue75;
-//					break;
-//				case 2 :
-//					c.r *= red50;
-//					c.g *= green50;
-//					c.b *= blue50;
-//					break;
-//				case 3 :
-//					c.r *= red25;
-//					c.g *= green25;
-//					c.b *= blue25;
-//					break;
-//				case 4 :
-//					c.r *= red0;
-//					c.g *= green0;
-//					c.b *= blue0;
-//					break;
-//			}
-//
-//			float speed = 10 * ( 1- (row*0.25));
-//			if(speed<2.5) speed = 2.5;
-//
-//			int blanks = 5;
-//			for(int i = 0; i< blanks; i++) {
-//				points.push_back(left);
-//				colours.push_back(ofColor(0));
-//			}
-//			for(float x =left.x ; x<=right.x; x+=speed) {
-//				points.push_back(ofPoint(x,y));
-//				colours.push_back(c);
-//			}
-//
-//			for(int i = 0; i< blanks; i++) {
-//				points.push_back(right);
-//				colours.push_back(ofColor(0));
-//			}
-//
-//
-//		}
-//		shapes.push_back(new ManualShape(points, colours, false,OFXLASER_PROFILE_DEFAULT));
-//
-//	} else if(testPattern ==9) {
-//		ofRectangle rect = maskRectangle;
-//
-//		shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-//		shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-//		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-//		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-//
-//	}
+	Zone& zone = projectorZone.zone;
+
+	ofRectangle& maskRectangle = projectorZone.zoneMask;
+
+	if(testPattern==1) {
+
+		ofRectangle& rect = maskRectangle;
+
+		ofColor col = ofColor(0,255,0);
+		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
+		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
+
+
+	} else if(testPattern==2) {
+
+		ofRectangle& rect = zone.rect;
+
+		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+		for(float y = 0; y<=1.1; y+=0.333333333) {
+
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
+		}
+
+		for(float x =0 ; x<=1.1; x+=0.3333333333) {
+
+
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
+
+		}
+
+		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/6, ofFloatColor(0,1,0), OFXLASER_PROFILE_DEFAULT));
+
+
+
+	}else if(testPattern==3) {
+
+		ofRectangle& rect = zone.rect;
+
+		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+
+		for(float y = 0; y<=1.1; y+=0.333333333) {
+
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+		}
+		shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+		shapes.push_back(new Line(rect.getBottomLeft(), glm::mix(rect.getTopLeft(), rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+		shapes.push_back(new Line( glm::mix(rect.getTopRight(), rect.getBottomRight(), 1.0f/3.0f), mix(rect.getTopRight(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+
+	} else if(testPattern==4) {
+
+		ofRectangle& rect = zone.rect;
+
+		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+
+		for(float x =0 ; x<=1.1; x+=0.3333333333) {
+			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
+
+		}
+
+		shapes.push_back(new Line(rect.getTopLeft(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+		shapes.push_back(new Line(rect.getTopRight(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+		shapes.push_back(new Line(glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 1.0f/3.0f), glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+
+
+	} else if((testPattern>=5) && (testPattern<=8)) {
+		ofColor c;
+
+		ofRectangle rect = maskRectangle;
+
+		rect.scaleFromCenter(0.5, 0.1);
+		vector<ofPoint> points;
+		vector<ofColor> colours;
+
+		ofPoint currentPosition = rect.getTopLeft();
+
+		for(int row = 0; row<5; row ++ ) {
+
+
+			float y =rect.getTop() + (rect.getHeight()*row/4);
+
+			ofPoint left = ofPoint(rect.getLeft(), y);
+
+			ofPoint right = ofPoint(rect.getRight(), y);
+
+			int moveIterations = currentPosition.distance(left)/1;
+
+			for(int i = 0; i<moveIterations; i++) {
+				points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
+				colours.push_back(ofColor(0));
+
+			}
+			currentPosition = right;
+
+			if(testPattern == 5) c.set(255,0,0);
+			else if(testPattern == 6) c.set(0,255,0);
+			else if(testPattern == 7) c.set(0,0,255);
+			else if(testPattern == 8) c.set(255,255,255);
+
+			switch (row) {
+				case 0 :
+					c.r *= colourSettings.red100;
+					c.g *= colourSettings.green100;
+					c.b *= colourSettings.blue100;
+					break;
+				case 1 :
+					c.r *= colourSettings.red75;
+					c.g *= colourSettings.green75;
+					c.b *= colourSettings.blue75;
+					break;
+				case 2 :
+					c.r *= colourSettings.red50;
+					c.g *= colourSettings.green50;
+					c.b *= colourSettings.blue50;
+					break;
+				case 3 :
+					c.r *= colourSettings.red25;
+					c.g *= colourSettings.green25;
+					c.b *= colourSettings.blue25;
+					break;
+				case 4 :
+					c.r *= colourSettings.red0;
+					c.g *= colourSettings.green0;
+					c.b *= colourSettings.blue0;
+					break;
+			}
+
+			float speed = 10 * ( 1- (row*0.25));
+			if(speed<2.5) speed = 2.5;
+
+			int blanks = 5;
+			for(int i = 0; i< blanks; i++) {
+				points.push_back(left);
+				colours.push_back(ofColor(0));
+			}
+			for(float x =left.x ; x<=right.x; x+=speed) {
+				points.push_back(ofPoint(x,y));
+				colours.push_back(c);
+			}
+
+			for(int i = 0; i< blanks; i++) {
+				points.push_back(right);
+				colours.push_back(ofColor(0));
+			}
+
+
+		}
+		shapes.push_back(new ManualShape(points, colours, false,OFXLASER_PROFILE_DEFAULT));
+
+	} else if(testPattern ==9) {
+		ofRectangle rect = maskRectangle;
+
+		shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+
+	}
 	return shapes; 
 	
 }
@@ -1290,6 +1272,7 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 bool Projector::loadSettings(vector<Zone*>& zones){
     ofJson json = ofLoadJson("projectors/projector" + ofToString(projectorIndex)+".json");
     ofDeserialize(json, params);
+    
 
     bool success = maskManager.deserialize(json);
     
@@ -1325,6 +1308,8 @@ bool Projector::saveSettings(){
     
     ofJson json;
     ofSerialize(json, params);
+    
+    scannerSettings.serialize(json);
 
     vector<int>projectorzonenums;
     for(ProjectorZone* projectorZone : projectorZones) {

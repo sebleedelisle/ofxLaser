@@ -17,6 +17,16 @@ class ScannerSettings {
     public :
     
     ScannerSettings();
+    ScannerSettings& operator=( ScannerSettings& that);
+    bool operator == (ScannerSettings& that);
+    bool operator != (ScannerSettings& that);
+  
+    void serialize(ofJson&json);
+    bool deserialize(ofJson&jsonGroup);
+    const string& getLabel(); 
+    void setLabel(string _label) {
+        label = _label;
+    };
     
     // scanner settings
     ofParameterGroup params;
@@ -26,8 +36,16 @@ class ScannerSettings {
     ofParameter<int> shapePostBlank = 0;
     ofParameter<int> shapePreOn = 0;
     ofParameter<int> shapePostOn = 0;
-    map<string, RenderProfile> renderProfiles;
-
+    
+    RenderProfile profileFast;
+    RenderProfile profileDefault;
+    RenderProfile profileDetail;
+    
+    map<string, RenderProfile&> renderProfiles;
+    private :
+    ofParameter<string> label;
+    ofParameter<string> description;
+    
     
 };
 
