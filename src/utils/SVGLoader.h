@@ -18,7 +18,16 @@ class SVGLoader : public ofThread{
 		waitForThread();
 		
 	};
-	
+    int getLoadCount(){
+        int count;
+        if(lock()) {
+            count = loadCount;
+            unlock();
+            return count;
+        } else {
+            return -1;
+        }
+    }
 	static deque<SVGLoader*> loadQueue;
 	static bool isLoading;
 	
@@ -66,8 +75,7 @@ class SVGLoader : public ofThread{
 	
 	ofxSVGExtra svg;
 
-	volatile int loadCount;
-	
+   
 	void replaceAll( string& content, string toFind, string toReplace);
 
     static bool sortalgo(const ofFile& a, const ofFile& b) {
@@ -110,9 +118,10 @@ class SVGLoader : public ofThread{
         return *a ? 1 : *b ? -1 : 0;
     }
 	
-	private:
+	protected:
 	void threadedFunction();
-	
+    volatile int loadCount;
+    
 
 	
 };

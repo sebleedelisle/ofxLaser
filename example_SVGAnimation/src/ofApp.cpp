@@ -18,8 +18,8 @@ void ofApp::draw(){
     ofBackground(15,15,20);
 
     int frameNum = ofGetElapsedTimef()*30; // 30 frames per second
+    frameNum = frameNum%svgLoader.getLoadCount();
     
-    frameNum = frameNum%svgLoader.loadCount;
     ofxLaser::Graphic& graphic = svgLoader.getLaserGraphic(frameNum);
     graphic.renderToLaser(laser, 1, OFXLASER_PROFILE_FAST);
     laser.send();
@@ -31,5 +31,5 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
     if(key == OF_KEY_TAB) {
         laser.nextProjector();
-    } 
+    }
 }
