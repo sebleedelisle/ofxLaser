@@ -18,7 +18,8 @@ void ofApp::draw(){
     ofBackground(15,15,20);
 
     int frameNum = ofGetElapsedTimef()*30; // 30 frames per second
-    frameNum = frameNum%svgLoader.getLoadCount();
+    int framesLoaded = svgLoader.getLoadCount();
+    if(framesLoaded>0) frameNum = frameNum%framesLoaded;
     
     ofxLaser::Graphic& graphic = svgLoader.getLaserGraphic(frameNum);
     graphic.renderToLaser(laser, 1, OFXLASER_PROFILE_FAST);

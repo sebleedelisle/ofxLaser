@@ -20,6 +20,9 @@ class SVGLoader : public ofThread{
 	};
     int getLoadCount(){
         int count;
+        
+        if(!isThreadRunning()) return loadCount;
+           
         if(lock()) {
             count = loadCount;
             unlock();
