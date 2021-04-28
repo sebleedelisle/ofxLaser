@@ -10,7 +10,7 @@
 #include "ofxLaserManager.h"
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
-#include "ofxNanoSvg.h"
+#include "ofxSvgExtra.h"
 
 namespace ofxLaser {
 
@@ -43,9 +43,7 @@ class Graphic {
 	}
 
 	
-	//void addSvg(ofxSVGExtra& svg, bool optimise = true, bool subtractFills = true);
-	void addSvg(ofxNanoSvg& svg, bool optimise = true, bool subtractFills = true);
-    void addSvg(string filename, bool optimise = true, bool subtractFills = true) {
+   void addSvg(string filename, bool optimise = true, bool subtractFills = true) {
         addSvgFromFile( filename, optimise ,  subtractFills );
     }
         

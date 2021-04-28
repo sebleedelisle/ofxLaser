@@ -23,17 +23,10 @@ void Graphic :: addSvgFromFile(string filename, bool optimise, bool subtractFill
 }
 
 void Graphic :: addSvgFromString(string data, bool optimise, bool subtractFills) {
-    //ofxSVGExtra svg;
-    //svg.load(filename);
-    //addSvg(svg, optimise, subtractFills);
 
-    ofxNanoSvg svg;
+
+    ofxSVGExtra svg;
     svg.loadFromString(data);
-    addSvg(svg, optimise, subtractFills);
-    
-}
-void Graphic :: addSvg(ofxNanoSvg& svg, bool optimise, bool subtractFills){
-    
     
     const vector <ofPath> & paths = svg.getPaths();
     
