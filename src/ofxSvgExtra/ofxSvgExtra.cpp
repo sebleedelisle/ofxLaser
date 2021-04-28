@@ -1,5 +1,6 @@
 #include "ofxSvgExtra.h"
 #include "ofConstants.h"
+#include <regex>
 
 using namespace std;
 
@@ -105,7 +106,64 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 			//cout << strokewidth << endl;
 		}
 	}
+    
+    // now a bunch of extra code to find and replace stroke-widths defined
+    // inside of style tags!
+    ofXmlExtra::Search styleElements = xml.find("//*[@style]");
+    if(!styleElements.empty()) {
+        
+        for(ofXmlExtra & element: styleElements){
+            //cout << element.toString() << endl;
+            string style = element.getAttribute("style").getValue();
+           
+           // cout << style << endl;
+            size_t startpos = style.find("stroke-width");
+            if(startpos!=string::npos) {
+                
+                // remove white space
+                if(style.find(" ")!=string::npos) ofJoinString(ofSplitString(style, " "), style);
+     
+                
+                vector<string>styleelements = ofSplitString(style, ";");
+                bool changed = false;
+                for(string& styleelement : styleelements) {
+                    if(styleelement.find("stroke-width")!=string::npos) {
+                        //cout << styleelement << endl;
+                        startpos = style.find(':', startpos)+1;
+                        
+                        
+                        string strokewidthstring = style.substr(startpos, string::npos);
+                        //cout << strokewidthstring << endl;
+                        float strokewidth = stof(strokewidthstring);
+                        if(strokewidth <1) {
+                            styleelement = "stroke-width=1";
+                            changed = true;
+                        }
+                    }
+                }
+                if(changed) {
+                    style = ofJoinString(styleelements, ";");
+                    //cout << style << endl;
+                    element.setAttribute("style", style);
+                    //cout << element.getAttribute("style");
+                }
+            }
+
+        }
+    }
+    
 	
+    // for some reason libsvgtiny fails if there is a viewBox attribute in the
+    // svg header, so let's strip it out!
+    ofXmlExtra::Search viewBoxElements = xml.find("//*[@viewBox]");
+    if(!viewBoxElements.empty()) {
+        
+        for(ofXmlExtra & element: viewBoxElements){
+            element.removeAttribute("viewBox");
+        }
+    }
+    
+    
 	//lib svgtiny doesn't remove elements with display = none, so this code fixes that
 	
 	bool finished = false;
@@ -216,6 +274,7 @@ void ofxSVGExtra::setupShape(struct svgtiny_shape * shape, ofPath & path){
 	for(int i = 0; i < (int)shape->path_length;){
 		if(p[i] == svgtiny_PATH_MOVE){
 			path.moveTo(p[i + 1], p[i + 2]);
+           //cout << "MOVE " << p[i+1] << " " << p[i+2] << endl;
 			i += 3;
 		}
 		else if(p[i] == svgtiny_PATH_CLOSE){
@@ -225,6 +284,7 @@ void ofxSVGExtra::setupShape(struct svgtiny_shape * shape, ofPath & path){
 		}
 		else if(p[i] == svgtiny_PATH_LINE){
 			path.lineTo(p[i + 1], p[i + 2]);
+            //cout << "LINE " << p[i+1] << " " << p[i+2] << endl;
 			i += 3;
 		}
 		else if(p[i] == svgtiny_PATH_BEZIER){

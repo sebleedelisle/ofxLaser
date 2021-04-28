@@ -54,12 +54,12 @@ void ofApp::setup(){
     laser.addCustomParameter(currentSVGFilename.set("Filename"));
 	laser.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));
     laser.addCustomParameter(rotate3D.set("Rotate 3D", true));
-    laser.addCustomParameter(renderProfileLabel);
+    laser.addCustomParameter(renderProfileLabel.set("Render Profile name",""));
     laser.addCustomParameter(renderProfileIndex.set("Render Profile", 1, 0, 2));
     
     ofParameter<string> description;
     description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
-    laser.addCustomParameter(description);
+    laser.addCustomParameter(description.set("Description", ""));
     
    // laser.initGui();
     

@@ -318,7 +318,7 @@ void Graphic::breakPolyline(ofPolyline* newPoly) {
 	// we need polys to be open lines, so that we subtract portions of line, rather than a cohesive shape
 	if(newPoly->isClosed()) {
 		newPoly->setClosed(false);
-		// if we add a point exactly at the st/Users/seb15/Dropbox/of_v0.10.1_osx_release/apps/BecHill/BecHillLasers/src/LaserAudioWave.hart position, Clipper intelligently assumes
+		// if we add a point exactly at the start position, Clipper intelligently assumes
 		// it's closed... if we make the last point a tiny bit offset, it correctly
 		// maintains its openness.
 		const vector<glm::vec3>& vertices = newPoly->getVertices();

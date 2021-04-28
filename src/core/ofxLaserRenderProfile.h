@@ -14,7 +14,7 @@ namespace ofxLaser {
 		public :
 		RenderProfile(string _label = "") {
 			
-			ofLogNotice("RenderProfile default constructor called "+_label);
+			//ofLogNotice("RenderProfile default constructor called "+_label);
             init(_label);
 		}
 		
