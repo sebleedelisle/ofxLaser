@@ -26,7 +26,7 @@ common:
 	# or use += in several lines
 	# NOTE - we only include ofxKinect as it's the easiest way to ensure libusb
 	# is included cross platform
-	ADDON_DEPENDENCIES = ofxOpenCv ofxNetwork ofxPoco ofxSvg 
+	ADDON_DEPENDENCIES = ofxOpenCv ofxNetwork ofxPoco  
 	
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
