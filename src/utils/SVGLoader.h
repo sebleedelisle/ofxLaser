@@ -60,7 +60,10 @@ class SVGLoader : public ofThread{
 	// returns number of SVGs to load
     int startLoad(string path);
 	
-
+    void setLoadOptimisation(bool value) {
+        useLoadOptimisation = value;
+    }
+    
     
     //ofxSVGFromString & getSvg(int index);
 	ofxLaser::Graphic& getLaserGraphic(int index);
@@ -124,6 +127,7 @@ class SVGLoader : public ofThread{
 	protected:
 	void threadedFunction();
     volatile int loadCount;
+    bool useLoadOptimisation = true;
     
 
 	

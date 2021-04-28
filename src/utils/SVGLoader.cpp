@@ -25,24 +25,6 @@ int SVGLoader:: startLoad(string path) {
 
 	dir.close();
 	
-	
-//	for(int j = 0; j<files.size(); j++) {
-//
-//		//string newname = path+"/"+files[j].getFileName();
-//
-//		ofFile ofxlgfile(path+"/"+files[j].getBaseName()+".ofxlg");
-//		if(ofxlgfile.exists()) {
-//			time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
-//			time_t originalfiletime = std::filesystem::last_write_time(files[j]);
-//			if(ofxlgfiletime>originalfiletime) {
-//				files[j].close();
-//				files[j] = ofxlgfile;
-//
-//			}
-//		}
-//		files[j].close();
-//	}
-
 	frames.resize(files.size());
 	
 	loadCount = 0;
@@ -95,47 +77,55 @@ void SVGLoader::threadedFunction() {
 		bool loadOptimised = false;
 		ofFile ofxlgfile(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg");
 		if(ofxlgfile.exists()) {
-			time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
-			time_t originalfiletime = std::filesystem::last_write_time(file);
-			if(ofxlgfiletime>originalfiletime) {
-				loadOptimised = true;
-			}
-		}
+            if(!useLoadOptimisation) {
+                ofxlgfile.remove();
+            } else {
+                time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
+                time_t originalfiletime = std::filesystem::last_write_time(file);
+                if(ofxlgfiletime>originalfiletime) {
+                    loadOptimised = true;
+                }
+
+            }
+        }
 		
 		if(!loadOptimised) {
 			
 			//ofLogNotice("Loading svg : " + file.getAbsolutePath());
-			ofBuffer buffer = ofBufferFromFile(file.getAbsolutePath());
-			
-			dataString = buffer.getText();
-			buffer.clear();
-			
-			
-			//ofLog(OF_LOG_NOTICE, "Loading frame #"+ofToString(i));
-			//if(!isThreadRunning()) break;
-			
-//			while(!lock()){
-//				sleep(1);
+//			ofBuffer buffer = ofBufferFromFile(file.getAbsolutePath());
+//
+//			dataString = buffer.getText();
+//			buffer.clear();
+//
+//
+//			//ofLog(OF_LOG_NOTICE, "Loading frame #"+ofToString(i));
+//			//if(!isThreadRunning()) break;
+//
+////			while(!lock()){
+////				sleep(1);
+////			}
+////			//ofLog(OF_LOG_NOTICE,file.getFileName());
+////			unlock();
+//
+//			try {
+//				svg.loadFromString(dataString);
+//			} catch (const std::exception& e) {
+//				ofLog(OF_LOG_ERROR, ofToString(e.what()));
 //			}
-//			//ofLog(OF_LOG_NOTICE,file.getFileName());
-//			unlock();
-			
-			try {
-				svg.loadFromString(dataString);
-			} catch (const std::exception& e) {
-				ofLog(OF_LOG_ERROR, ofToString(e.what()));
-			}
-			
+//
 			while(!lock()){
 				sleep(1);
 			}
-			frames[i].addSvg(svg);
+			frames[i].addSvgFromFile(file.getAbsolutePath(), true, true);
 			
-			ofJson json;
-			frames[i].serialize(json);
-			//cout << "Saving optimised file : " << file.getEnclosingDirectory()+file.getBaseName()+".ofxlg" << endl;
-			ofSavePrettyJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg", json);
-			unlock();
+            if(useLoadOptimisation) {
+                ofJson json;
+                frames[i].serialize(json);
+                //cout << "Saving optimised file : " << file.getEnclosingDirectory()+file.getBaseName()+".ofxlg" << endl;
+                ofSavePrettyJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg", json);
+            }
+            
+            unlock();
 
 		} else {
 			

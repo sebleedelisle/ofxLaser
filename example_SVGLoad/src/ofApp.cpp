@@ -15,8 +15,10 @@ void ofApp::setup(){
     
     // and load them all
     const vector<ofFile>& files = dir.getFiles();
+    
+    dir.close();
 
-	svgs.resize(files.size());
+	//svgs.resize(files.size());
 	
 	for(int i = 0; i<files.size();i++) {
         const ofFile & file = files.at(i);
@@ -26,10 +28,10 @@ void ofApp::setup(){
 		// and put in a pull request to oF, but in the meantime,
 		// we can use this surrogate custom SVG class.
 		
-		ofxSVGExtra& svg = svgs[i];
+		//ofxSVGExtra& svg = svgs[i];
 		
-        svg.load(file.getAbsolutePath());
-		laserGraphics.push_back(ofxLaser::Graphic());
+        //svg.load(file.getAbsolutePath());
+		laserGraphics.emplace_back();
 		
 		// the ofxLaser::Graphic object is a way to manage a bunch
 		// of shapes for laser rendering, and it can load SVGs.
@@ -40,7 +42,7 @@ void ofApp::setup(){
 		// subtractFills : if true, will subtract filled areas from shapes underneath
 		// this is important because otherwise, all our objects will appear transparent.
 	
-		laserGraphics.back().addSvg(svg, true, true);
+		laserGraphics.back().addSvgFromFile(file.getAbsolutePath(), false, true);
 		
 		// this centres all the graphics
 		laserGraphics.back().autoCentre();

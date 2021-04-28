@@ -11,50 +11,47 @@ using namespace ofxLaser;
 // static class members
 int Graphic::numGraphicsInMemory = 0;
 
-void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
-	
-	const vector <ofPath> & paths = svg.getPaths();
-	// TODO add subtracted fills to mask polyline.
-	for (ofPath path : svg.getPaths()){
-		addPath(path, false, subtractFills);
-	}
-	
-	if(optimise) {
-		connectLineSegments();
-		for(size_t i= 0; i<polylines.size(); i++) {
-			polylines[i]->simplify(0.2);
-		}
-	}
-	
-//	ofJson json;
-//	serialize(json);
-//	deserialize(json);
-	
-}
-void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
-	
-	const vector <ofPath> & paths = svg.getPaths();
-	
-	for (ofPath path : svg.getPaths()){
-		addPath(path, false, subtractFills);
-	}
-	
-	if(optimise) {
-		connectLineSegments();
-		for(size_t i= 0; i<polylines.size(); i++) {
-			polylines[i]->simplify(0.2);
-		}
-	}
+
+void Graphic :: addSvgFromFile(string filename, bool optimise, bool subtractFills) {
+    filename = ofToDataPath(filename);
+
+  
+    ofBuffer buffer = ofBufferFromFile(filename);
+    
+    addSvgFromString(buffer.getText(), optimise, subtractFills);
 	
 }
 
-void Graphic :: addSvg(string filename, bool optimise, bool subtractFills) {
-	ofxSVGExtra svg;
-	svg.load(filename);
-	addSvg(svg, optimise, subtractFills);
+void Graphic :: addSvgFromString(string data, bool optimise, bool subtractFills) {
+    //ofxSVGExtra svg;
+    //svg.load(filename);
+    //addSvg(svg, optimise, subtractFills);
 
-	
+    ofxNanoSvg svg;
+    svg.loadFromString(data);
+    addSvg(svg, optimise, subtractFills);
+    
 }
+void Graphic :: addSvg(ofxNanoSvg& svg, bool optimise, bool subtractFills){
+    
+    
+    const vector <ofPath> & paths = svg.getPaths();
+    
+    for (ofPath path : svg.getPaths()){
+        addPath(path, false, subtractFills, true);
+    }
+    
+    if(optimise) {
+        connectLineSegments();
+        // if we subtracted fills then the lines were optimised already
+        if(!subtractFills) {
+            for(size_t i= 0; i<polylines.size(); i++) {
+                polylines[i]->simplify(0.2);
+            }
+        }
+    }
+}
+
 
 void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	
@@ -237,7 +234,7 @@ void Graphic :: autoCentre() {
 	translate(-boundingBox.getCenter());
 }
 
-void Graphic :: addPath(const ofPath& path, bool useTransform, bool subtractFills) {
+void Graphic :: addPath(const ofPath& path, bool useTransform, bool subtractFills, bool optimise) {
 	// tests for empty paths
 	
 	ofPath newpath = path;
@@ -261,9 +258,13 @@ void Graphic :: addPath(const ofPath& path, bool useTransform, bool subtractFill
 		const vector<ofPolyline> & outlines = newpath.getOutline();
 		ofColor col(newpath.getStrokeColor());
 		for(const ofPolyline& line:outlines) {
-			
-			addPolyline(line, col, false, false);
-			
+            if(optimise) {
+                ofPolyline polyline = line;
+                polyline.simplify(0.2);
+                addPolyline(polyline, col, false, false);
+            } else {
+                addPolyline(line, col, false, false);
+            }
 		}
 		
 	}

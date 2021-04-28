@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-    
+    svgLoader.setLoadOptimisation(false); 
     svgLoader.startLoad("svgs/");
     
 }

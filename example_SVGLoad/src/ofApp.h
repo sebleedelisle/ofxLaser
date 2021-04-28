@@ -6,7 +6,6 @@
 
 #include "ofMain.h"
 #include "ofxLaserManager.h"
-#include "ofxSvgExtra.h"
 #include "ofxLaserGraphic.h"
 
 
@@ -28,8 +27,7 @@ public:
     ofParameter<string> renderProfileLabel;
     
 	vector<ofxLaser::Graphic> laserGraphics;
-	vector<ofxSVGExtra> svgs; 
-    vector<string> fileNames; 
+	 vector<string> fileNames; 
 	
 	ofxLaser::Manager laser;
 	
