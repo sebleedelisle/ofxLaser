@@ -63,8 +63,8 @@ void DragHandle::draw(const glm::vec3& mousepos, float scale) {
 		ofDrawCircle(*this,size/2*scale);
 	} else {
 		ofSetRectMode(OF_RECTMODE_CENTER);
-        //ofDrawRectangle(*this,radius*2/scale, radius*2/scale);
-        ofDrawRectRounded(*this,size/scale, size/scale, 2/scale);
+        ofDrawRectangle(*this,size/scale, size/scale);
+        //ofDrawRectRounded(*this,size/scale, size/scale, 2/scale);
     
        
 	}

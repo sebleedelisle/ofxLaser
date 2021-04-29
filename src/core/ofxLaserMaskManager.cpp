@@ -59,8 +59,8 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quad->maskLevel= level;
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
     quad->setName(ofToString(quads.size()));
-    quad->lineColour = ofColor::red;
-
+    //quad->lineColour = ofColor::red;
+    
     quad->offset = offset;
     quad->scale = scale;
     return *quad;

@@ -48,7 +48,7 @@ class UI {
     
     static void addParameterGroup(ofParameterGroup& parameterGroup);
     
-    static void startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false) {
+    static void startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) {
         ImGuiWindowFlags window_flags = flags;
         window_flags |= ImGuiWindowFlags_NoNav;
         //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -69,7 +69,7 @@ class UI {
         ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_Once);
         
         // start the main window!
-        ImGui::Begin(name.c_str(), NULL, window_flags);
+        ImGui::Begin(name.c_str(), openstate, window_flags);
         
         
     }
@@ -167,6 +167,12 @@ class UI {
 
     static void drawDashedLine(glm::vec3 p1, glm::vec3 p2);
     
+    
+    
+    static ImU32 getColourForState(int state) {
+        const ImVec4 stateCols[] = {{0,1,0,1}, {1,1,0,1}, {1,0,0,1}};
+        return ImGui::GetColorU32(stateCols[state]);
+    }
     
 };
 

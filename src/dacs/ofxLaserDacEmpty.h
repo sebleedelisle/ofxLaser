@@ -19,7 +19,9 @@ namespace ofxLaser {
         virtual bool setPointsPerSecond(uint32_t pps) override { return true; };
         virtual string getId() override {return "";};
         
-        virtual ofColor getStatusColour() override {return ofColor::white; };
+        virtual int getStatus() override {return OFXLASER_DACSTATUS_ERROR;};
+    
+       // virtual ofColor getStatusColour() override {return ofColor::white; };
     
         virtual void reset()  override  {};
         virtual void close() override {};

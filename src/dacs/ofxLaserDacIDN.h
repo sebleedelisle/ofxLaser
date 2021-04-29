@@ -47,26 +47,26 @@ class DacIDN : public DacBase, ofThread {
 	public:
 	void setup(string ip);
 	
-	bool sendFrame(const vector<Point>& points);
-	bool sendPoints(const vector<Point>& points);
-	bool setPointsPerSecond(uint32_t pps);
+	bool sendFrame(const vector<Point>& points) override;
+	bool sendPoints(const vector<Point>& points) override;
+	bool setPointsPerSecond(uint32_t pps) override;
 	
-	string getId(){
+	string getId() override {
 		return "IDN";
 	}
 	
 	// TODO return relevant colour 
-	ofColor getStatusColour(){
-		return connected ? ofColor::green :  ofColor::red;
-	}
+//	ofColor getStatusColour() override {
+//		return connected ? ofColor::green :  ofColor::red;
+//	}
 	
-	void close();
+	void close() override ;
 	
 	protected:
 
 	private:
 
-	void threadedFunction();
+	void threadedFunction() override;
 	
 	void sendFrameToDac();
 

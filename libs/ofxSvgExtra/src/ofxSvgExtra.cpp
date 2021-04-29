@@ -154,15 +154,19 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
     
 	
     // for some reason libsvgtiny fails if there is a viewBox attribute in the
-    // svg header, so let's strip it out!
+    // svg header but no width and height, so let's strip it out!
+   
     ofXml::Search viewBoxElements = xml.find("//*[@viewBox]");
+    
     if(!viewBoxElements.empty()) {
-        
         for(ofXml & element: viewBoxElements){
-            element.removeAttribute("viewBox");
+            if(element.getAttribute("width").getValue()=="") {
+
+                element.removeAttribute("viewBox");
+            }
         }
     }
-    
+        
     
 	//lib svgtiny doesn't remove elements with display = none, so this code fixes that
 	

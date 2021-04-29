@@ -7,7 +7,7 @@ void ofApp::setup(){
 	
 	laserWidth = 800;
 	laserHeight = 800;
-	laser.setup(laserWidth, laserHeight);
+	laser.setCanvasSize(laserWidth, laserHeight);
 	
     numLaserEffects = 9;
     

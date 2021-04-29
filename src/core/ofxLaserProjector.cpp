@@ -32,7 +32,7 @@ Projector::~Projector() {
     // NOTE that the manager saves the projector settings when it closes 
 	ofLog(OF_LOG_NOTICE, "ofxLaser::Projector destructor called");
 	pps.removeListener(this, &Projector::ppsChanged);
-	armed.removeListener(this, &ofxLaser::Projector::setArmed);
+	armed.removeListener(this, &ofxLaser::Projector::setDacArmed);
     ofRemoveListener(params.parameterChangedE(), this, &Projector::paramsChanged);
    
 	if(dac!=nullptr) dac->close();
@@ -50,6 +50,11 @@ void Projector::setDac(DacBase* newdac){
 }
 DacBase* Projector::getDac(){
     return dac;
+    
+}
+
+bool Projector::hasDac() {
+    return (dac != &emptyDac);
     
 }
 bool Projector::removeDac(){
@@ -115,6 +120,7 @@ void Projector :: init() {
 	projectorparams.add(advanced);
 	
 	params.add(projectorparams);
+    params.add(scannerSettings.params); 
 	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
@@ -126,7 +132,7 @@ void Projector :: init() {
 
      
      
-    armed.addListener(this, &ofxLaser::Projector::setArmed);
+    armed.addListener(this, &ofxLaser::Projector::setDacArmed);
     pps.addListener(this, &Projector::ppsChanged);
   
 
@@ -157,10 +163,15 @@ void Projector :: init() {
 
 
 
-void Projector ::setArmed(bool& armed){
-    dac->setArmed(armed); 
+void Projector ::setDacArmed(bool& _armed){
+    dac->setArmed(_armed);
+    
 }
 
+bool Projector ::toggleArmed() {
+    armed = !armed;
+    return armed;
+}
 
 void Projector:: ppsChanged(int& e){
 	ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
@@ -256,12 +267,12 @@ string Projector::getDacLabel() {
     }
 }
 
-bool Projector::getDacConnectedState() {
+int Projector::getDacConnectedState() {
     
     if(dac!=nullptr) {
-        return dac->getStatusColour()==ofColor::green;
+        return dac->getStatus();
     } else {
-        return "No laser controller set up";
+        return OFXLASER_DACSTATUS_ERROR;
     }
 }
 /*
@@ -480,8 +491,12 @@ void Projector::update(bool updateZones) {
 	}
 	
     needsSave |= projectorZoneChanged;
-	
-	smoothedFrameRate += (getFrameRate() - smoothedFrameRate)*0.2;
+    float framerate = getFrameRate();
+	smoothedFrameRate += (framerate - smoothedFrameRate)*0.2;
+    frameTimeHistory[frameTimeHistoryOffset] = 1/framerate;
+    frameTimeHistoryOffset++;
+    if(frameTimeHistoryOffset>=frameTimeHistorySize) frameTimeHistoryOffset = 0;
+    
     if(needsSave) saveSettings();
  
 }
@@ -1309,7 +1324,7 @@ bool Projector::saveSettings(){
     ofJson json;
     ofSerialize(json, params);
     
-    scannerSettings.serialize(json);
+    //scannerSettings.serialize(json);
 
     vector<int>projectorzonenums;
     for(ProjectorZone* projectorZone : projectorZones) {

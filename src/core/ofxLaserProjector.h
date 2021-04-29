@@ -56,6 +56,7 @@ class Projector {
     DacBase* getDac();
     bool removeDac();
     
+    bool hasDac(); 
     
     void paramsChanged(ofAbstractParameter& e){
         saveSettings();
@@ -71,8 +72,7 @@ class Projector {
     void update(bool updateZones);
     void send(ofPixels* pixels = NULL, float masterIntensity = 1);
     
-    void setArmed(bool& armed);
-   
+    bool toggleArmed(); 
    
     // adds all the shape points to the vector passed in
     void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
@@ -90,7 +90,7 @@ class Projector {
     // DAC
     
     string getDacLabel() ;
-    bool getDacConnectedState();
+    int getDacConnectedState();
     
     // Zones
     
@@ -134,30 +134,8 @@ class Projector {
 
     //-----------------------------------------------
     
-    
     int projectorIndex;
     
-    DacEmpty emptyDac;
-
-    MaskManager maskManager;
-    
-    float defaultHandleSize = 8;
-
-    DacBase* dac;
-    
-    //const int min = -32768;
-    //const int max = 32767;
-    
-    ofPoint laserHomePosition;
-    float smoothedFrameRate = 0;
-    vector<Point> laserPoints;
-    vector<Point> sparePoints;
-    vector<Point> sparePoints2;
-    unsigned long frameCounter = 0;
-    
-    int numPoints;
-    ofMesh previewPathMesh;
-    ofEventListener paramsChangedListener;
     
     ofParameterGroup params;
     ofParameter<bool> armed;
@@ -191,12 +169,45 @@ class Projector {
     ofParameter<bool> smoothHomePosition;
     ofParameter<bool> laserOnWhileMoving = false;
  
-    
+    MaskManager maskManager;
+
     
     bool guiInitialised = false;
     
     float lastSaveTime = 0; 
+    float smoothedFrameRate = 0;
+    int frameTimeHistorySize = 200;
+    float frameTimeHistory[200];
+    int frameTimeHistoryOffset = 0;
 
+    //-----------------------------------
+    protected :
+  
+    void setDacArmed(bool& armed);
+    
+    DacEmpty emptyDac;
+
+    
+    float defaultHandleSize = 8;
+
+    DacBase* dac;
+    
+    //const int min = -32768;
+    //const int max = 32767;
+    
+    ofPoint laserHomePosition;
+    
+     
+    vector<Point> laserPoints;
+    vector<Point> sparePoints;
+    vector<Point> sparePoints2;
+    unsigned long frameCounter = 0;
+    
+    int numPoints;
+    ofMesh previewPathMesh;
+    ofEventListener paramsChangedListener;
+
+    
 };
 
 }

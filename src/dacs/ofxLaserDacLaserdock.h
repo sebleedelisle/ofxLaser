@@ -24,17 +24,12 @@ namespace ofxLaser {
 class DacLaserdock : public DacBase, ofThread{
 	public:
 	
-    DacLaserdock(){};// : lddmanager(LaserdockDeviceManager::getInstance()) {};
-	~DacLaserdock();
-	
-	//void setup(string serial="");
-	//bool connectToDevice(string serial="");
-    
+    DacLaserdock(){};
+    ~DacLaserdock();
+
     bool setup(libusb_device* usbdevice);
     OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());
    
-   
-    
     void reset() override;
     void close() override;
     
@@ -42,12 +37,12 @@ class DacLaserdock : public DacBase, ofThread{
 	bool sendPoints(const vector<Point>& points) override ;
 	bool setPointsPerSecond(uint32_t pps) override;
 	
-	string getId() override{return "Laserdock " + ofToString(serialNumber);};
+	string getId() override {return "Laserdock " + ofToString(serialNumber);};
 	
-	// TODO return relevant colour
-	ofColor getStatusColour() override{
-		return connected ? ofColor::green :  ofColor::red;
-	}
+    int getStatus() override {
+        return connected ? OFXLASER_DACSTATUS_GOOD :  OFXLASER_DACSTATUS_ERROR;
+    }
+
 	
 	bool addPoint(const LaserdockSample &point );
 	// simple object pooling system
@@ -55,8 +50,6 @@ class DacLaserdock : public DacBase, ofThread{
 	
 	ofParameter<int> pointBufferDisplay;
 	ofParameter<string> serialNumber; 
-	//	ofParameter<int> latencyDisplay;
-//	ofParameter<int> reconnectCount;
 	
 	private:
 	void threadedFunction() override;

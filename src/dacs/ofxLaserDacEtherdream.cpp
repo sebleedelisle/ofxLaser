@@ -787,13 +787,13 @@ string DacEtherdream ::getId(){
    // string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
 }
 
-ofColor DacEtherdream :: getStatusColour(){
-	if(!connected) return ofColor::red;
-	if(response.status.playback_state <=1) return ofColor::orange;
-	else if(response.status.playback_state ==2) return ofColor::green;
-	else return ofColor::red;
-	
-	
+int DacEtherdream :: getStatus(){
+	if(!connected) return OFXLASER_DACSTATUS_ERROR;
+	if(response.status.playback_state <=1) return OFXLASER_DACSTATUS_WARNING;
+	else if(response.status.playback_state ==2) return OFXLASER_DACSTATUS_GOOD;
+	else return OFXLASER_DACSTATUS_ERROR;
+
+
 }
 
 

@@ -29,12 +29,11 @@ namespace ofxLaser {
 		bool update();
         // the zone object stores shapes that intersect with it
 		bool addShape(Shape* s);
-		//void draw();
 		
 		ofPoint& addSortedShapesToVector(vector<Shape*>& shapes, ofPoint& currentPosition);
 	
 		ofRectangle rect;
-
+        string zoneLabel;
 		deque<Shape*> shapes;
 
       //  bool editable;

@@ -83,8 +83,8 @@ class DacHelios : public DacBase, ofThread{
     
 	
 
-	ofColor getStatusColour() override {
-		return connected ? ofColor::green :  ofColor::red;
+	int getStatus() override {
+		return connected ? OFXLASER_DACSTATUS_GOOD :  OFXLASER_DACSTATUS_ERROR;
 	}
 	
 	

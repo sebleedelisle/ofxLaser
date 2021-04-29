@@ -51,19 +51,14 @@ void QuadGui::set(float x, float y, float w, float h) {
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
         
         handles[i].set(xpos, ypos);
-        handles[i].col = handleColour*0.5;
-        handles[i].overCol = handleColour;
-        
+         
         allHandles.push_back(&handles[i]);
         
     }
     
     centreHandle.set(x + (w/2.0f), y+(h/2.0f));
     allHandles.push_back(&centreHandle);
-    for(DragHandle* handle : allHandles) {
-        handle->overCol = ofColor::magenta;
-        handle->col = ofColor(255,0,255,128);
-    }
+    
     updatePoly();
     
 }
@@ -90,6 +85,18 @@ void QuadGui :: removeListeners() {
     ofRemoveListener(ofEvents().mouseDragged, this, &QuadGui::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     
 }
+void QuadGui :: setColours(ofColor _lineColour, ofColor _handleColour, ofColor _labelColour){
+    
+    handleColour = _handleColour;
+    lineColour = _lineColour;
+    labelColour = _labelColour;
+    
+    for(DragHandle* handle : allHandles) {
+        handle->overCol = handleColour;
+        handle->col = handleColour*0.5;
+    }
+    
+}
 
 void QuadGui :: draw() {
 	
@@ -97,6 +104,10 @@ void QuadGui :: draw() {
         isDirty = false;
         return;
     }
+    if(!editable) {
+        selected = false;
+    }
+    
     ofPushMatrix();
     ofTranslate(offset);
     ofScale(scale, scale);
@@ -104,27 +115,29 @@ void QuadGui :: draw() {
 	ofPushStyle();
 	ofNoFill();
 	ofSetLineWidth(1);
-	/*
-	if(isDirty) {
-		//updateHomography();
-		ofSetColor(ofColor::red);
-	}*/
+
     
     ofSetColor(lineColour);
     
-	glm::vec3 p1 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[1], 0.1);
-	glm::vec3 p2 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[2], 0.1);
-    
-    //if(selected) {
+	//glm::vec3 p1 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[1], 0.1);
+	//glm::vec3 p2 = glm::mix((glm::vec3)handles[0],(glm::vec3)handles[2], 0.1);
+    glm::vec3 shift(0.5,0.5,0);
+    if(editable) {
 		
-    UI::drawDashedLine(handles[1], handles[3]);
-    UI::drawDashedLine(handles[3], handles[2]);
-    UI::drawDashedLine(handles[0], handles[1]);
-    UI::drawDashedLine(handles[2], handles[0]);
+        UI::drawDashedLine(handles[1]+shift, handles[3]+shift);
+        UI::drawDashedLine(handles[3]+shift, handles[2]+shift);
+        UI::drawDashedLine(handles[0]+shift, handles[1]+shift);
+        UI::drawDashedLine(handles[2]+shift, handles[0]+shift);
+
+    } else {
+        ofSetColor(lineColour*0.5);
+        ofDrawLine(handles[1]+shift, handles[3]+shift);
+        ofDrawLine(handles[3]+shift, handles[2]+shift);
+        ofDrawLine(handles[0]+shift, handles[1]+shift);
+        ofDrawLine(handles[2]+shift, handles[0]+shift);
+       // ofRectangle rect(handles[0], )
         
-        
-     //   drawDashedLine(p1,p2);
-    //}
+    }
     
     
     if(!displayLabel.empty()) {
@@ -132,21 +145,21 @@ void QuadGui :: draw() {
 
         ofFill();
         ofPushMatrix();
-        ofTranslate(handles[1]-ofPoint(textwidth+24,0));
+        ofTranslate(handles[1]);
+        ofScale(1/scale, 1/scale, 1); //-ofPoint(textwidth+12,1.5));
+        ofTranslate(-textwidth-10, 1);
         ofSetColor(0,150);
         
-        ofDrawRectangle(0,0,textwidth+24,24);
-        ofSetColor(labelColour);
+        ofDrawRectangle(0,0,textwidth+10,18);
+        ofSetColor(labelColour * (editable?1:0.5));
 
-        ofDrawBitmapString(displayLabel, 6, 17);
+        ofDrawBitmapString(displayLabel, 7, 13);
 
         ofPopMatrix();
        
     }
     if(selected) {
         for(int i = 0; i<numHandles; i++) {
-           // handles[i].scale = scale;
-           
             handles[i].draw(mousePos, scale);
         }
         centreHandle.draw(mousePos, scale);
@@ -381,9 +394,7 @@ bool QuadGui::deserialize(ofJson& jsonGroup) {
 }
 
 void QuadGui::setVisible(bool warpvisible) {
-	
 	visible = warpvisible;
-	
 }
 
 

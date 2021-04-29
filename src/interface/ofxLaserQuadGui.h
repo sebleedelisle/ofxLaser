@@ -24,7 +24,7 @@ class QuadGui {
 	void set(const ofRectangle& rect);
 	virtual void set(float x, float y, float w, float h) ;
     void setConstrained(const ofRectangle& rect); 
-	
+    void setColours(ofColor lineColour, ofColor handleColour, ofColor labelColour);
 	virtual void draw();
 	
     void initListeners();
@@ -34,8 +34,6 @@ class QuadGui {
     bool mouseDragged(ofMouseEventArgs &e);
     bool mouseMoved(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
-    
-
     
     // hit test in screen space
     // (takes into account the offset and scale)
@@ -53,10 +51,14 @@ class QuadGui {
 	virtual bool deserialize(ofJson&jsonGroup);
 
 	void setVisible(bool warpvisible);
-	bool checkDirty(); 
-	
 	bool isVisible() { return visible; };
-	
+    void setEditable(bool _editable) {
+        editable = _editable;
+    }
+    bool getEditable() { return editable; };
+    
+    bool checkDirty();
+    
 	//string saveLabel;
 	string displayLabel;
 	
@@ -65,9 +67,6 @@ class QuadGui {
     ofRectangle constrainRect;
    // bool reversable = true;
 
-    ofColor lineColour;
-    ofColor labelColour;
-    ofColor handleColour;
     
 	const int numHandles = 4;
 	DragHandle handles[4];
@@ -85,11 +84,17 @@ class QuadGui {
     bool selected; 
     
 	protected :
-	bool visible = true;
+    bool visible = true;
+    bool editable = true;
     bool isDirty = true;
     
-    bool initialised = false; 
-	
+    bool initialised = false;
+    
+    private :
+    ofColor lineColour;
+    ofColor labelColour;
+    ofColor handleColour;
+
 
 };
 }

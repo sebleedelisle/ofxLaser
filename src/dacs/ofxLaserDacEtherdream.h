@@ -95,24 +95,23 @@ namespace ofxLaser {
 		~DacEtherdream();
 		
 		// DacBase functions
-		bool sendFrame(const vector<Point>& points);
-        bool sendPoints(const vector<Point>& points);
-		bool setPointsPerSecond(uint32_t newpps);
-		string getId();
-		ofColor getStatusColour();
-		const vector<ofAbstractParameter*>& getDisplayData();
+		bool sendFrame(const vector<Point>& points) override;
+        bool sendPoints(const vector<Point>& points) override;
+		bool setPointsPerSecond(uint32_t newpps) override;
+		string getId() override;
+		int getStatus() override;
+		const vector<ofAbstractParameter*>& getDisplayData() override;
 		
 		void setup(string id, string ip);
         
         OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup(string ip));
        
-        
 		bool addPoint(const dac_point &point );
 		void closeWhileRunning();
-		void close();
+		void close() override;
 	
 		
-		void reset(); 
+		void reset() override; 
         
         //output the data that we just sent
         void logData();

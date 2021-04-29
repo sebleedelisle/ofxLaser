@@ -18,7 +18,7 @@ using namespace ofxLaser;
 Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
     setIndex(0);
 	set(x, y, w,h);
-    lineColour.set(200,20,200);
+    setColours(ofColor(200,20,200), ofColor(200,20,200), ofColor(200,20,200));
 	
     lockPerpendicular = true;
     for(DragHandle& handle : handles) {
@@ -32,7 +32,8 @@ Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
 
 void Zone:: setIndex(int _index)  {
     index = _index;
-    setName("Zone "+ofToString(index+1));
+    setName("Z"+ofToString(index+1));
+    zoneLabel = "ZONE " + ofToString(index+1); 
    
     
 }

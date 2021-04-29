@@ -292,9 +292,9 @@ void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2){
    ofPushStyle();
    ofNoFill();
 //   ofSetColor(colour);
-   ofSetLineWidth(2);
+   ofSetLineWidth(1);
 
-   UI::dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
+   UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
    UI::dashedLineMesh.draw();
    ofPopStyle();
 

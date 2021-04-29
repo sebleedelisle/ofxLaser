@@ -45,6 +45,8 @@ class Manager {
     Manager();
     ~Manager();
     
+    OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(widht, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
+  
     OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
     OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector());
    
@@ -160,7 +162,7 @@ class Manager {
     
     ofParameter<bool> showProjectorSettings;
     
-    ofParameter<bool> editInputZones;
+    ofParameter<bool> lockInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
     ofParameter<bool> useBitmapMask;
@@ -190,6 +192,8 @@ class Manager {
 	  
     bool guiIsVisible;
     bool initialised = false;
+    
+    bool showEditScannerPreset = false;
     
     bool doArmAll = false;
     bool doDisarmAll = false;
