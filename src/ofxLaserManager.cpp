@@ -1294,7 +1294,7 @@ void Manager::drawLaserGui() {
         // MUTE SOLO
         for(ProjectorZone* projectorZone : projector->projectorZones) {
             
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->enabled?0.5f:1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->getEnabled()?0.5f:1.0f);
             
             string muteLabel = "M##"+projectorZone->getLabel();
             if(ImGui::Button(muteLabel.c_str(), ImVec2(20,20))) {

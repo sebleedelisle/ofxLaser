@@ -20,6 +20,14 @@ class ProjectorZone {
     
     bool update() ;
     void setVisible(bool visible);
+    bool getEnabled() {
+        return enabled;
+    }
+    void setEnabled(bool value) {
+        enabled = value;
+        zoneTransform.setVisible(enabled); 
+    }
+    
     void draw();
     
     string getLabel();
@@ -43,7 +51,6 @@ class ProjectorZone {
     ofParameter<float>topEdge;
     ofParameter<bool>muted;
     ofParameter<bool>soloed;
-    ofParameter<bool>enabled;
     
     ofParameterGroup params; 
     ofParameterGroup zoneMaskGroup;
@@ -51,6 +58,9 @@ class ProjectorZone {
     
     float scale;
     ofPoint offset;
+    
+    protected :
+    bool enabled;
     
 };
 

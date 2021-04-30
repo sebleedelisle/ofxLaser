@@ -120,7 +120,7 @@ void Projector :: init() {
 	projectorparams.add(advanced);
 	
 	params.add(projectorparams);
-    params.add(scannerSettings.params); 
+    params.add(scannerSettings.params);
 	
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
@@ -339,7 +339,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
     float scale = w/800.0f;
     ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
     for(ProjectorZone* projectorZone : projectorZones) {
-        if(!projectorZone->enabled) continue;
+        if(!projectorZone->getEnabled()) continue;
         projectorZone->setScale(scale);
         projectorZone->setOffset(offset);
         projectorZone->draw();
@@ -437,7 +437,7 @@ void Projector :: hideWarpGui() {
 }
 void Projector :: showWarpGui() {
     for(ProjectorZone* projectorZone : projectorZones) {
-        projectorZone->setVisible(true);
+        if(projectorZone->getEnabled()) projectorZone->setVisible(true);
     }
 	
 }
@@ -459,12 +459,12 @@ void Projector::update(bool updateZones) {
     
     if(soloMode) {
         for(ProjectorZone* projectorZone : projectorZones) {
-            projectorZone->enabled = projectorZone->soloed;
+            projectorZone->setEnabled(projectorZone->soloed);
         }
         
     } else {
         for(ProjectorZone* projectorZone : projectorZones) {
-            projectorZone->enabled = !projectorZone->muted;
+            projectorZone->setEnabled(!projectorZone->muted);
         }
     }
     
@@ -756,7 +756,7 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
 	//for(int i = 0; i<(int)projectorZones.size(); i++) {
     for(ProjectorZone* projectorZone : projectorZones) {
         //ProjectorZone* projectorZone = projectorZones[i];
-		if(!projectorZone->enabled) continue;
+		if(!projectorZone->getEnabled()) continue;
         
 		Zone& zone = projectorZone->zone;
         ZoneTransform& warp = projectorZone->zoneTransform;
