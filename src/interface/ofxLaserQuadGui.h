@@ -32,7 +32,7 @@ class QuadGui {
     
 	bool mousePressed(ofMouseEventArgs &e);
     bool mouseDragged(ofMouseEventArgs &e);
-    bool mouseMoved(ofMouseEventArgs &e);
+    void mouseMoved(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     
     // hit test in screen space

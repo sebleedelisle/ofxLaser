@@ -88,11 +88,12 @@ bool ScannerSettings :: deserialize(ofJson&jsonGroup){
 //    cout << (&renderProfiles.at("FAST") == &profileFast );
 //    cout << (&renderProfiles.at("DETAIL") == &profileDetail );
 //    cout << (&renderProfiles.at("DEFAULT") == &profileDefault )<< endl;
-    ofDeserialize(jsonGroup, params);
+     ofDeserialize(jsonGroup, params);
 //    cout << (&renderProfiles.at("FAST") == &profileFast );
 //    cout << (&renderProfiles.at("DETAIL") == &profileDetail );
 //    cout << (&renderProfiles.at("DEFAULT") == &profileDefault )<< endl;
 //
+	 return true; 
 }
 
 const string& ScannerSettings :: getLabel() {

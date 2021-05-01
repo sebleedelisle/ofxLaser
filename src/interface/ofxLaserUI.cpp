@@ -84,31 +84,31 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     
   
 }
 
 bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip, const char* format, float power){
     
-    UI::addFloatSlider(param, format, power);
+    bool returnvalue = UI::addFloatSlider(param, format, power);
     if(tooltip!="") UI::toolTip(tooltip);
     //cout << param.getName()<< " " << param << " " << resetParam.getName() << " " << resetParam << endl; 
     if(param!=resetParam) {
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
         if (ImGui::Button("R")) param.set(resetParam);
     }
-    
+	return returnvalue; 
 }
 bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip){
     
-    UI::addIntSlider(param);
+    bool returnvalue = UI::addIntSlider(param);
     if(tooltip!="") UI::toolTip(tooltip);
     if(param!=resetParam) {
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
         if (ImGui::Button("R")) param.set(resetParam);
     }
-    
+	return returnvalue; 
 }
 
 bool UI::addIntSlider(ofParameter<int>& param) {

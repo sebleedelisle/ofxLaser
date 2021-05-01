@@ -267,7 +267,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	return handleHit;
 	
 }
-bool QuadGui :: mouseMoved(ofMouseEventArgs &e){
+void QuadGui :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
