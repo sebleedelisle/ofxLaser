@@ -49,23 +49,17 @@ class Projector {
     
     void init();
     
-    string getLabel() {
-        return "Projector " + ofToString(projectorIndex+1);
-    }
+    string getLabel();
     void setDac(DacBase* dac);
     DacBase* getDac();
     bool removeDac();
     
     bool hasDac(); 
     
-    void paramsChanged(ofAbstractParameter& e){
-        saveSettings();
-    }
+    void paramsChanged(ofAbstractParameter& e);
     bool loadSettings(vector<Zone*>& zones);
     bool saveSettings();
-    bool getSaveStatus() {
-        return (ofGetElapsedTimef()-lastSaveTime<1);
-    }
+    bool getSaveStatus();
     
     void setDefaultHandleSize(float size);
     
@@ -79,13 +73,8 @@ class Projector {
 
     
     void sendRawPoints(const vector<Point>& points, Zone* zone, float masterIntensity =1);
-    int getPointRate() {
-        return pps;
-    };
-    float getFrameRate() {
-        if(numPoints>0) return (float)pps/(float)numPoints;
-        else return pps;
-    }
+    int getPointRate();
+    float getFrameRate();
     
     // DAC
     
@@ -106,15 +95,8 @@ class Projector {
     void drawTransformAndPath(ofRectangle rect); 
 
     
-    vector<ProjectorZone*> projectorZones;
-
-    ProjectorZone* getProjectorZoneForZone(Zone* zone) {
-        for(ProjectorZone* projectorZone : projectorZones) {
-            if(&projectorZone->zone == zone) return projectorZone;
-        }
-        return nullptr;
-
-    }
+   
+    ProjectorZone* getProjectorZoneForZone(Zone* zone);
     
     // Managing points
     void addPoint(ofxLaser::Point p);
@@ -137,7 +119,7 @@ class Projector {
     //-----------------------------------------------
     
     int projectorIndex;
-    
+    vector<ProjectorZone*> projectorZones;
     
     ofParameterGroup params;
     ofParameter<bool> armed;

@@ -343,6 +343,16 @@ void Manager:: update(){
 	
 }
 
+void Manager::beginDraw() {
+    ofViewport((ofGetWidth()-width)/-2, (ofGetHeight()-height)/-2, ofGetWidth(), ofGetHeight()) ;
+    ofPushMatrix();
+    ofTranslate((ofGetWidth()-width)/2, (ofGetHeight()-height)/2);
+    
+}
+void Manager::endDraw() {
+    ofPopMatrix();
+    ofViewport(0,0,ofGetWidth(), ofGetHeight());
+}
 
 void Manager::send(){
 	
@@ -1264,20 +1274,11 @@ void Manager::drawLaserGui() {
     
     if(laser.showProjectorSettings) {
         x-=(projectorpanelwidth+spacing);
-        // CODE THAT DOES A MAXIMUM OF 2 PROJECTOR SETTINGS
-//        if(projectors.size()<3) {
-//            for(ofxLaser::Projector* projector : laser.getProjectors()) {
-//
-//                drawProjectorPanel(projector, projectorpanelwidth, spacing, x);
-//                x+=projectorpanelwidth+spacing;
-//
-//            }
-//        } else {
-            int projectorIndexToShow = currentProjector;
-            if(projectorIndexToShow ==-1) projectorIndexToShow = 0;
-            drawProjectorPanel(&getProjector(projectorIndexToShow), projectorpanelwidth, spacing, x);
-            
-        //}
+
+        int projectorIndexToShow = currentProjector;
+        if(projectorIndexToShow ==-1) projectorIndexToShow = 0;
+        drawProjectorPanel(&getProjector(projectorIndexToShow), projectorpanelwidth, spacing, x);
+
         
     }
     

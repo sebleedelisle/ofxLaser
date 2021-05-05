@@ -68,7 +68,13 @@ bool Projector::removeDac(){
 	}
 }
 
-
+int Projector::getPointRate() {
+    return pps;
+};
+float Projector::getFrameRate() {
+    if(numPoints>0) return (float)pps/(float)numPoints;
+    else return pps;
+}
 
 void Projector::setDefaultHandleSize(float size) {
 	
@@ -193,18 +199,12 @@ void Projector::addZone(Zone* zone, float srcwidth, float srcheight) {
     
     // initialise zoneTransform
     projectorZone->zoneTransform.init(zone->rect);
-    //    ofRectangle destRect = zone->rect;
-    //    destRect.scale(400/srcwidth, 400/srcheight);
-    //    destRect.x*=400/srcwidth;
-    //    destRect.x+=200;
-    //    destRect.y*=400/srcheight;
-    //    zoneTransform.setDst(destRect);
+
     projectorZone->zoneMask = zone->rect;
     
-    std::sort(projectorZones.begin(), projectorZones.end(), [](const ProjectorZone* a, const ProjectorZone* b) -> bool
-    {
-        
-        return (a->getZoneIndex()<b->getZoneIndex()); // a.mProperty > b.mProperty;
+    // sort the zones... oh a fancy lambda check me out
+    std::sort(projectorZones.begin(), projectorZones.end(), [](const ProjectorZone* a, const ProjectorZone* b) -> bool {
+        return (a->getZoneIndex()<b->getZoneIndex());
     });
      
 }
@@ -214,8 +214,8 @@ bool Projector :: hasZone(Zone* zone){
         if(zone == &projectorZone->zone) return true;
     }
     return false;
-    
 }
+
 bool Projector :: removeZone(Zone* zone){
 
     ProjectorZone* projectorZone = getProjectorZoneForZone(zone);
@@ -232,7 +232,13 @@ bool Projector :: removeZone(Zone* zone){
     
     
 }
+ProjectorZone* Projector::getProjectorZoneForZone(Zone* zone) {
+    for(ProjectorZone* projectorZone : projectorZones) {
+        if(&projectorZone->zone == zone) return projectorZone;
+    }
+    return nullptr;
 
+}
 
 void Projector::updateZoneMasks() {
 	
@@ -240,24 +246,11 @@ void Projector::updateZoneMasks() {
         
         projectorZone->updateZoneMask();
     }
-    
-    /*
-	for(size_t i = 0; i<zoneMasks.size(); i++) {
-		
-		ofRectangle& zoneMask = zoneMasks[i];
-		Zone& zone = *projectorZones[i];
-		
-		ofParameter<float>& leftEdge = leftEdges[i];
-		ofParameter<float>& rightEdge = rightEdges[i];
-		ofParameter<float>& topEdge = topEdges[i];
-		ofParameter<float>& bottomEdge = bottomEdges[i];
-		zoneMask.setX(zone.rect.getLeft()+(leftEdge*zone.rect.getWidth()));
-		zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
-		zoneMask.setWidth(zone.rect.getWidth()*(1-leftEdge-rightEdge));
-		zoneMask.setHeight(zone.rect.getHeight()*(1-topEdge-bottomEdge));
-	}*/
 }
 
+string Projector :: getLabel() {
+    return "Projector " + ofToString(projectorIndex+1);
+}
 
 string Projector::getDacLabel() {
     if(dac!=&emptyDac) {
@@ -316,7 +309,9 @@ void Projector::drawTransformAndPath(ofRectangle rect) {
         
     }
     //drawTransformUI(rect.x, rect.y, rect.width, rect.height);
-    
+    ofSetColor(255);
+    ofDrawBitmapString(ofToString(projectorIndex+1), rect.getRight()-20, rect.getTop()+20);
+
     ofPushMatrix();
     ofTranslate(rect.x, rect.y);
     ofScale(rect.width/800, rect.height/800);
@@ -326,6 +321,36 @@ void Projector::drawTransformAndPath(ofRectangle rect) {
    
     float scale = 800.0f/bounds.width;
     if(800/bounds.height<scale) scale = 800/bounds.height;
+    if(scale<1.1) {
+        scale = 1;
+        bounds.set(0,0,800,800);
+    } else {
+        // draw output scale
+        ofPushMatrix();
+        ofPushStyle();
+        ofTranslate(700,700);
+        ofScale(0.1,0.1);
+        ofFill();
+        ofSetColor(0);
+        ofDrawRectangle(0,0,800,800);
+        ofNoFill();
+        ofSetColor(50,50,200);
+        ofDrawRectangle(0,0,800,800);
+        for(ProjectorZone* zone : projectorZones) {
+
+            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+            
+            ofBeginShape();
+            for(glm::vec3& p:perimeterpoints) {
+                ofVertex(p);
+            }
+            ofEndShape();
+            
+        }
+        ofPopStyle();
+        ofPopMatrix();
+        
+    }
     ofScale(scale, scale);
     ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
     drawLaserPath(ofRectangle(0,0,800,800), false);
@@ -354,10 +379,7 @@ void Projector :: drawLaserPath(ofRectangle rect, bool drawDots) {
 void Projector :: drawLaserPath(float x, float y, float w, float h, bool drawDots) {
 	ofPushStyle();
 	
-	ofSetColor(255);
-
-	ofDrawBitmapString(ofToString(projectorIndex+1), x+w-20, y+20);
-	ofSetColor(100);
+    ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
 	ofTranslate(x,y);
@@ -1277,7 +1299,9 @@ void  Projector :: processPoints(float masterIntensity, bool offsetColours) {
 }
 
 
-
+void Projector::paramsChanged(ofAbstractParameter& e){
+    saveSettings();
+}
 
 
 bool Projector::loadSettings(vector<Zone*>& zones){
@@ -1346,3 +1370,6 @@ bool Projector::saveSettings(){
     
 }
 
+bool Projector :: getSaveStatus(){
+    return (ofGetElapsedTimef()-lastSaveTime<1);
+}

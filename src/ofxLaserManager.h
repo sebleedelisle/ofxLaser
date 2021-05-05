@@ -72,16 +72,8 @@ class Manager {
     
     void renderPreview();
     
-    void beginDraw() {
-        ofViewport((ofGetWidth()-width)/-2, (ofGetHeight()-height)/-2, ofGetWidth(), ofGetHeight()) ;
-        ofPushMatrix();
-        ofTranslate((ofGetWidth()-width)/2, (ofGetHeight()-height)/2);
-        
-    }
-    void endDraw() {
-        ofPopMatrix();
-        ofViewport(0,0,ofGetWidth(), ofGetHeight());
-    }
+    void beginDraw();
+    void endDraw();
     
     bool loadSettings();
     bool saveSettings();
