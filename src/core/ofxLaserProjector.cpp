@@ -275,63 +275,8 @@ int Projector::getDacConnectedState() {
         return OFXLASER_DACSTATUS_ERROR;
     }
 }
-/*
-void Projector::renderStatusBox(float x, float y, float w, float h) {
-	ofPushStyle();
-	ofPushMatrix();
-	ofDisableBlendMode();
-	ofTranslate(x,y);
-	ofFill();
-	ofSetColor(50);
-	ofDrawRectangle(0,0,w,h);
-	ofSetColor(100);
-	ofDrawRectangle(0,0,w,18);
-	
-	// draw name of projector
-	//ofSetText
-	ofSetColor(20);
-	ofDrawBitmapString(ofToString(label.back()) + " "+dac->getLabel(), 8, 13);
-	string framerate = ofToString(round(smoothedFrameRate));
-	ofDrawBitmapString(framerate, w-(framerate.size()*8)- 18,13);
-	ofSetColor(dac->getStatusColour());
-	ofDrawRectangle(w-18+4,4,10,10); 
-	//ofNoFill();
-	//ofSetColor(255);
-	//ofDrawRectangle(0,0,w,h);
-	ofTranslate(0,24);
-	const vector<ofAbstractParameter*>& displaydata = dac->getDisplayData();
-	for(size_t i = 0; i<displaydata.size(); i++) {
-		
-		ofAbstractParameter* dataelement = displaydata[i];
-		
-		ofSetColor(0);
-		ofDrawRectangle(8,i*16,w-16,10);
-		
-		ofParameter<int>* intparam = dynamic_cast<ofParameter<int>*>(dataelement);
-		if(intparam!=nullptr) {
-			ofSetColor(100);
-			ofDrawBitmapString(dataelement->getName(),8,i*16+10);
-			ofSetColor(150);
-			
-			float size = ofMap(intparam->get(), intparam->getMin(), intparam->getMax(), 0,w-16, true);
-			ofDrawRectangle(8, i*16, size,10);
-		}
-		ofParameter<string>* stringparam = dynamic_cast<ofParameter<string>*>(dataelement);
-		if(stringparam!=nullptr) {
-			ofSetColor(100);
-			ofDrawBitmapString(stringparam->get(),8,i*16+10);
-			
-		}
-	}
-	
-	
-	
-	ofPopMatrix();
-	ofPopStyle();
-	
-}
- */
-void Projector::drawWarpUI(float x, float y, float w, float h) {
+
+void Projector::drawTransformUI(float x, float y, float w, float h) {
 	
 	ofPushStyle();
 	ofNoFill();
@@ -352,10 +297,61 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
     ofPopStyle();
 }   
 
-void Projector :: drawLaserPath(ofRectangle rect) {
-	drawLaserPath(rect.x, rect.y, rect.width, rect.height); 
+void Projector::drawTransformAndPath(ofRectangle rect) {
+    ofRectangle bounds;
+    vector<glm::vec3> perimeterpoints;
+    bool firsttime = true;
+    for(ProjectorZone* zone : projectorZones) {
+        ZoneTransform& zonetransform = zone->zoneTransform;
+       
+        zonetransform.getPerimeterPoints(perimeterpoints);
+        if(firsttime) {
+            bounds.setPosition(*perimeterpoints.begin());
+            firsttime = false;
+        }
+        for(glm::vec3& p:perimeterpoints) {
+            bounds.growToInclude(p);
+        }
+        
+        
+    }
+    //drawTransformUI(rect.x, rect.y, rect.width, rect.height);
+    
+    ofPushMatrix();
+    ofTranslate(rect.x, rect.y);
+    ofScale(rect.width/800, rect.height/800);
+    ofPushStyle();
+    ofNoFill();
+    ofSetColor(50,50,200);
+   
+    float scale = 800.0f/bounds.width;
+    if(800/bounds.height<scale) scale = 800/bounds.height;
+    ofScale(scale, scale);
+    ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
+    drawLaserPath(ofRectangle(0,0,800,800), false);
+   
+   // ofDrawRectangle(bounds);
+    for(ProjectorZone* zone : projectorZones) {
+
+        zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+        
+        ofBeginShape();
+        for(glm::vec3& p:perimeterpoints) {
+            ofVertex(p);
+        }
+        ofEndShape();
+        
+    }
+    ofPopStyle();
+    ofPopMatrix();
+    
 }
-void Projector :: drawLaserPath(float x, float y, float w, float h) {
+
+
+void Projector :: drawLaserPath(ofRectangle rect, bool drawDots) {
+	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots);
+}
+void Projector :: drawLaserPath(float x, float y, float w, float h, bool drawDots) {
 	ofPushStyle();
 	
 	ofSetColor(255);
@@ -377,7 +373,7 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	ofSetLineWidth(0.5);
 	
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-	previewPathMesh.draw();
+	if(drawDots) previewPathMesh.draw();
 	
     // draw the coloured line in the background
 	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
