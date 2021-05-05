@@ -26,6 +26,8 @@ ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
     ofAddListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
     params.add(zoneMaskGroup);
     isDirty = true;
+    enabled = true;
+    visible = true;
    
 }
 ProjectorZone :: ~ProjectorZone() {
@@ -43,15 +45,12 @@ bool ProjectorZone :: update() {
     return wasDirty;
 }
 
-void ProjectorZone :: setVisible(bool visible) {
-    zoneTransform.setVisible(visible);
-    
-}
 void ProjectorZone :: draw() {
      
+    if(!visible) return ;
     zoneTransform.draw(ofToString(zone.getIndex()+1));
 
-    if(!enabled) return;
+   //if(!enabled) return;
    
     ofPushMatrix();
     

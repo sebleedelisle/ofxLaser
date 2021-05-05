@@ -25,7 +25,7 @@ ZoneTransform::ZoneTransform() {
 	scale = 1;
 	offset.set(0,0);
 	initListeners();
-	visible = true;
+	editable = true;
 	isDirty = true;
 	selected = false;
 	
@@ -77,7 +77,6 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 
         ofRectangle destRect(200,200,400,400);
     
-     
         //= srcRect;
 		//destRect.scale(srcwidth/800, srcheight/800);
 		//destRect.x*=srcwidth/800;
@@ -86,7 +85,6 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 		
 		updateDivisions();
 
-	
 }
 
 
@@ -102,12 +100,15 @@ bool ZoneTransform::update(){
 	
 
 }
-void ZoneTransform :: setVisible(bool warpvisible){
-	visible = warpvisible;
+void ZoneTransform :: setEditable(bool warpvisible){
+	editable = warpvisible;
 }
-
+void ZoneTransform :: setVisible(bool warpvisible){
+    visible = warpvisible;
+}
 void ZoneTransform::draw(string label) {
 	
+    if(!visible) return ;
 	ofPushMatrix();
 	ofTranslate(offset);
 	ofScale(scale, scale);
@@ -140,7 +141,7 @@ void ZoneTransform::draw(string label) {
 		}
 	}
 	
-	if(selected) {
+	if(selected && editable) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
 			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, scale);
 		}
@@ -410,7 +411,7 @@ void ZoneTransform :: removeListeners() {
 bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     
     
-    if(!visible) return false;
+    if((!editable) || (!visible)) return false;
 
     mousePos = e;
     mousePos-=offset;
@@ -421,7 +422,7 @@ bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
 bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	
-	if(!visible) return false;
+	if((!editable) || (!visible)) return false;
 
 	mousePos = e;
     mousePos-=offset;
@@ -521,7 +522,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 
 bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
-	if(!visible) return false;
+    if((!editable) || (!visible)) return false;
 	if(!selected) return false;
 
 	ofPoint mousePoint;
@@ -554,7 +555,7 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 
 bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	
-	if(!visible) return false;
+	//if(!editable) return false;
 	if(!selected) return false;
 	
 	bool wasDragging = false;

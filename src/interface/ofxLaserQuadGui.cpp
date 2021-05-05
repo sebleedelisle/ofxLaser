@@ -220,7 +220,7 @@ bool QuadGui :: hitTest(const ofPoint& p) {
 bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
         
-	if(!visible) return false;
+	if((!editable) || (!visible)) return false;
 
     bool hit = hitTestScreen(e);
     if((hit) &&(!selected)) {
@@ -268,6 +268,8 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){
+    if((!editable) || (!visible)) return false;
+
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
@@ -275,7 +277,8 @@ void QuadGui :: mouseMoved(ofMouseEventArgs &e){
 }
 bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
 
-	if(!visible) return false;
+    if((!editable) || (!visible)) return false;
+
 	if(!selected) return false;
 
     mousePos = e;
@@ -325,7 +328,7 @@ void QuadGui :: updatePoly() {
 
 bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
 	
-	if(!visible) return false;
+	//if(!visible) return false;
 	if(!selected) return false;
 
 	

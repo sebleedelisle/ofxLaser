@@ -286,7 +286,7 @@ void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2){
    
    float l = glm::length(p2-p1);
 
-   for(float p = 0; p<l; p+=4) {
+   for(int p = 0; p<l; p+=6) {
        UI::dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
    }
    ofPushStyle();
@@ -294,7 +294,8 @@ void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2){
 //   ofSetColor(colour);
    ofSetLineWidth(1);
 
-   UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
+//   UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
+    UI::dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
    UI::dashedLineMesh.draw();
    ofPopStyle();
 

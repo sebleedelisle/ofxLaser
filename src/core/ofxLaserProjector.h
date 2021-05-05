@@ -100,8 +100,8 @@ class Projector {
     void drawLaserPath(ofRectangle rect);
     void drawLaserPath(float x=0, float y=0, float w=800, float h=800);
     void drawWarpUI(float x=0, float y=0, float w=800, float h=800);
-    void hideWarpGui();
-    void showWarpGui();
+    void disableTransformGui();
+    void enableTransformGui();
 
     
     vector<ProjectorZone*> projectorZones;

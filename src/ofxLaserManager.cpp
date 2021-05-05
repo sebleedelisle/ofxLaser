@@ -537,18 +537,21 @@ void Manager :: drawPreviews(bool expandPreview) {
             //ofScale(scale, scale);
         }
         
-        ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
+        //ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
         
         for(size_t i= 0; i<projectors.size(); i++) {
             if((!expandPreview)&&(showOutputPreviews)) {
                 ofFill();
                 ofSetColor(0);
-                ofRectangle projectorPreviewRect(((lowerSectionHeight*scale) +guiSpacing)*i,0,lowerSectionHeight*scale, lowerSectionHeight*scale);
+                ofRectangle projectorPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
                 ofDrawRectangle(projectorPreviewRect);
+                projectors[i]->drawWarpUI(projectorPreviewRect.getLeft(),projectorPreviewRect.getTop(),projectorPreviewRect.getWidth(),projectorPreviewRect.getHeight());
                 projectors[i]->drawLaserPath(projectorPreviewRect);
+               
+               
             }
             // disables the warp interfaces
-            projectors[i]->hideWarpGui();
+            projectors[i]->disableTransformGui();
         }
         
         ofPopMatrix();
@@ -571,13 +574,13 @@ void Manager :: drawPreviews(bool expandPreview) {
                 if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
                 
                 ofDrawRectangle(guiSpacing,guiSpacing,size,size);
-                projectors[i]->showWarpGui();
+                projectors[i]->enableTransformGui();
                 projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
                 projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
                
                 
             } else {
-                projectors[i]->hideWarpGui();
+                projectors[i]->disableTransformGui();
             }
             
         }
@@ -761,7 +764,7 @@ void Manager::initAndLoadSettings() {
 	testPattern.addListener(this, &ofxLaser::Manager::testPatternAllProjectors);
 	
 	interfaceParams.setName("Interface");
-	interfaceParams.add(lockInputZones.set("Lock input zones", false));
+	interfaceParams.add(lockInputZones.set("Lock input zones", true));
 	interfaceParams.add(showInputPreview.set("Show preview", true));
 	interfaceParams.add(showOutputPreviews.set("Show path previews", true));
 	//interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));

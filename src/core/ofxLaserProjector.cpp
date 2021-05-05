@@ -339,7 +339,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
     float scale = w/800.0f;
     ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
     for(ProjectorZone* projectorZone : projectorZones) {
-        if(!projectorZone->getEnabled()) continue;
+        //if(!projectorZone->getEnabled()) continue;
         projectorZone->setScale(scale);
         projectorZone->setOffset(offset);
         projectorZone->draw();
@@ -350,7 +350,7 @@ void Projector::drawWarpUI(float x, float y, float w, float h) {
     maskManager.draw();
    
     ofPopStyle();
-}
+}   
 
 void Projector :: drawLaserPath(ofRectangle rect) {
 	drawLaserPath(rect.x, rect.y, rect.width, rect.height); 
@@ -427,17 +427,17 @@ void Projector :: drawLaserPath(float x, float y, float w, float h) {
 	
 }
 
-void Projector :: hideWarpGui() {
+void Projector :: disableTransformGui() {
 	
     for(ProjectorZone* projectorZone : projectorZones) {
-        projectorZone->setVisible(false);
+        projectorZone->setEnabled(false);
     }
 	
 	
 }
-void Projector :: showWarpGui() {
+void Projector :: enableTransformGui() {
     for(ProjectorZone* projectorZone : projectorZones) {
-        if(projectorZone->getEnabled()) projectorZone->setVisible(true);
+        if(projectorZone->getVisible()) projectorZone->setEnabled(true);
     }
 	
 }
@@ -459,12 +459,12 @@ void Projector::update(bool updateZones) {
     
     if(soloMode) {
         for(ProjectorZone* projectorZone : projectorZones) {
-            projectorZone->setEnabled(projectorZone->soloed);
+            projectorZone->setVisible(projectorZone->soloed);
         }
         
     } else {
         for(ProjectorZone* projectorZone : projectorZones) {
-            projectorZone->setEnabled(!projectorZone->muted);
+            projectorZone->setVisible(!projectorZone->muted);
         }
     }
     
@@ -756,7 +756,7 @@ void Projector ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer,
 	//for(int i = 0; i<(int)projectorZones.size(); i++) {
     for(ProjectorZone* projectorZone : projectorZones) {
         //ProjectorZone* projectorZone = projectorZones[i];
-		if(!projectorZone->getEnabled()) continue;
+		if(!projectorZone->getVisible()) continue;
         
 		Zone& zone = projectorZone->zone;
         ZoneTransform& warp = projectorZone->zoneTransform;

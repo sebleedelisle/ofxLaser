@@ -19,13 +19,20 @@ class ProjectorZone {
     ~ProjectorZone();
     
     bool update() ;
-    void setVisible(bool visible);
+    
     bool getEnabled() {
         return enabled;
     }
     void setEnabled(bool value) {
         enabled = value;
-        zoneTransform.setVisible(enabled); 
+        zoneTransform.setEditable(enabled); 
+    }
+    void setVisible(bool value) {
+        visible = value;
+        zoneTransform.setVisible(visible);
+    }
+    bool getVisible() {
+        return visible;
     }
     
     void draw();
@@ -61,6 +68,7 @@ class ProjectorZone {
     
     protected :
     bool enabled;
+    bool visible;
     
 };
 

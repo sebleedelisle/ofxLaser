@@ -88,7 +88,8 @@ class ZoneTransform {
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
-	void setVisible(bool warpvisible);
+	void setEditable(bool warpvisible);
+    void setVisible(bool warpvisible);
 	bool checkDirty();
 	void setDirty(bool state) {isDirty = state;};
 
@@ -135,8 +136,9 @@ class ZoneTransform {
 	
 	protected :
 	
-	bool selected;
-	bool visible;
+	bool selected; // highlighted and ready to edit
+	bool editable;  // visible and editable
+    bool visible;
 	bool isDirty;
 	
 	bool initialised = false;
