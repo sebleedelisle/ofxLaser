@@ -97,11 +97,13 @@ class Projector {
     void addZone(Zone* zone, float srcwidth, float srcheight);
     bool hasZone(Zone* zone);
     bool removeZone(Zone* zone);
-    void drawLaserPath(ofRectangle rect);
-    void drawLaserPath(float x=0, float y=0, float w=800, float h=800);
-    void drawWarpUI(float x=0, float y=0, float w=800, float h=800);
+    void drawLaserPath(ofRectangle rect, bool drawDots = true);
+    void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true);
+    void drawTransformUI(float x=0, float y=0, float w=800, float h=800);
     void disableTransformGui();
     void enableTransformGui();
+    
+    void drawTransformAndPath(ofRectangle rect); 
 
     
     vector<ProjectorZone*> projectorZones;

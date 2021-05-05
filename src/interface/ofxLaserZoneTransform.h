@@ -57,7 +57,7 @@ class ZoneTransform {
 	
 	void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
 
-	
+    void getPerimeterPoints(vector<glm::vec3>& points); 
 	void setHandleSize(float size);
 	
     bool getSelected() {return selected;};

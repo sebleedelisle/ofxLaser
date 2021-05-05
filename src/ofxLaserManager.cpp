@@ -528,7 +528,8 @@ void Manager :: drawPreviews(bool expandPreview) {
     
     ofPushStyle();
     
-    // if none of the projectors are selected then draw as many as we can on screen
+    // if none of the projectors are selected then draw
+    // the path previews below
     if(currentProjector==-1) {
         ofPushMatrix();
         float scale = 1 ;
@@ -541,12 +542,13 @@ void Manager :: drawPreviews(bool expandPreview) {
         
         for(size_t i= 0; i<projectors.size(); i++) {
             if((!expandPreview)&&(showOutputPreviews)) {
+                ofRectangle projectorPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
+                
                 ofFill();
                 ofSetColor(0);
-                ofRectangle projectorPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
                 ofDrawRectangle(projectorPreviewRect);
-                projectors[i]->drawWarpUI(projectorPreviewRect.getLeft(),projectorPreviewRect.getTop(),projectorPreviewRect.getWidth(),projectorPreviewRect.getHeight());
-                projectors[i]->drawLaserPath(projectorPreviewRect);
+                
+                projectors[i]->drawTransformAndPath(projectorPreviewRect);
                
                
             }
@@ -576,7 +578,7 @@ void Manager :: drawPreviews(bool expandPreview) {
                 ofDrawRectangle(guiSpacing,guiSpacing,size,size);
                 projectors[i]->enableTransformGui();
                 projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
-                projectors[i]->drawWarpUI(guiSpacing,guiSpacing,size,size);
+                projectors[i]->drawTransformUI(guiSpacing,guiSpacing,size,size);
                
                 
             } else {
@@ -1288,12 +1290,12 @@ void Manager::drawLaserGui() {
         
         glm::vec2 projectorZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
-        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(300,0));
+        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(340,0));
     
         ImGui::Columns(3, "Projector zones columns");
         ImGui::SetColumnWidth(0, 80.0f);
         ImGui::SetColumnWidth(1, 80.0f);
-        ImGui::SetColumnWidth(2, 140.0f);
+        ImGui::SetColumnWidth(2, 180.0f);
         // MUTE SOLO
         for(ProjectorZone* projectorZone : projector->projectorZones) {
             
@@ -1344,7 +1346,7 @@ void Manager::drawLaserGui() {
         ImGui::Dummy(ImVec2(0.0f, 2.0f));
         for(QuadMask* mask : maskManager.quads){
             string label = "##"+mask->displayLabel;
-            ImGui::Text("%s", mask->displayLabel.c_str());
+            ImGui::Text("MASK %s", mask->displayLabel.c_str());
             ImGui::SameLine();
             ImGui::PushItemWidth(40);
             int level = mask->maskLevel;

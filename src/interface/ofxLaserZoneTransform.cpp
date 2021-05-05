@@ -304,6 +304,31 @@ vector<ofPoint> ZoneTransform::getCorners(){
 	return corners;
 }
 
+void ZoneTransform::getPerimeterPoints(vector<glm::vec3>& points) {
+    points.clear();
+    
+    for(int i = 0; i<xDivisions; i++) {
+        points.push_back(dstHandles[i]);
+    }
+    for(int i = xDivisions; i<(((xDivisions+1)*(yDivisions+1))-1); i+=(xDivisions+1) ) {
+        points.push_back(dstHandles[i]);
+    }
+    int start =((xDivisions+1)*(yDivisions+1))-1;
+    int end = yDivisions*(xDivisions+1);
+    for(int i =start ; i>end; i--){
+        points.push_back(dstHandles[i]);
+    }
+    start = yDivisions*(xDivisions+1);
+    end = 0;
+    for(int i =start ; i>=end; i-=(xDivisions+1)){
+        points.push_back(dstHandles[i]);
+    }
+//    points.push_back(dstHandles[yDivisions*(xDivisions+1)]);
+//
+}
+
+
+
 bool ZoneTransform :: isCorner(int i ) {
 	return (i==0) || (i == xDivisions) || (i == yDivisions*(xDivisions+1)) || (i==((xDivisions+1)*(yDivisions+1))-1);
 	
@@ -432,7 +457,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
-		return false;
+		return true;
 	}
 	
 	
