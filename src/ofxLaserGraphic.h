@@ -7,7 +7,7 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxLaserManager.h"
+#include "ofxLaserManagerBase.h"
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
 #include "ofxSvgExtra.h"
@@ -69,7 +69,7 @@ class Graphic {
 	
 	void replacePolylines(vector<ofPolyline*>& newpolys, vector<ofColor>&newcolours);
 
-	void renderToLaser(ofxLaser::Manager& laser, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
+	void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
 	
     void clear();
     

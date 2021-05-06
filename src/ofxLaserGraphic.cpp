@@ -694,7 +694,7 @@ float Graphic :: getAngleBetweenPoints(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 
 }
 
-void Graphic :: renderToLaser(ofxLaser::Manager& laser, float brightness, string renderProfile) {
+void Graphic :: renderToLaser(ofxLaser::ManagerBase& laser, float brightness, string renderProfile) {
 		
 	for(size_t i= 0; i<polylines.size(); i++) {
 		ofColor col = colours[i];

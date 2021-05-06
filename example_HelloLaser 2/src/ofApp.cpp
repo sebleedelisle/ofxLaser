@@ -313,7 +313,7 @@ void ofApp::mouseDragged(ofMouseEventArgs& e){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(ofMouseEventArgs& e){
-    if(laser.currentProjector==-1) {
+    if(!laser.isProjectorSelected()) {
         polyLines.push_back(ofPolyline());
         drawingShape = true;
     }

@@ -314,6 +314,7 @@ void Projector::drawTransformAndPath(ofRectangle rect) {
 
     ofPushMatrix();
     ofTranslate(rect.x, rect.y);
+    float rectscale = rect.width/800;
     ofScale(rect.width/800, rect.height/800);
     ofPushStyle();
     ofNoFill();
@@ -353,7 +354,7 @@ void Projector::drawTransformAndPath(ofRectangle rect) {
     }
     ofScale(scale, scale);
     ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
-    drawLaserPath(ofRectangle(0,0,800,800), false);
+    drawLaserPath(ofRectangle(0,0,800,800), false, 4/(scale*rectscale));
    
    // ofDrawRectangle(bounds);
     for(ProjectorZone* zone : projectorZones) {
@@ -373,10 +374,10 @@ void Projector::drawTransformAndPath(ofRectangle rect) {
 }
 
 
-void Projector :: drawLaserPath(ofRectangle rect, bool drawDots) {
-	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots);
+void Projector :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
+	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
 }
-void Projector :: drawLaserPath(float x, float y, float w, float h, bool drawDots) {
+void Projector :: drawLaserPath(float x, float y, float w, float h, bool drawDots, float radius) {
 	ofPushStyle();
 	
     ofSetColor(100);
@@ -422,17 +423,17 @@ void Projector :: drawLaserPath(float x, float y, float w, float h, bool drawDot
         
         if(c==ofColor::black) {
             ofSetColor(200);
-            ofDrawCircle(p, 3);
+            ofDrawCircle(p, radius);
         } else {
             ofFill();
             c.setBrightness(255);
             ofSetColor(c);
-            ofDrawCircle(p, 4);
+            ofDrawCircle(p, radius);
             ofNoFill();
             ofSetLineWidth(2); 
             c.setBrightness(128);
             ofSetColor(c);
-            ofDrawCircle(p, 6);
+            ofDrawCircle(p, radius*1.5);
         }
 	}
 	
