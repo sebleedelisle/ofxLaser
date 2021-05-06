@@ -16,7 +16,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserDacBase.h"
-#include "ofxLaserProjector.h"
+#include "ofxLaserLaser.h"
 #include "ofxLaserDacData.h"
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacManagerLaserdock.h"

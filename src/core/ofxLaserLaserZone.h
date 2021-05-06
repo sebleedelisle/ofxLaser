@@ -1,5 +1,5 @@
 //
-//  ofxLaserProjectorZone.h
+//  ofxLaserLaserZone.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 13/04/2021.

@@ -1,5 +1,5 @@
 //
-//  ofxLaserProjector.cpp
+//  ofxLaserLaser.cpp
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 06/11/2017.

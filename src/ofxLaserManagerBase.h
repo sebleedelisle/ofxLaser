@@ -19,7 +19,7 @@
 #include "ofxLaserDacBase.h"
 #include "ofxLaserBitmapMaskManager.h"
 
-#include "ofxLaserProjector.h"
+#include "ofxLaserLaser.h"
 #include "ofxLaserPresetManager.h"
 
 

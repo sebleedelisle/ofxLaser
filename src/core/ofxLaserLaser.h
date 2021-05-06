@@ -11,7 +11,7 @@
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
-#include "ofxLaserProjectorZone.h"
+#include "ofxLaserLaserZone.h"
 #include "ofxLaserManualShape.h"
 #include "PennerEasing.h"
 #include "ofxLaserMaskManager.h"
