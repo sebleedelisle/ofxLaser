@@ -10,15 +10,19 @@
 using namespace ofxLaser;
 
 Manager :: Manager() {
-    currentProjector = -1;
+    selectedLaser = -1;
     guiIsVisible = true;
-    
+    guiLaserSettingsPanelWidth = 320;
+    guiSpacing = 8;
+    dacStatusBoxHeight = 88;
+    dacStatusBoxSmallWidth = 160;
 }
 
-bool Manager :: deleteProjector(Projector* projector) {
-    bool success = ManagerBase::deleteProjector(projector);
+bool Manager :: deleteLaser(Laser* laser) {
+    bool success = ManagerBase::deleteLaser(laser);
     if(success) {
-        currentProjector = -1;
+        selectedLaser = -1;
+        if(getNumLasers()==0) showLaserSettings = false;
         return true;
     } else {
         return false;
@@ -26,30 +30,30 @@ bool Manager :: deleteProjector(Projector* projector) {
     
 }
 
-void Manager::nextProjector() {
-    int next = currentProjector+1;
-    if(next>=(int)projectors.size()) next=-1;
+void Manager::selectNextLaser() {
+    int next = selectedLaser+1;
+    if(next>=(int)lasers.size()) next=-1;
     
-    setCurrentProjector(next);
+    setSelectedLaser(next);
     
 }
 
-void Manager::previousProjector() {
-    int prev = currentProjector-1;
-    if(prev<-1) prev=(int)projectors.size()-1;
-    setCurrentProjector(prev);
+void Manager::selectPreviousLaser() {
+    int prev = selectedLaser-1;
+    if(prev<-1) prev=(int)lasers.size()-1;
+    setSelectedLaser(prev);
     
 }
-int Manager::getCurrentProjector(){
-    return currentProjector;
+int Manager::getSelectedLaser(){
+    return selectedLaser;
 }
-void Manager::setCurrentProjector(int i){
-    if(currentProjector!=i) {
-        currentProjector = i;
+void Manager::setSelectedLaser(int i){
+    if(selectedLaser!=i) {
+        selectedLaser = i;
     }
 }
-bool Manager::isProjectorSelected() {
-    return currentProjector>=0;
+bool Manager::isAnyLaserSelected() {
+    return selectedLaser>=0;
 }
 
 
@@ -100,9 +104,9 @@ void Manager :: drawPreviews(bool expandPreview) {
         if(height>(thirdOfHeight*2)) {
             previewScale = (float)(thirdOfHeight*2) / (float)height;
         }
-        // but if we're viewing a projector warp ui
+        // but if we're viewing a laser transform ui
         // then shrink the preview down and move it underneath
-        if(currentProjector>=0) {
+        if(selectedLaser>=0) {
             int positionY = 800 + guiSpacing*2;
             if((thirdOfHeight*2)+(guiSpacing*2) < positionY ) {
                 positionY = (thirdOfHeight*2)+(guiSpacing*2);
@@ -150,46 +154,45 @@ void Manager :: drawPreviews(bool expandPreview) {
     
     ofPushStyle();
     
-    // if none of the projectors are selected then draw
+    // if none of the lasers are selected then draw
     // the path previews below
-    if(currentProjector==-1) {
+    if(selectedLaser==-1) {
         ofPushMatrix();
         float scale = 1 ;
-        if((lowerSectionHeight+guiSpacing)*(int)projectors.size()>ofGetWidth()-(guiSpacing*2)) {
-            scale = ((float)ofGetWidth()-(guiSpacing*2))/((float)(lowerSectionHeight+guiSpacing)*(float)projectors.size());
-            //ofScale(scale, scale);
+        if((lowerSectionHeight+guiSpacing)*(int)lasers.size()>ofGetWidth()-(guiSpacing*2)) {
+            scale = ((float)ofGetWidth()-(guiSpacing*(1+lasers.size())))/((float)(lowerSectionHeight+guiSpacing)*(float)lasers.size());
+
         }
         
-        //ofTranslate(guiSpacing,(height*previewScale)+(guiSpacing*2));
         
-        for(size_t i= 0; i<projectors.size(); i++) {
+        for(size_t i= 0; i<lasers.size(); i++) {
             if((!expandPreview)&&(showOutputPreviews)) {
-                ofRectangle projectorPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
+                ofRectangle laserOutputPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
                 
                 ofFill();
                 ofSetColor(0);
-                ofDrawRectangle(projectorPreviewRect);
+                ofDrawRectangle(laserOutputPreviewRect);
                 
-                projectors[i]->drawTransformAndPath(projectorPreviewRect);
+                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
                
                
             }
             // disables the warp interfaces
-            projectors[i]->disableTransformGui();
+            lasers[i]->disableTransformGui();
         }
         
         ofPopMatrix();
         
-        // if we're not filling the preview to fit the screen, draw the projector
+        // if we're not filling the preview to fit the screen, draw the laser
         // gui elements
         
         
     } else  {
-        // ELSE we have a currently selected projector, so draw the various UI elements
+        // ELSE we have a currently selected laser, so draw the various UI elements
         // for that...
         
-        for(size_t i= 0; i<projectors.size(); i++) {
-            if((int)i==currentProjector) {
+        for(size_t i= 0; i<lasers.size(); i++) {
+            if((int)i==selectedLaser) {
                 
                 ofFill();
                 ofSetColor(0);
@@ -198,13 +201,13 @@ void Manager :: drawPreviews(bool expandPreview) {
                 if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
                 
                 ofDrawRectangle(guiSpacing,guiSpacing,size,size);
-                projectors[i]->enableTransformGui();
-                projectors[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
-                projectors[i]->drawTransformUI(guiSpacing,guiSpacing,size,size);
+                lasers[i]->enableTransformGui();
+                lasers[i]->drawLaserPath(guiSpacing,guiSpacing,size,size);
+                lasers[i]->drawTransformUI(guiSpacing,guiSpacing,size,size);
                
                 
             } else {
-                projectors[i]->disableTransformGui();
+                lasers[i]->disableTransformGui();
             }
             
         }
@@ -216,8 +219,8 @@ void Manager :: drawPreviews(bool expandPreview) {
 
     if((!expandPreview) && (guiIsVisible)) {
         
-        // if this is the current projector or we have 2 or fewer projectors, then render the gui
-        if(!showProjectorSettings) {
+        // if this is the current laser or we have 2 or fewer lasers, then render the gui
+        if(!showLaserSettings) {
             
     
             
@@ -226,9 +229,9 @@ void Manager :: drawPreviews(bool expandPreview) {
             
             // draw all the status boxes but small
             
-            for(size_t i= 0; i<projectors.size(); i++) {
+            for(size_t i= 0; i<lasers.size(); i++) {
 
-                //projectors[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
+                //lasers[i]->renderStatusBox(x, i*(dacStatusBoxHeight+guiSpacing)+10, w,dacStatusBoxHeight);
             }
             
             
@@ -242,12 +245,12 @@ void Manager :: drawPreviews(bool expandPreview) {
 void Manager :: renderPreview() {
     
 
-    if((previewFbo.getWidth()!=width*previewScale) || (previewFbo.getHeight()!=height*previewScale)) {
+    if((canvasPreviewFbo.getWidth()!=width*previewScale) || (canvasPreviewFbo.getHeight()!=height*previewScale)) {
        // previewFbo.clear();
-        previewFbo.allocate(width*previewScale, height*previewScale, GL_RGBA, 3);
+        canvasPreviewFbo.allocate(width*previewScale, height*previewScale, GL_RGBA, 3);
     }
     
-    previewFbo.begin();
+    canvasPreviewFbo.begin();
     
     ofClear(0,0,0,0);
     ofPushStyle();
@@ -322,8 +325,8 @@ void Manager :: renderPreview() {
     ofPopMatrix();
     
     ofPopStyle();
-    previewFbo.end();
-    previewFbo.draw(previewOffset);
+    canvasPreviewFbo.end();
+    canvasPreviewFbo.draw(previewOffset);
 }
 
 bool Manager ::toggleGui(){
@@ -340,8 +343,8 @@ bool Manager::isGuiVisible() {
 
 void Manager::setDefaultHandleSize(float size) {
     defaultHandleSize = size;
-    for(Projector* projector : projectors) {
-        projector->setDefaultHandleSize(defaultHandleSize);
+    for(Laser* laser : lasers) {
+        laser->setDefaultHandleSize(defaultHandleSize);
     }
     
 }
@@ -356,61 +359,44 @@ bool Manager::togglePreview(){
     return showInputPreview;
 };
 
+glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
+    
+    glm::vec2 returnpos= pos - glm::vec2(guiSpacing, guiSpacing);
+    returnpos/=previewScale;
+    return returnpos; 
+    
+}
 
 void Manager::drawLaserGui() {
     
-    ofxLaser::ManagerBase& laser = *this;
-    // auto mainSettings = ofxImGui::Settings();
+    ofxLaser::ManagerBase& laserManager = *this;
     
     int mainpanelwidth = 270;
-    int projectorpanelwidth = 280;
+    int laserpanelwidth = 280;
     int spacing = 8;
-    
-//    ImGuiWindowFlags window_flags = 0;
-//
-//    window_flags |= ImGuiWindowFlags_NoMove;
-//    window_flags |= ImGuiWindowFlags_NoResize;
-//    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
-//    window_flags |= ImGuiWindowFlags_NoNav;
-   
-    
     
     // calculate x position of main window
     int x = ofGetWidth() - mainpanelwidth - spacing;
-    // if we're also showing the projector settings, make space
-    // TODO max 2 projectors
-//    if(laser.showProjectorSettings){
-//        //int numProjectors =laser.getNumProjectors();
-//        //if(numProjectors>2) numProjectors = 1;
-//        int numProjectors = 1;
-//        x-=(numProjectors*projectorpanelwidth);
-//        x-=(spacing*numProjectors);
-//    }
     
     UI::startWindow("Settings", ImVec2(x, spacing), ImVec2(mainpanelwidth, 0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true );
-    
-    
-    // some custom styles - to do put in a theme?
-//    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 5.0f)); // 1 Spacing between items
-//    ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(6.0f, 6.0f)); // 2 gap between element and label
-    
+
     
     // START BIG BUTTONS
     UI::largeItemStart();
 
     // the arm and disarm buttons
-    bool useRedButton =laser.areAllLasersArmed();
+    bool useRedButton =laserManager.areAllLasersArmed();
     if(useRedButton) UI::secondaryColourButtonStart();
     // change the colour for the arm all button if we're armed
     int buttonwidth = (mainpanelwidth-(spacing*3))/2;
     if(ImGui::Button("ARM ALL LASERS", ImVec2(buttonwidth, 0.0f) )) {
-        laser.armAllProjectors();
+        laserManager.armAllLasers();
     }
     if(useRedButton) UI::secondaryColourButtonEnd();
     
     ImGui::SameLine();
     if(ImGui::Button("DISARM ALL LASERS",  ImVec2(buttonwidth, 0.0f))) {
-        laser.disarmAllProjectors();
+        laserManager.disarmAllLasers();
     }
     
       // change width of slider vs label
@@ -420,38 +406,24 @@ void Manager::drawLaserGui() {
     //UI::addFloatAsIntSlider(laser.masterIntensity, 100);
     ImGui::PushItemWidth(mainpanelwidth-(spacing*2));
     float multiplier = 100;
-    int value = laser.globalBrightness*multiplier;
-    if (ImGui::SliderInt("##int", &value, laser.globalBrightness.getMin()*multiplier, laser.globalBrightness.getMax()*multiplier, "GLOBAL BRIGHTNESS %d")) {
-        laser.globalBrightness.set((float)value/multiplier);
+    int value = laserManager.globalBrightness*multiplier;
+    if (ImGui::SliderInt("##int", &value, laserManager.globalBrightness.getMin()*multiplier, laserManager.globalBrightness.getMax()*multiplier, "GLOBAL BRIGHTNESS %d")) {
+        laserManager.globalBrightness.set((float)value/multiplier);
         
     }
     ImGui::PopItemWidth();
     
     string label;
-    if(projectors.size()>0) {
-        label = showProjectorSettings? "CLOSE PROJECTOR SETTINGS" : "OPEN PROJECTOR SETTINGS";
+    if(lasers.size()>0) {
+        label = showLaserSettings? "CLOSE LASER SETTINGS" : "OPEN LASER SETTINGS";
         
         if(ImGui::Button(label.c_str())) {
-            showProjectorSettings = !showProjectorSettings;
+            showLaserSettings = !showLaserSettings;
         }
     }
-    
-//    for(int i =0; i<(int)projectors.size(); i++) {
-//
-//        if(i>0) ImGui::SameLine();
-//        string label = ofToString(i+1);
-//
-//        if(ImGui::Button(label.c_str())) {
-//            if(currentProjector!=i) currentProjector = i;
-//            else currentProjector = -1;
-//        }
-//
-//
-//    }
-//
-    
-    if(ImGui::Button("ADD PROJECTOR", ImVec2(buttonwidth, 0.0f))) {
-        createAndAddProjector();
+        
+    if(ImGui::Button("ADD LASER", ImVec2(buttonwidth, 0.0f))) {
+        createAndAddLaser();
     }
     ImGui::SameLine();
     if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
@@ -463,38 +435,38 @@ void Manager::drawLaserGui() {
   
     
     
-    // SHOW LIST OF PROJECTORS
+    // SHOW LIST OF LASERS
     
-    for(int i = 0; i<laser.getNumProjectors(); i++) {
+    for(int i = 0; i<getNumLasers(); i++) {
         
-        ofxLaser::Projector& projector = laser.getProjector(i);
-        string projectorNumberString = ofToString(i+1);
+        ofxLaser::Laser& laserobject = laserManager.getLaser(i);
+        string laserNumberString = ofToString(i+1);
         bool showsecondarycolour = false;
         
-        // PROJECTOR BUTTONS
-        if(ImGui::Button(projectorNumberString.c_str())) {
-            if(currentProjector!=i) currentProjector = i;
-            else currentProjector = -1;
+        // LASER BUTTONS
+        if(ImGui::Button(laserNumberString.c_str())) {
+            if(selectedLaser!=i) selectedLaser = i;
+            else selectedLaser = -1;
         }
         ImGui::SameLine();
         
         // ARM BUTTONS
-        if(projector.armed) {
+        if(laserobject.armed) {
             UI::secondaryColourButtonStart();
             showsecondarycolour = true;
         }
         string armlabel = "ARM##"+ofToString(i+1);
         if(ImGui::Button(armlabel.c_str())){
-            projector.toggleArmed();
+            laserobject.toggleArmed();
         }
         if(showsecondarycolour) UI::secondaryColourButtonEnd();
         
         // FRAME RATES
         
         ImGui::SameLine();
-        label = "##framerate"+projectorNumberString;
+        label = "##framerate"+laserNumberString;
         ImGui::PushItemWidth(100);
-        ImGui::PlotLines(label.c_str(), projector.frameTimeHistory, projector.frameTimeHistorySize, projector.frameTimeHistoryOffset, "", 0, 0.1f);
+        ImGui::PlotLines(label.c_str(), laserobject.frameTimeHistory, laserobject.frameTimeHistorySize, laserobject.frameTimeHistoryOffset, "", 0, 0.1f);
         ImGui::PopItemWidth();
         
         // DAC STATUSES
@@ -507,7 +479,7 @@ void Manager::drawLaserGui() {
         ImVec2 p = ImGui::GetCursorScreenPos();
         p.x+=radius-2;
         p.y+=radius+4;
-        ImU32 col = UI::getColourForState(projector.getDacConnectedState());
+        ImU32 col = UI::getColourForState(laserobject.getDacConnectedState());
         
         draw_list->AddCircleFilled(p,radius, col);
         ImGui::InvisibleButton("##invisible", ImVec2(radius*2, radius*2) - ImVec2(2,2));
@@ -518,12 +490,12 @@ void Manager::drawLaserGui() {
         
     }
 
-    UI::addIntSlider(laser.testPattern);
+    UI::addIntSlider(laserManager.testPattern);
     
-    UI::addParameterGroup(laser.interfaceParams);
+    UI::addParameterGroup(laserManager.interfaceParams);
     
     
-    if((!lockInputZones) && (currentProjector ==-1)) {
+    if((!lockInputZones) && (selectedLaser ==-1)) {
         
         ImGui::Separator();
         
@@ -567,10 +539,10 @@ void Manager::drawLaserGui() {
         }
     }
     
-    if(laser.customParams.size()>0) {
+    if(laserManager.customParams.size()>0) {
         ImGui::Separator();
         ImGui::Text("CUSTOM PARAMETERS");
-        UI::addParameterGroup(laser.customParams);
+        UI::addParameterGroup(laserManager.customParams);
 
     }
     
@@ -583,66 +555,66 @@ void Manager::drawLaserGui() {
    // ImGui::End();
     
     
-    // show projector settings :
+    // show laser settings :
     
-    if(laser.showProjectorSettings) {
-        x-=(projectorpanelwidth+spacing);
+    if(laserManager.showLaserSettings) {
+        x-=(laserpanelwidth+spacing);
 
-        int projectorIndexToShow = currentProjector;
-        if(projectorIndexToShow ==-1) projectorIndexToShow = 0;
-        drawProjectorPanel(&getProjector(projectorIndexToShow), projectorpanelwidth, spacing, x);
+        int laserIndexToShow = selectedLaser;
+        if(laserIndexToShow ==-1) laserIndexToShow = 0;
+        drawLaserSettingsPanel(&getLaser(laserIndexToShow), laserpanelwidth, spacing, x);
 
         
     }
     
-    // Show projector zone settings mute / solo / etc
-    if(currentProjector!=-1)  {
+    // Show laser zone settings mute / solo / etc
+    if(selectedLaser!=-1)  {
         
         
-        // PROJECTOR ZONE SETTINGS
-        Projector* projector = projectors[currentProjector];
+        // LASER ZONE SETTINGS
+        Laser* laser = lasers[selectedLaser];
         
-        glm::vec2 projectorZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
+        glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
-        UI::startWindow("Projector zones", ImVec2(projectorZonePos.x+spacing, projectorZonePos.y), ImVec2(340,0));
+        UI::startWindow("Laser output zones", ImVec2(laserZonePos.x+spacing, laserZonePos.y), ImVec2(340,0));
     
-        ImGui::Columns(3, "Projector zones columns");
+        ImGui::Columns(3, "Laser zones columns");
         ImGui::SetColumnWidth(0, 80.0f);
         ImGui::SetColumnWidth(1, 80.0f);
         ImGui::SetColumnWidth(2, 180.0f);
         // MUTE SOLO
-        for(ProjectorZone* projectorZone : projector->projectorZones) {
+        for(LaserZone* laserZone : laser->laserZones) {
             
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->getEnabled()?0.5f:1.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, laserZone->getEnabled()?0.5f:1.0f);
             
-            string muteLabel = "M##"+projectorZone->getLabel();
+            string muteLabel = "M##"+laserZone->getLabel();
             if(ImGui::Button(muteLabel.c_str(), ImVec2(20,20))) {
-                projectorZone->muted = !projectorZone->muted;
+                laserZone->muted = !laserZone->muted;
             };
             ImGui::PopStyleVar();
             
             ImGui::SameLine();
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, projectorZone->soloed?1.0f:0.5f);
-            string soloLabel = "S##"+projectorZone->getLabel();
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, laserZone->soloed?1.0f:0.5f);
+            string soloLabel = "S##"+laserZone->getLabel();
             if(ImGui::Button(soloLabel.c_str(), ImVec2(20,20))){
-                projectorZone->soloed = !projectorZone->soloed;
+                laserZone->soloed = !laserZone->soloed;
             }
             ImGui::PopStyleVar();
             ImGui::SameLine();
-            ImGui::Text("%s",projectorZone->getLabel().c_str());
+            ImGui::Text("%s",laserZone->getLabel().c_str());
             
         }
         ImGui::NextColumn();
        // ImGui::SetCursorPosX(200);
         for(Zone* zone : zones) {
-            bool checked = projector->hasZone(zone);
+            bool checked = laser->hasZone(zone);
             
             if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
                 if(checked) {
-                    projector->addZone(zone, width, height);
+                    laser->addZone(zone, width, height);
                 } else {
                     
-                    projector->removeZone(zone);
+                    laser->removeZone(zone);
                 }
                 
             }
@@ -650,7 +622,7 @@ void Manager::drawLaserGui() {
         ImGui::NextColumn();
         
         
-        MaskManager& maskManager = projector->maskManager;
+        MaskManager& maskManager = laser->maskManager;
         if(ImGui::Button("ADD MASK")) {
             maskManager.addQuadMask();
         }
@@ -686,30 +658,30 @@ void Manager::drawLaserGui() {
         
         ImGui::Columns();
         ImGui::Separator();
-        UI::addIntSlider(projector->testPattern);
-        UI::addCheckbox(projector->hideContentDuringTestPattern);
+        UI::addIntSlider(laser->testPattern);
+        UI::addCheckbox(laser->hideContentDuringTestPattern);
         UI::toolTip("Disable this if you want to see the laser content at the same time as the text patterns");
         
         UI::endWindow();
         
         
-        // Projector Masks
+        // Laser Output Masks
         
         
-        for(ProjectorZone* projectorZone : projector->projectorZones) {
+        for(LaserZone* laserZone : laser->laserZones) {
         
-            if(projectorZone->zoneTransform.getSelected()) {
-                ImVec2 pos(projectorZone->zoneTransform.getRight(),projectorZone->zoneTransform.getCentre().y);
+            if(laserZone->zoneTransform.getSelected()) {
+                ImVec2 pos(laserZone->zoneTransform.getRight(),laserZone->zoneTransform.getCentre().y);
                 ImVec2 size(200,0);
-                UI::startWindow(projectorZone->getLabel()+"##"+projector->getLabel(),pos, size, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+                UI::startWindow(laserZone->getLabel()+"##"+laser->getLabel(),pos, size, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
 
 
-                UI::addParameterGroup(projectorZone->zoneTransform.params);
+                UI::addParameterGroup(laserZone->zoneTransform.params);
                 ImGui::Text("Edge masks");
-                UI::addFloatSlider(projectorZone->bottomEdge);
-                UI::addFloatSlider(projectorZone->topEdge);
-                UI::addFloatSlider(projectorZone->leftEdge);
-                UI::addFloatSlider(projectorZone->rightEdge);
+                UI::addFloatSlider(laserZone->bottomEdge);
+                UI::addFloatSlider(laserZone->topEdge);
+                UI::addFloatSlider(laserZone->leftEdge);
+                UI::addFloatSlider(laserZone->rightEdge);
                 
                 UI::endWindow();
             }
@@ -721,22 +693,9 @@ void Manager::drawLaserGui() {
 }
 
 
-void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float projectorpanelwidth, float spacing, float x) {
+void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x) {
     
-//    ImGuiWindowFlags window_flags = 0;
-//
-//    window_flags |= ImGuiWindowFlags_NoMove;
-//    window_flags |= ImGuiWindowFlags_NoResize;
-//    window_flags |= ImGuiWindowFlags_AlwaysAutoResize;
-//    window_flags |= ImGuiWindowFlags_NoNav;
-//
-//    ImGui::SetNextWindowSize(ImVec2(projectorpanelwidth,0), ImGuiCond_Appearing);
-//    ImGui::SetNextWindowPos(ImVec2(x,spacing));
-//
-//
-//    ImGui::Begin(projector->getLabel().c_str(), NULL, window_flags);
-    
-    UI::startWindow(projector->getLabel(), ImVec2(x, spacing), ImVec2(projectorpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, true, (bool*)&showProjectorSettings.get());
+    UI::startWindow(laser->getLabel(), ImVec2(x, spacing), ImVec2(laserpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, true, (bool*)&showLaserSettings.get());
     
    
     
@@ -744,13 +703,12 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     // change width of slider vs label
     ImGui::PushItemWidth(140);
     
-    UI::addCheckbox(projector->armed);
-    //UI::addFloatAsIntSlider(projector->intensity, 100);
-    ImGui::PushItemWidth(projectorpanelwidth-(spacing*2));
+    UI::addCheckbox(laser->armed);
+    ImGui::PushItemWidth(laserpanelwidth-(spacing*2));
     float multiplier = 100;
-    int value = projector->intensity*multiplier;
-    if (ImGui::SliderInt("##int", &value, projector->intensity.getMin()*multiplier, projector->intensity.getMax()*multiplier, "BRIGHTNESS %d")) {
-        projector->intensity.set((float)value/multiplier);
+    int value = laser->intensity*multiplier;
+    if (ImGui::SliderInt("##int", &value, laser->intensity.getMin()*multiplier, laser->intensity.getMax()*multiplier, "BRIGHTNESS %d")) {
+        laser->intensity.set((float)value/multiplier);
         
     }
     ImGui::PopItemWidth();
@@ -758,7 +716,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     UI::largeItemEnd();
     
-    UI::addIntSlider(projector->testPattern);
+    UI::addIntSlider(laser->testPattern);
     //UI::addButton(resetDac);
     
     
@@ -769,9 +727,9 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
       
         ImVec2 p = ImGui::GetCursorScreenPos();
-        int state = projector->getDacConnectedState();
+        int state = laser->getDacConnectedState();
         
-        ImU32 col = UI::getColourForState(projector->getDacConnectedState());
+        ImU32 col = UI::getColourForState(laser->getDacConnectedState());
         
         draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
         ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
@@ -782,17 +740,15 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(0,2));
     //ImGui::Text("DAC:");
     //ImGui::SameLine();
-    // TODO add a method in projector that tells us if
-    // it's using the empty dac?
-    if(!projector->hasDac() && (projector->dacId.get()!="") ) {
+    if(!laser->hasDac() && (laser->dacId.get()!="") ) {
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
-        ImGui::Text("Waiting for %s", projector->dacId.get().c_str());
+        ImGui::Text("Waiting for %s", laser->dacId.get().c_str());
         ImGui::PopStyleVar();
     } else {
-        ImGui::Text("%s", projector->getDacLabel().c_str());
+        ImGui::Text("%s", laser->getDacLabel().c_str());
     }
 
-    ImGui::SameLine(projectorpanelwidth-30);
+    ImGui::SameLine(laserpanelwidth-30);
     if(ImGui::Button("^", ImVec2(19,19))){
         
         
@@ -800,13 +756,10 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     // DAC LIST -------------------------------------------------------------
     
-    ImGui::PushItemWidth(projectorpanelwidth-spacing*2);
+    ImGui::PushItemWidth(laserpanelwidth-spacing*2);
     
     // get the dacs from the dacAssigner
     const vector<DacData>& dacList = dacAssigner.getDacList();
-//    string comboLabel;
-//    if(dacList.size()>0) comboLabel = projector->getDacLabel();
-//    else comboLabel = "No DACs discovered";
         
     if (ImGui::ListBoxHeader("##listbox", MIN(5, MAX(1,dacList.size())))){
         
@@ -832,22 +785,20 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
                 } else {
                    //
                 }
-                // if this dac is assigned to a projector, show which projector
+                // if this dac is assigned to a laser, show which laser
                 //  - this could be done at the other end?
                 
-                
-                
-                if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedProjector == projector), selectableflags)) {
+                if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedLaser == laser), selectableflags)) {
                     // then select dac
                     // TODO : show a warning yes / no if :
                     //      - we already are connected to a DAC
-                    //      - the chosen DAC is already being used by another projector
-                    dacAssigner.assignToProjector(dacdata.label, *projector);
+                    //      - the chosen DAC is already being used by another laser
+                    dacAssigner.assignToLaser(dacdata.label, *laser);
                 }
                 
-                if(dacdata.assignedProjector!=nullptr) {
-                    ImGui::SameLine(projectorpanelwidth - 100);
-                    string label =" > " + dacdata.assignedProjector->getLabel();
+                if(dacdata.assignedLaser!=nullptr) {
+                    ImGui::SameLine(laserpanelwidth - 100);
+                    string label =" > " + dacdata.assignedLaser->getLabel();
                     ImGui::Text("%s",label.c_str());
                 }
                 
@@ -862,9 +813,9 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     //ImGui::PopStyleVar();
     ImGui::PopItemWidth();
     
-    if(projector->hasDac()) {
+    if(laser->hasDac()) {
         if(ImGui::Button("Disconnect DAC")) {
-            dacAssigner.disconnectDacFromProjector(*projector);
+            dacAssigner.disconnectDacFromLaser(*laser);
         }
         ImGui::SameLine();
     }
@@ -882,11 +833,11 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     UI::largeItemStart();
     ImGui::PushItemWidth(190);
-    UI::addFloatAsIntPercentage(projector->speedMultiplier);
+    UI::addFloatAsIntPercentage(laser->speedMultiplier);
     UI::toolTip("Scanner speed adjustment (NB this works mathematically, it doesn't change the point rate)");
     ImGui::PopItemWidth();
     ImGui::PushItemWidth(170);
-    UI::addFloatSlider(projector->colourChangeShift);
+    UI::addFloatSlider(laser->colourChangeShift);
     UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
     ImGui::PopItemWidth();
     UI::largeItemEnd();
@@ -894,41 +845,36 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
    
  
     // ZONES
-    UI::addCheckbox(projector->flipX);
-    UI::addCheckbox(projector->flipY);
+    UI::addCheckbox(laser->flipX);
+    UI::addCheckbox(laser->flipY);
     
     // FINE OUTPUT SETTINGS
     bool treevisible = ImGui::TreeNode("Fine position adjustments");
         
-    UI::toolTip("These affect all output zones for this projector and can be used to re-align projectors if they have moved slightly since setting them up");
+    UI::toolTip("These affect all output zones for this laser and can be used to re-align the output if moved slightly since setting them up");
     if (treevisible){
         
-       /// ImGui::PushItemWidth(projectorpanelwidth-120);
         
-        ofParameter<float>& param = projector->rotation;
+        ofParameter<float>& param = laser->rotation;
         if(ImGui::DragFloat("Rotation", (float*)&param.get(), 0.01f,-10,10)) { //  param.getMin(), param.getMax())) {
             param.set(param.get());
             
         }
-        //UI::addFloatSlider(projector->rotation, "%.2f", 2.0);
-        if(projector->rotation!=0) {
+        if(laser->rotation!=0) {
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-            if (ImGui::Button("Reset")) projector->rotation = 0;
+            if (ImGui::Button("Reset")) laser->rotation = 0;
         }
         
-        ofParameter<glm::vec2>& param2 = projector->outputOffset;
+        ofParameter<glm::vec2>& param2 = laser->outputOffset;
         if(ImGui::DragFloat2("Position", (float*)&param2.get().x, 0.01f, -50.0f,50.0f)) { //  param.getMin(), param.getMax())) {
             param2.set(param2.get());
             
         }
-        //UI::addFloat2Slider(projector->outputOffset, "%.2f", 2.0);
-        
-        
         
         glm::vec2 zero2;
-        if(projector->outputOffset.get()!=zero2) {
+        if(laser->outputOffset.get()!=zero2) {
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-            if (ImGui::Button("Reset")) projector->outputOffset.set(zero2);
+            if (ImGui::Button("Reset")) laser->outputOffset.set(zero2);
         }
        // ImGui::PopItemWidth();
         ImGui::TreePop();
@@ -937,11 +883,11 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
    
     
     
-    // TODO IMPLEMENT PROJECTOR PROFILES
+    // TODO IMPLEMENT LASER PROFILES
     /*
-    // PROJECTOR PROFILE
+    // LASER PROFILE
     ImGui::Separator();
-    ImGui::Text("PROJECTOR PROFILE");
+    ImGui::Text("LASER PROFILE");
     
     // TODO :
     // check if the settings are different from the preset, if they are
@@ -988,11 +934,11 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     //
     // when an option is selected, update all the params
     const vector<string>& presets = presetManager.getPresetNames();
-    string label =projector->scannerSettings.getLabel();
+    string label =laser->scannerSettings.getLabel();
     ScannerSettings& currentPreset = *presetManager.getPreset(label);
    
     
-    bool presetEdited = (projector->scannerSettings!=currentPreset);
+    bool presetEdited = (laser->scannerSettings!=currentPreset);
     if (presetEdited){
         label+="(edited)";
         
@@ -1004,10 +950,10 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
 
         for(const string presetName : presets) {
 
-            if (ImGui::Selectable(presetName.c_str(), presetName == projector->scannerSettings.getLabel())) {
+            if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
-                projector->scannerSettings = *presetManager.getPreset(presetName);
+                laser->scannerSettings = *presetManager.getPreset(presetName);
             }
         }
      
@@ -1030,16 +976,16 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     if (showEditScannerPreset && ImGui::Begin("Edit Scanner Preset", &showEditScannerPreset, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoDocking))
     {
-        ImGui::Text("SCANNER SETTINGS - %s",projector->getLabel().c_str());
+        ImGui::Text("SCANNER SETTINGS - %s",laser->getLabel().c_str());
         ImGui::Separator();
         if (ImGui::BeginCombo("Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
 
             for(const string presetName : presets) {
 
-                if (ImGui::Selectable(presetName.c_str(), presetName == projector->scannerSettings.getLabel())) {
+                if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                     //get the preset and make a copy of it
                     // uses operator overloading to create a clone
-                    projector->scannerSettings = *presetManager.getPreset(presetName);
+                    laser->scannerSettings = *presetManager.getPreset(presetName);
                 }
             }
          
@@ -1056,13 +1002,13 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         ImGui::PopStyleVar();
         
         if (ImGui::BeginPopupModal("Save Preset", 0)){
-            string presetlabel = projector->scannerSettings.getLabel();
+            string presetlabel = laser->scannerSettings.getLabel();
 
             ImGui::Text("Are you sure you want to overwrite the preset \"%s\"?", presetlabel.c_str());
             ImGui::Separator();
 
             if (ImGui::Button("OK", ImVec2(120, 0))) {
-                PresetManager::addPreset(presetlabel, projector->scannerSettings);
+                PresetManager::addPreset(presetlabel, laser->scannerSettings);
                 ImGui::CloseCurrentPopup();
                 
             }
@@ -1081,17 +1027,14 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
         ImGui::SameLine();
         if(ImGui::Button("SAVE AS")){
-            strcpy(newPresetLabel, projector->scannerSettings.getLabel().c_str());
+            strcpy(newPresetLabel, laser->scannerSettings.getLabel().c_str());
             ImGui::OpenPopup("Save Preset As");
             
         };
         
         if (ImGui::BeginPopupModal("Save Preset As", 0)){
-            //string presetlabel = projector->scannerSettings.getLabel();
             
             if(ImGui::InputText("1", newPresetLabel, IM_ARRAYSIZE(newPresetLabel))){
-                //presetlabel = buf;
-                //PresetManager::addPreset(presetlabel, projector->scannerSettings);
                 
             }
             
@@ -1100,7 +1043,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 string presetlabel = newPresetLabel;
                 // TODO CHECK PRESET EXISTS AND ADD POP UP
-                PresetManager::addPreset(presetlabel, projector->scannerSettings);
+                PresetManager::addPreset(presetlabel, laser->scannerSettings);
                 ImGui::CloseCurrentPopup();
                 
             }
@@ -1116,16 +1059,16 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         }
         
         
-        UI::addResettableFloatSlider(projector->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
+        UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
 
         ImGui::Columns(2);
-        UI::addResettableIntSlider(projector->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
+        UI::addResettableIntSlider(laser->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
      
-        UI::addResettableIntSlider(projector->scannerSettings.shapePreOn, currentPreset.shapePreOn, "The length of time that the laser is switched on and held at the beginning of a shape");
+        UI::addResettableIntSlider(laser->scannerSettings.shapePreOn, currentPreset.shapePreOn, "The length of time that the laser is switched on and held at the beginning of a shape");
         ImGui::NextColumn();
        
-        UI::addResettableIntSlider(projector->scannerSettings.shapePostBlank, currentPreset.shapePostBlank,"The length of time that the laser is switched off and held at the end of a shape" );
-        UI::addResettableIntSlider(projector->scannerSettings.shapePostOn, currentPreset.shapePostOn,"The length of time that the laser is switched on and held at the end of a shape" );
+        UI::addResettableIntSlider(laser->scannerSettings.shapePostBlank, currentPreset.shapePostBlank,"The length of time that the laser is switched off and held at the end of a shape" );
+        UI::addResettableIntSlider(laser->scannerSettings.shapePostOn, currentPreset.shapePostOn,"The length of time that the laser is switched on and held at the end of a shape" );
 
         ImGui::Columns(1);
         
@@ -1140,7 +1083,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
         ImGui::SetColumnWidth(1, 250);
        
 
-        for (auto & renderProfilePair : projector->scannerSettings.renderProfiles) {
+        for (auto & renderProfilePair : laser->scannerSettings.renderProfiles) {
             ImGui::PushItemWidth(120);
             string name =renderProfilePair.first;
             RenderProfile& profile = renderProfilePair.second;
@@ -1169,7 +1112,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
    
     if(ImGui::TreeNode("Colour calibration")){
         
-        UI::addParameterGroup(projector->colourSettings.params);
+        UI::addParameterGroup(laser->colourSettings.params);
         
         ImGui::TreePop();
     }
@@ -1184,19 +1127,19 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     if(ImGui::TreeNode("Advanced")){
         // POINT RATE
-        ImGui::PushItemWidth(projectorpanelwidth-60);
+        ImGui::PushItemWidth(laserpanelwidth-60);
         ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f);
-        int ppsslider = projector->pps;
+        int ppsslider = laser->pps;
         string ppsstring = "Point rate : " + ofToString(ppsslider);
-        if(ImGui::SliderInt("##Point rate", &ppsslider, projector->pps.getMin(), projector->pps.getMax(), ppsstring.c_str())){
-            projector->pps.set(ppsslider/100*100);
+        if(ImGui::SliderInt("##Point rate", &ppsslider, laser->pps.getMin(), laser->pps.getMax(), ppsstring.c_str())){
+            laser->pps.set(ppsslider/100*100);
           
         }
-        UI::toolTip("The actual points sent to the projector - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
+        UI::toolTip("The actual points sent to the laser - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
         ImGui::PopItemWidth();
         ImGui::PopStyleVar(1);
         
-        UI::addParameterGroup(projector->advancedParams);
+        UI::addParameterGroup(laser->advancedParams);
         ImGui::TreePop();
     }
     
@@ -1204,7 +1147,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     // the arm and disarm buttons
     //int buttonwidth = (mainpanelwidth-(spacing*3))/2;
     UI::secondaryColourButtonStart();
-    if(ImGui::Button("DELETE PROJECTOR")) {
+    if(ImGui::Button("DELETE LASER")) {
         ImGui::OpenPopup("Delete?");
     }
     UI::secondaryColourButtonEnd();
@@ -1214,21 +1157,12 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     {
         ImGui::Text("Are you sure? All the zone settings will be deleted.\n\n");
         ImGui::Separator();
-
-        //static int dummy_i = 0;
-        //ImGui::Combo("Combo", &dummy_i, "Delete\0Delete harder\0");
-
-//        static bool dont_ask_me_next_time = false;
-//        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-//        ImGui::Checkbox("Don't ask me next time", &dont_ask_me_next_time);
-//        ImGui::PopStyleVar();
-
-        
+      
         UI::secondaryColourButtonStart();
         
         if (ImGui::Button("DELETE", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
-            deleteProjector(projector);
+            deleteLaser(laser);
             
         }
         UI::secondaryColourButtonEnd();
@@ -1251,7 +1185,7 @@ void Manager :: drawProjectorPanel(ofxLaser::Projector* projector, float project
     
     
     // draw a flashing dot during saving
-    if(projector->getSaveStatus() && (ofGetElapsedTimeMillis()%300)<150) {
+    if(laser->getSaveStatus() && (ofGetElapsedTimeMillis()%300)<150) {
         ImDrawList*   draw_list = ImGui::GetWindowDrawList();
         ImVec2 p = ImGui::GetWindowPos();
         p.x+=ImGui::GetContentRegionAvailWidth();

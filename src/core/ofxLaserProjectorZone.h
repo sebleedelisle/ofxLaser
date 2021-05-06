@@ -11,12 +11,12 @@
 
 namespace ofxLaser {
 
-class ProjectorZone {
+class LaserZone {
     
     public :
     
-    ProjectorZone(Zone& _zone) ;
-    ~ProjectorZone();
+    LaserZone(Zone& _zone) ;
+    ~LaserZone();
     
     bool update() ;
     

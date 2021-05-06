@@ -45,17 +45,13 @@ class ManagerBase {
     ManagerBase();
     ~ManagerBase();
     
-    OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(widht, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
-  
-    OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
-    OF_DEPRECATED_MSG("Projectors are no longer set up in code, use the UI within the app.", void addProjector());
-   
+    
     
     void initAndLoadSettings();
     
     virtual void update();
    
-    virtual bool deleteProjector(Projector* projector);
+    virtual bool deleteLaser(Laser* laser);
     
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
@@ -64,7 +60,7 @@ class ManagerBase {
 
     void renumberZones(); 
     
-    void addZoneToProjector(unsigned int zonenum, unsigned int projnum);
+    void addZoneToLaser(unsigned int zonenum, unsigned int lasernum);
     
  
     void setCanvasSize(int width, int height);
@@ -76,16 +72,16 @@ class ManagerBase {
     bool saveSettings();
     
     void send();
-    void sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum = 0, int zonenum = 0);
+    void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, int zonenum = 0);
     
-    int getProjectorPointRate(unsigned int projectornum = 0);
-    float getProjectorFrameRate(unsigned int projectornum);
+    int getLaserPointRate(unsigned int lasernum = 0);
+    float getLaserFrameRate(unsigned int lasernum);
     
-    void armAllProjectorsListener();
-    void disarmAllProjectorsListener();
-    void armAllProjectors();
-    void disarmAllProjectors();
-    void testPatternAllProjectors(int& pattern);
+    void armAllLasersListener();
+    void disarmAllLasersListener();
+    void armAllLasers();
+    void disarmAllLasers();
+    void testPatternAllLasers(int& pattern);
     
     void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
@@ -102,12 +98,16 @@ class ManagerBase {
     void drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     void drawCircle(const glm::vec2& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
    
-    vector<Projector*>& getProjectors();
-    Projector& getProjector(int index = 0);
-    int getNumProjectors() { return (int)projectors.size(); };
+    vector<Laser*>& getLasers();
+    Laser& getLaser(int index = 0);
+    int getNumLasers() { return (int)lasers.size(); };
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
-
+    OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
+  
+    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
+    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
+  
     
      
     Zone& getZone(int zonenum);
@@ -118,7 +118,7 @@ class ManagerBase {
     
     // should be called before initGui
     bool setGuideImage(string filename);
-    bool isProjectorArmed(unsigned int i);
+    bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
     
     ofPoint gLProject(ofPoint p);
@@ -129,17 +129,14 @@ class ManagerBase {
     DacAssigner& dacAssigner;
     
     int width, height;
-    int guiProjectorPanelWidth;
-    int dacStatusBoxSmallWidth;
-    int dacStatusBoxHeight;
-    int guiSpacing;
+
     // converts openGL coords to screen coords //
     
     
     
     ofParameter<int> testPattern;
     
-    ofParameter<bool> showProjectorSettings;
+    ofParameter<bool> showLaserSettings;
     
     ofParameter<bool> lockInputZones;
     ofParameter<bool> showInputPreview;
@@ -156,9 +153,6 @@ class ManagerBase {
     
     BitmapMaskManager laserMask;
     
-    ofFbo previewFbo;
-    glm::vec2 previewOffset;
-    float previewScale;
     
     bool zonesChanged;
     std::vector<Zone*> zones;
@@ -168,21 +162,22 @@ class ManagerBase {
     ofParameterGroup customParams;
     
     protected :
-	  
+    ofFbo canvasPreviewFbo;
+    
     bool initialised = false;
     
     
     bool doArmAll = false;
     bool doDisarmAll = false;
     
-    void createAndAddProjector();
+    void createAndAddLaser();
     
     int createDefaultZone();
     
     ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
     int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
     
-    std::vector<Projector*> projectors;
+    std::vector<Laser*> lasers;
     
     std::deque <ofxLaser::Shape*> shapes;
     //ofParameter<int> testPattern;

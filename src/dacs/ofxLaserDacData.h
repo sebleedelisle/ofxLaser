@@ -7,11 +7,10 @@
 #pragma once
 
 #include "ofMain.h"
-//#include "ofxLaserProjector.h"
 
 namespace ofxLaser {
 
-class Projector; 
+class Laser; 
 class DacData {
 
     public :
@@ -21,15 +20,14 @@ class DacData {
         label = "EMPTY";
         available = false;
         id = "" ;
-        assignedProjector = nullptr;
+        assignedLaser = nullptr;
     }
     
-    // maybe have a label identifier for the projector? might be safer than the object
-    DacData(string _type, string _id, string _address="", ofxLaser::Projector* projector = nullptr){
+    DacData(string _type, string _id, string _address="", ofxLaser::Laser* laser = nullptr){
         type = _type;
         id = _id;
         address = _address;
-        assignedProjector = projector;
+        assignedLaser = laser;
         label = type + " " + id;
         available = true;
         
@@ -48,7 +46,7 @@ class DacData {
     string id;      // id is the Mac address or the serial number
     string address; // IP address for network DACs
     bool available; // is it still available? Useful for if a dac connects and then becomes unavailable
-    ofxLaser::Projector* assignedProjector; // which projector it's currently assigned to 
+    ofxLaser::Laser* assignedLaser; // which laser it's currently assigned to 
     
     
 };

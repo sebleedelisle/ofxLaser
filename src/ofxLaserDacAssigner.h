@@ -5,12 +5,12 @@
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 // The DacAssigner is a complex object that is responsible for keeping track
-// of available DACs and which projectors they are connected to.
+// of available DACs and which laser objects they are connected to.
 //
 // It keeps a collection of DacManagers, one for each type of DAC that we
 // support. The DAC objects themselves are owned by the managers, but
 // the DacAssigner is responsible for giving and taking them from
-// projectors.
+// laser objects.
 
 #pragma once
 
@@ -39,10 +39,10 @@ class DacAssigner {
     const vector<DacData>& getDacList();
     const vector<DacData>& updateDacList();
     
-    bool assignToProjector(const string& label, Projector& projector);
-    bool disconnectDacFromProjector(Projector& projector);
+    bool assignToLaser(const string& label, Laser& laser);
+    bool disconnectDacFromLaser(Laser& laser);
     DacData& getDacDataForLabel(const string& label);
-    DacData& getDacDataForProjector(Projector& projector);
+    DacData& getDacDataForLaser(Laser& laser);
     
     DacManagerBase* getManagerForType(string type); 
 

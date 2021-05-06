@@ -73,13 +73,13 @@ const vector<DacData>& DacAssigner ::updateDacList(){
                 nowavailable = newdacdata.available;
                 
                 // We have a dacdata that is not available
-                // but has an assigned projector which means that
-                // the projector is waiting for that dac to
+                // but has an assigned laser which means that
+                // the laser object is waiting for that dac to
                 // become available.
-                // So let's get the dac and assign it to the projector!
-                if(!dacdata.available && (dacdata.assignedProjector!=nullptr)) {
+                // So let's get the dac and assign it to the laser!
+                if(!dacdata.available && (dacdata.assignedLaser!=nullptr)) {
                     DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
-                    dacdata.assignedProjector->setDac(dacToAssign);
+                    dacdata.assignedLaser->setDac(dacToAssign);
                     dacdata.available = true;
                 }
                 break;
@@ -116,7 +116,7 @@ const vector<DacData>& DacAssigner ::updateDacList(){
 }
 
 
-bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projector){
+bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     
     DacData* dacdataptr = &getDacDataForLabel(daclabel);
     
@@ -131,7 +131,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
         string dactype = daclabel.substr(0, daclabel.find(" "));
         string dacid = daclabel.substr(daclabel.find(" ")+1, string::npos);
         
-        dacDataList.emplace_back(dactype, dacid, "", &projector);
+        dacDataList.emplace_back(dactype, dacid, "", &laser);
         dacdataptr = &dacDataList.back();
         dacdataptr->available = false;
        
@@ -140,30 +140,30 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     DacData& dacdata = *dacdataptr;
     
-    ofLogNotice("DacAssigner::assignToProjector - " + dacdata.label, ofToString(projector.projectorIndex));
+    ofLogNotice("DacAssigner::assignToLaser - " + dacdata.label, ofToString(laser.laserIndex));
     
   
     // get manager for type
     DacManagerBase* manager = getManagerForType(dacdata.type);
     if(manager==nullptr) {
-        ofLogError("DacAssigner ::assignToProjector - invalid type " + dacdata.type);
+        ofLogError("DacAssigner ::assignToLaser - invalid type " + dacdata.type);
         return false;
     }
     
     
-    // if projector already has a dac then delete it!
-    disconnectDacFromProjector(projector);
+    // if laser already has a dac then delete it!
+    disconnectDacFromLaser(laser);
     
     DacBase* dacToAssign = nullptr;
     
-    if(dacdata.assignedProjector!=nullptr) {
-        // remove from current projector
+    if(dacdata.assignedLaser!=nullptr) {
+        // remove from current laser
         
         // Is this bad? Maybe better to get the dac
         // from its manager?
-        dacToAssign = dacdata.assignedProjector->getDac();
-        dacdata.assignedProjector->removeDac();
-        dacdata.assignedProjector = nullptr;
+        dacToAssign = dacdata.assignedLaser->getDac();
+        dacdata.assignedLaser->removeDac();
+        dacdata.assignedLaser = nullptr;
         
     } else {
     
@@ -173,18 +173,18 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     }
     // if success
     if(dacToAssign!=nullptr) {
-        // give the dac to the projector
-        projector.setDac(dacToAssign);
-        // store a reference to the projector in the
+        // give the dac to the laser
+        laser.setDac(dacToAssign);
+        // store a reference to the laser in the
         // dacdata
-        dacdata.assignedProjector = &projector;
+        dacdata.assignedLaser = &laser;
         
         
-        // clear the reference to this projector from the other dac data
+        // clear the reference to this laser from the other dac data
         for(DacData& dacdataToCheck : dacDataList) {
             if(&dacdata == &dacdataToCheck) continue;
-            else if(dacdataToCheck.assignedProjector == &projector) {
-                dacdataToCheck.assignedProjector = nullptr;
+            else if(dacdataToCheck.assignedLaser == &laser) {
+                dacdataToCheck.assignedLaser = nullptr;
             }
         }
         
@@ -192,7 +192,7 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
         // if we can't get a dac object for the label
         // the dac must have disconnected since we updated
         // the list!
-        // Maybe we should store the projector in the
+        // Maybe we should store the laser in the
         // DacData anyway it can be connected if / when
         // it's found?
         dacdata.available = false;
@@ -202,11 +202,11 @@ bool DacAssigner ::assignToProjector(const string& daclabel, Projector& projecto
     return true; 
 }
 
-bool DacAssigner :: disconnectDacFromProjector(Projector& projector) {
-    DacData& dacData = getDacDataForProjector(projector);
-    if(dacData.assignedProjector!=nullptr) {
-        dacData.assignedProjector = nullptr;
-        projector.removeDac();
+bool DacAssigner :: disconnectDacFromLaser(Laser& laser) {
+    DacData& dacData = getDacDataForLaser(laser);
+    if(dacData.assignedLaser!=nullptr) {
+        dacData.assignedLaser = nullptr;
+        laser.removeDac();
         getManagerForType(dacData.type)->disconnectAndDeleteDac(dacData.id);
         return true;
     } else {
@@ -237,7 +237,7 @@ DacData& DacAssigner ::getDacDataForLabel(const string& label){
 }
 
 
-DacData& DacAssigner ::getDacDataForProjector(Projector& projector){
-    return getDacDataForLabel(projector.getDacLabel());
+DacData& DacAssigner ::getDacDataForLaser(Laser& laser){
+    return getDacDataForLabel(laser.getDacLabel());
 }
 

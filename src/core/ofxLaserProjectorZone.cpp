@@ -8,13 +8,13 @@
 #include "ofxLaserProjectorZone.h"
 using namespace ofxLaser;
 
-ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
+LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
     // init params?
     soloed = false;
     zoneTransform.init(zone.rect);
     
     // TODO make params object for serialisation / deserialisation?
-    params.setName("projectorZone"+ofToString(zone.getIndex()));
+    params.setName("laserZone"+ofToString(zone.getIndex()));
     params.add(muted.set("mute", false));
     params.add(soloed.set("solo", false));
     
@@ -23,20 +23,20 @@ ProjectorZone :: ProjectorZone(Zone& _zone) : zone(_zone) {
     zoneMaskGroup.add(topEdge.set("Top", 0,0,1));
     zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
     zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
-    ofAddListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
+    ofAddListener(zoneMaskGroup.parameterChangedE(), this, &LaserZone::zoneMaskChanged);
     params.add(zoneMaskGroup);
     isDirty = true;
     enabled = true;
     visible = true;
    
 }
-ProjectorZone :: ~ProjectorZone() {
+LaserZone :: ~LaserZone() {
     // Transform object should be automatically deleted i think
     // make sure destructor cleans up ok
-    ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &ProjectorZone::zoneMaskChanged);
+    ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &LaserZone::zoneMaskChanged);
 }
 
-bool ProjectorZone :: update() {
+bool LaserZone :: update() {
     
     bool wasDirty = isDirty;
     wasDirty = zoneTransform.update() | wasDirty;
@@ -45,7 +45,7 @@ bool ProjectorZone :: update() {
     return wasDirty;
 }
 
-void ProjectorZone :: draw() {
+void LaserZone :: draw() {
      
     if(!visible) return ;
     zoneTransform.draw(ofToString(zone.getIndex()+1));
@@ -84,21 +84,21 @@ void ProjectorZone :: draw() {
 
 }
 
-string ProjectorZone :: getLabel() {
+string LaserZone :: getLabel() {
     return ofToString(zone.getIndex()+1);
 }
-void ProjectorZone :: setScale(float _scale) {
+void LaserZone :: setScale(float _scale) {
     scale = _scale;
     zoneTransform.scale = scale;
 }
-void ProjectorZone :: setOffset(ofPoint _offset) {
+void LaserZone :: setOffset(ofPoint _offset) {
     offset = _offset;
     zoneTransform.offset = offset;
 }
-void ProjectorZone :: zoneMaskChanged(ofAbstractParameter& e) {
+void LaserZone :: zoneMaskChanged(ofAbstractParameter& e) {
     updateZoneMask();
 }
-void ProjectorZone :: updateZoneMask() {
+void LaserZone :: updateZoneMask() {
     //zoneTransform.updateZoneMask();
     zoneMask.setX(zone.rect.getLeft()+(leftEdge*zone.rect.getWidth()));
     zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
@@ -108,7 +108,7 @@ void ProjectorZone :: updateZoneMask() {
 }
 
 
-bool ProjectorZone :: serialize(ofJson& json){
+bool LaserZone :: serialize(ofJson& json){
    
    // ofJson jsonGroup;
     
@@ -120,12 +120,12 @@ bool ProjectorZone :: serialize(ofJson& json){
     zoneTransform.serialize(zoneTransformJson);
     json["zonetransform"] = zoneTransformJson;
     // zoneTransform
-    //json["projectorzone"+ofToString(zone.index))] = jsonGroup);
+    //json["laserzone"+ofToString(zone.index))] = jsonGroup);
     return true;
 }
 
 
-bool ProjectorZone :: deserialize(ofJson& json){
+bool LaserZone :: deserialize(ofJson& json){
  
     // TODO Error check! Try / catch
     ofJson paramsJson = json["params"];

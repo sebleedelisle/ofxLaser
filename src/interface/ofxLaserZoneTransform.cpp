@@ -16,12 +16,6 @@ using namespace ofxLaser;
 
 ZoneTransform::ZoneTransform() {
 
-    
-	//saveLabel = filename;
-	//displayLabel = labelname;
-    //projectorIndex = projectorindex;
-    //zoneIndex = zoneindex;
-
 	scale = 1;
 	offset.set(0,0);
 	initListeners();
@@ -45,8 +39,7 @@ ZoneTransform::ZoneTransform() {
 	yDivisions = 1;
 	setSrc(ofRectangle(0,0,100,100));
 	setDst(ofRectangle(100,100,200,200));
-    //setDivisions(3,3);
-	
+   
     xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     

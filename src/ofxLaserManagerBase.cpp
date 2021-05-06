@@ -29,25 +29,21 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
 	}
     
     setCanvasSize(800,800);
-    
-	guiProjectorPanelWidth = 320;
-	guiSpacing = 8;
-	dacStatusBoxHeight = 88;
-	dacStatusBoxSmallWidth = 160;
+
 	showInputPreview = true;
 	lockInputZones = false;
 	
     initAndLoadSettings();
     
-    // if no projectors loaded make one and add a zone
-    if(projectors.size()==0) {
-        createAndAddProjector();
-        //addZone(0,0,800,800);
+    // if no lasers are loaded make one and add a zone
+    if(lasers.size()==0) {
+        createAndAddLaser();
+
         if(zones.size()==0) createDefaultZone();
-        for(Projector* projector : projectors) {
-            projector->addZone(zones[0],800,800);
+        for(Laser* laser : lasers) {
+            laser->addZone(zones[0],800,800);
         }
-        showProjectorSettings = true;
+        showLaserSettings = true;
         
     }
 	
@@ -57,10 +53,10 @@ ManagerBase :: ~ManagerBase() {
 	saveSettings();
     
 //    // clean up
-//    for(Projector* projector : projectors) {
-//        delete projector;
+//    for(Laser* laser : lasers) {
+//        delete laser;
 //    }
-//    projectors.clear();
+//    lasers.clear();
 //
 //    for(Zone* zone : zones) {
 //        delete zone;
@@ -74,79 +70,60 @@ void ManagerBase :: setCanvasSize(int w, int h){
 	width = w;
 	height = h;
 	laserMask.init(w,h);
-    previewFbo.allocate(w, h, GL_RGBA, 3);
+    canvasPreviewFbo.allocate(w, h, GL_RGBA, 3);
 }
 
-void ManagerBase::addProjector(DacBase& dac) {
-    ofLogError("Projectors are no longer set up in code! Add them within the app instead.");
-    throw;
-    
-}
-
-void ManagerBase::addProjector() {
-    ofLogError("Projectors are no longer set up in code! Add them within the app instead.");
-    throw;
-    
-}
-void ManagerBase::createAndAddProjector() {
+void ManagerBase::createAndAddLaser() {
 	
-	// create and add new projector object
+	// create and add new laser object
 	
-	Projector* projector = new Projector(projectors.size());
-	projectors.push_back(projector);
-    
-    /*
-	// If we have no zones set up then create a big default zone.
-	if(zones.size()==0) {
-		addZoneToProjector(createDefaultZone(), (int)projectors.size()-1);
-	} else if(zones.size()==1) {
-		addZoneToProjector(0, (int)projectors.size()-1);
-	}*/
+	Laser* laser = new Laser(lasers.size());
+	lasers.push_back(laser);
 	
-	projector->setDefaultHandleSize(defaultHandleSize);
+    laser->setDefaultHandleSize(defaultHandleSize);
     
     // TODO should this be here?
-    projector->init();
+    laser->init();
     
 }
 
-bool ManagerBase :: deleteProjector(Projector* projector) {
+bool ManagerBase :: deleteLaser(Laser* laser) {
     
     bool deleteZones = true;
     
-    // check if projector exists and isn't null
-    if(projector == nullptr) return false;
+    // check if laser exists and isn't null
+    if(laser == nullptr) return false;
 
-    if(find(projectors.begin(), projectors.end(), projector) == projectors.end()) return false;
+    if(find(lasers.begin(), lasers.end(), laser) == lasers.end()) return false;
   
     // disconnect dac
-    dacAssigner.disconnectDacFromProjector(*projector);
+    dacAssigner.disconnectDacFromLaser(*laser);
 
-    vector<Projector*> :: iterator it = find(projectors.begin(), projectors.end(), projector);
-    int index = it-projectors.begin();
-    // hopefully should renumber current projector OK
+    vector<Laser*> :: iterator it = find(lasers.begin(), lasers.end(), laser);
+    int index = it-lasers.begin();
+    // hopefully should renumber current laser OK
   
-    // remove projector from projector array
-    projectors.erase(it);
+    // remove laser from laser array
+    lasers.erase(it);
     
-    // delete zones that are only assigned to this projector *************************
+    // TODO delete zones that are only assigned to this laser *************************
     if(deleteZones) {
         
         
     }
     
-    // delete projector object
-    delete projector;
+    // delete laser object
+    delete laser;
     
-    //  delete projector settings files
-    ofDirectory::removeDirectory("projectors/", true);
+    //  delete laser settings files
+    ofDirectory::removeDirectory("lasers/", true);
    
-    // re-save remaining projectors
+    // re-save remaining laser
     // TODO - Do we need to do that ?
-    for(int i = 0; i<(int)projectors.size(); i++) {
+    for(int i = 0; i<(int)lasers.size(); i++) {
         
-        projectors[i]->projectorIndex = i;
-        projectors[i]->saveSettings();
+        lasers[i]->laserIndex = i;
+        lasers[i]->saveSettings();
         
     }
     
@@ -177,8 +154,8 @@ bool ManagerBase :: deleteZone(Zone* zone) {
     zones.erase(it);
     renumberZones();
     
-    for(Projector* projector : projectors) {
-        projector->removeZone(zone);
+    for(Laser* laser : lasers) {
+        laser->removeZone(zone);
     }
     delete zone;
     
@@ -193,17 +170,17 @@ void ManagerBase :: renumberZones() {
 }
 
 
-void ManagerBase::addZoneToProjector(unsigned int zonenum, unsigned int projnum) {
-	if(projectors.size()<=projnum) {
-		ofLog(OF_LOG_ERROR, "Invalid projector number passed to AddZoneToProjector(...)");
+void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
+	if(lasers.size()<=lasernum) {
+		ofLog(OF_LOG_ERROR, "Invalid laser number passed to addZoneToLaser(...)");
 		return;
 	}
 	if(zones.size()<=zonenum) {
-		ofLog(OF_LOG_ERROR, "Invalid zone number passed to AddZoneToProjector(...)");
+		ofLog(OF_LOG_ERROR, "Invalid zone number passed to addZoneToLaser(...)");
 		return;
 	}
 	
-	projectors[projnum]->addZone(zones[zonenum], width, height);
+	lasers[lasernum]->addZone(zones[zonenum], width, height);
 }
 
 int ManagerBase::createDefaultZone() {
@@ -311,8 +288,8 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
 }
 
 void ManagerBase:: update(){
-	if(doArmAll) armAllProjectors();
-	if(doDisarmAll) disarmAllProjectors();
+	if(doArmAll) armAllLasers();
+	if(doDisarmAll) disarmAllLasers();
 	zonesChanged = false;
 	
 	if(useBitmapMask) laserMask.update();
@@ -326,15 +303,14 @@ void ManagerBase:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		//zones[i]->setVisible(currentProjector==-1);
-        zones[i]->setEditable((!lockInputZones));
+		zones[i]->setEditable((!lockInputZones));
 		updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
 	}
 	
-	// update all the projectors which clears the points,
+	// update all the lasers which clears the points,
 	// and updates all the zone settings
-	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->update(updateZoneRects); // clears the points
+	for(size_t i= 0; i<lasers.size(); i++) {
+		lasers[i]->update(updateZoneRects); // clears the points
 	}
 	zonesChanged = updateZoneRects;
 	
@@ -422,16 +398,16 @@ void ManagerBase::send(){
 	}
 	
 	// 2 :
-	// The projectors go through each of their zones, and pull out each shape
+	// The lasers go through each of their zones, and pull out each shape
 	// it'd need to be in zone space, then as each shape is converted to points, that's
-	// when we'd do the warp for the projector space.
+	// when we'd do the warp for the output space.
 	
-	// So - the shapes need to be sorted in projector space but their points need to be
+	// So - the shapes need to be sorted in output space but their points need to be
 	// calculated at zone space. Otherwise the perspective distortion won't look right in
 	// terms of brightness distribution.
-	for(size_t i= 0; i<projectors.size(); i++) {
+	for(size_t i= 0; i<lasers.size(); i++) {
 		
-		Projector& p = *projectors[i];
+		Laser& p = *lasers[i];
 		
 		p.send(useBitmapMask?laserMask.getPixels():NULL, globalBrightness);
 		
@@ -439,29 +415,24 @@ void ManagerBase::send(){
 }
 
 
-int ManagerBase :: getProjectorPointRate(unsigned int projectornum ){
-	return projectors.at(projectornum)->getPointRate();
+int ManagerBase :: getLaserPointRate(unsigned int lasernum ){
+	return lasers.at(lasernum)->getPointRate();
 }
 
-float ManagerBase :: getProjectorFrameRate(unsigned int projectornum ){
-	if((projectornum>=0) && (projectornum<projectors.size())) {
-		return projectors.at(projectornum)->getFrameRate();
+float ManagerBase :: getLaserFrameRate(unsigned int lasernum ){
+	if((lasernum>=0) && (lasernum<lasers.size())) {
+		return lasers.at(lasernum)->getFrameRate();
 	} else return 0;
 }
-void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int projectornum, int zonenum){
+void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum, int zonenum){
 	// ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size()));
-	Projector* proj = projectors.at(projectornum);
+	Laser* laser = lasers.at(lasernum);
    
-	proj->sendRawPoints(points, &getZone(zonenum), globalBrightness);
+    laser->sendRawPoints(points, &getZone(zonenum), globalBrightness);
 	
 }
 
 
-// DEPRECATED, showAdvanced parameter now redundant
-void ManagerBase::initGui(bool showAdvanced) {
-    ofLogError("Projectors are no longer set up in code! Add them within the app instead.");
-    throw;
-}
 
 void ManagerBase::initAndLoadSettings() {
     if(initialised) {
@@ -472,9 +443,9 @@ void ManagerBase::initAndLoadSettings() {
    
 	params.setName("Laser");
 	params.add(globalBrightness.set("Global brightness", 0.1,0,1));
-	params.add(showProjectorSettings.set("Edit projector", false));
+	params.add(showLaserSettings.set("Edit laser", false));
 	params.add(testPattern.set("Global test pattern", 0,0,9));
-	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllProjectors);
+	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
 	
 	interfaceParams.setName("Interface");
 	interfaceParams.add(lockInputZones.set("Lock input zones", true));
@@ -498,29 +469,29 @@ void ManagerBase::initAndLoadSettings() {
 	
 }
 
-void ManagerBase::armAllProjectorsListener() {
+void ManagerBase::armAllLasersListener() {
 	doArmAll = true;
 }
 
-void ManagerBase::disarmAllProjectorsListener(){
+void ManagerBase::disarmAllLasersListener(){
 	doDisarmAll = true;
 }
-void ManagerBase::armAllProjectors() {
+void ManagerBase::armAllLasers() {
 	
-	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->armed = true;
+	for(size_t i= 0; i<lasers.size(); i++) {
+		lasers[i]->armed = true;
 	}
 	doArmAll = false;
 }
-void ManagerBase::disarmAllProjectors(){
-	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->armed = false;
+void ManagerBase::disarmAllLasers(){
+	for(size_t i= 0; i<lasers.size(); i++) {
+		lasers[i]->armed = false;
 	}
 	doDisarmAll = false;
 }
-void ManagerBase::testPatternAllProjectors(int &pattern){
-	for(size_t i= 0; i<projectors.size(); i++) {
-		projectors[i]->testPattern = testPattern;
+void ManagerBase::testPatternAllLasers(int &pattern){
+	for(size_t i= 0; i<lasers.size(); i++) {
+		lasers[i]->testPattern = testPattern;
 	}
 }
 
@@ -534,7 +505,7 @@ bool ManagerBase::loadSettings() {
     globalBrightness = 0.1;
 
     
-    // load the zone config files - [zone config also knows which projectors have which zones] < do they tho?
+    // load the zone config files
     
     ofJson zonesJson = ofLoadJson("zones.json");
     for(ofJson& zoneJson : zonesJson) {
@@ -545,43 +516,40 @@ bool ManagerBase::loadSettings() {
     
    
     
-    // NOW load the projectors
+    // NOW load the lasers
     
     // numLasers was saved in the json
     for(int i = 0; i<numLasers; i++) {
         
-        // if we don't have a projector object already make one
-        if(projectors.size()<i+1) {
-            createAndAddProjector();
+        // if we don't have a laser object already make one
+        if(lasers.size()<i+1) {
+            createAndAddLaser();
         } else {
-            // if we already have a projector then make sure no dac is connected
-            dacAssigner.disconnectDacFromProjector(*projectors[i]);
+            // if we already have a laser then make sure no dac is connected
+            dacAssigner.disconnectDacFromLaser(*lasers[i]);
         }
-        Projector* projector = projectors[i];
-        projector->loadSettings(zones);
+        Laser* laser = lasers[i];
+        laser->loadSettings(zones);
         
-        // if the projector has a dac id saved in the settings,
+        // if the laser has a dac id saved in the settings,
         // tell the dacAssigner about it
-        if(!projector->dacId->empty()) {
-            dacAssigner.assignToProjector(projector->dacId, *projector);
+        if(!laser->dacId->empty()) {
+            dacAssigner.assignToLaser(laser->dacId, *laser);
         }
         
     }
-    // if we had more projectors to start with than we needed, then resize
+    // if we had more lasers to start with than we needed, then resize
     // the vector (shouldn't be needed but it doesn't hurt)
-    projectors.resize(numLasers);
+    lasers.resize(numLasers);
 
     // shouldn't be needed but hey
-    disarmAllProjectors();
+    disarmAllLasers();
     
    
     
     
     if(zones.size()==0) {
-//        createDefaultZone();
-//        for(Projector* projector : projectors) {
-//            projector->addZone(zones[0],800,800);
-//        }
+
     } else {
         renumberZones();
     }
@@ -597,7 +565,7 @@ bool ManagerBase::saveSettings() {
 	 
     // update the number of lasers for the laserNum param
     // (it's automatically saved with the params)
-    numLasers = projectors.size();
+    numLasers = lasers.size();
     
     ofJson json;
     ofSerialize(json, params);
@@ -605,9 +573,8 @@ bool ManagerBase::saveSettings() {
 
     bool savesuccess = ofSavePrettyJson("laserSettings.json", json);
     
-	for(size_t i= 0; i<projectors.size(); i++) {
-        savesuccess &= projectors[i]->saveSettings();
-//        savesuccess &= projectors[i]->saveZoneSettings();
+	for(size_t i= 0; i<lasers.size(); i++) {
+        savesuccess &= lasers[i]->saveSettings();
 	}
     // TODO add laserMask saving to laser settings
     //savesuccess &= laserMask.saveSettings();
@@ -622,7 +589,6 @@ bool ManagerBase::saveSettings() {
     
     ofSavePrettyJson("zones.json", zoneJson);
    
-    // SAVE all the ProjectorZones
     
     return savesuccess;
 	
@@ -659,12 +625,12 @@ ofPoint ManagerBase::gLProject( float x, float y, float z ) {
 }
 
 
-Projector& ManagerBase::getProjector(int index){
-	return *projectors.at(index);
+Laser& ManagerBase::getLaser(int index){
+	return *lasers.at(index);
 };
 
-std::vector<Projector*>& ManagerBase::getProjectors(){
-	return projectors;
+std::vector<Laser*>& ManagerBase::getLasers(){
+	return lasers;
 };
 
 
@@ -708,20 +674,41 @@ bool ManagerBase::setZoneMode(ofxLaserZoneMode newmode) {
 	return true;
 }
 
-bool ManagerBase::isProjectorArmed(unsigned int i){
-	if((i<0) || (i>=projectors.size())){
+bool ManagerBase::isLaserArmed(unsigned int i){
+	if((i<0) || (i>=lasers.size())){
 		return false;
 	} else {
-		return projectors[i]->armed;
+		return lasers[i]->armed;
 	}
 	
 }
 
 
 bool ManagerBase::areAllLasersArmed(){
-	for(Projector* projector : projectors) {
-		if(!projector->armed) return false;
+	for(Laser* laser : lasers) {
+		if(!laser->armed) return false;
 	}
-	return (projectors.size()==0)? false : true;
+	return (lasers.size()==0)? false : true;
 	
+}
+    
+
+//------------------- DEPRECATED --------------------------
+
+
+void ManagerBase::addProjector(DacBase& dac) {
+    ofLogError("Lasers are no longer set up in code! Add them within the app instead.");
+    throw;
+    
+}
+
+void ManagerBase::addProjector() {
+    ofLogError("Lasers are no longer set up in code! Add them within the app instead.");
+    throw;
+    
+}
+// DEPRECATED, showAdvanced parameter now redundant
+void ManagerBase::initGui(bool showAdvanced) {
+    ofLogError("ManagerBase::initGui(bool showAdvanced) initGui is no longer required");
+    throw;
 }

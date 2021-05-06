@@ -1,5 +1,5 @@
 //
-//  ofxLaserProjector.h
+//  ofxLaserLaser.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 06/11/2017.
@@ -40,12 +40,12 @@ class PointsForShape : public vector<Point> {
 };
 
 
-class Projector {
+class Laser {
     
     public :
     
-    Projector(int _index);
-    ~Projector();
+    Laser(int _index);
+    ~Laser();
     
     void init();
     
@@ -96,7 +96,7 @@ class Projector {
 
     
    
-    ProjectorZone* getProjectorZoneForZone(Zone* zone);
+    LaserZone* getLaserZoneForZone(Zone* zone);
     
     // Managing points
     void addPoint(ofxLaser::Point p);
@@ -112,14 +112,14 @@ class Projector {
     
     void ppsChanged(int& e);
     
-    deque<Shape*> getTestPatternShapesForZone(ProjectorZone& zone);
+    deque<Shape*> getTestPatternShapesForZone(LaserZone& zone);
     
 
 
     //-----------------------------------------------
     
-    int projectorIndex;
-    vector<ProjectorZone*> projectorZones;
+    int laserIndex;
+    vector<LaserZone*> laserZones;
     
     ofParameterGroup params;
     ofParameter<bool> armed;

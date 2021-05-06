@@ -25,7 +25,7 @@ public:
     int numLaserEffects;
     float elapsedTime;
     
-	ofxLaser::Manager laser;
+	ofxLaser::Manager laserManager;
 	
 	bool drawingShape = false;
 	int laserWidth;

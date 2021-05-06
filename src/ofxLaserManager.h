@@ -14,16 +14,16 @@ class Manager : public ManagerBase {
     public : 
     Manager();
     
-    bool deleteProjector(Projector* projector) override;
+    bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param);
 
     
-    void nextProjector();
-    void previousProjector();
-    int getCurrentProjector();
-    void setCurrentProjector(int i);
-    bool isProjectorSelected();
+    void selectNextLaser();
+    void selectPreviousLaser();
+    int getSelectedLaser();
+    void setSelectedLaser(int i);
+    bool isAnyLaserSelected();
 
     void drawUI(bool fullscreen = false);
     void drawPreviews(bool fullscreen = false);
@@ -31,10 +31,10 @@ class Manager : public ManagerBase {
     
     void renderPreview();
    
-    
+    glm::vec2 screenToLaserInput(glm::vec2& pos); 
     void setDefaultHandleSize(float size);
     
-    void drawProjectorPanel(ofxLaser::Projector* projector, float projectorpanelwidth, float spacing, float x);
+    void drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
     void drawLaserGui();
     bool togglePreview();
     bool toggleGui();
@@ -42,12 +42,19 @@ class Manager : public ManagerBase {
     bool isGuiVisible();
     
     protected :
-    int currentProjector;
+    int selectedLaser;
    
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
+    int guiLaserSettingsPanelWidth;
+    int dacStatusBoxSmallWidth;
+    int dacStatusBoxHeight;
+    int guiSpacing;
     
+  
+    glm::vec2 previewOffset;
+    float previewScale;
 
 };
 }
