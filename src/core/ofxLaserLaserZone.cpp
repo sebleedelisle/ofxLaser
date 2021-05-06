@@ -5,7 +5,7 @@
 //  Created by Seb Lee-Delisle on 13/04/2021.
 //
 
-#include "ofxLaserProjectorZone.h"
+#include "ofxLaserLaserZone.h"
 using namespace ofxLaser;
 
 LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {

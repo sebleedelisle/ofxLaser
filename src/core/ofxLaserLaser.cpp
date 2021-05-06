@@ -6,7 +6,7 @@
 //
 //
 
-#include "ofxLaserProjector.h"
+#include "ofxLaserLaser.h"
 
 using namespace ofxLaser;
 
