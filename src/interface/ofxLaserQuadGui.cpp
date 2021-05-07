@@ -268,7 +268,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){
-    if((!editable) || (!visible)) return false;
+    if((!editable) || (!visible)) return;
 
     mousePos = e;
     mousePos-=offset;
