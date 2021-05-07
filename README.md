@@ -1,7 +1,7 @@
 ofxLaser
 =========
 
-An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Laserdock/LaserCube and IDN controllers, but more DACs to be added in the future.
+An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Helios, Laserdock/LaserCube, but more DACs to be added in the future.
 
 Safety Notice
 =============
@@ -9,15 +9,105 @@ Safety Notice
 
 Seriously, don't mess around with this stuff. You can really damage your eyes.  
 
+Major Update May 2021
+==================
+
+Version **1.0 beta** is now available. This is a significant upgrade from previous versions. 
+* Advanced GUI that uses DearIMGui
+* All laser set up is done within the compiled app and saved to config files
+* Much simpler set up in code, see examples
+* Automatic detection of laser controllers (DACs), including etherdream, Helios, and LaserCube
+
+API changes
+* No laser set up required in code any more. laser.setup(), laser.initGui no longer needed. 
+* Terminology has been changed from "projector" to "laser" to avoid confusing with newcomers used to working with conventional projectors
+
+
+Usage 
+-------
+All API calls are via the ofxLaser::Manager object. 
+
+ofxLaser::Manager::update()  - update and prepare the system to receive new laser graphics
+ofxLaser::Manager::send() - send everything drawn this time to the lasers
+ofxLaser::Manager::drawUI() - draw the laser UI system
+
+Note that all drawing methods must be called after update() and before send(). 
+
+Drawing to the laser 
+--------------------
+We have three render profiles for each laser, default, fast and detailed, referenced using the following compiler definitions:
+OFXLASER_PROFILE_DEFAULT
+OFXLASER_PROFILE_FAST
+OFXLASER_PROFILE_DETAIL
+
+Use the default profile for most things, use fast for any smooth lines where accuracy doesn't matter, and detail for anything intricate. Bear in mind that the output will get flickery the more detailed you get. 
+
+These three profiles can be edited within the app's GUI, and can be defined differently for each laser. You can also save and load scanner presets. 
+
+Drawing methods
+--------------------
+drawLine(start,  end, colour, profile);
+Draws a line to the laser(s). 
+returns : void
+parameters : 
+    start : *glm::vec2, glm::vec3 or ofPoint* - the start position of the line
+    end : *glm::vec2, glm::vec3 or ofPoint* - the end position of the line
+    colour : *ofColor* the colour of the line
+    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+
+drawLine( x1,  y1,  x2,  y2, colour, profile);
+Draws a line to the laser(s). 
+returns : void
+parameters : 
+    x1, y1, x2, y2 : *floats*, start and end coordinates for the line. 
+    colour :  *ofColor* the colour of the line
+    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+
+drawDot(position, colour, intensity, profile);
+Draws a dot to the laser(s). This can also be used to make beam effects. Use the intensity to change the brightness - this changes how long the laser lingers to make the point so is more efficient than darkening the colour.  
+returns : void
+parameters : 
+    position : *glm::vec2, glm::vec3 or ofPoint* - the  position of the dot
+    colour : *ofColor* the colour of the dot 
+    intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
+    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+
+drawDot( x,  y, colour,  intensity, profile);
+As above but with separate x and y values instead of a point object. 
+returns : void
+parameters : 
+    x, y : *floats* - the x and y position of the dot
+    colour : *ofColor* the colour of the dot 
+    intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
+    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+    
+drawCircle(x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+drawCircle(const glm::vec2& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+
+drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
+drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
+
+Laser Graphic object
+------------------------
+The ofxLaser::Graphic class can be used to store multiple polylines and can also handle shape occlusion. It can also be used to load and render SVGs. To send the graphic to the laser use the drawLaserGraphic function. 
+
+void drawLaserGraphic(Graphic& graphic, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
+
+
+
+
+
 Features
 ----------
-* Can draw any vector shape to the laser with a simple function calls
+* Can draw any vector shape to lasers with simple function calls
 * Shapes are sorted in real-time to find the optimal path for the laser
-* Can control multiple lasers (works fine with 8 etherdreams+ and is limited only by CPU and network speed)
-* Masking of individual areas with varying levels at source
+* Automatic laser controller detection
+* Can control multiple lasers (has been tested with 16 lasers and is limited only by CPU and network speed)
+* Masking of individual areas with varying levels 
 * Many calibration options for blanking - colour change offset, pre/post blanks, pre/post on points
 * Specify laser speed and acceleration for each shape using "render profiles" 
-* Output warping to compensate for perspective distortion
+* Output zone transformation for projection mapping and to compensate for perspective distortion
 * Multiple zones can be sent to multiple projectors and individually warped for mapping onto separate planes
 * Colour calibration system to compensate for laser power to brightness curves
 * Full rewrite of the Etherdream library using Poco sockets, very reliable

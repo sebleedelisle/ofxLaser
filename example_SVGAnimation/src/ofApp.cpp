@@ -1,5 +1,11 @@
 #include "ofApp.h"
 
+// You can use the SVGLoader utility class to load an SVG sequence
+// as an animation. The example animated SVG sequence is from
+// a collaboration with comedian Bec Hill, see
+// https://youtu.be/U4D0wJNYtWs for the back story.
+
+
 //--------------------------------------------------------------
 void ofApp::setup(){
     // the first time it runs, the SVGLoader will load the SVGs
