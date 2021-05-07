@@ -47,7 +47,7 @@ These three profiles can be edited within the app's GUI, and can be defined diff
 
 Drawing methods
 --------------------
-##### drawLine(start,  end, colour, profile);
+### drawLine(start,  end, colour, profile);
 Draws a line to the laser(s). 
 returns : void
 ###### parameters : 
@@ -56,7 +56,7 @@ returns : void
 * colour : *ofColor* the colour of the line
 * profile : (optional) the render profile, use one of the profile definitions (defaults to the default profile)
 
-##### drawLine( x1,  y1,  x2,  y2, colour, profile);
+### drawLine( x1,  y1,  x2,  y2, colour, profile);
 Draws a line to the laser(s). 
 returns : void
 ###### parameters : 
@@ -64,7 +64,7 @@ returns : void
 - colour :  *ofColor* the colour of the line
 - profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
 
-##### drawDot(position, colour, intensity, profile);
+### drawDot(position, colour, intensity, profile);
 Draws a dot to the laser(s). This can also be used to make beam effects. Use the intensity to change the brightness - this changes how long the laser lingers to make the point so is more efficient than darkening the colour.  
 returns : void
 ###### parameters : 
@@ -73,7 +73,7 @@ returns : void
 - intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
 - profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
 
-##### drawDot( x,  y, colour,  intensity, profile);
+### drawDot( x,  y, colour,  intensity, profile);
 As above but with separate x and y values instead of a point object. 
 returns : void
 ###### parameters : 
