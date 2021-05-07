@@ -1,188 +1,163 @@
 //
-//  ofxLaserMask.cpp
-//  LightningStrikesAberdeen
+//  ofxLaserMaskManager .cpp
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 02/02/2018.
 //
+
 
 #include "ofxLaserMaskManager.h"
 
 
 using namespace ofxLaser;
 
-MaskManager::MaskManager() {
+MaskManager  ::MaskManager  () {
     
 }
 
-MaskManager::~MaskManager() {
+MaskManager  ::~MaskManager  () {
     
-    if(fbo.isAllocated()) fbo.clear();
     while(quads.size()>0) {
         delete quads.back();
         quads.pop_back();
     }
+    
 }
 
-bool MaskManager::update() {
+bool MaskManager  ::update() {
     
     dirty = false;
     for(int i = 0; i<quads.size(); i++) {
         
         dirty = quads[i]->checkDirty() | dirty;
-        if(firstUpdate) {
-            quads[i]->draw();
-			
-        }
+//        if(firstUpdate) {
+//            quads[i]->draw();
+//            
+//        }
     }
-    firstUpdate = false;
+   // firstUpdate = false;
+    bool wasDirty = dirty;
     if(dirty) {
-        fbo.begin();
-		ofDisableBlendMode();
-        ofBackground(255);
-		if(maskBitmap.isAllocated()) {
-			maskBitmap.draw(0,0,width, height);
-		}
-       
-        ofFill();
-        
-        for(int i = 0; i<quads.size(); i++) {
-            QuadMask& quad = *quads[i];
-            
-            ofSetColor(255*(1.0f-quad.maskLevel));
-            
-            ofBeginShape();
-            
-            ofVertex(quad.handles[0]);
-            ofVertex(quad.handles[1]);
-            ofVertex(quad.handles[3]);
-            ofVertex(quad.handles[2]);
-            ofEndShape();
-        }
-        
-        
-        fbo.end();
-        fbo.readToPixels(pixels);
-        saveSettings();
+        dirty = false;
+        //saveSettings();
     }
-    return dirty;
+    return wasDirty;
 }
 
-bool MaskManager::draw(bool showBitmap) {
+bool MaskManager  ::draw() {
+
+    for(int i= 0; i<quads.size(); i++) {
+        quads[i]->draw();
+    }
     
-    if(showBitmap) {
-        ofPushStyle();
-		ofPushMatrix();
-		ofTranslate(offset);
-		ofScale(scale, scale);
-        ofEnableBlendMode(OF_BLENDMODE_ADD);
-        ofSetColor(50,0,0);
-        fbo.draw(0,0);
-        
-        ofPopStyle();
-		ofPopMatrix();
-        for(int i= 0; i<quads.size(); i++) {
-            quads[i]->draw();
-        }
-    }
     return true;
-
-//    if(dirty) {
-//        ofSetColor(255,0,0);
-//        ofFill();
-//        ofDrawRectangle(0,0,20,20);
-//    }
 }
 
-QuadMask& MaskManager::addQuadMask(float level) {
+QuadMask& MaskManager::addQuadMask(int level) {
     QuadMask* quad = new QuadMask();
     quads.push_back(quad);
     quad->maskLevel= level;
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
-    quad->setName("maskquad"+ofToString(quads.size()),ofToString(quads.size()));
-    quad->loadSettings();
-	quad->offset = offset;
-	quad->scale = scale; 
+    quad->setName(ofToString(quads.size()));
+    //quad->lineColour = ofColor::red;
+    
+    quad->offset = offset;
+    quad->scale = scale;
     return *quad;
 }
 
-void MaskManager::init(int w, int h){
-	width = w;
-	height = h; 
-	maskBitmap.load("LaserMask.png");
-//	if(!maskBitmap.loadImage("img/LaserMask.png")) {
-//		maskBitmap.allocate(width, height, OF_IMAGE_COLOR);
-//	};
-	
-    if(fbo.isAllocated()) {
-        fbo.clear();
-    }
-    
-    fbo.allocate(width, height, GL_RGB);
-    
-    fbo.begin();
-    ofBackground(255);
-	if(maskBitmap.isAllocated()) {
-		maskBitmap.draw(0,0,w,h);
-	} 
-    fbo.end();
-    fbo.readToPixels(pixels);
-    
+void MaskManager  ::init(int w, int h){
+    width = w;
+    height = h;
 }
 
 void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
-	if((offset == newoffset) && (newscale==scale)) return;
-	offset = newoffset;
-	scale = newscale;
-	dirty = true;
-	for(QuadMask* quad : quads) {
-		quad->offset = offset;
-		quad->scale = scale;
-	}
-	
-}
-
-float MaskManager::getBrightness(int x, int y) {
-    ofFloatColor c = pixels.getColor(x,y);
-    return c.getBrightness();
+    if((offset == newoffset) && (newscale==scale)) return;
+    offset = newoffset;
+    scale = newscale;
+    dirty = true;
+    for(QuadMask* quad : quads) {
+        quad->offset = offset;
+        quad->scale = scale;
+    }
     
 }
-ofPixels* MaskManager::getPixels() {
-    return &pixels;
+
+
+
+ bool MaskManager :: deleteQuadMask(QuadMask* mask) {
+    
+     vector<QuadMask*> :: iterator it = find(quads.begin(), quads.end(), mask);
+     if(it==quads.end()) {
+         return false;
+     }
+     
+     quads.erase(it);
+     delete mask;
+     
+     for(int i = 0; i<(int)quads.size(); i++) {
+         quads[i]->displayLabel = ofToString(i+1);
+         
+     }
+     
+     return true;
+    
+    
 }
 
-vector<ofPolyline*>  MaskManager::getLaserMaskShapes(){
-	
-	vector<ofPolyline*> polylines;
-	for(int i = 0 ;i<quads.size(); i++) {
-		QuadMask& quad = *quads[i];
-		ofPolyline* poly = ofxLaser::Factory :: getPolyline();
-
-
-		poly->addVertex(quad.handles[0]);
-		poly->addVertex(quad.handles[1]);
-		poly->addVertex(quad.handles[3]);
-		poly->addVertex(quad.handles[2]);
-		poly->setClosed(true);
-		polylines.push_back(poly);
-
-
-
-	}
-	return polylines;
-	
-}
-
-bool MaskManager::loadSettings() {
-    for(int i = 0; i<quads.size(); i++) {
-        quads[i]->loadSettings();
-		
+vector<ofPolyline*>  MaskManager  ::getLaserMaskShapes(){
+    
+    vector<ofPolyline*> polylines;
+    for(int i = 0 ;i<quads.size(); i++) {
+        QuadMask& quad = *quads[i];
+        ofPolyline* poly = ofxLaser::Factory :: getPolyline();
+        
+        
+        poly->addVertex(quad.handles[0]);
+        poly->addVertex(quad.handles[1]);
+        poly->addVertex(quad.handles[3]);
+        poly->addVertex(quad.handles[2]);
+        poly->setClosed(true);
+        polylines.push_back(poly);
+        
+        
+        
     }
-	dirty = true; 
-    return true;
+    return polylines;
+    
 }
-bool MaskManager::saveSettings() {
-    for(int i = 0; i<quads.size(); i++) {
-        quads[i]->saveSettings();
+
+void MaskManager::serialize(ofJson&json) {
+    
+    // create an empty json object
+    ofJson maskJson;
+    
+    for(int i = 0; i<(int)quads.size(); i++) {
+        // create node with the index of the label and
+        // serialize the quad data into it
+        quads[i]->serialize(maskJson[ofToString(i)]);
     }
-    return true;
+    // create a node called "maskmanager" and put the quad
+    // data in
+    json["maskmanager"] = maskJson;
+    //cout << maskJson.dump(3) << endl;
+    //cout << json.dump(3) << endl;
 }
+
+bool MaskManager::deserialize(ofJson& jsonGroup) {
+    ofJson maskJson = jsonGroup["maskmanager"];
+    while(quads.size()>0) {
+        delete quads.back();
+        quads.pop_back();
+    }
+   // cout << maskJson.size() << endl;
+    bool success = true;
+    for(auto quadjson : maskJson) {
+        cout << quadjson.dump(3) << endl; 
+        addQuadMask();
+        success &= quads.back()->deserialize(quadjson);
+    }
+    return success;
+}
+
+

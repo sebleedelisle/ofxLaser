@@ -1,14 +1,14 @@
 //
 //  ofxLaserPolyline.h
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 16/11/2017.
 //
 //
 
 #pragma once
-#include "ofxLaserManager.h"
 #include "ofxLaserFactory.h"
+#include "ofxLaserShape.h"
 
 namespace ofxLaser {
 	class Polyline : public Shape {

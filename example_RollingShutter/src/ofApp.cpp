@@ -11,34 +11,19 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
-	laserWidth = 800;
-	laserHeight = 800;
-	laser.setup(laserWidth, laserHeight);
 	startTime = 0;
 
-	laser.addProjector(dac);
-
-#ifdef USE_LASERDOCK
-	dac.setup();
-#else
-	// load the IP address of the Etherdream / IDN DAC
-	ofBuffer buffer = ofBufferFromFile("dacIP.txt");
-	string dacIp = buffer.getText();
-	// if there's no file, then use the default IP address :
-	if(dacIp=="") dacIp ="192.168.88.247";
-	dac.setup(dacIp);
-#endif
-	
-	laser.addCustomParameter(startOffset.set("start offset", 0, 0,500));
-	laser.addCustomParameter(endOffset.set("end offset", 0, 0,500));
-	laser.addCustomParameter(pointsPerFrame.set("points per frame", 1000, 900,1100));
-	laser.addCustomParameter(beamPos.set("beam pos", 0.5,0,1));
-	laser.addCustomParameter(timeSpeed.set("time speed", 1,0.01,2));
+    laserManager.getLaser(0).pps = 25000; // set this to be 1000 x your frame rate
+    
+	laserManager.addCustomParameter(startOffset.set("start offset", 0, 0,500));
+	laserManager.addCustomParameter(endOffset.set("end offset", 0, 0,500));
+	laserManager.addCustomParameter(pointsPerFrame.set("points per frame", 1000, 900,1100));
+	laserManager.addCustomParameter(beamPos.set("beam pos", 0.5,0,1));
+	laserManager.addCustomParameter(timeSpeed.set("time speed", 1,0.01,2));
 	points.resize(pointsPerFrame);
 	
-    laser.initGui(true);
     currentLaserEffect = 0;
-    numLaserEffects = 8;
+    numLaserEffects = 7;
 		
 }
 
@@ -46,15 +31,15 @@ void ofApp::setup(){
 void ofApp::update(){
     
 	float deltaTime = ofGetLastFrameTime();
-	pointsToSend+= deltaTime*laser.getProjector(0).getPointRate();
+    pointsToSend+= deltaTime*laserManager.getLaserPointRate(0);
 	elapsedTime+=(deltaTime*timeSpeed);
 	
     // prepares laser manager to receive new points
-    laser.update();
+    laserManager.update();
 	
 	while(pointsToSend>points.size()) {
 		
-		laser.sendRawPoints(points);
+		laserManager.sendRawPoints(points);
 		pointsToSend-=points.size();
 	}
 	
@@ -64,13 +49,9 @@ void ofApp::update(){
 
 void ofApp::draw() {
 	
-	ofBackground(40);
+	ofBackground(15,15,20);
 	
-	int ypos = laserHeight+20;
-	ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
-    ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
-	ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
-	ofDrawBitmapString("[ and ] to sync to camera", 400, ypos+=30);
+	
     
     showLaserEffect(currentLaserEffect);
 
@@ -85,25 +66,39 @@ void ofApp::draw() {
 		
 	}
 	
-    laser.drawUI();
-	ofNoFill();
-	ofSetLineWidth(2);
-	mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
-	
-	mesh.draw();
-
+    laserManager.drawUI();
+    
+    if(!laserManager.isAnyLaserSelected()) {
+        
+        int ypos = 816;
+        ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
+        ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
+        ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
+        ofDrawBitmapString("[ and ] to sync to camera", 400, ypos+=30);
+        
+        
+        ofNoFill();
+        ofSetLineWidth(2);
+        mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+        ofPushMatrix();
+        //ofTranslate(laser.guiSpacing, laser.guiSpacing);
+        //ofScale(laser.previewScale);
+        
+        mesh.draw();
+        ofPopMatrix();
+    }
 }
 
 
 void ofApp :: showLaserEffect(int effectnum) {
     
     
-	float left = laserWidth*0.1;
-	float top = laserHeight*0.1;
-	float right = laserWidth*0.9;
-	float bottom = laserHeight*0.9;
-	float width = laserWidth*0.8;
-	float height = laserHeight*0.8;
+	float left = laserManager.width*0.1;
+	float top = laserManager.height*0.1;
+	float right = laserManager.width*0.9;
+	float bottom = laserManager.height*0.9;
+	float width = laserManager.width*0.8;
+	float height = laserManager.height*0.8;
 	
 	switch (currentLaserEffect) {
 			
@@ -308,10 +303,11 @@ void ofApp :: showLaserEffect(int effectnum) {
 			
 		}
 		case 6: {
+            points.clear();
 			for(int i = 0; i<pointsPerFrame; i++) {
 				ofxLaser::Point p;
 				p.set(400, 400);
-				float angle = ofMap(i, 0, pointsPerFrame, 0,PI*2);
+				float angle = ofMap(i, 0, pointsPerFrame, 0,PI*4);
 				
 				p.x+=cos(angle)*100;
 				p.y+=sin(angle)*100;
@@ -346,32 +342,7 @@ void ofApp::keyPressed(int key){
 		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
 		startTime = elapsedTime;
 	}
-	if(key=='f') {
-        ofToggleFullscreen();
-	}
     if(key==OF_KEY_TAB) {
-        laser.nextProjector();
+        laserManager.selectNextLaser();
     }
 }
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-	
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-	
-}
-
-void ofApp::mouseReleased(int x, int y, int button) {
-	
-	
-}
-
-//--------------------------------------------------------------
-void ofApp::exit(){
-	laser.saveSettings();
-}
-

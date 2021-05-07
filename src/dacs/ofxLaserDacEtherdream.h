@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacEtherdream.hpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/11/2017.
 //
@@ -95,21 +95,23 @@ namespace ofxLaser {
 		~DacEtherdream();
 		
 		// DacBase functions
-		bool sendFrame(const vector<Point>& points);
-        bool sendPoints(const vector<Point>& points);
-		bool setPointsPerSecond(uint32_t newpps);
-		string getLabel();
-		ofColor getStatusColour();
-		const vector<ofAbstractParameter*>& getDisplayData();
+		bool sendFrame(const vector<Point>& points) override;
+        bool sendPoints(const vector<Point>& points) override;
+		bool setPointsPerSecond(uint32_t newpps) override;
+		string getId() override;
+		int getStatus() override;
+		const vector<ofAbstractParameter*>& getDisplayData() override;
 		
-		void setup(string ip);
-		//bool addPoints(const vector<dac_point> &points );
+		void setup(string id, string ip);
+        
+        OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup(string ip));
+       
 		bool addPoint(const dac_point &point );
 		void closeWhileRunning();
-		void close();
+		void close() override;
 	
 		
-		void reset(); 
+		void reset() override; 
         
         //output the data that we just sent
         void logData();
@@ -132,6 +134,41 @@ namespace ofxLaser {
 		int pointsToSendBeforePlaying;
 
 		vector<dac_point> framePoints;
+        
+        
+        // data conversion utilities - should probably go somewhere else
+        
+        static uint16_t bytesToUInt16(unsigned char* byteaddress) {
+            return (uint16_t)(*(byteaddress+1)<<8)|*byteaddress;
+            
+        }
+        static uint16_t bytesToInt16(unsigned char* byteaddress) {
+            uint16_t i = *(signed char *)(byteaddress);
+            i *= 1 << CHAR_BIT;
+            i |= (*byteaddress+1);
+            return i;
+            
+        }
+        static uint32_t bytesToUInt32(unsigned char* byteaddress){
+            return (uint32_t)(*(byteaddress+3)<<24)|(*(byteaddress+2)<<16)|(*(byteaddress+1)<<8)|*byteaddress;
+            
+        }
+        static void writeUInt16ToBytes(uint16_t& n, unsigned char* byteaddress){
+            *(byteaddress+1) = n>>8;
+            *byteaddress = n&0xff;
+        }
+        static void writeInt16ToBytes(int16_t& n, unsigned char* byteaddress){
+            *(byteaddress+1) = n>>8;
+            *byteaddress = n&0xff;
+        }
+        static void writeUInt32ToBytes(uint32_t& n, unsigned char* byteaddress){
+            *(byteaddress+3) = (n>>24) & 0xff;
+            *(byteaddress+2) = (n>>16) & 0xff;
+            *(byteaddress+1) = (n>>8) & 0xff;
+            *byteaddress = n&0xff;
+            
+        }
+        
 		
 	private:
 		void threadedFunction();
@@ -165,7 +202,8 @@ namespace ofxLaser {
         uint64_t startTime; // to measure latency
 		bool beginSent;
 		
-		string ipaddress; 
+		string ipaddress;
+        string id; 
 		
 		deque<dac_point*> bufferedPoints;
 		vector<dac_point*> sparePoints;

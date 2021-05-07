@@ -1,6 +1,6 @@
  //
 //  ofxLaserDacEtherdream.cpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/11/2017.
 //
@@ -35,7 +35,7 @@ DacEtherdream :: DacEtherdream(){
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
     dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-	pointsToSendBeforePlaying = 500;//500;//100; 	// the minimum number of points to buffer before
+	pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 
@@ -78,28 +78,42 @@ DacEtherdream :: ~DacEtherdream(){
 void DacEtherdream :: close() {
 	
 	
-	if(isThreadRunning()) waitForThread();
-	if(connected) {
-		sendStop();
-		waitForAck('s');
-		socket.close();
-	}
-}
-void DacEtherdream :: setup(string ip) {
-	// TODO - this can return a Poco::Net::HostNotFoundException - add try / catch
+    if(isThreadRunning()) {
+        if(connected) {
+            if(lock()) {
+                sendStop();
+                unlock();
+                waitForAck('s');
+            }
+        }
+        // also stops the thread :
+        waitForThread();
+    }
+		
+	socket.close();
 
+}
+
+bool DacEtherdream :: setup(string ip) {
+    ofLogError("DACs are no longer set up in code! Do it within the app instead");
+    throw; 
+    return false;
+}
+
+void DacEtherdream :: setup(string _id, string _ip) {
 	
 	pps = 0;
 	pps = newPPS = 30000; // this is always sent on begin
 	queuedPPSChangeMessages = 0;
 	connected = false;
-	ipaddress = ip;
+	ipaddress = _ip;
+    id = _id;
 	
 	Poco::Timespan timeout(1 * 250000); // 1/4 seconds timeout
 	
 	try {
 		// Etherdreams always talk on port 7765
-		Poco::Net::SocketAddress sa(ip, 7765);
+		Poco::Net::SocketAddress sa(ipaddress, 7765);
 		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
 		socket.connect(sa, timeout);
 		socket.setSendTimeout(timeout);
@@ -108,7 +122,7 @@ void DacEtherdream :: setup(string ip) {
 		connected = true;
 	} catch (Poco::Exception& exc) {
 		//Handle your network errors.
-		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " +ip+" "+ exc.displayText());
+		ofLog(OF_LOG_ERROR,  "DacEtherdream setup failed - Network error: " +ipaddress+" "+ exc.displayText());
 		connected = false;
 
 	}catch (Poco::Net::HostNotFoundException& exc) {
@@ -164,6 +178,7 @@ void DacEtherdream :: closeWhileRunning() {
 	while(!lock());
 	sendStop();
 	unlock();
+    
 	waitForThread();
 	
 	while(!lock());
@@ -767,17 +782,18 @@ inline bool DacEtherdream::waitForAck(char command) {
 	}
 }
 
-string DacEtherdream ::getLabel(){
-	return "Etherdream";
+string DacEtherdream ::getId(){
+	return "Etherdream "+id;
+   // string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
 }
 
-ofColor DacEtherdream :: getStatusColour(){
-	if(!connected) return ofColor::red;
-	if(response.status.playback_state <=1) return ofColor::orange;
-	else if(response.status.playback_state ==2) return ofColor::green;
-	else return ofColor::red;
-	
-	
+int DacEtherdream :: getStatus(){
+	if(!connected) return OFXLASER_DACSTATUS_ERROR;
+	if(response.status.playback_state <=1) return OFXLASER_DACSTATUS_WARNING;
+	else if(response.status.playback_state ==2) return OFXLASER_DACSTATUS_GOOD;
+	else return OFXLASER_DACSTATUS_ERROR;
+
+
 }
 
 
@@ -920,7 +936,7 @@ bool DacEtherdream :: sendBytes(const uint8_t* buffer, int length) {
 	if(failed) {
 		if(networkerror) {
 			closeWhileRunning();
-			setup(ipaddress);
+			setup(id, ipaddress);
 		}
 		beginSent = false;
 		//prepareSent = false;

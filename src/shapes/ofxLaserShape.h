@@ -21,99 +21,27 @@ class Shape {
 	};
 	virtual void addPreviewToMesh(ofMesh& mesh) =0;
 	
-	vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed, float speedMultiplier){
-		
-        speed*=speedMultiplier;
-        acceleration*=speedMultiplier;
-		unitDistances.clear();
-		
-		float acceleratedistance = (speed*speed) / (2*acceleration);
-		float timetogettospeed = speed / acceleration;
-		
-		float totaldistance = distance;
-		
-		float constantspeeddistance = totaldistance - (acceleratedistance*2);
-		float constantspeedtime = constantspeeddistance/speed;
-		
-		if(totaldistance<(acceleratedistance*2)) {
-			
-			constantspeeddistance = 0 ;
-			constantspeedtime = 0;
-			acceleratedistance = totaldistance/2;
-			speed = sqrt( acceleratedistance * 2 * acceleration);
-			timetogettospeed = speed / acceleration;
-			
-		}
-		
-		float totaltime = (timetogettospeed*2) + constantspeedtime;
-		
-		float timeincrement = totaltime / (floor(totaltime));
-		
-		float currentdistance;
-		
-		float t = 0;
-		
-		while (t <= totaltime + 0.001) {
-			
-			if(t>totaltime) t = totaltime;
-			
-			if(t <=timetogettospeed) {
-				currentdistance = 0.5 * acceleration * (t*t);
-				
-			} else if((t>timetogettospeed) && (t<=timetogettospeed+constantspeedtime)){
-				currentdistance = acceleratedistance + ((t-timetogettospeed) * speed);
-				
-			} else  {
-				float t3 = t - (timetogettospeed + constantspeedtime);
-				
-				currentdistance = (acceleratedistance + constantspeeddistance) + (speed*t3)+(0.5 *(-acceleration) * (t3*t3));
-				
-				
-			}
-			
-			unitDistances.push_back(currentdistance/totaldistance);
-			
-			t+=timeincrement;
-			
-		}
-		
-		return unitDistances; 
-		
-	}
+    vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed, float speedMultiplier);
 
 	vector<float> unitDistances;
+
+    virtual ofPoint& getStartPos();
+    virtual ofPoint& getEndPos();
 	
-	bool tested = false;
-	bool reversed = false;
-	bool reversable = false; 
+    virtual ofFloatColor& getColour();
+    virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) ;
+    virtual bool intersectsRect(ofRectangle & rect) = 0;
 	
-	virtual ofPoint& getStartPos(){
-		if(reversed && reversable) return endPos;
-		else return startPos; 
-	}
-	virtual ofPoint& getEndPos(){
-		if(reversed && reversable) return startPos;
-		else return endPos;
-	};
+    void setTargetZone(int zonenumber);
 	
-	virtual ofFloatColor& getColour() {
-		return colour;
-	}
-	virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
-		
-	};
-	virtual bool intersectsRect(ofRectangle & rect) {
-		return true; 
-		
-	};
-	
-	void setTargetZone(int zonenumber) {
-		targetZoneNumber = zonenumber;
-	}
-	
-	int getTargetZone() {
-		return targetZoneNumber;
-	}
+    int getTargetZone();
+    
+    
+    bool tested = false;
+    bool reversed = false;
+    bool reversable = false;
+    
+    
 	string profileLabel;
 	
 	protected :

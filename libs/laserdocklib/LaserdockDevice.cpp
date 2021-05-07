@@ -132,6 +132,7 @@ LaserdockDevice::LaserdockDevice(libusb_device * usbdevice)
 }
 
 LaserdockDevice::~LaserdockDevice() {
+    
 }
 
 bool LaserdockDevice::enable_output() {

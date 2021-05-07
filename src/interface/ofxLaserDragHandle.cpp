@@ -21,14 +21,14 @@ DragHandle::DragHandle(float x, float y) {
 	set(x, y);
 }
 
-void DragHandle::set(float xpos, float ypos, float r) {
+void DragHandle::set(float xpos, float ypos, float _size) {
 	
 	x = xpos;
 	y = ypos;
-	radius = r;
+	size = _size;
 };
-void DragHandle::setSize(float r) {
-	radius = r;
+void DragHandle::setSize(float _size) {
+	size = _size;
 };
 
 void DragHandle::set(glm::vec3 pos) {
@@ -43,9 +43,9 @@ void DragHandle::set(glm::vec2 pos) {
 	z = 0;
 	
 };
-void DragHandle::draw(bool isOver, float scale) {
+void DragHandle::draw(const glm::vec3& mousepos, float scale) {
 	if(!active) return;
-	//bool isOver = hitTest(ofPoint(ofGetMouseX(), ofGetMouseY()));
+	bool isOver = hitTest(mousepos, scale);
 	ofPushStyle();
 	
 	if(isFilled) ofFill();
@@ -53,13 +53,20 @@ void DragHandle::draw(bool isOver, float scale) {
 		ofNoFill();
 		ofSetLineWidth(1);
 	}
-	ofSetColor(isOver?overCol:col);
+    
+    //ofDrawLine(mousepos.x, mousepos.y-4, mousepos.x, mousepos.y+4);
+    //ofDrawLine(mousepos.x-4, mousepos.y, mousepos.x+4, mousepos.y);
+    
+    ofSetColor(isOver?overCol:col);
 	
 	if(isCircular) {
-		ofDrawCircle(*this,radius*scale);
+		ofDrawCircle(*this,size/2*scale);
 	} else {
 		ofSetRectMode(OF_RECTMODE_CENTER);
-		ofDrawRectangle(*this,radius*2*scale, radius*2*scale);
+        ofDrawRectangle(*this,size/scale, size/scale);
+        //ofDrawRectRounded(*this,size/scale, size/scale, 2/scale);
+    
+       
 	}
 	ofPopStyle();
 };
@@ -110,7 +117,17 @@ bool DragHandle::stopDrag(){
 	}
 };
 
-bool DragHandle::hitTest(glm::vec3 hitpoint) {
-	return(active && glm::distance( (glm::vec3) *this, hitpoint ) < radius );
+bool DragHandle::hitTest(glm::vec3 hitpoint, float scale) {
+    if(active) {
+        if(isCircular) {
+            return (glm::distance( (glm::vec3) *this, hitpoint ) < size/2 );
+        } else {
+            ofRectangle rect;
+            rect.setFromCenter(*this, size/scale, size/scale );
+            return rect.inside(hitpoint);
+        }
+    } else {
+        return(false);
+    }
 }
 

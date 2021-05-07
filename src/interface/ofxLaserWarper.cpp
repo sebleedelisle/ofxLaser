@@ -1,6 +1,6 @@
 //
 //  ofxLaserWarper.cpp
-//  NewTransformTest
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/02/2018.
 //
@@ -16,7 +16,7 @@ using namespace ofxLaser;
 void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, glm::vec3 src4, glm::vec3 dst1, glm::vec3 dst2, glm::vec3 dst3, glm::vec3 dst4) {
 	
 	// the source points are the zone points in screen space
-	// the dest points are points in the projector space
+	// the dest points are points in the output space
 	
 	srcCVPoints.resize(4);
 	dstCVPoints.resize(4);

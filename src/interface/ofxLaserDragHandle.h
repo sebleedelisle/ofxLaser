@@ -17,12 +17,15 @@ namespace ofxLaser {
 	DragHandle(glm::vec3 p);
 	DragHandle(float x, float y);
 
-	void set(float xpos, float ypos, float r =8);
-	void setSize(float r) ;
+    void set(float xpos, float ypos) {
+        set(xpos, ypos, size);
+    }
+    void set(float xpos, float ypos, float size);
+    void setSize(float size) ;
 
 	void set(glm::vec3 pos);
 	void set(glm::vec2 pos);
-	void draw(bool isOver = true, float scale = 1) ;
+	void draw(const glm::vec3& mousepos, float scale = 1) ;
 
 	void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 
@@ -30,12 +33,12 @@ namespace ofxLaser {
 
 	bool stopDrag();
 
-	bool hitTest(glm::vec3 hitpoint) ;
+	bool hitTest(glm::vec3 hitpoint, float scale = 1) ;
 	
 	ofPoint clickOffset, startPos;
 	bool isDragging = false;
-	bool active = true;
-	float radius = 4;
+    bool active = true;
+	float size = 10;
 	bool xAxis;
 	bool yAxis;
 	
@@ -43,8 +46,8 @@ namespace ofxLaser {
 	bool yLocked = false;
 	
 	bool altKeyDisable;
-	bool isCircular = true;
-    bool isFilled = false;
+	bool isCircular = false;
+    bool isFilled = true;
 		
 	bool snapToGrid = false;
 	float gridSize = 1;
@@ -53,8 +56,8 @@ namespace ofxLaser {
 	vector<DragHandle*>connectedHandlesY;
 		
 	
-	ofColor col = ofColor(60);
-	ofColor overCol = ofColor(255);
+	ofColor col = ofColor(255, 100);
+	ofColor overCol = ofColor(255,255);
 	
 	
 };

@@ -1,8 +1,8 @@
 //
-//  ofxLaserDacBase.hpp
-//  ofxLaserRewrite
+//  ofxLaserDacHelios.h
+//  ofxLaser
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 07/05/2020.
 //
 //
 
@@ -11,7 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserDacBase.h"
 #include "HeliosDac.h"
-#include "ofxLaserDacHeliosManager.h"
+//#include "ofxLaserDacHeliosManager.h"
 
 #define HELIOS_MIN 0
 #define HELIOS_MAX 4095
@@ -59,35 +59,44 @@ class DacHelios : public DacBase, ofThread{
 	DacHelios();
 	~DacHelios();
 	
-	void setup(string serial="");
-	const vector<ofAbstractParameter*>& getDisplayData();
+    
+    OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());
+   
+	bool setup(libusb_device* usbdevice);
+	const vector<ofAbstractParameter*>& getDisplayData() override;
 		
-	bool connectToDevice(string serial="");
-    void reset();
-    void setActive(bool active);
-	void close();
+	//bool connectToDevice(string serial="");
+    void reset() override;
+    void setArmed(bool armed) override;
+	void close() override;
 	
-	bool sendFrame(const vector<Point>& points) ;
-	bool sendPoints(const vector<Point>& points) ;
-	bool setPointsPerSecond(uint32_t pps);
+	bool sendFrame(const vector<Point>& points) override ;
+	bool sendPoints(const vector<Point>& points)  override;
+	bool setPointsPerSecond(uint32_t pps) override;
 	
 	DacHeliosFrame* getFrame();
-	DacHeliosFrame* releaseFrame(DacHeliosFrame* frame);
+	DacHeliosFrame* deleteFrame(DacHeliosFrame* frame);
 	ofThreadChannel<DacHeliosFrame*> spareFrames;
 	
-	string getLabel(){return "Helios";};
+	//string getLabel(){return "Helios";};
+    string getId() override{return "Helios " + ofToString(dacName);};
+    
 	
 
-	ofColor getStatusColour(){
-		return connected ? ofColor::green :  ofColor::red;
+	int getStatus() override {
+		return connected ? OFXLASER_DACSTATUS_GOOD :  OFXLASER_DACSTATUS_ERROR;
 	}
 	
 	
 	ofParameter<int> pointBufferDisplay;
 	ofParameter<string> deviceName;
-	
+    
+    string dacName;
+    HeliosDacDevice* dacDevice;
+    libusb_device* usbDevice;
+    
 	private:
-	void threadedFunction();
+	void threadedFunction() override;
 
 	void setConnected(bool state);
 	
@@ -105,12 +114,9 @@ class DacHelios : public DacBase, ofThread{
                             // if armed status has changed and sends
                             // signal to DAC
 	
-	DacHeliosManager &heliosManager;
+	//DacHeliosManager &heliosManager;
 	
-	// ONLY to be accessed within thread
-	string deviceId;
-	HeliosDacDevice* dacDevice;
-	
+   
 	
 };
 

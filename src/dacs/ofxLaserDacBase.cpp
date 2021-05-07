@@ -2,7 +2,10 @@
 #include "ofxLaserDacBase.h"
 using namespace ofxLaser;
 
-void DacBase::setActive(bool active){
-   armed = active;
+void DacBase::setArmed(bool _armed){
+   armed = _armed;
 };
-const vector<ofAbstractParameter*>& DacBase::getDisplayData() { return displayData;};
+const vector<ofAbstractParameter*>& DacBase::getDisplayData() {
+    return displayData;
+    
+};

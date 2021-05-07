@@ -1,6 +1,6 @@
 //
-//  ofxLaserMaskM.h
-//  LightningStrikesAberdeen
+//  ofxLaserMaskManager .h
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 02/02/2018.
 //
@@ -14,37 +14,38 @@
 
 namespace ofxLaser {
     
-class MaskManager {
+class MaskManager  {
     
 public:
     
-    MaskManager();
-    ~MaskManager();
+    MaskManager ();
+    ~MaskManager ();
+     
+    virtual void init(int width, int height);
+    virtual bool update();
+    virtual bool draw();
     
-    void init(int width, int height);
-    bool update();
-    bool draw(bool showBitmap = false); 
-    ofPixels* getPixels();
-    float getBrightness(int x, int y);
-    bool loadSettings();
-    bool saveSettings();
-	void setOffsetAndScale(ofPoint offset, float scale); 
+    virtual bool deleteQuadMask(QuadMask* mask); 
+    
+    virtual void serialize(ofJson&json);
+    virtual bool deserialize(ofJson&jsonGroup);
+
+    void setOffsetAndScale(ofPoint offset, float scale);
 	
+    
+    
 	vector<ofPolyline*> getLaserMaskShapes();
-    QuadMask& addQuadMask(float level=1);
+    QuadMask& addQuadMask(int level=100);
     
     vector<QuadMask*> quads;
     
-    ofFbo fbo;
-    ofPixels pixels;
-	ofImage maskBitmap;
 	int width, height; 
 	
     protected :
     bool dirty;
 	ofPoint offset;
 	float scale = 1;
-    bool firstUpdate = true; 
+   // bool firstUpdate = true; 
     
 };
 }

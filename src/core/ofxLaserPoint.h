@@ -10,46 +10,23 @@
 namespace ofxLaser {
 class Point : public ofPoint {
 
+    // TODO remove intensity - I don't think it's used
+    
 public:
 	
-	Point() {
-		x = y = z = 0;
-		r = g = b = 0;
-		useCalibration = true;
-		intensity = 1;
-		
-	}
-	Point(ofPoint p, ofColor c, float pointIntensity = 1, bool usecalibration = true ) {
-		
-		x = p.x;
-		y = p.y;
-		z = p.z;
-		r = c.r;
-		g = c.g;
-		b = c.b;
-		useCalibration = usecalibration;
-		intensity = pointIntensity;
-	}
+    Point();
+    Point(ofPoint p, ofColor c, bool usecalibration = true ) ;
 	
-	ofColor getColour() {
-		return ofColor(r, g, b);
-	}
-	void copyColourFromPoint(Point& pointToCopyFrom) {
-		r = pointToCopyFrom.r;
-		g = pointToCopyFrom.g;
-		b = pointToCopyFrom.b;
-	}
-	void setColour(int pr, int pg, int pb) {
-		r = pr;
-		g = pg;
-		b = pb;
-	}
+    ofColor getColour();
+    void copyColourFromPoint(Point& pointToCopyFrom);
+    void setColour(int pr, int pg, int pb);
+    void multiplyColour(float value) ;
 	
 	float r; //0-255
 	float g;
 	float b;
 	
-	float intensity;
+	//float intensity;
 	bool useCalibration;
 	
 

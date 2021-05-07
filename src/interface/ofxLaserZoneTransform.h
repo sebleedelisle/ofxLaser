@@ -1,6 +1,6 @@
 //
 //  ofxLaserZoneTransform.h
-//  example_HelloLaser
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/02/2018.
 //
@@ -13,7 +13,7 @@
 #include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
-#include "ofxGui.h"
+#include "ofxLaserUI.h"
 #include "ofxLaserWarper.h"
 
 namespace ofxLaser {
@@ -22,18 +22,23 @@ class ZoneTransform {
 	
 	public :
 	
-	ZoneTransform(int index, string filename);
+	ZoneTransform();
 	~ZoneTransform();
-	
+    
+    bool update();
+    void draw(string label);
+    
 	void init(ofRectangle& srcRect);
-	void initGuiListeners();
+
 	
 	void initListeners();
 	void removeListeners();
 	
-	bool mousePressed(ofMouseEventArgs &e);
-	bool mouseDragged(ofMouseEventArgs &e);
+    bool mouseMoved(ofMouseEventArgs &e);
+    bool mousePressed(ofMouseEventArgs &e);
+    bool mouseDragged(ofMouseEventArgs &e);
 	bool mouseReleased(ofMouseEventArgs &e);
+    void paramChanged(ofAbstractParameter& e);
 
 	//void setName(string labelname, string filename);
 	
@@ -52,24 +57,32 @@ class ZoneTransform {
 	
 	void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
 
-	
+    void getPerimeterPoints(vector<glm::vec3>& points); 
 	void setHandleSize(float size);
 	
-	void update();
-	void draw();
-	
+    bool getSelected() {return selected;};
+    float getRight() {
+        float right = 0;
+        for(DragHandle& handle : dstHandles) {
+            if(handle.x>right) right = handle.x;
+        }
+        right*=scale; 
+        right+=offset.x;
+        
+        return right;
+    }
+    
 	bool hitTest(ofPoint mousePoint);
 	
 	void resetFromCorners();
 	vector<ofPoint> getCorners();
 	bool isCorner(int index);
 	
-	bool loadSettings();
-	void saveSettings();
 	void serialize(ofJson&json);
 	bool deserialize(ofJson&jsonGroup);
 
-	void setVisible(bool warpvisible);
+	void setEditable(bool warpvisible);
+    void setVisible(bool warpvisible);
 	bool checkDirty();
 	void setDirty(bool state) {isDirty = state;};
 
@@ -103,29 +116,32 @@ class ZoneTransform {
 	
 	DragHandle moveHandle;
 	
-	string saveLabel;
-	string displayLabel;
-	int index; 
+	//string saveLabel;
+	//string displayLabel;
+	//int zoneIndex;
+    //int projectorIndex;
 	
 	
 	ofPoint offset;
 	float scale = 1;
+    ofPoint mousePos; 
 	
 	
 	protected :
 	
-	bool selected;
-	bool visible;
+	bool selected; // highlighted and ready to edit
+	bool editable;  // visible and editable
+    bool visible;
 	bool isDirty;
 	
 	bool initialised = false;
 	int xDivisions;
 	int yDivisions;
 	
-	static ofMesh dashedLineMesh;
+	//static ofMesh dashedLineMesh;
 	
 	//TODO move to utils
-	static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
+	//static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
 	
 	
 	

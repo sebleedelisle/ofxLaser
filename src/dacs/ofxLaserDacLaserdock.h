@@ -1,8 +1,8 @@
 //
-//  ofxLaserDacBase.hpp
-//  ofxLaserRewrite
+//  ofxLaserDacLaserdock.hpp
+//  ofxLaser
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 03/03/2019.
 //
 //
 
@@ -11,7 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserDacBase.h"
 #include "ofxNetwork.h"
-#include "LaserdockDeviceManager.h"
+//#include "LaserdockDeviceManager.h"
 #include "LaserdockDevice.h"
 #include "libusb.h"
 
@@ -24,23 +24,25 @@ namespace ofxLaser {
 class DacLaserdock : public DacBase, ofThread{
 	public:
 	
-	DacLaserdock() : lddmanager(LaserdockDeviceManager::getInstance()) {};
-	~DacLaserdock();
+    DacLaserdock(){};
+    ~DacLaserdock();
+
+    bool setup(libusb_device* usbdevice);
+    OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());
+   
+    void reset() override;
+    void close() override;
+    
+	bool sendFrame(const vector<Point>& points) override ;
+	bool sendPoints(const vector<Point>& points) override ;
+	bool setPointsPerSecond(uint32_t pps) override;
 	
-	void setup(string serial="");
-	bool connectToDevice(string serial="");
-    void reset(); 
+	string getId() override {return "Laserdock " + ofToString(serialNumber);};
 	
-	bool sendFrame(const vector<Point>& points) ;
-	bool sendPoints(const vector<Point>& points) ;
-	bool setPointsPerSecond(uint32_t pps);
-	
-	string getLabel(){return "Laserdock";};
-	
-	// TODO return relevant colour
-	ofColor getStatusColour(){
-		return connected ? ofColor::green :  ofColor::red;
-	}
+    int getStatus() override {
+        return connected ? OFXLASER_DACSTATUS_GOOD :  OFXLASER_DACSTATUS_ERROR;
+    }
+
 	
 	bool addPoint(const LaserdockSample &point );
 	// simple object pooling system
@@ -48,16 +50,13 @@ class DacLaserdock : public DacBase, ofThread{
 	
 	ofParameter<int> pointBufferDisplay;
 	ofParameter<string> serialNumber; 
-	//	ofParameter<int> latencyDisplay;
-//	ofParameter<int> reconnectCount;
 	
 	private:
-	void threadedFunction();
+	void threadedFunction() override;
 
 	void setConnected(bool state);
 	
-	LaserdockDeviceManager &lddmanager;
-	LaserdockDevice * device = nullptr;
+	LaserdockDevice * dacDevice = nullptr;
 	
 	LaserdockSample sendpoint, lastpoint;
 	deque<LaserdockSample*> bufferedPoints;

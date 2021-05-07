@@ -157,3 +157,4 @@ example_HelloLaser/bin/data/*..json
 *.db-wal
 *.db-shm
 *.json
+*.ofxlg

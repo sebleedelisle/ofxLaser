@@ -1,6 +1,6 @@
 //
 //  ofxLaserPolyline.cpp
-//  ofxLaserRewrite
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 16/11/2017.
 //

@@ -1,6 +1,6 @@
 //
 //  ofxLaserWarper.h
-//  NewTransformTest
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/02/2018.
 //

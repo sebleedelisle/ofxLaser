@@ -1,6 +1,6 @@
 //
-//  ObjectFactory.cpp
-//  LaserLightSynths2019
+//  ofxLaserFactory.cpp
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 15/01/2019.
 //

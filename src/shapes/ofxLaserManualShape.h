@@ -35,7 +35,7 @@ class ManualShape : public Shape{
 	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) {
 		
 		for(size_t i = 0; i<points.size(); i++) {
-			destpoints.push_back(ofxLaser::Point(points[i], colours[i],1, useCalibration));
+			destpoints.push_back(ofxLaser::Point(points[i], colours[i], useCalibration));
 		}
 	};
 	
@@ -48,7 +48,10 @@ class ManualShape : public Shape{
 		}
 	}
 
-		
+    bool intersectsRect(ofRectangle & rect) {
+        return true;
+    }
+    
 	vector<ofPoint> points;
 	vector<ofColor> colours;
 	bool useCalibration;

@@ -1,15 +1,33 @@
 //
-//  ofxLaserDacBase.cpp
+//  ofxLaserDacHelios.cpp
 //
-//  Created by Seb Lee-Delisle on 07/11/2017.
+//  Created by Seb Lee-Delisle on 07/05/2020.
 //
 //
+
+// Helio Dac is an affordable open source USB laser controller 
+// It has a frame send functionality and you can't stream points
+// unless you put them in separate frames, which is probably fine. 
+// 
+// I've had issues using three or more of them on a single Windows 
+// machine, even following the official instructions to change the
+// USB drivers using Zadig
+// 
+// I think it's some kind of incompatability with some USB hubs, so 
+// if you have issues, try using different hubs, or put the controllers
+// on different USB buses. 
+// 
+// Unlike other DAC implementations in ofxLaser, I'm using the built-in 
+// functionality that replays frames until a new one is sent. This seems  
+// to help with the performance as I've found that any USB activity can 
+// cause short drop-outs otherwise. 
+
 
 #include "ofxLaserDacHelios.h"
 
 using namespace ofxLaser;
 
-DacHelios:: DacHelios() : heliosManager(DacHeliosManager::getInstance()) {
+DacHelios:: DacHelios() {
 	pps = 30000;
 	newPPS = 30000;
 	
@@ -19,121 +37,123 @@ DacHelios:: DacHelios() : heliosManager(DacHeliosManager::getInstance()) {
     newArmed = false;  // as in the PPS system, this knows
                             // if armed status has changed and sends
                             // signal to DAC
-	deviceId = "";
+    dacName = "";
 	dacDevice = nullptr;
 	
 }
 DacHelios:: ~DacHelios() {
-	ofLogNotice("DacHelios destructor");
-	//stopThread();
-	close();
-	
+	//ofLogNotice("DacHelios destructor");
+    
+    // close() stops the thread and deletes the dac device
+    close();
 	
 }
 
 void DacHelios::close() {
 	
+    // Stop the thread running, if it's still running
+
 	if(isThreadRunning()) {
 		waitForThread(true); // also stops the thread
-		if(lock()) {
-			if(dacDevice!=nullptr) {
-				dacDevice->SetClosed();
-				dacDevice = nullptr;
-			}
-			unlock();
-		}
-		delete dacDevice;
+		
 	}
+    // we own the dacDevice so let's close it down
+    if(dacDevice!=nullptr) {
+        dacDevice->SetClosed();
+        delete dacDevice;
+        dacDevice = nullptr;
+    }
+
 }
 
+bool DacHelios::setup(libusb_device* usbdevice) {
 
-void DacHelios::setup(string name) {
-	
-	deviceName = name; // the parameter which shows the name
-	
-	ofLogNotice("DacHelios::setup "+name);
-	
-	connectToDevice(deviceName);
-
-	pointBufferDisplay.set("Point Buffer", 0,0,1799);
-	displayData.push_back(&deviceName);
-	displayData.push_back(&pointBufferDisplay);
-        
-    #ifndef _MSC_VER
-            // only linux and osx
-            //http://www.yonch.com/tech/82-linux-thread-priority
-            struct sched_param param;
-            param.sched_priority = 60;
-            pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
-    #else
-            // windows implementation
-            SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
-    #endif
+    usbDevice = usbdevice; 
+    libusb_device_handle* devHandle;
+    int result = libusb_open(usbdevice, &devHandle);
+    cout << "...libusb_open result : " << result << endl;
     
-	startThread();
+    if (result < 0) {
+        return false;
+    }
+    
+    result = libusb_claim_interface(devHandle, 0);
+    cout << "...libusb_claim_interface : " << result << endl;
+    // seems to return LIBUSB_ERROR_ACCESS if it's busy
+    if (result < 0) {
+        libusb_close(devHandle);
+        return false;
+    }
+    
+    result = libusb_set_interface_alt_setting(devHandle, 0, 1);
+    cout << "...libusb_set_interface_alt_setting : " << result << endl;
+    if (result < 0) {
+        libusb_close(devHandle);
+        return false;
+    }
+    
+    HeliosDacDevice* dac = new HeliosDacDevice(devHandle);
+    cout << "...new dac device " << dac->nameStr << endl;
+    if(dac->nameStr.empty()) {
+        ofLogError("new dac name is wrong!");
+    }
+
+    dacDevice = dac;
+    dacName = dacDevice->GetName();
+
+	// Not sure if we need this right now - it changes the thread priority. 
+	// Could be necessary on Raspberry Pi. 
+    //#ifndef _MSC_VER
+    //        // only linux and osx
+    //        //http://www.yonch.com/tech/82-linux-thread-priority
+    //        struct sched_param param;
+    //        param.sched_priority = 60;
+    //        pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+    //#else
+    //        // windows implementation
+    //        SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_LOWEST);
+    //#endif
+
+    connected = true;
+    
+    startThread();
+    return true;
 
 }
+
 
 const vector<ofAbstractParameter*>& DacHelios :: getDisplayData() {
-//	if(lock()) {
-//
-//		//pointBufferDisplay += (response.status.buffer_fullness-pointBufferDisplay)*1;
-//
-//		//int pointssincelastmessage = (float)((ofGetElapsedTimeMicros()-lastMessageTimeMicros)*response.status.point_rate)/1000000.0f;
-//
-//		//pointBufferDisplay = bufferedPoints.size();
-//
-//		//latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
-//		//reconnectCount = prepareSendCount;
-//
-//		unlock();
-//	}
-	
 	return displayData;
 }
 
-bool DacHelios::connectToDevice(string name) {
-	
-	dacDevice = heliosManager.getDacDeviceForName(name);
-	if(dacDevice!=nullptr) {
-		deviceId = deviceName = dacDevice->nameStr;
-		if(dacDevice->isClosed()) { // not sure why it should be but hey
-			ofLogError("HeliosDac device is closed before it's used!"+ name);
-			heliosManager.deleteDevice(dacDevice);
-			connected = false;
-			
-			dacDevice = nullptr;
-		} else {
-			connected = true;
-		}
-	} else {
-		connected = false;
-	}
-
-	return connected;
-	
-}
 
 bool DacHelios:: sendFrame(const vector<Point>& points){
+    
 	if(!connected) return false;
 	// make a new frame object or reuse one if it already exists
 	DacHeliosFrame* frame = getFrame();
-	
-    int minSampleCount = pps * 0.01; // minimum frame length is 1/100 of a second
+	    
     
 	// add all points into the frame object
 	frameMode = true;
-    while(frame->numSamples<minSampleCount) {
-        for(const ofxLaser::Point& p : points) {
-            frame->addPoint(p);
-        }
-   
+    for(const ofxLaser::Point& p : points) {
+        frame->addPoint(p);
     }
+
+    
+    // there's a truly weird bug in Helios were if we
+    // have a specific number of points the dac gets unhappy.
+    // There's a horrific hack in the HeliosDac code that
+    // adds a point and adjusts the point rate to accommodate
+    // but I'm very unhappy with that - it will have issues
+    // when using the frame sync system.
+    
 //    if ((((int)frame->numSamples-45) % 64) == 0) {
 //        Point p =points.back();
 //        p.setColour(0,0,0);
 //        frame->addPoint(p);
 //    }
+    
 	// add the frame object to the frame channel
 	framesChannel.send(frame);
 	
@@ -144,7 +164,10 @@ bool DacHelios:: sendFrame(const vector<Point>& points){
 
 bool DacHelios::sendPoints(const vector<Point>& points) {
 	
+    // sends a point stream. So far very un-tested for this DAC
+    
 	if(!connected) return false;
+    
 	// get frame object
 
 	DacHeliosFrame* frame = getFrame();
@@ -172,8 +195,8 @@ bool DacHelios::setPointsPerSecond(uint32_t newpps) {
 	
 };
 
-void DacHelios :: setActive(bool active){
-    newArmed = active;
+void DacHelios :: setArmed(bool _armed){
+    newArmed = _armed;
     
 }
 void DacHelios :: reset() {
@@ -192,112 +215,148 @@ void DacHelios :: threadedFunction(){
 	
 	while(isThreadRunning()) {
 	
+        // pps = points per second
 		if(connected && (newPPS!=pps)) {
+            // we don't have to do anything particularly
+            // special as pps is passed through in the
+            // SendFrame function
 			pps = newPPS;
-			
 		}
+        
+        // if the armed state has changed, let's also
+        // change the shutter state!
         if(connected && (newArmed!=armed)) {
-            if((dacDevice!=nullptr) && (dacDevice->SetShutter(newArmed)==HELIOS_SUCCESS)) {
+            // Do we need to check that dacDevice isn't null?
+            // Probably overkill.
+           // if((dacDevice!=nullptr) &&
+            if(dacDevice->SetShutter(newArmed)==HELIOS_SUCCESS) {
                 armed = newArmed;
             }
         }
        
         
-		if(connected && isThreadRunning()) {
+		if(isThreadRunning()) {
             
 			// is there a new frame?
 			// if so, store it
 			bool dacReady = false;
 			int status = 0;
-				
+            
+            // keep checking for new frames as long as
+            // the dac isn't ready for new frames.
 			while((!dacReady) && isThreadRunning())  {
-				// if we're in frame mode or we don't have a next frame let's pull another frame off the buffer
-				// (means that we only skip frames in frame mode)
-				if( (frameMode || nextFrame==nullptr) &&
+				// if we're in frame mode we want to check for
+                // a new frame every time.
+                //
+                // if we're not in frame mode then we only want
+                // to check for a new frame if we've run out of frames.
+                //
+                // If either of these things are true then let's
+                // pull another frame off the buffer.
+                //
+				// This means that we only skip frames in frame mode,
+                // so if we're not, there's a danger that we could
+                // build up a huge buffer of frames. This should be checked
+                // in sendPoints, although
+                //
+                // note that it's a while, not an if, so we keep pulling off
+                // frames as long as there is a new one - that way we
+                // don't get a build up of frames
+				while( (frameMode || nextFrame==nullptr ) &&
 					 (framesChannel.tryReceive(newFrame)) ) {
+                    // we have a new frame, so delete the old one and store it
 					if(nextFrame!=nullptr) {
-						nextFrame = releaseFrame(nextFrame);
+						deleteFrame(nextFrame);
 					}
 					nextFrame = newFrame;
 				}
 				yield(); 
-				//float time = ofGetElapsedTimef();
-				if(dacDevice!=nullptr) status = dacDevice->GetStatus();
+				
+                // Is the dac ready for a new frame?
+				//if(dacDevice!=nullptr)
+                status = dacDevice->GetStatus();
 				
 				yield(); 
 				dacReady = (status == 1);
-				
-				if(!dacReady) {
-
+                if(status==1) {
+                    dacReady = true;
+                    setConnected(true);
+                } else {
+                    // if we have an actual error...
 					if(status<0) {
                         ofLog(OF_LOG_NOTICE, "heliosDac.getStatus error: "+ ofToString(status));// +" " + ofToString(ofGetElapsedTimef()-time));
-					}
+                        
+                        // if the error is -5001 or -1002
+                        // then i think it's game over and we have to
+                        // concede defeat.
+                        setConnected(false);
+                    } else {
+                        setConnected(true);
+                    }
 					yield();
 				}
 				
 				//yield();
 			}
-			// if we got to here then the dac is ready but we might not have a
-			// currentFrame yet...
+            
+            // We know now that the dac is ready for a new
+            // frame.
+            
+			// if we have a new frame
 			if(nextFrame!=nullptr) {
+                // clear the existing frame
 				if(currentFrame!=nullptr) {
-					releaseFrame(currentFrame);
+					deleteFrame(currentFrame);
 				}
+                // and get the next frame
 				currentFrame = nextFrame;
 				nextFrame = nullptr;
-			}
-			if(currentFrame!=nullptr) {
-				int result =  0;
-				int attempts = 0; 
-				if(dacDevice!=nullptr) {
-					while((attempts<10) && (result!=HELIOS_SUCCESS)) {
-						result = dacDevice->SendFrame(pps, HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
-						attempts++; 
-						yield(); 
-					}
-				}
-				// if we're not in frame mode then delete the points
-				if((result == HELIOS_SUCCESS) && (!frameMode) ) {
-					currentFrame=releaseFrame(currentFrame);
-				}
-				
-				//ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame : "+ ofToString(result));
-				if(result <=-5000){ // then we have a USB connection error
-					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. LIBUSB error : "+ ofToString(result));
-					//if(result!=-5007) setConnected(false); // time out error
-				} else if(result!=HELIOS_SUCCESS) {
-					ofLog(OF_LOG_NOTICE, "heliosDac.WriteFrame failed. Error : "+ ofToString(result));
-					//setConnected(false);
-				} else {
-					//setConnected(true);
-				}
-			} else {
-				//ofLogError("DacHelios - run out of points!");
-			}
-		} else {
+            }
             
- 
-			// TODO : handle reconnection better
-			// try to reconnect!
+            // if we didn't get a new frame, we might
+            // still have a currentframe if the last
+            // time round it failed after 10 attempts
+            
+            if(currentFrame!=nullptr) {
 			
-			if(isThreadRunning()) {
-				if(lock()) {
-					if(connectToDevice(deviceName)) {
-						setConnected(true);
-					
-						unlock();
-					} else {
-						unlock();
-						// wait five seconds and try again
-						for(size_t i = 0; (i<10)&&(isThreadRunning()); i++ ) {
-							sleep(50);
-						}
-					}
-				}
-				yield();
+				int result =  0;
+				int attempts = 0;
+                
+                // let's attempt to send the points
+                while((attempts<10) && (result!=HELIOS_SUCCESS) && isThreadRunning()) {
+                
+                   
+                    // if we're in frame mode, send the points
+                    // with the default flags - this means that
+                    // the Helios will automatically replay the
+                    // frame until it gets a new one.
+                    //
+                    // This is different from other Dacs where
+                    // we manage that replay system ourself, but
+                    // the Helios seems happiest this way.
+                    //
+                    // If we're not in frame mode then just send
+                    // the frame in single mode.
+                    
+                    result = dacDevice->SendFrame(pps, frameMode ? HELIOS_FLAGS_DEFAULT : HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+                    
+                    if(result!=HELIOS_SUCCESS) {
+                        ofLogNotice("LaserDacHelios thread SendFrame attempt " + ofToString(attempts) + " failed - error " + ofToString(result));
+                    }
+                    attempts++;
+                    yield();
+                }
+            
+				// if the frame was sent successfully, delete it!
+				if(result == HELIOS_SUCCESS){ 
+					currentFrame=deleteFrame(currentFrame);
+                    setConnected(true);
+                } else {
+                    setConnected(false);
+                }
 				
 			}
-			
+            
 		}
 	}
 
@@ -312,17 +371,18 @@ void DacHelios :: setConnected(bool state) {
 		connected = state;
 		if(!connected) {
 			//heliosManager.deviceDisconnected(deviceName);
-			armed = !newArmed;
-			heliosManager.deleteDevice(dacDevice);
-			dacDevice = nullptr;
+			//armed = !newArmed;
+			//heliosManager.deleteDevice(dacDevice);
+			//dacDevice = nullptr;
 		}
+        unlock();
 		ofLogNotice("Helios Dac changed connection state : "+ofToString(connected));
-		unlock();
+		
 		
 	}
 }
 
-
+// object pooling system
 DacHeliosFrame* DacHelios :: getFrame() {
 	DacHeliosFrame* returnframe;
 	
@@ -337,7 +397,7 @@ DacHeliosFrame* DacHelios :: getFrame() {
 	}
 		
 }
-DacHeliosFrame* DacHelios :: releaseFrame(DacHeliosFrame* frame){
+DacHeliosFrame* DacHelios :: deleteFrame(DacHeliosFrame* frame){
 	//delete frame;
 	//
 	spareFrames.send(frame);
