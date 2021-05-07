@@ -1,3 +1,5 @@
+![ofxLaser logo](https://github.com/sebleedelisle/ofxLaser/blob/main/github_preview.png?raw=true)
+
 ofxLaser
 =========
 
