@@ -1,4 +1,4 @@
-ofxLaser Legacy version for openFrameworks v0.11.x
+ofxLaser
 =========
 
 An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Helios, Laserdock/LaserCube, but more DACs to be added in the future.
