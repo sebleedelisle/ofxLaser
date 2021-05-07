@@ -21,6 +21,7 @@ Version **1.0 beta** is now available. This is a significant upgrade from previo
 API changes
 * No laser set up required in code any more. laser.setup(), laser.initGui no longer needed. 
 * Terminology has been changed from "projector" to "laser" to avoid confusing with newcomers used to working with conventional projectors
+* Adding lasers, assigning zones and editing masks is now all done within the app's GUI. No need for laser.addProjector(), laser.addZone(), laser.addZoneToProjector(), etc. 
 
 
 Usage 
@@ -50,36 +51,36 @@ drawLine(start,  end, colour, profile);
 Draws a line to the laser(s). 
 returns : void
 parameters : 
-    start : *glm::vec2, glm::vec3 or ofPoint* - the start position of the line
-    end : *glm::vec2, glm::vec3 or ofPoint* - the end position of the line
-    colour : *ofColor* the colour of the line
-    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+    : start : *glm::vec2, glm::vec3 or ofPoint* - the start position of the line
+    : end : *glm::vec2, glm::vec3 or ofPoint* - the end position of the line
+    : colour : *ofColor* the colour of the line
+    : profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
 
 drawLine( x1,  y1,  x2,  y2, colour, profile);
 Draws a line to the laser(s). 
 returns : void
 parameters : 
-    x1, y1, x2, y2 : *floats*, start and end coordinates for the line. 
-    colour :  *ofColor* the colour of the line
-    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+    - x1, y1, x2, y2 : *floats*, start and end coordinates for the line. 
+    - colour :  *ofColor* the colour of the line
+    - profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
 
 drawDot(position, colour, intensity, profile);
 Draws a dot to the laser(s). This can also be used to make beam effects. Use the intensity to change the brightness - this changes how long the laser lingers to make the point so is more efficient than darkening the colour.  
 returns : void
 parameters : 
-    position : *glm::vec2, glm::vec3 or ofPoint* - the  position of the dot
-    colour : *ofColor* the colour of the dot 
-    intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
-    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+    - position : *glm::vec2, glm::vec3 or ofPoint* - the  position of the dot
+    - colour : *ofColor* the colour of the dot 
+    - intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
+    - profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
 
 drawDot( x,  y, colour,  intensity, profile);
 As above but with separate x and y values instead of a point object. 
 returns : void
 parameters : 
-    x, y : *floats* - the x and y position of the dot
-    colour : *ofColor* the colour of the dot 
-    intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
-    profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
+    - x, y : *floats* - the x and y position of the dot
+    - colour : *ofColor* the colour of the dot 
+    - intensity : (optional) *float* a unit value (0-1) defining the brightness of the dot. 
+    - profile : (optional) the render profile, use one of the profile defintions (defaults to the default profile)
     
 drawCircle(x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
 drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
