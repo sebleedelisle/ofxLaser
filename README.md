@@ -5,7 +5,7 @@ ofxLaser
 
 An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Helios, Laserdock/LaserCube, but more DACs to be added in the future.
 
-[![Seb Lee showreel](https://img.youtube.com/vi/l2lMqerYE78/0.jpg)](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel")
+[![Seb Lee showreel](https://github.com/sebleedelisle/ofxLaser/blob/main/video_thumbnail.png?raw=true)](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel")
 
 All of the projects in the showreel were made with ofxLaser and openFrameworks. 
 
