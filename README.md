@@ -163,7 +163,9 @@ Roadmap
 
 Licence
 -------
-The code in this repository is available under the [Apache2.0 Licence](http://www.apache.org/licenses/LICENSE-2.0).  
+Licence
+-------
+The code in this repository is available under the [MIT License](https://secure.wikimedia.org/wikipedia/en/wiki/Mit_license).  
 Copyright (c) 2012-2021 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.co](https://seblee.co)
 
 Installation
