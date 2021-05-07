@@ -287,6 +287,21 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
 	
 }
 
+
+void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string renderProfile) {
+    
+    auto & polylines = graphic.polylines;
+    auto & colours = graphic.colours;
+    
+    for(size_t i= 0; i<polylines.size(); i++) {
+        ofColor col = colours[i];
+        col*=brightness;
+        drawPoly(*polylines[i],col, renderProfile);
+        
+    }
+    
+}
+
 void ManagerBase:: update(){
 	if(doArmAll) armAllLasers();
 	if(doDisarmAll) disarmAllLasers();
@@ -442,7 +457,7 @@ void ManagerBase::initAndLoadSettings() {
     ofxLaser::UI::setupGui();
    
 	params.setName("Laser");
-	params.add(globalBrightness.set("Global brightness", 0.1,0,1));
+	params.add(globalBrightness.set("Global brightness", 0.2,0,1));
 	params.add(showLaserSettings.set("Edit laser", false));
 	params.add(testPattern.set("Global test pattern", 0,0,9));
 	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
@@ -496,18 +511,25 @@ void ManagerBase::testPatternAllLasers(int &pattern){
 }
 
 bool ManagerBase::loadSettings() {
-    ofJson json = ofLoadJson("laserSettings.json");
-    
+    ofJson json;
+    string filename ="laserSettings.json";
+    if(ofFile(filename).exists()) {
+        json = ofLoadJson("laserSettings.json");
+    }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
     
     // reset the global brightness setting, despite what was in the settings.
-    globalBrightness = 0.1;
+    globalBrightness = 0.2;
 
     
     // load the zone config files
     
-    ofJson zonesJson = ofLoadJson("zones.json");
+    ofJson zonesJson;
+    filename ="zones.json";
+    if(ofFile(filename).exists()) {
+        zonesJson= ofLoadJson(filename);
+    }
     for(ofJson& zoneJson : zonesJson) {
         zones.push_back(new Zone());
         zones.back()->deserialize(zoneJson);

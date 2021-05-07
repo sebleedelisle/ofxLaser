@@ -10,6 +10,8 @@ public:
 	void update();
 	void draw();
 	
+    ofPolyline makeStarPolyline(int numsides);
+    
 	void keyPressed(ofKeyEventArgs& e);
     
 	ofxLaser::Manager laser;

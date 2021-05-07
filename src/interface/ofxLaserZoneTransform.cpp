@@ -658,7 +658,7 @@ bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 			dstHandles[i].x = point[0];
 			dstHandles[i].y = point[1];
 			dstHandles[i].z = 0;
-            cout << "setting handle " << i << " : " << dstHandles[i] << endl;
+            //cout << "setting handle " << i << " : " << dstHandles[i] << endl;
 			
 		}
 	}

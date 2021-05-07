@@ -10,6 +10,12 @@
 bool SVGLoader::isLoading = false;
 deque<SVGLoader*> SVGLoader::loadQueue;
 
+SVGLoader::~SVGLoader() {
+    //stopThread();
+    if(isThreadRunning()) waitForThread();
+    
+};
+
 int SVGLoader:: startLoad(string path) {
     
     dir = ofDirectory(path);
@@ -27,14 +33,14 @@ int SVGLoader:: startLoad(string path) {
 	
 	frames.resize(files.size());
 	
-	loadCount = 0;
+	loadedCount = 0;
 	
-	int size = (int)files.size();
+    totalFileCount = (int)files.size();
 
 	SVGLoader::addToQueue(this); 
 	SVGLoader::startQueueLoading();
 	
-	return size; 
+	return totalFileCount;
 }
 void SVGLoader::threadedFunction() {
 	
@@ -42,7 +48,7 @@ void SVGLoader::threadedFunction() {
 	
 	string dataString;
 	int dupeCount = 0;
-	int loadedCount = 0;
+	loadedCount = 0;
 	
 	// load the file
 	for(size_t i = 0; i<files.size();i++) {
@@ -75,7 +81,8 @@ void SVGLoader::threadedFunction() {
 		//cout << file.getExtension() << endl;
 		
 		bool loadOptimised = false;
-		ofFile ofxlgfile(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg");
+        string optimisedFileName = file.getEnclosingDirectory()+"optimised/"+file.getBaseName()+".ofxlg";
+		ofFile ofxlgfile(optimisedFileName);
 		if(ofxlgfile.exists()) {
             if(!useLoadOptimisation) {
                 ofxlgfile.remove();
@@ -122,15 +129,15 @@ void SVGLoader::threadedFunction() {
                 ofJson json;
                 frames[i].serialize(json);
                 //cout << "Saving optimised file : " << file.getEnclosingDirectory()+file.getBaseName()+".ofxlg" << endl;
-                ofSavePrettyJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg", json);
+                ofSavePrettyJson(optimisedFileName, json);
             }
             
             unlock();
 
 		} else {
 			
-			//ofLogNotice("Loading ofxlg : " + file.getAbsolutePath());
-			ofJson json = ofLoadJson(file.getEnclosingDirectory()+file.getBaseName()+".ofxlg");
+			//ofLogNotice("Loading ofxlg : " + optimisedFileName);
+			ofJson json = ofLoadJson(optimisedFileName);
 			while(!lock()){
 				sleep(1);
 			}
@@ -140,13 +147,10 @@ void SVGLoader::threadedFunction() {
 		}
 		file.close();
         lock();
-		loadCount=(int)i+1;
+		loadedCount=(int)i+1;
         unlock();
         
-		loadedCount++;
-       
 
-	
 	}
 	dir.close();
 	while(!lock()){
@@ -165,7 +169,38 @@ void SVGLoader::threadedFunction() {
 	
 }
 
-void SVGLoader::replaceAll(string& data, string stringToFind, string stringToReplace){
+bool SVGLoader::hasFinishedLoading() {
+    return !isThreadRunning();
+}
+int SVGLoader :: getLoadedPercent(){
+    return ofMap(getLoadedCount(), 0, totalFileCount, 0, 100);
+}
+int SVGLoader :: getTotalFileCount(){
+    return totalFileCount;
+    
+}
+
+int SVGLoader :: getLoadedCount(){
+    int count;
+    
+    if(!isThreadRunning()) return loadedCount;
+       
+    if(lock()) {
+        count = loadedCount;
+        unlock();
+        return count;
+    } else {
+        return -1;
+    }
+}
+
+
+
+void SVGLoader :: setLoadOptimisation(bool value) {
+    useLoadOptimisation = value;
+}
+
+void SVGLoader :: replaceAll(string& data, string stringToFind, string stringToReplace){
 	
 	std::string::size_type n = 0;
 	while ( ( n = data.find( stringToFind, n ) ) != std::string::npos )
@@ -176,12 +211,6 @@ void SVGLoader::replaceAll(string& data, string stringToFind, string stringToRep
 	
 
 }
-//
-//string& SVGLoader::getSvgFilename(int index) {
-//	//if(svgs.size()==0) return;
-//	index = index %fileNames.size();
-//	return fileNames.at(index);
-//}
 
 ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 	if(isThreadRunning() && !lock()) {
@@ -193,7 +222,7 @@ ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 		if(index>=(int)frames.size()) index = (int)frames.size()-1;
 		if(index<0) index = 0;
 		
-		if((frames.size()!=0) && (loadCount>index)) {
+		if((frames.size()!=0) && (loadedCount>index)) {
 			returngraphic = &(frames.at(index));
 		}
 		
@@ -204,3 +233,62 @@ ofxLaser::Graphic&  SVGLoader::getLaserGraphic(int index) {
 	}
 }
 
+// STATIC :
+void SVGLoader::addToQueue(SVGLoader* svgloader) {
+    loadQueue.push_back(svgloader);
+}
+void SVGLoader::startQueueLoading() {
+    if(!isLoading) {
+        loadNext();
+        
+    }
+}
+void SVGLoader :: loadNext() {
+    if(loadQueue.size()>0) {
+        loadQueue[0]->startThread();
+        ofLog(OF_LOG_NOTICE, "SVGLoader load starting : " + loadQueue[0]->dir.getOriginalDirectory());
+        loadQueue.pop_front();
+        isLoading = true;
+    } else {
+        isLoading = false;
+    }
+}
+
+bool SVGLoader :: sortalgo(const ofFile& a, const ofFile& b) {
+    string aname = a.getBaseName(), bname = b.getBaseName();
+    return strcasecmp_withNumbers(aname.c_str(), bname.c_str()) < 0;
+}
+
+int SVGLoader :: strcasecmp_withNumbers(const char *void_a, const char *void_b) {
+    const char *a = void_a;
+    const char *b = void_b;
+    
+    if (!a || !b) { // if one doesn't exist, other wins by default
+        return a ? 1 : b ? -1 : 0;
+    }
+    if (isdigit(*a) && isdigit(*b)) { // if both start with numbers
+        char *remainderA;
+        char *remainderB;
+        long valA = strtol(a, &remainderA, 10);
+        long valB = strtol(b, &remainderB, 10);
+        if (valA != valB)
+            return valA - valB;
+        // if you wish 7 == 007, comment out the next two lines
+        else if (remainderB - b != remainderA - a) // equal with diff lengths
+            return (remainderB - b) - (remainderA - a); // set 007 before 7
+        else // if numerical parts equal, recurse
+            return strcasecmp_withNumbers(remainderA, remainderB);
+    }
+    if (isdigit(*a) || isdigit(*b)) { // if just one is a number
+        return isdigit(*a) ? -1 : 1; // numbers always come first
+    }
+    while (*a && *b) { // non-numeric characters
+        if (isdigit(*a) || isdigit(*b))
+            return strcasecmp_withNumbers(a, b); // recurse
+        if (tolower(*a) != tolower(*b))
+            return tolower(*a) - tolower(*b);
+        a++;
+        b++;
+    }
+    return *a ? 1 : *b ? -1 : 0;
+}

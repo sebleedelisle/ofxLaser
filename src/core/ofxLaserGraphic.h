@@ -7,16 +7,17 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxLaserManagerBase.h"
+//#include "ofxLaserManagerBase.h"
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
 #include "ofxSvgExtra.h"
 
 namespace ofxLaser {
 
-// contains vector of polylines and colours
-// also a render function that sends them to the laser
 
+class ManagerBase;
+
+// contains vector of polylines and colours
 class Graphic {
 	
 	public:
@@ -69,7 +70,7 @@ class Graphic {
 	
 	void replacePolylines(vector<ofPolyline*>& newpolys, vector<ofColor>&newcolours);
 
-	void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
+	
 	
     void clear();
     
@@ -90,10 +91,6 @@ class Graphic {
 	// returns false if lines aren't touching
 	bool joinPolylines(ofPolyline& poly1, ofPolyline& poly2);
 	
-	// a boolean subtract operation - affects all polys
-	//void subtractShapeFromPolylines(const ofPolyline& polyToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
-	//void subtractShapesFromPolylines(const vector<ofPolyline*>& polysToSubtract, vector<ofPolyline*>& polys, vector<ofColor>& colours);
-
 	void subtractPathFromPolylines(ofPath& sourcepath);
 	bool pointInsidePath(glm::vec3 point, ofPath& path);
 	
@@ -103,11 +100,14 @@ class Graphic {
 	ofPath transformPath(ofPath& path);
 	
 	glm::vec3 gLProject(glm::vec3& v);
-
 	
 	// returns angle of difference or 360 if they are not touching
 	float comparePolylines(ofPolyline& poly1, ofPolyline& poly2);
 	float getAngleBetweenPoints(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3);
+    
+    // ----------------------- DEPRECATED ------------------------------
+    
+    OF_DEPRECATED_MSG("ofxLaser::Graphic::renderToLaser(laser, brightness, profile) - has been moved into the LaserManager class - use laserManager", void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = ""));
 	
 	vector<ofPolyline*> polylines;
 	vector<ofColor> colours;

@@ -18,7 +18,7 @@
 #include "ofxLaserCircle.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserBitmapMaskManager.h"
-
+#include "ofxLaserGraphic.h"
 #include "ofxLaserLaser.h"
 #include "ofxLaserPresetManager.h"
 
@@ -98,6 +98,8 @@ class ManagerBase {
     void drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     void drawCircle(const glm::vec2& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
    
+    void drawLaserGraphic(Graphic& graphic, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
+    
     vector<Laser*>& getLasers();
     Laser& getLaser(int index = 0);
     int getNumLasers() { return (int)lasers.size(); };

@@ -27,12 +27,10 @@ public:
 	
 	int numLaserEffects; 
 	
-	ofxLaser::Manager laser;
+	ofxLaser::Manager laserManager;
 	
 	bool drawingShape = false;
-	int laserWidth;
-	int laserHeight;
-    
+	 
 	std::vector<ofPolyline> polyLines;
 		
 	float elapsedTime;

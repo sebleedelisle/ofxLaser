@@ -814,13 +814,13 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::PopItemWidth();
     
     if(laser->hasDac()) {
-        if(ImGui::Button("Disconnect DAC")) {
+        if(ImGui::Button("Disconnect controller")) {
             dacAssigner.disconnectDacFromLaser(*laser);
         }
         ImGui::SameLine();
     }
     
-    if(ImGui::Button("Refresh DAC list")) {
+    if(ImGui::Button("Refresh controller list")) {
         dacAssigner.updateDacList();
         
     }

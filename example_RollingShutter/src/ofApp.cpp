@@ -11,21 +11,17 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
-	laserWidth = 800;
-	laserHeight = 800;
-	laser.setup(laserWidth, laserHeight);
 	startTime = 0;
 
-	laser.addProjector();
-
-	laser.addCustomParameter(startOffset.set("start offset", 0, 0,500));
-	laser.addCustomParameter(endOffset.set("end offset", 0, 0,500));
-	laser.addCustomParameter(pointsPerFrame.set("points per frame", 1000, 900,1100));
-	laser.addCustomParameter(beamPos.set("beam pos", 0.5,0,1));
-	laser.addCustomParameter(timeSpeed.set("time speed", 1,0.01,2));
+    laserManager.getLaser(0).pps = 25000; // set this to be 1000 x your frame rate
+    
+	laserManager.addCustomParameter(startOffset.set("start offset", 0, 0,500));
+	laserManager.addCustomParameter(endOffset.set("end offset", 0, 0,500));
+	laserManager.addCustomParameter(pointsPerFrame.set("points per frame", 1000, 900,1100));
+	laserManager.addCustomParameter(beamPos.set("beam pos", 0.5,0,1));
+	laserManager.addCustomParameter(timeSpeed.set("time speed", 1,0.01,2));
 	points.resize(pointsPerFrame);
 	
-    laser.initGui();
     currentLaserEffect = 0;
     numLaserEffects = 7;
 		
@@ -35,15 +31,15 @@ void ofApp::setup(){
 void ofApp::update(){
     
 	float deltaTime = ofGetLastFrameTime();
-	pointsToSend+= deltaTime*laser.getProjector(0).getPointRate();
+    pointsToSend+= deltaTime*laserManager.getLaserPointRate(0);
 	elapsedTime+=(deltaTime*timeSpeed);
 	
     // prepares laser manager to receive new points
-    laser.update();
+    laserManager.update();
 	
 	while(pointsToSend>points.size()) {
 		
-		laser.sendRawPoints(points);
+		laserManager.sendRawPoints(points);
 		pointsToSend-=points.size();
 	}
 	
@@ -70,11 +66,11 @@ void ofApp::draw() {
 		
 	}
 	
-    laser.drawUI();
+    laserManager.drawUI();
     
-    if(laser.currentProjector==-1) {
+    if(!laserManager.isAnyLaserSelected()) {
         
-        int ypos = (laserHeight*laser.previewScale)+(laser.guiSpacing*2);
+        int ypos = 816;
         ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
         ofDrawBitmapString("TAB to change view, F to toggle full screen", 400, ypos+=30);
         ofDrawBitmapString("Left and Right Arrows to change current effect", 400, ypos+=30);
@@ -85,8 +81,8 @@ void ofApp::draw() {
         ofSetLineWidth(2);
         mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
         ofPushMatrix();
-        ofTranslate(laser.guiSpacing, laser.guiSpacing);
-        ofScale(laser.previewScale);
+        //ofTranslate(laser.guiSpacing, laser.guiSpacing);
+        //ofScale(laser.previewScale);
         
         mesh.draw();
         ofPopMatrix();
@@ -97,12 +93,12 @@ void ofApp::draw() {
 void ofApp :: showLaserEffect(int effectnum) {
     
     
-	float left = laserWidth*0.1;
-	float top = laserHeight*0.1;
-	float right = laserWidth*0.9;
-	float bottom = laserHeight*0.9;
-	float width = laserWidth*0.8;
-	float height = laserHeight*0.8;
+	float left = laserManager.width*0.1;
+	float top = laserManager.height*0.1;
+	float right = laserManager.width*0.9;
+	float bottom = laserManager.height*0.9;
+	float width = laserManager.width*0.8;
+	float height = laserManager.height*0.8;
 	
 	switch (currentLaserEffect) {
 			
@@ -346,10 +342,7 @@ void ofApp::keyPressed(int key){
 		if(currentLaserEffect>=numLaserEffects) currentLaserEffect = 0;
 		startTime = elapsedTime;
 	}
-	if(key=='f') {
-        ofToggleFullscreen();
-	}
     if(key==OF_KEY_TAB) {
-        laser.nextProjector();
+        laserManager.selectNextLaser();
     }
 }

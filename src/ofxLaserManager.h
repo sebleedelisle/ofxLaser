@@ -41,6 +41,13 @@ class Manager : public ManagerBase {
     void setGuiVisible(bool visible);
     bool isGuiVisible();
     
+    
+    //----------- DEPRECATED ------------------------
+    
+    OF_DEPRECATED_MSG("ofxLaser::Manager::nextProjector - use selectNextLaser() ", void nextProjector());
+    OF_DEPRECATED_MSG("ofxLaser::Manager::previousProjector - use selectPreviousLaser() ", void previousProjector());
+
+    
     protected :
     int selectedLaser;
    

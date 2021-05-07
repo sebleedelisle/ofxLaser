@@ -29,7 +29,7 @@ public:
 	vector<ofxLaser::Graphic> laserGraphics;
 	 vector<string> fileNames; 
 	
-	ofxLaser::Manager laser;
+	ofxLaser::Manager laserManager;
 	
 	int laserWidth;
 	int laserHeight;

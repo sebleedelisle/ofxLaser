@@ -22,26 +22,10 @@ void ofApp::setup(){
 	
 	for(int i = 0; i<files.size();i++) {
         const ofFile & file = files.at(i);
-		
-		// note that we are using ofxSvgExtra rather than the basic
-		// ofxSVG - I have added some functionality to the SVG object
-		// and put in a pull request to oF, but in the meantime,
-		// we can use this surrogate custom SVG class.
-		
-		//ofxSVGExtra& svg = svgs[i];
-		
-        //svg.load(file.getAbsolutePath());
+
 		laserGraphics.emplace_back();
 		
-		// the ofxLaser::Graphic object is a way to manage a bunch
-		// of shapes for laser rendering, and it can load SVGs.
-		
-		// addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills)
-		// optimise : if true, will join similar line segments into conjoined paths
-		// (way faster to laser)
-		// subtractFills : if true, will subtract filled areas from shapes underneath
-		// this is important because otherwise, all our objects will appear transparent.
-	
+        // addSvgFromFile(string filename, bool optimise, bool subtractFills)
 		laserGraphics.back().addSvgFromFile(file.getAbsolutePath(), false, true);
 		
 		// this centres all the graphics
@@ -52,20 +36,17 @@ void ofApp::setup(){
     }
     
 		
-    laser.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
-    laser.addCustomParameter(currentSVGFilename.set("Filename"));
-	laser.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));
-    laser.addCustomParameter(rotate3D.set("Rotate 3D", true));
-    laser.addCustomParameter(renderProfileLabel.set("Render Profile name",""));
-    laser.addCustomParameter(renderProfileIndex.set("Render Profile", 1, 0, 2));
+    laserManager.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
+    laserManager.addCustomParameter(currentSVGFilename.set("Filename"));
+	laserManager.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));
+    laserManager.addCustomParameter(rotate3D.set("Rotate 3D", true));
+    laserManager.addCustomParameter(renderProfileLabel.set("Render Profile name",""));
+    laserManager.addCustomParameter(renderProfileIndex.set("Render Profile", 1, 0, 2));
     
     ofParameter<string> description;
-    description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
-    laser.addCustomParameter(description.set("Description", ""));
+    description.set("description", "INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
+    laserManager.addCustomParameter(description);
     
-   // laser.initGui();
-    
-	
     currentSVG = 0;
 	
 	 
@@ -73,7 +54,7 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-    laser.update();
+    laserManager.update();
 }
 
 
@@ -99,7 +80,7 @@ void ofApp::draw() {
 	
     currentSVGFilename = fileNames[currentSVG];
 	
-    laser.beginDraw();
+    laserManager.beginDraw();
     
     ofPushMatrix();
 
@@ -110,14 +91,14 @@ void ofApp::draw() {
         ofRotateYDeg(angle);
     }
     if(laserGraphics.size()>currentSVG) {
-		laserGraphics[currentSVG].renderToLaser(laser, 1, renderProfile);
+		laserManager.drawLaserGraphic(laserGraphics[currentSVG], 1, renderProfile);
     }
     ofPopMatrix();
     
-    laser.endDraw();
+    laserManager.endDraw();
     
-    laser.send();
-    laser.drawUI();
+    laserManager.send();
+    laserManager.drawUI();
 	
 }
 
@@ -136,6 +117,6 @@ void ofApp::keyPressed(int key){
 		if(currentSVG>=laserGraphics.size()) currentSVG = 0;
 	}
     
-    if(key==OF_KEY_TAB) laser.nextProjector();
+    if(key==OF_KEY_TAB) laserManager.selectNextLaser();
 
 }

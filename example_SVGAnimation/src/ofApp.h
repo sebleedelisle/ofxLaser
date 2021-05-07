@@ -16,7 +16,7 @@ class ofApp : public ofBaseApp{
     void keyPressed(int key);
     
     
-    ofxLaser::Manager laser;
+    ofxLaser::Manager laserManager;
     SVGLoader svgLoader; 
     
     

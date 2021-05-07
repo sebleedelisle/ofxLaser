@@ -22,6 +22,7 @@ void ofApp::setup(){
 	laserManager.addCustomParameter(colour.set("Colour", ofColor(0, 255, 0), ofColor(0), ofColor(255)));
     
     ofParameter<string> description;
+    description.setName("description"); 
     description.set("INSTRUCTIONS : \nTAB to toggle output editor \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
     laserManager.addCustomParameter(description);
     

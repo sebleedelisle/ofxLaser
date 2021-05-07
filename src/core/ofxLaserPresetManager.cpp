@@ -37,25 +37,26 @@ PresetManager :: PresetManager() {
 void PresetManager :: loadPresets() {
     // open directory
     ofDirectory dir = ofDirectory("scannerpresets");
-    dir.listDir();
-  
-    //only show svg files
-    dir.allowExt("json");
-    //populate the directory object
-    dir.listDir();
-    const vector<ofFile>& allFiles = dir.getFiles();
-    dir.close();
-    
-    // iterate through files
-    
-    for(auto file : allFiles) {
-        ScannerSettings settings;
-        ofJson json = ofLoadJson("scannerpresets/"+file.getFileName());
-        settings.deserialize(json);
-        addPreset(settings);
+    if(dir.exists()) {
+        dir.listDir();
+      
+        //only show svg files
+        dir.allowExt("json");
+        //populate the directory object
+        dir.listDir();
+        const vector<ofFile>& allFiles = dir.getFiles();
+        dir.close();
         
+        // iterate through files
+        
+        for(auto file : allFiles) {
+            ScannerSettings settings;
+            ofJson json = ofLoadJson("scannerpresets/"+file.getFileName());
+            settings.deserialize(json);
+            addPreset(settings);
+            
+        }
     }
-    
     // addPreset to List
     // close directory
     // if no presets loaded make a default preset
