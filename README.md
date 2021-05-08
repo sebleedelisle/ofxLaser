@@ -5,9 +5,11 @@ ofxLaser
 
 An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Helios, Laserdock/LaserCube, but more DACs to be added in the future.
 
+Comprehensive multi-laser support, limited only by your CPU. 
+
 [![Seb Lee showreel](https://github.com/sebleedelisle/ofxLaser/blob/main/video_thumbnail.png?raw=true)](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel")
 
-All of the projects in the showreel were made with ofxLaser and openFrameworks. 
+Every project in the [showreel](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel") were made with ofxLaser and openFrameworks. 
 
 Safety Notice
 =============
@@ -19,10 +21,10 @@ Major Update May 2021
 ==================
 
 Version **1.0 beta** is now available. This is a significant upgrade from previous versions. 
-* Advanced GUI that uses DearIMGui
-* All laser set up is done within the compiled app and saved to config files
+* Advanced GUI that uses DearImGui
+* All lasers, zones and masks are set up within compiled app's UI and saved to config files
 * Much simpler set up in code, see examples
-* Automatic detection of laser controllers (DACs), including etherdream, Helios, and LaserCube
+* Automatic discovery of laser controllers (DACs), with support for Ether Dream, Helios, and LaserCube / LaserDock
 
 API changes
 * No laser set up required in code any more. laser.setup(), laser.initGui no longer needed. 
@@ -32,24 +34,23 @@ API changes
 Summary
 -----------
 
-The system is primarily designed to render graphics to one or more lasers. Conceptually we have an input canvas, and we draw everything into that. Within the canvas we can define one or more input zones, and choose which lasers each one is sent to. Each zone can be sent to one or more lasers, and the output for that zone can be adjusted for size and perspective within the app's UI. 
-
+The system is primarily designed to render graphics to one or more lasers. Conceptually we have an input canvas, and we draw everything into that. Within the canvas we can define one or more input zones that can be assigned to one or more lasers. The output for the zones can be adjusted for size and perspective. 
 
 The default size of the canvas is 800,800 but you can change it using ofxLaser::Manager::setCanvasSize(width, height). 
 
 ofxLaser features
 ----------
 * Can draw any vector shape to lasers with simple function calls
-* Shapes are sorted in real-time to find the optimal path for the laser
+* Shapes are sorted to find the optimal path for the laser
 * Automatic laser controller detection
-* Can control multiple lasers (has been tested with 16 lasers and is limited only by CPU and network speed)
-* Masking of individual areas with varying levels 
-* Many calibration options for blanking - colour change offset, pre/post blanks, pre/post on points
+* Comprehensive multiple laser support (has been tested with 16 lasers and is limited only by CPU and network speed)
+* Masking system to provide blank areas within the laser output 
+* Many calibration options for blanking - colour change shift, pre/post blanks, pre/post on points
 * Specify laser speed and acceleration for each shape using "render profiles" 
 * Output zone transformation for projection mapping and to compensate for perspective distortion
 * Multiple zones can be sent to multiple projectors and individually warped for mapping onto separate planes
 * Colour calibration system to compensate for laser power to brightness curves
-* Full rewrite of the Etherdream library using Poco sockets, very reliable
+* Full rewrite of the Ether Dream library using Poco sockets, very reliable
 * Shapes take into account the current transformation matrix, so works with ofTransform, ofRotate, and ofScale
 * Works with 3D co-ordinates and shapes
 * Cross platform - developed on OSX, but also tested on Windows and Linux
@@ -181,7 +182,7 @@ The current main branch works with [openFrameworks](https://openframeworks.cc) v
 
 * OF 0.11.x [main](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/main](https://github.com/sebleedelisle/ofxLaser/) 
 
-
+Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder. 
 Either clone the source code using git:
 
 	> cd openFrameworks/addons/
@@ -192,8 +193,8 @@ Or download the source from GitHub [here](https://github.com/sebleedelisle/ofxLa
 To run the examples, import them into the project generator, create a new project, and open the project file in your IDE.
 
 Legacy versions (no longer supported): 
-* OF 0.11.x: use [ofxLaser/of_0.11.2](https://github.com/sebleedelisle/ofxLaser/tree/of_9.10.1)
-* OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_9.10.1) 
+* OF 0.11.x: use [ofxLaser/of_0.11.2](https://github.com/sebleedelisle/ofxLaser/tree/of_11.0.2)
+* OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_10.0.1) 
 * OF 0.9.x : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
 Dependencies
