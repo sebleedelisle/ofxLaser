@@ -1,7 +1,7 @@
 # This file allows testing your addon using travis CI servers to use it you'll need to
-# create an account in travis.org and enable your addon there. 
+# create an account in travis.org and enable your addon there.
 #
-# By default it will test linux 64bit and osx against the master and stable OF branches. 
+# By default it will test linux 64bit and osx against the master and stable OF branches.
 # Other platforms can be enabled by uncommenting the corresponding sections.
 #
 # If any extra install is needed to use the addon it can be included in the corresponding
@@ -14,6 +14,8 @@
 language: c++
 compiler: gcc
 sudo: true
+
+
 matrix:
   include:
   # fully specify builds, include can't dynamically expand matrix entries
@@ -23,7 +25,8 @@ matrix:
   - os: linux
     dist: trusty
     sudo: required
-    env: TARGET="linux64" OF_BRANCH="master"
+    env: BADGE=linux TARGET="linux64" OF_BRANCH="master"
+    compiler: gcc
     addons:
       apt:
         sources:
@@ -33,167 +36,21 @@ matrix:
           - g++-4.9
           - gdb
 
-# Linux 64bit, OF stable:  Not supported yet
-#  - os: linux
-#    dist: trusty
-#    sudo: required
-#    env: TARGET="linux64" OF_BRANCH="stable"
-#    addons:
-#      apt:
-#        sources:
-#          - ubuntu-toolchain-r-test
-#        packages:
-#          - gcc-4.9
-#          - g++-4.9
-#          - gdb
-
 # OSX, OF master
   - os: osx
-    osx_image: xcode8
+    osx_image: xcode10.1
     compiler: clang
-    env: TARGET="osx" OF_BRANCH="master"
+    env: BADGE=osx TARGET="osx" OF_BRANCH="master"
 
-# OSX, OF stable:  Not supported yet
-#  - os: osx
-#    osx_image: xcode8
-#    compiler: clang
-#    env: TARGET="osx" OF_BRANCH="stable"
-
-# Linux ARM6, OF master: Uncomment following lines to enable 
-#  - os: linux
-#    sudo: required
-#    dist: trusty
-#    env: TARGET="linuxarmv6l" OF_BRANCH="master"
-
-
-# Linux ARM6, OF stable:  Not supported yet
-#  - os: linux
-#    sudo: required
-#    dist: trusty
-#    env: TARGET="linuxarmv6l" OF_BRANCH="stable"
-
-# Linux ARM7, OF master: Uncomment following lines to enable 
-#  - os: linux
-#    sudo: false
-#    env: TARGET="linuxarmv7l" OF_BRANCH="master"
-#    cache:
-#      directories:
-#        - ~/rpi2_toolchain
-#        - ~/firmware-master
-#        - ~/archlinux
-
-# Linux ARM7, OF stable:  Not supported yet
-#  - os: linux
-#    sudo: false
-#    env: TARGET="linuxarmv7l" OF_BRANCH="stable"
-#    cache:
-#      directories:
-#        - ~/rpi2_toolchain
-#        - ~/firmware-master
-#        - ~/archlinux
-
-
-# Emscripten, OF master: Uncomment following lines to enable 
-#  - os: linux
-#    sudo: false
-#    env: TARGET="emscripten" OF_BRANCH="master"
-#    addons:
-#      apt:
-#        sources:
-#          - ubuntu-toolchain-r-test
-#        packages:
-#          - libstdc++6
-
-
-# Emscripten, OF stable: Not supported yet
-#  - os: linux
-#    sudo: false
-#    env: TARGET="emscripten" OF_BRANCH="stable"
-#    addons:
-#      apt:
-#        sources:
-#          - ubuntu-toolchain-r-test
-#        packages:
-#          - libstdc++6
-
-
-# iOS, OF master: Not supported yet
-#  - os: osx
-#    osx_image: xcode8
-#    compiler: clang
-#    env: TARGET="ios" OF_BRANCH="master"
-
-
-# iOS, OF stable: Not supported yet
-#  - os: osx
-#    osx_image: xcode8
-#    compiler: clang
-#    env: TARGET="ios" OF_BRANCH="stable"
-
-
-# tvOS, OF master: Not supported yet
-#  - os: osx
-#    osx_image: xcode8
-#    compiler: clang
-#    env: TARGET="tvos" OF_BRANCH="master"
-
-
-# tvOS, OF stable: Not supported yet
-#  - os: osx
-#    osx_image: xcode8
-#    compiler: clang
-#    env: TARGET="tvos" OF_BRANCH="stable"
-
-
-# Android armv7, OF master: Uncomment following lines to enable 
-#  - os: linux
-#    sudo: false
-#    env: TARGET="android" OPT="armv7" OF_BRANCH="master"
-#    cache:
-#      directories:
-#        - ~/android-ndk-r12b
-
-
-# Android armv7, OF stable: Not supported yet
-#  - os: linux
-#    sudo: false
-#    env: TARGET="android" OPT="armv7" OF_BRANCH="stable"
-#    cache:
-#      directories:
-#        - ~/android-ndk-r12b
-
-
-# Android x86, OF master: Uncomment following lines to enable 
-#  - os: linux
-#    sudo: false
-#    env: TARGET="android" OPT="x86" OF_BRANCH="master"
-#    cache:
-#      directories:
-#        - ~/android-ndk-r12b
-
-
-# Android x86, OF stable: Not supported yet
-#  - os: linux
-#    sudo: false
-#    env: TARGET="android" OPT="x86" OF_BRANCH="stable"
-#    cache:
-#      directories:
-#        - ~/android-ndk-r12b
-
-
-  # Exclude the default build that would otherwise be generated
-  # see https://github.com/travis-ci/travis-ci/issues/1228
-  exclude:
-    - compiler: gcc
 
 install:
   - cd ~
   - git clone --depth=1 --branch=$OF_BRANCH https://github.com/openframeworks/openFrameworks
   - cd openFrameworks
-  - travis_wait 40 scripts/ci/addons/install.sh
+  - scripts/ci/addons/install.sh
 
 script:
   - scripts/ci/addons/build.sh
 
 git:
-  depth: 10
+depth: 10
