@@ -349,8 +349,30 @@ void Manager::setDefaultHandleSize(float size) {
     
 }
 
-void Manager::addCustomParameter(ofAbstractParameter& param){
+void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettings){
     customParams.add(param);
+    if(loadFromSettings){
+        //loadJson.find("custom");
+        if(!loadJson.empty()) {
+            if(loadJson.contains("Laser")) {
+                if(loadJson["Laser"].contains("Custom")) {
+                   //     auto value = loadJson["Laser"]["Custom"][param.getName()];
+                    try {
+                        ofDeserialize(loadJson["Laser"]["Custom"], param);
+                    } catch(...) {
+                        
+                    }
+                    
+                }
+            }
+        }
+        //ofDeserialize(loadJson["custom"], param);
+        ofLogNotice(loadJson.dump(3));
+        ofLogNotice(loadJson["Laser"].dump(3));
+        ofLogNotice(loadJson["Laser"]["Custom"].dump(3));
+       ofLogNotice(loadJson["Laser"]["Custom"][param.getName()].dump(3));
+        
+    }
 }
 
 

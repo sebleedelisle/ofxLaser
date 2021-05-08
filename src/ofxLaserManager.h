@@ -16,7 +16,7 @@ class Manager : public ManagerBase {
     
     bool deleteLaser(Laser* laser) override;
     
-    void addCustomParameter(ofAbstractParameter& param);
+    void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
 
     
     void selectNextLaser();

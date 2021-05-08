@@ -511,7 +511,7 @@ void ManagerBase::testPatternAllLasers(int &pattern){
 }
 
 bool ManagerBase::loadSettings() {
-    ofJson json;
+    ofJson& json = loadJson;
     string filename ="laserSettings.json";
     if(ofFile(filename).exists()) {
         json = ofLoadJson("laserSettings.json");

@@ -36,7 +36,7 @@ void ofApp::setup(){
     }
     
 		
-    laserManager.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()));
+    laserManager.addCustomParameter(currentSVG.set("Current SVG", 0, 0, laserGraphics.size()-1));
     laserManager.addCustomParameter(currentSVGFilename.set("Filename"));
 	laserManager.addCustomParameter(scale.set("SVG scale", 1.0, 0.1,6));
     laserManager.addCustomParameter(rotate3D.set("Rotate 3D", true));
@@ -46,9 +46,6 @@ void ofApp::setup(){
     ofParameter<string> description;
     description.set("description", "INSTRUCTIONS : \nLeft and Right Arrows to change current SVG \nTAB to toggle output editor \nF to toggle full screen");
     laserManager.addCustomParameter(description);
-    
-    currentSVG = 0;
-	
 	 
 }
 

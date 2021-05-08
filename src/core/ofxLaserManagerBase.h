@@ -162,6 +162,7 @@ class ManagerBase {
     ofParameterGroup params;
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
+    ofJson loadJson;
     
     protected :
     ofFbo canvasPreviewFbo;
