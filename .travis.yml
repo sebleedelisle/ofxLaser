@@ -1,0 +1,127 @@
+
+# This file allows testing your addon using travis CI servers to use it you'll need to
+# create an account in travis.org and enable your addon there.
+#
+# By default it will test linux 64bit and osx against the master and stable OF branches.
+# Other platforms can be enabled by uncommenting the corresponding sections.
+#
+# If any extra install is needed to use the addon it can be included in the corresponding
+# install script in:
+#
+# scripts/ci/$TARGET/install.sh
+#
+
+
+language: c++
+compiler: gcc
+sudo: true
+
+
+matrix:
+  include:
+  # fully specify builds, include can't dynamically expand matrix entries
+  # relative order of sudo and env is important so that addons: is recognized
+
+# Linux 64bit, OF master
+  - os: linux
+    dist: trusty
+    sudo: required
+    env: BADGE=linux64 TARGET="linux64" OF_BRANCH="master"
+    compiler: gcc
+    addons:
+      apt:
+        sources:
+          - ubuntu-toolchain-r-test
+        packages:
+          - gcc-4.9
+          - g++-4.9
+          - gdb
+
+  # - os: linux
+  #   sudo: required
+  #   dist: trusty
+  #   env: BADGE=linuxarmv6l TARGET="linuxarmv6l"
+
+
+  # - os: linux
+  #   sudo: required
+  #   dist: trusty
+  #   env: BADGE=linuxarmv7l TARGET="linuxarmv7l"
+  #   cache:
+  #     directories:
+  #       - ~/.ccache
+
+
+  # - os: linux
+  #   sudo: required
+  #   dist: trusty
+  #   env: BADGE=emscripten TARGET="emscripten"
+  #   services:
+  #     - docker
+  #   before_install:
+  #     - docker run -dit --name emscripten -v $(pwd):/src trzeci/emscripten:sdk-incoming-64bit bash
+
+
+
+# OSX, OF master
+  - os: osx
+    osx_image: xcode9.4
+    compiler: clang
+    env: BADGE=osx TARGET="osx" OF_BRANCH="master"
+
+    # - os: osx
+    # osx_image: xcode9.4
+    # compiler: clang
+    # env: BADGE=ios TARGET="ios" OF_BRANCH="master"
+
+  # - os: osx
+  #   osx_image: xcode9.4
+  #   compiler: clang
+  #   env: BADGE=tvos TARGET="tvos"
+
+
+
+  # - os: linux
+  #   language: android
+  #   dist: trusty
+  #   sudo: required
+  #   env: BADGE=androidArm TARGET="android" NDK_DIR="android-ndk-r15c" GRADLE_TARGET="compileArm7DebugSources"
+  #   android:
+  #     components:
+  #       - build-tools-25.0.3
+  #       - android-25
+  #   cache:
+  #     directories:
+  #       - ~/.gradle
+  #       - ~/android-ndk-r15c
+
+  # - os: linux
+  #   language: android
+  #   dist: trusty
+  #   sudo: required
+  #   env: BADGE=androidX86 TARGET="android" NDK_DIR="android-ndk-r15c" GRADLE_TARGET="compileX86DebugSources"
+  #   android:
+  #     components:
+  #       - build-tools-25.0.3
+  #       - android-25
+  #   cache:
+  #     directories:
+  #       - ~/.gradle
+  #       - ~/android-ndk-r15c
+
+
+
+install:
+  - cd ~
+  - git clone --depth=1 --branch=$OF_BRANCH https://github.com/openframeworks/openFrameworks
+  - cd openFrameworks
+  - git clone --depth=1 --branch=master https://github.com/npisanti/ofxAudioFile addons/ofxAudioFile
+  - git clone --depth=1 --branch=master https://github.com/kylemcdonald/ofxFft addons/ofxFft
+
+  - travis_wait 30 scripts/ci/addons/install.sh
+
+script:
+  - scripts/ci/addons/build.sh
+
+git:
+  depth: 10
