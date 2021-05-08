@@ -9,7 +9,7 @@ Comprehensive multi-laser support, limited only by your CPU.
 
 [![Seb Lee showreel](https://github.com/sebleedelisle/ofxLaser/blob/main/video_thumbnail.png?raw=true)](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel")
 
-Every project in the [showreel](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel") were made with ofxLaser and openFrameworks. 
+Every project in the [showreel](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel") was made with ofxLaser and openFrameworks. 
 
 Safety Notice
 =============
