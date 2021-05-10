@@ -121,6 +121,8 @@ class Laser {
     int laserIndex;
     vector<LaserZone*> laserZones;
     
+    string savePath ="ofxLaser/lasers/";
+    
     ofParameterGroup params;
     ofParameter<bool> armed;
     ofParameter<int> pps;

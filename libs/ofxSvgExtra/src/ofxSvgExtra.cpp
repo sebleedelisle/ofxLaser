@@ -45,9 +45,9 @@ void ofxSVGExtra::load(std::string path){
 }
 
 void ofxSVGExtra::loadFromString(std::string stringdata, std::string urlstring){
-
-	if(increaseCompatibility) fixSvgText(stringdata);
-	
+    if(increaseCompatibility) fixSvgText(stringdata);
+    if(stringdata.empty()) return ;
+    
 	const char* data = stringdata.c_str();
 	int size = stringdata.size();
 	const char* url = urlstring.c_str();

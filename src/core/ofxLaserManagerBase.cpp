@@ -512,9 +512,9 @@ void ManagerBase::testPatternAllLasers(int &pattern){
 
 bool ManagerBase::loadSettings() {
     ofJson& json = loadJson;
-    string filename ="laserSettings.json";
+    string filename ="ofxLaser/laserSettings.json";
     if(ofFile(filename).exists()) {
-        json = ofLoadJson("laserSettings.json");
+        json = ofLoadJson("ofxLaser/laserSettings.json");
     }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
@@ -526,7 +526,7 @@ bool ManagerBase::loadSettings() {
     // load the zone config files
     
     ofJson zonesJson;
-    filename ="zones.json";
+    filename ="ofxLaser/zones.json";
     if(ofFile(filename).exists()) {
         zonesJson= ofLoadJson(filename);
     }
@@ -593,7 +593,7 @@ bool ManagerBase::saveSettings() {
     ofSerialize(json, params);
     
 
-    bool savesuccess = ofSavePrettyJson("laserSettings.json", json);
+    bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
     
 	for(size_t i= 0; i<lasers.size(); i++) {
         savesuccess &= lasers[i]->saveSettings();
@@ -609,7 +609,7 @@ bool ManagerBase::saveSettings() {
         zoneJson.push_back(jsonGroup);
     }
     
-    ofSavePrettyJson("zones.json", zoneJson);
+    ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
    
     
     return savesuccess;

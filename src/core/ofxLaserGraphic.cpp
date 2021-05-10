@@ -15,7 +15,6 @@ int Graphic::numGraphicsInMemory = 0;
 void Graphic :: addSvgFromFile(string filename, bool optimise, bool subtractFills) {
     filename = ofToDataPath(filename);
 
-  
     ofBuffer buffer = ofBufferFromFile(filename);
     
     addSvgFromString(buffer.getText(), optimise, subtractFills);
@@ -24,9 +23,12 @@ void Graphic :: addSvgFromFile(string filename, bool optimise, bool subtractFill
 
 void Graphic :: addSvgFromString(string data, bool optimise, bool subtractFills) {
 
-
     ofxSVGExtra svg;
     svg.loadFromString(data);
+    addSvg(svg, optimise, subtractFills);
+}
+
+void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
     
     const vector <ofPath> & paths = svg.getPaths();
     
@@ -43,9 +45,9 @@ void Graphic :: addSvgFromString(string data, bool optimise, bool subtractFills)
             }
         }
     }
+    
+    
 }
-
-
 void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	
 	if(polylines.size()==0) return;

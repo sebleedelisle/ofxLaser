@@ -36,7 +36,7 @@ PresetManager :: PresetManager() {
 
 void PresetManager :: loadPresets() {
     // open directory
-    ofDirectory dir = ofDirectory("scannerpresets");
+    ofDirectory dir = ofDirectory("ofxLaser/scannerpresets");
     if(dir.exists()) {
         dir.listDir();
       
@@ -51,7 +51,7 @@ void PresetManager :: loadPresets() {
         
         for(auto file : allFiles) {
             ScannerSettings settings;
-            ofJson json = ofLoadJson("scannerpresets/"+file.getFileName());
+            ofJson json = ofLoadJson("ofxLaser/scannerpresets/"+file.getFileName());
             settings.deserialize(json);
             addPreset(settings);
             
@@ -96,7 +96,7 @@ void PresetManager :: savePreset(string label, ScannerSettings& settings){
     ofJson presetJson;
     settings.serialize(presetJson);
     // save json
-    ofSavePrettyJson("scannerpresets/"+label+".json", presetJson);
+    ofSavePrettyJson("ofxLaser/scannerpresets/"+label+".json", presetJson);
     
 }
 

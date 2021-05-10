@@ -1298,7 +1298,8 @@ void Laser::paramsChanged(ofAbstractParameter& e){
 
 
 bool Laser::loadSettings(vector<Zone*>& zones){
-    ofJson json = ofLoadJson("lasers/laser" + ofToString(laserIndex)+".json");
+
+    ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
     ofDeserialize(json, params);
     
 
@@ -1312,7 +1313,7 @@ bool Laser::loadSettings(vector<Zone*>& zones){
         int zoneNum = (int)jsonitem;
         LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
         laserZones.push_back(laserZone);
-        ofJson laserZoneJson = ofLoadJson("lasers/laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
+        ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
 
         success &= laserZone->deserialize(laserZoneJson);
         
@@ -1344,14 +1345,14 @@ bool Laser::saveSettings(){
 
     maskManager.serialize(json);
     //cout << json.dump(3) << endl;
-    bool success = ofSavePrettyJson("lasers/laser"+ ofToString(laserIndex) +".json", json);
+    bool success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
 
     
     for(LaserZone* laserZone : laserZones) {
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
         
-        success &= ofSavePrettyJson("lasers/laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + ".json", laserzonejson);
+        success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + ".json", laserzonejson);
     }
     
     lastSaveTime = ofGetElapsedTimef(); 
