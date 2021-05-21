@@ -204,6 +204,7 @@ void Laser::addZone(Zone* zone, float srcwidth, float srcheight) {
     std::sort(laserZones.begin(), laserZones.end(), [](const LaserZone* a, const LaserZone* b) -> bool {
         return (a->getZoneIndex()<b->getZoneIndex());
     });
+    saveSettings();
      
 }
 
@@ -224,6 +225,8 @@ bool Laser :: removeZone(Zone* zone){
     // TODO Check cleanup
     laserZones.erase(it);
     delete laserZone;
+    
+    saveSettings();
     
     return true;
     

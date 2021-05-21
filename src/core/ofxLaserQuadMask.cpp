@@ -13,9 +13,17 @@ using namespace ofxLaser;
 QuadMask::QuadMask() : QuadGui() {
     maskLevel.set("Reduction amount", 100, 0,100);
     setColours(ofColor::red,ofColor::red,ofColor::red);
+    maskLevel.addListener(this, &QuadMask::maskLevelChanged);
     
     
 };
+
+QuadMask::~QuadMask() {
+    
+    maskLevel.removeListener(this, &QuadMask::maskLevelChanged);
+    
+    
+}
 void QuadMask::serialize(ofJson&json) {
     QuadGui::serialize(json);
     json["masklevel"] = (int)maskLevel;

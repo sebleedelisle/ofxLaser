@@ -66,6 +66,12 @@ void QuadGui::set(float x, float y, float w, float h) {
 void QuadGui::setConstrained(const ofRectangle &rect) {
     constrainRect = rect;
     constrained = true;
+    
+    ofRectangle intersection = rect.getIntersection(boundingBox);
+    if(intersection!=boundingBox) {
+        set(intersection);
+    }
+    
 }
 
 void QuadGui :: initListeners() {

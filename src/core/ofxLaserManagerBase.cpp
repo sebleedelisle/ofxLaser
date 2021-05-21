@@ -71,6 +71,11 @@ void ManagerBase :: setCanvasSize(int w, int h){
 	height = h;
 	laserMask.init(w,h);
     canvasPreviewFbo.allocate(w, h, GL_RGBA, 3);
+    ofRectangle canvasRectangle(0,0,w,h);
+    for(Zone* zone : zones) {
+        zone->setConstrained(canvasRectangle); 
+        
+    }
 }
 
 void ManagerBase::createAndAddLaser() {

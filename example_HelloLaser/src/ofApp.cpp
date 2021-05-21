@@ -10,7 +10,7 @@ void ofApp::setup(){
     // laser.setCanvasSize(int width, int height) - default is 800 x 800.
     
     starPoly = makeStarPolyline(4);
-   
+    
 }
 
 //--------------------------------------------------------------
