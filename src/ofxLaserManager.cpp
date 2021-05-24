@@ -48,7 +48,7 @@ int Manager::getSelectedLaser(){
     return selectedLaser;
 }
 void Manager::setSelectedLaser(int i){
-    if(selectedLaser!=i) {
+    if((selectedLaser!=i) && (i<numLasers)) {
         selectedLaser = i;
     }
 }
