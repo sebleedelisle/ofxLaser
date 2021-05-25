@@ -367,10 +367,10 @@ void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettin
             }
         }
         //ofDeserialize(loadJson["custom"], param);
-        ofLogNotice(loadJson.dump(3));
-        ofLogNotice(loadJson["Laser"].dump(3));
-        ofLogNotice(loadJson["Laser"]["Custom"].dump(3));
-       ofLogNotice(loadJson["Laser"]["Custom"][param.getName()].dump(3));
+        //ofLogNotice(loadJson.dump(3));
+        //ofLogNotice(loadJson["Laser"].dump(3));
+        //ofLogNotice(loadJson["Laser"]["Custom"].dump(3));
+        //ofLogNotice(loadJson["Laser"]["Custom"][param.getName()].dump(3));
         
     }
 }

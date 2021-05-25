@@ -178,7 +178,7 @@ bool Laser ::toggleArmed() {
 }
 
 void Laser:: ppsChanged(int& e){
-	ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
+	//ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
 	pps=round(pps/100)*100;
 	if(pps<=100) pps =100;
 	dac->setPointsPerSecond(pps);
