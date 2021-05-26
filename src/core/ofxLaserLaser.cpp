@@ -968,7 +968,8 @@ RenderProfile& Laser::getRenderProfile(string profilelabel) {
 deque<Shape*> Laser ::getTestPatternShapesForZone(LaserZone& laserZone) {
 	
 	deque<Shape*> shapes;
-    new Line(ofPoint(0,0), ofPoint(100,0),ofColor::red, OFXLASER_PROFILE_FAST);
+    if(testPattern==0) return shapes;
+   
 	Zone& zone = laserZone.zone;
 
 	ofRectangle& maskRectangle = laserZone.zoneMask;
