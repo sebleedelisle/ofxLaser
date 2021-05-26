@@ -1296,23 +1296,23 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 
 
 void Laser::paramsChanged(ofAbstractParameter& e){
-    saveSettings();
+    if(ignoreParamChange) return;
+    else saveSettings();
 }
 
 
 bool Laser::loadSettings(vector<Zone*>& zones){
-
+    ignoreParamChange = true;
     ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
     ofDeserialize(json, params);
     
-
     bool success = maskManager.deserialize(json);
     
     ofJson zoneNumJson = json["laserzones"];
     
     // if the json node isn't found then this should do nothing
     for(auto jsonitem : zoneNumJson) {
-        cout << (int) jsonitem << endl;
+        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
         int zoneNum = (int)jsonitem;
         LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
         laserZones.push_back(laserZone);
@@ -1321,12 +1321,13 @@ bool Laser::loadSettings(vector<Zone*>& zones){
         success &= laserZone->deserialize(laserZoneJson);
         
     }
-
+    ignoreParamChange = false;
     if(json.empty() || (!success)) {
         return false;
     } else {
         return true;
     }
+    
 }
 
 
@@ -1354,7 +1355,7 @@ bool Laser::saveSettings(){
     for(LaserZone* laserZone : laserZones) {
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
-        
+        //cout << "Laser::saveSettings() " << laserZone->getZoneIndex();
         success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + ".json", laserzonejson);
     }
     

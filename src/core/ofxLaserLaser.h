@@ -165,6 +165,7 @@ class Laser {
     int frameTimeHistorySize = 200;
     float frameTimeHistory[200];
     int frameTimeHistoryOffset = 0;
+    bool ignoreParamChange = false; 
 
     //-----------------------------------
     protected :
