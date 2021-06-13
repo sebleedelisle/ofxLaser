@@ -46,11 +46,11 @@ void DacManagerEtherdream :: threadedFunction() {
             int port;
             // Honestly I'm not sure what happens with multiple etherdreams...
             udpConnection.GetRemoteAddr(address, port);
-          //  std::cout << "----------------------------------------------------------------------"<< std::endl;
-          //  std::cout << "ip: " << address << " " << port << std::endl;
-            //std::cout << "Packet Size: " << newMessage << std::endl;
-            //std::cout << "UDP Packet: " << std::endl;
-            
+//            std::cout << "----------------------------------------------------------------------"<< std::endl;
+//            std::cout << "ip: " << address << " " << port << std::endl;
+//            std::cout << "Packet Size: " << numBytesReceived << std::endl;
+//            std::cout << "UDP Packet: " << std::endl;
+//
             unsigned long macAddress=0;
             int i = 0;
             for(i = 0; i < 6 ; i++) {
@@ -101,7 +101,7 @@ void DacManagerEtherdream :: threadedFunction() {
             
             
         }
-        sleep(500); 
+        sleep(10);
     }
             
      
@@ -119,6 +119,7 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
         
         // if we last got an update from the etherdream less
         // than two seconds ago, add it to the list.
+        //ofLogNotice("lastUpdateTime : " ) << (ofGetElapsedTimef() - ed.lastUpdateTime);
         if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
             daclist.emplace_back(getType(), id, ed.ipAddress);
         }

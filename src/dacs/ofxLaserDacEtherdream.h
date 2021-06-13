@@ -171,7 +171,7 @@ namespace ofxLaser {
         
 		
 	private:
-		void threadedFunction();
+		void threadedFunction() override;
 
 		inline bool sendBegin();
 		inline bool sendPrepare();
