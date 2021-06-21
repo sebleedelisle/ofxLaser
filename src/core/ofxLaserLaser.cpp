@@ -116,8 +116,10 @@ void Laser :: init() {
     laserparams.add(pps.set("Points per second", 30000,1000,80000));
     advanced.add(laserOnWhileMoving.set("Laser on while moving", false));
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
-	advanced.add(sortShapes.set("Optimise shape draw order", true));
-	advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
+    advanced.add(sortShapes.set("Optimise shape draw order", true));
+    advanced.add(newShapeSortMethod.set("Experimental shape sorting", true));
+    advanced.add(alwaysClockwise.set("Always clockwise sorting", true));
+    advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
 
@@ -609,64 +611,196 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 		return;
 	}
 	
-	vector<PointsForShape> allzoneshapepoints;
+	vector<PointsForShape> allzoneshapes;
 
 	// TODO add speed multiplier to getPointsForMove function
-	getAllShapePoints(&allzoneshapepoints, pixels, speedMultiplier);
+	getAllShapePoints(&allzoneshapes, pixels, speedMultiplier);
 	
-	vector<PointsForShape*> sortedshapepoints;
+	vector<PointsForShape*> sortedshapes;
 	
 	
 	// sort the point objects
-	if(allzoneshapepoints.size()>0) {
+	if(allzoneshapes.size()>0) {
 		bool reversed = false;
 		int currentIndex = 0;
 		float shortestDistance = INFINITY;
-		int nextDotIndex = -1;
+		int nextShapeIndex = -1;
+        
+        for(size_t i = 0; i<allzoneshapes.size(); i++) {
+            PointsForShape& shape = allzoneshapes[i];
+            float distance = laserHomePosition.squareDistance(shape.getStart());
+            if(distance<shortestDistance) {
+                reversed = shape.reversed;
+                shortestDistance = distance;
+                currentIndex = i;
+            }
+            distance = laserHomePosition.squareDistance(shape.getEnd());
+            if(distance<shortestDistance) {
+                reversed = !shape.reversed;
+                shortestDistance = distance;
+                currentIndex = i;
+            }
+        }
+        shortestDistance = INFINITY;
 
 		if(sortShapes) {
 			do {
 				
-				PointsForShape& shapePoints1 = allzoneshapepoints[currentIndex];
+                // get the shape object at the current index
+				PointsForShape& shapePoints1 = allzoneshapes[currentIndex];
 				
+                // set its tested flag to say we've checked it
 				shapePoints1.tested = true;
-				sortedshapepoints.push_back(&shapePoints1);
-				shapePoints1.reversed = reversed;
+                // add it to the list
+				sortedshapes.push_back(&shapePoints1);
+				// set its reversed flag - this is set during the
+                // previous iterative process to find the next shape
+                shapePoints1.reversed = reversed;
 				
+                // set the distance to infinity
 				shortestDistance = INFINITY;
-				nextDotIndex = -1;
+                // reset the next shape index in case we don't find any
+				nextShapeIndex = -1;
 				
-				
-				for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
+                // go through all the shapes
+				for(size_t i = 0; i<allzoneshapes.size(); i++) {
 					
-					PointsForShape& shapePoints2 = allzoneshapepoints[j];
-					if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
+                    // get the shape at j
+					PointsForShape& shapePoints2 = allzoneshapes[i];
+					// if it's the same shape as this one or we've already checked it skip this one
+                    if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
 					
+                    // check non-reversed first
 					shapePoints2.reversed = false;
 					
+                    // if the distance between our first shape and the second shape is
+                    // the shortest we've found...
 					if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
+                        // set the new shortest distance...
 						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
-						nextDotIndex = (int)j;
+                        // set this as the next shape to check
+						nextShapeIndex = (int)i;
+                        // set reversed to be false (this is set the next time around
 						reversed = false;
 					}
 					
+                    // now do the same thing but with the next shape reversed
 					if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
 						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
-						nextDotIndex = (int)j;
+						nextShapeIndex = (int)i;
 						reversed = true;
 					}
 					
-					
 				}
-				
-				currentIndex = nextDotIndex;
-				
-				
+				currentIndex = nextShapeIndex;
 				
 			} while (currentIndex>-1);
+            
+            
+            if(newShapeSortMethod) {
+                
+                //cout << " NEW SHAPE SORT START -------------- " <<sortedshapes.size()<<  endl;
+             
+                // reset the tested flags
+                for (PointsForShape* shape : sortedshapes) shape->tested = false;
+             
+                // start at the end
+                currentIndex = sortedshapes.size()-1;
+                
+                while(currentIndex>1) { // don't think we need to do this process for 0 and 1
+                
+                    PointsForShape& shape = *sortedshapes[currentIndex];
+                    if(shape.tested) {
+                        currentIndex--;
+                        continue;
+                    }
+                    // position to move this shape to
+                    int targetIndex = currentIndex;
+                    
+                    // get the distance between this and its two neighbours
+                    PointsForShape& neighbourAfter = *sortedshapes[(currentIndex+1) % sortedshapes.size()];
+                    PointsForShape& neighbourBefore = *sortedshapes[currentIndex-1]; // should always be >0
+                  
+                    float distanceToBeat = neighbourAfter.getStart().distance(shape.getEnd()) + shape.getStart().distance(neighbourBefore.getEnd()) - neighbourBefore.getEnd().distance(neighbourAfter.getStart());
+                    //distanceToBeat *= 2;
+                    
+                    // now iterate back to the first shape
+                    for(int i = currentIndex-1; i>0; i--) { // don't think we need to go all the way back to 0
+                        // check the distance if we were to insert the shape between i and i-1
+                        int shapeIndexBefore = (i==0) ? sortedshapes.size()-1 : i-1 ;
+                        int shapeIndexAfter = i;
+                        
+                        PointsForShape& shapeBefore = *sortedshapes[shapeIndexBefore];
+                        PointsForShape& shapeAfter = *sortedshapes[shapeIndexAfter];
+                        
+                        float distanceToCompare = shapeBefore.getEnd().distance(shape.getStart()) + shape.getEnd().distance(shapeAfter.getStart()) -                            shapeBefore.getEnd().distance(shapeAfter.getStart());
+                        
+                       // if((shape.getStart()!=shape.getEnd()) && (shapeBefore.getEnd().squareDistance(shapeAfter.getStart()) < 1)) continue; // if the shapes are connected don't insert a new one here unless it starts and ends at the same place
+                       
+                        if(distanceToCompare<distanceToBeat) {
+                            // set target position of this shape to be i
+                            targetIndex = i;
+                            distanceToBeat = distanceToCompare; 
+                        }
+                    
+                    }
+                    
+                    shape.tested = true;
+                    // if the target position != currentIndex then move it there
+                    if(targetIndex!=currentIndex) {
+                        sortedshapes.erase(sortedshapes.begin() + currentIndex);
+                        //if(targetIndex == 0 ) targetIndex = sortedshapes.size();
+                        sortedshapes.insert(sortedshapes.begin() +targetIndex, &shape);
+                        //ofLogNotice("moving shape at ") << currentIndex << " to " << targetIndex;
+                    } else {
+                        // else subtract 1 from the currentIndex
+                        currentIndex--;
+                    }
+                }
+                
+                //cout << "----------------------------------- " << endl;
+
+                
+                
+            }
+            
+            if(alwaysClockwise) {
+                // CHECK HANDEDNESS
+                float sum = 0;
+                ofPoint p1 = sortedshapes[0]->getStart();
+                ofPoint p2 = p1;
+                for(size_t i = 0; i< sortedshapes.size(); i++) {
+                    
+                    PointsForShape& shape = *sortedshapes[i];
+                    p1 = p2;
+                    p2 = shape.getStart();
+                    
+                    float value = (p2.x-p1.x) * (p2.y+p1.y);
+                    sum+=value;
+                    
+                    if(shape.getStart()!=shape.getEnd()) {
+                        p1 = p2;
+                        p2 = shape.getEnd();
+                        value = (p2.x-p1.x) * (p2.y+p1.y);
+                        sum+=value;
+                    }
+                    
+                    
+                }
+                
+                //cout << sum << ((sum>0) ? "RIGHT" : "LEFT") << endl;
+                
+                if(sum<0) {
+                    reverse(sortedshapes.begin(),sortedshapes.end());
+                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
+                 
+                }
+            }
+            
+            
 		} else {
-			for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
-				sortedshapepoints.push_back(&allzoneshapepoints[j]);
+			for(size_t j = 0; j<allzoneshapes.size(); j++) {
+				sortedshapes.push_back(&allzoneshapes[j]);
 			}
 			
 		}
@@ -678,8 +812,8 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 		
 		ofPoint currentPosition = laserHomePosition; // MUST be in output space
 		
-		for(size_t j = 0; j<sortedshapepoints.size(); j++) {
-			PointsForShape& shapepoints = *sortedshapepoints[j];
+		for(size_t j = 0; j<sortedshapes.size(); j++) {
+			PointsForShape& shapepoints = *sortedshapes[j];
 			if(shapepoints.size()==0) continue;
 			
 			if(currentPosition.distance(shapepoints.getStart())>2){
@@ -699,8 +833,8 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 			
 			PointsForShape* nextshapepoints = nullptr;
 			
-			if(j<sortedshapepoints.size()-1) {
-				nextshapepoints = sortedshapepoints[j+1];
+			if(j<sortedshapes.size()-1) {
+				nextshapepoints = sortedshapes[j+1];
 			}
 			if((nextshapepoints==nullptr) || (currentPosition.distance(nextshapepoints->getStart())>2)){
 				for(int k = 0;k<scannerSettings.shapePostOn;k++) {
@@ -748,11 +882,11 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 	dac->sendFrame(laserPoints);
     numPoints = (int)laserPoints.size();
 	
-	if(sortedshapepoints.size()>0) {
+	if(sortedshapes.size()>0) {
 		if(smoothHomePosition) {
-			laserHomePosition += (sortedshapepoints.front()->getStart()-laserHomePosition)*0.05;
+			laserHomePosition += (sortedshapes.front()->getStart()-laserHomePosition)*0.05;
 		} else {
-			laserHomePosition = sortedshapepoints.back()->getEnd();
+			laserHomePosition = sortedshapes.back()->getEnd();
 		}
 	}
 }

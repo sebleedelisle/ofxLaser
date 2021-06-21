@@ -37,6 +37,20 @@ class PointsForShape : public vector<Point> {
     Point& getEnd() {
         return reversed?this->front() : this->back();
     }
+    
+    glm::vec3 getStartGlm() {
+        glm::vec3 p;
+        p.x = reversed ? this->back().x : this->front().x;
+        p.y = reversed ? this->back().y : this->front().y;
+        return p;
+    }
+    glm::vec3 getEndGlm() {
+        glm::vec3 p;
+        p.x = reversed ? this->front().x : this->back().x;
+        p.y = reversed ? this->front().y : this->back().y;
+        return p;
+    }
+    
 };
 
 
@@ -148,10 +162,12 @@ class Laser {
     ColourSettings colourSettings; 
     // advanced settings
     ofParameterGroup advancedParams;
-    ofParameter<float>targetFramerate;
-    ofParameter<bool>syncToTargetFramerate;
-    ofParameter<int>syncShift;
-    ofParameter<bool>sortShapes;
+    ofParameter<float> targetFramerate;
+    ofParameter<bool> syncToTargetFramerate;
+    ofParameter<int> syncShift;
+    ofParameter<bool> sortShapes;
+    ofParameter<bool> newShapeSortMethod;
+    ofParameter<bool> alwaysClockwise;
     ofParameter<bool> smoothHomePosition;
     ofParameter<bool> laserOnWhileMoving = false;
  

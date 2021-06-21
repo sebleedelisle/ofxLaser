@@ -12,7 +12,7 @@ using namespace ofxLaser;
 
 Polyline::Polyline() {
 	
-	reversable = false;
+	reversable = true;
 	colour = ofColor::white;
 	cachedProfile = NULL;
 	multicoloured = false;
@@ -35,7 +35,7 @@ Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours,
 
 void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilelabel){
 	
-	reversable = false;
+	reversable = true;
 	colour = col;
 	cachedProfile = NULL;
 	multicoloured = false;
@@ -49,7 +49,7 @@ void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilela
 
 void Polyline::init(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
 	
-	reversable = false;
+	reversable = true;
 	cachedProfile = NULL;
 	
 	multicoloured = true;
