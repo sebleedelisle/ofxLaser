@@ -127,7 +127,8 @@ class Laser {
     void ppsChanged(int& e);
     
     deque<Shape*> getTestPatternShapesForZone(LaserZone& zone);
-    
+    float getMoveDistanceForShapes(vector<PointsForShape>& shapes);
+    float getMoveDistanceForShapes(vector<PointsForShape*>& shapes);
 
 
     //-----------------------------------------------

@@ -118,7 +118,7 @@ void Laser :: init() {
 	advanced.add(smoothHomePosition.set("Smooth home position", true));
     advanced.add(sortShapes.set("Optimise shape draw order", true));
     advanced.add(newShapeSortMethod.set("Experimental shape sorting", true));
-    advanced.add(alwaysClockwise.set("Always clockwise sorting", true));
+    //advanced.add(alwaysClockwise.set("Always clockwise sorting", true));
     advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
 	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
 	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
@@ -622,31 +622,17 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 	// sort the point objects
 	if(allzoneshapes.size()>0) {
 		bool reversed = false;
-//		int currentIndex = 0;
 		float shortestDistance = INFINITY;
-//		int nextShapeIndex = -1;
+
         PointsForShape* currentShape = nullptr;
         PointsForShape* nextShape = nullptr;
         ofPoint position = laserHomePosition;
-//
-//        for(size_t i = 0; i<allzoneshapes.size(); i++) {
-//            PointsForShape& shape = allzoneshapes[i];
-//            float distance = laserHomePosition.squareDistance(shape.getStart());
-//            if(distance<shortestDistance) {
-//                reversed = shape.reversed;
-//                shortestDistance = distance;
-//                currentIndex = i;
-//            }
-//            distance = laserHomePosition.squareDistance(shape.getEnd());
-//            if(distance<shortestDistance) {
-//                reversed = !shape.reversed;
-//                shortestDistance = distance;
-//                currentIndex = i;
-//            }
-//        }
-//        shortestDistance = INFINITY;
+
 
 		if(sortShapes) {
+            
+            float moveDistanceForUnSortedShapes = getMoveDistanceForShapes(allzoneshapes);
+            
 			do {
                 
                 if(currentShape!=nullptr) {
@@ -730,7 +716,7 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
                     PointsForShape& neighbourBefore = *sortedshapes[currentIndex-1]; // should always be >0
                   
                     float distanceToBeat = neighbourAfter.getStart().distance(shape.getEnd()) + shape.getStart().distance(neighbourBefore.getEnd()) - neighbourBefore.getEnd().distance(neighbourAfter.getStart());
-                    //distanceToBeat *= 2;
+                    distanceToBeat *= 0.95; // so close calls do nothing
                     
                     // now iterate back to the first shape
                     for(int i = currentIndex-1; i>0; i--) { // don't think we need to go all the way back to 0
@@ -773,38 +759,50 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
             }
             
             if(alwaysClockwise) {
-                // CHECK HANDEDNESS
-                float sum = 0;
-                ofPoint p1 = sortedshapes[0]->getStart();
-                ofPoint p2 = p1;
-                for(size_t i = 0; i< sortedshapes.size(); i++) {
-                    
-                    PointsForShape& shape = *sortedshapes[i];
-                    p1 = p2;
-                    p2 = shape.getStart();
-                    
-                    float value = (p2.x-p1.x) * (p2.y+p1.y);
-                    sum+=value;
-                    
-                    if(shape.getStart()!=shape.getEnd()) {
-                        p1 = p2;
-                        p2 = shape.getEnd();
-                        value = (p2.x-p1.x) * (p2.y+p1.y);
-                        sum+=value;
-                    }
-                    
-                    
-                }
                 
-                //cout << sum << ((sum>0) ? "RIGHT" : "LEFT") << endl;
-                
-                if(sum<0) {
-                    reverse(sortedshapes.begin(),sortedshapes.end());
-                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
-                 
-                }
+                // TODO this algorithm doesn't seem to work right now :/
+//
+//                // CHECK HANDEDNESS
+//                float sum = 0;
+//                ofPoint p1 = sortedshapes[0]->getStart();
+//                ofPoint p2 = p1;
+//                for(size_t i = 0; i< sortedshapes.size(); i++) {
+//
+//                    PointsForShape& shape = *sortedshapes[i];
+//                    p1 = p2;
+//                    p2 = shape.getStart();
+//
+//                    float value = (p2.x-p1.x) * (p2.y+p1.y);
+//                    sum+=value;
+//
+//                    if(shape.getStart()!=shape.getEnd()) {
+//                        p1 = p2;
+//                        p2 = shape.getEnd();
+//                        value = (p2.x-p1.x) * (p2.y+p1.y);
+//                        sum+=value;
+//                    }
+//
+//
+//                }
+//
+//                //cout << sum << ((sum>0) ? "RIGHT" : "LEFT") << endl;
+//
+//                if(sum<0) {
+//                    reverse(sortedshapes.begin(),sortedshapes.end());
+//                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
+//
+//                }
             }
-            
+            float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedshapes);
+            // if the sorted shapes don't save much then don't bother sorting them!
+            if(moveDistanceForSortedShapes/moveDistanceForUnSortedShapes > 0.9) {
+                sortedshapes.clear();
+                for(size_t j = 0; j<allzoneshapes.size(); j++) {
+                    allzoneshapes[j].reversed = false;
+                    sortedshapes.push_back(&allzoneshapes[j]);
+                }
+                
+            }
             
 		} else {
 			for(size_t j = 0; j<allzoneshapes.size(); j++) {
@@ -856,13 +854,29 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 			
 			
 		}
+        // if we have a really fast frame, let's duplicate it and reverse it
+        // (this helps for things like a single line where we maybe don't want to
+        // jump back to the beginning if we can draw the line again reversed)
+        if((pps/ laserPoints.size()) >100) {
+            int numpoints = laserPoints.size();
+            for(int i = numpoints-1; i>=0; i--) {
+                addPoint(laserPoints[i]);
+                
+            }
+            currentPosition = laserPoints.back();
+        }
+        
 		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
 	
 	if (laserPoints.size() == 0) {
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
-	}
+        // if we have a super short frame, might as well duplicate and reverse it
+    }
+        
+    
+    
 	int targetNumPoints;
     
 	// TODO add system to speed up if too much stuff to draw
@@ -897,6 +911,29 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 			laserHomePosition = sortedshapes.back()->getEnd();
 		}
 	}
+}
+
+float Laser ::getMoveDistanceForShapes(vector<PointsForShape>& shapes){
+    float distance = 0;
+    ofPoint position = laserHomePosition;
+    for(PointsForShape shape : shapes) {
+        distance+= shape.getStart().distance(position);
+        position = shape.getEnd();
+    }
+    return distance;
+    
+}
+
+
+float Laser ::getMoveDistanceForShapes(vector<PointsForShape*>& shapes){
+    float distance = 0;
+    ofPoint position = laserHomePosition;
+    for(PointsForShape* shape : shapes) {
+        distance+= shape->getStart().distance(position);
+        position = shape->getEnd();
+    }
+    return distance;
+    
 }
 
 

@@ -436,7 +436,8 @@ void ManagerBase::send(){
 
 
 int ManagerBase :: getLaserPointRate(unsigned int lasernum ){
-	return lasers.at(lasernum)->getPointRate();
+    if(lasernum>=lasers.size()) return -1;
+	else return lasers.at(lasernum)->getPointRate();
 }
 
 float ManagerBase :: getLaserFrameRate(unsigned int lasernum ){
@@ -446,6 +447,10 @@ float ManagerBase :: getLaserFrameRate(unsigned int lasernum ){
 }
 void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum, int zonenum){
 	// ofLog(OF_LOG_NOTICE, "ofxLaser::Manager::sendRawPoints(...) point count : "+ofToString(points.size()));
+    if(lasernum>=lasers.size()) {
+        ofLogError("Invalid laser number sent to ofxLaser::ManagerBase::sendRawPoints");
+        return;
+    }
 	Laser* laser = lasers.at(lasernum);
    
     laser->sendRawPoints(points, &getZone(zonenum), globalBrightness);
