@@ -622,79 +622,87 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 	// sort the point objects
 	if(allzoneshapes.size()>0) {
 		bool reversed = false;
-		int currentIndex = 0;
+//		int currentIndex = 0;
 		float shortestDistance = INFINITY;
-		int nextShapeIndex = -1;
-        
-        for(size_t i = 0; i<allzoneshapes.size(); i++) {
-            PointsForShape& shape = allzoneshapes[i];
-            float distance = laserHomePosition.squareDistance(shape.getStart());
-            if(distance<shortestDistance) {
-                reversed = shape.reversed;
-                shortestDistance = distance;
-                currentIndex = i;
-            }
-            distance = laserHomePosition.squareDistance(shape.getEnd());
-            if(distance<shortestDistance) {
-                reversed = !shape.reversed;
-                shortestDistance = distance;
-                currentIndex = i;
-            }
-        }
-        shortestDistance = INFINITY;
+//		int nextShapeIndex = -1;
+        PointsForShape* currentShape = nullptr;
+        PointsForShape* nextShape = nullptr;
+        ofPoint position = laserHomePosition;
+//
+//        for(size_t i = 0; i<allzoneshapes.size(); i++) {
+//            PointsForShape& shape = allzoneshapes[i];
+//            float distance = laserHomePosition.squareDistance(shape.getStart());
+//            if(distance<shortestDistance) {
+//                reversed = shape.reversed;
+//                shortestDistance = distance;
+//                currentIndex = i;
+//            }
+//            distance = laserHomePosition.squareDistance(shape.getEnd());
+//            if(distance<shortestDistance) {
+//                reversed = !shape.reversed;
+//                shortestDistance = distance;
+//                currentIndex = i;
+//            }
+//        }
+//        shortestDistance = INFINITY;
 
 		if(sortShapes) {
 			do {
+                
+                if(currentShape!=nullptr) {
+                    // get the shape object at the current index
+                    PointsForShape& shape1 = *currentShape; // allzoneshapes[currentIndex];
 				
-                // get the shape object at the current index
-				PointsForShape& shapePoints1 = allzoneshapes[currentIndex];
-				
-                // set its tested flag to say we've checked it
-				shapePoints1.tested = true;
-                // add it to the list
-				sortedshapes.push_back(&shapePoints1);
-				// set its reversed flag - this is set during the
-                // previous iterative process to find the next shape
-                shapePoints1.reversed = reversed;
-				
-                // set the distance to infinity
-				shortestDistance = INFINITY;
-                // reset the next shape index in case we don't find any
-				nextShapeIndex = -1;
+                    // set its tested flag to say we've checked it
+                    shape1.tested = true;
+                    // add it to the list
+                    sortedshapes.push_back(&shape1);
+                    // set its reversed flag - this is set during the
+                    // previous iterative process to find the next shape
+                    shape1.reversed = reversed;
+                    
+                    position = shape1.getEnd();
+                    
+                    // set the distance to infinity
+                    shortestDistance = INFINITY;
+                    // reset the next shape in case we don't find any
+                    nextShape = nullptr;
+                }
+                    
 				
                 // go through all the shapes
 				for(size_t i = 0; i<allzoneshapes.size(); i++) {
 					
                     // get the shape at j
-					PointsForShape& shapePoints2 = allzoneshapes[i];
+					PointsForShape& shape2 = allzoneshapes[i];
 					// if it's the same shape as this one or we've already checked it skip this one
-                    if((&shapePoints1==&shapePoints2) || (shapePoints2.tested)) continue;
+                    if((currentShape==&shape2) || (shape2.tested)) continue;
 					
                     // check non-reversed first
-					shapePoints2.reversed = false;
+					shape2.reversed = false;
 					
                     // if the distance between our first shape and the second shape is
                     // the shortest we've found...
-					if(shapePoints1.getEnd().squareDistance(shapePoints2.getStart()) < shortestDistance) {
+					if(position.squareDistance(shape2.getStart()) < shortestDistance) {
                         // set the new shortest distance...
-						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getStart());
+						shortestDistance = position.squareDistance(shape2.getStart());
                         // set this as the next shape to check
-						nextShapeIndex = (int)i;
+						nextShape = &shape2;
                         // set reversed to be false (this is set the next time around
 						reversed = false;
 					}
 					
                     // now do the same thing but with the next shape reversed
-					if((shapePoints2.reversable) && (shapePoints1.getEnd().squareDistance(shapePoints2.getEnd()) < shortestDistance)) {
-						shortestDistance = shapePoints1.getEnd().squareDistance(shapePoints2.getEnd());
-						nextShapeIndex = (int)i;
+					if((shape2.reversable) && (position.squareDistance(shape2.getEnd()) < shortestDistance)) {
+						shortestDistance = position.squareDistance(shape2.getEnd());
+                        nextShape = &shape2;
 						reversed = true;
 					}
 					
 				}
-				currentIndex = nextShapeIndex;
+                currentShape = nextShape;
 				
-			} while (currentIndex>-1);
+			} while (currentShape!=nullptr);
             
             
             if(newShapeSortMethod) {
@@ -705,7 +713,7 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
                 for (PointsForShape* shape : sortedshapes) shape->tested = false;
              
                 // start at the end
-                currentIndex = sortedshapes.size()-1;
+                int currentIndex = sortedshapes.size()-1;
                 
                 while(currentIndex>1) { // don't think we need to do this process for 0 and 1
                 
