@@ -452,7 +452,10 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         return;
     }
 	Laser* laser = lasers.at(lasernum);
-   
+    if(zonenum>=zones.size()) {
+        ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
+        return;
+    }
     laser->sendRawPoints(points, &getZone(zonenum), globalBrightness);
 	
 }

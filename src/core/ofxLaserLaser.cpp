@@ -526,9 +526,14 @@ void Laser::update(bool updateZones) {
 
 void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, float masterIntensity ){
     
-    LaserZone& laserZone = *getLaserZoneForZone(zone);
-    ofRectangle& maskRectangle = laserZone.zoneMask;
-    ZoneTransform& warp = laserZone.zoneTransform;
+    LaserZone* laserZone = getLaserZoneForZone(zone);
+    if(laserZone==nullptr) {
+        ofLogError("Laser::sendRawPoints(...), zone "+zone->zoneLabel + " not added to laser ");
+        return;
+        
+    }
+    ofRectangle& maskRectangle = laserZone->zoneMask;
+    ZoneTransform& warp = laserZone->zoneTransform;
     bool offScreen = true;
     
     vector<Point>segmentpoints;
