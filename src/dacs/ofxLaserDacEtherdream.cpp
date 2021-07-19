@@ -450,11 +450,21 @@ void DacEtherdream :: threadedFunction(){
 			prepareSendCount = 0;
 			
 			// clear frame
+            dac_point lastPoint;
+            if(framePoints.size()>0) {
+                lastPoint = framePoints[0];
+               
+            } else {
+                lastPoint.x = 400;
+                lastPoint.y = 400;
+            }
+            lastPoint.r = 0;
+            lastPoint.g = 0;
+            lastPoint.b = 0;
+            
 			for(dac_point* point : bufferedPoints) {
-				*point = framePoints[0];
-				point->r = 0;
-				point->g = 0;
-				point->b = 0;
+                *point = lastPoint;
+				
 			}
 			
 		}
@@ -527,7 +537,7 @@ void DacEtherdream :: threadedFunction(){
 }
 
 bool DacEtherdream::setPointsPerSecond(uint32_t newpps){
-	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
+	//ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
 	if(!isThreadRunning()){
 		pps = newPPS = newpps;
 		return true; 
