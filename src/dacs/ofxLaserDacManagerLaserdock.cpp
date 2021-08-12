@@ -123,7 +123,7 @@ bool DacManagerLaserdock :: disconnectAndDeleteDac(const string& id){
     auto it=dacsById.find(id);
     dacsById.erase(it);
     delete dac; 
-    
+    return true;
 }
 
 
