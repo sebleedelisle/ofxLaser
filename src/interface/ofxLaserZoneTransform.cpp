@@ -434,6 +434,7 @@ bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
+    return false;
 
 }
 

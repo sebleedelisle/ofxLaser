@@ -225,6 +225,14 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
 
 
 bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
+    
+    auto parameterGroupPtr = std::dynamic_pointer_cast<ofParameterGroup>(param);
+    if(parameterGroupPtr) {
+        for(auto& param : *parameterGroupPtr) {
+            addParameter(param);
+        
+        }
+    }
     auto parameterBoolPtr = std::dynamic_pointer_cast<ofParameter<bool>>(param);
     if(parameterBoolPtr) {
         return UI::addCheckbox(*parameterBoolPtr);

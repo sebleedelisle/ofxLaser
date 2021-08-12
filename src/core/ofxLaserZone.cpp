@@ -43,7 +43,6 @@ Zone::~Zone() {
 	
 }
 
-
 void Zone:: set(float x, float y, float w, float h) {
     QuadGui::set(x, y, w, h);
     rect.set(x,y,w,h); 
