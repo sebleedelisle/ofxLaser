@@ -5,6 +5,10 @@
 //  Created by Seb Lee-Delisle on 07/02/2018.
 //
 //
+// Used by the zone transform objects to converts points from input zone to
+// output zone coordinates. It has no interface elements, they are provided
+// by the zone transform object itself.
+//
 
 #pragma once
 #include "ofMain.h"

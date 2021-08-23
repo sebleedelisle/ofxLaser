@@ -43,7 +43,8 @@ class UI {
     
     static bool addColour(ofParameter<ofFloatColor>& parameter, bool alpha = false);
     static bool addColour(ofParameter<ofColor>& parameter, bool alpha = false);
-
+    
+    static bool addParameter(ofAbstractParameter& param);
     static bool addParameter(shared_ptr<ofAbstractParameter>& param);
     
     static void addParameterGroup(ofParameterGroup& parameterGroup);

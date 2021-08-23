@@ -127,8 +127,8 @@ bool UI::addIntSlider(ofParameter<int>& param) {
 bool UI::addFloatSlider(ofParameter<float>& param, const char* format, float power) {
     string label = param.getName();
     ofParameterGroup parent = param.getFirstParent();
-    label = label+"##"+parent.getName();
-
+    if(parent) label = label+"##"+parent.getName();
+    
     if(ImGui::SliderFloat(label.c_str(), (float*)&param.get(), param.getMin(), param.getMax(),format, power)){
         param.set(ofClamp(param.get(), param.getMin(), param.getMax()));
         return true;
@@ -223,7 +223,10 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
     }
 }
 
-
+bool UI::addParameter(ofAbstractParameter& param) {
+    shared_ptr<ofAbstractParameter> ref = param.newReference();
+    addParameter(ref);
+}
 bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
     auto parameterGroupPtr = std::dynamic_pointer_cast<ofParameterGroup>(param);

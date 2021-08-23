@@ -400,7 +400,7 @@ void Manager::drawLaserGui() {
     // calculate x position of main window
     int x = ofGetWidth() - mainpanelwidth - spacing;
     
-    UI::startWindow("Settings", ImVec2(x, spacing), ImVec2(mainpanelwidth, 0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true );
+    UI::startWindow("Settings", ImVec2(x, spacing), ImVec2(mainpanelwidth, 0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize, true );
 
     
     // START BIG BUTTONS
