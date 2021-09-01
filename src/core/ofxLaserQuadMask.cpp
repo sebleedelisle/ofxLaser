@@ -39,7 +39,7 @@ bool QuadMask::deserialize(ofJson& jsonGroup) {
     return true;
 }
 
-void QuadMask::draw() {
+void QuadMask:: draw() {
     
     ofPushStyle();
     

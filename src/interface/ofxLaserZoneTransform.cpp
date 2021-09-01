@@ -122,7 +122,7 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-			UI::drawDashedLine(dstHandles[i], dstHandles[i+1]);
+			UI::drawDashedLine(dstHandles[i], dstHandles[i+1], 6/scale);
 		}
 		if(y<yDivisions) {
 			if((x>0)&&(x<xDivisions)) {
@@ -130,13 +130,13 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1]);
+            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1], 6/scale );
 		}
 	}
 	
 	if(selected && editable) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
-			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, scale);
+			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, 1/scale);
 		}
 	}
 	ofPopMatrix();

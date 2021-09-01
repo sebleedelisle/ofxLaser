@@ -292,18 +292,18 @@ void UI::addParameterGroup(ofParameterGroup& parameterGroup) {
 }
 
 ofMesh UI::dashedLineMesh;
-void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2){
+void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing){
    UI::dashedLineMesh.clear();
    
    float l = glm::length(p2-p1);
 
-   for(int p = 0; p<l; p+=6) {
+   for(float p = 0; p<l; p+=spacing) {
        UI::dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
    }
    ofPushStyle();
    ofNoFill();
 //   ofSetColor(colour);
-   ofSetLineWidth(1);
+   //ofSetLineWidth(5);
 
 //   UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
     UI::dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);

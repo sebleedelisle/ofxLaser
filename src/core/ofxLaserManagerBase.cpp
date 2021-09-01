@@ -89,7 +89,7 @@ void ManagerBase::createAndAddLaser() {
     
     // TODO should this be here?
     laser->init();
-    
+
 }
 
 bool ManagerBase :: deleteLaser(Laser* laser) {
@@ -543,6 +543,7 @@ bool ManagerBase::loadSettings() {
     if(ofFile(filename).exists()) {
         zonesJson= ofLoadJson(filename);
     }
+    zones.clear();
     for(ofJson& zoneJson : zonesJson) {
         zones.push_back(new Zone());
         zones.back()->deserialize(zoneJson);
@@ -603,7 +604,7 @@ bool ManagerBase::saveSettings() {
     numLasers = lasers.size();
     
     ofJson json;
-    ofSerialize(json, params);
+    ofSerialize(json, params);  
     
 
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
@@ -669,11 +670,7 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 };
 
 
-bool ManagerBase::setGuideImage(string filename){
-	return guideImage.load(filename);
-	
-	
-}
+
 
 Zone& ManagerBase::getZone(int zonenum) {
 	// TODO bounds check?

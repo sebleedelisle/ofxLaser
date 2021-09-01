@@ -74,6 +74,15 @@ void QuadGui::setConstrained(const ofRectangle &rect) {
     
 }
 
+int QuadGui::getWidth() {
+    return boundingBox.getWidth();
+    
+}
+
+int QuadGui::getHeight() {
+    return boundingBox.getHeight(); 
+    
+}
 void QuadGui :: initListeners() {
     
     ofAddListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
@@ -130,10 +139,10 @@ void QuadGui :: draw() {
     glm::vec3 shift(0.5,0.5,0);
     if(editable) {
 		
-        UI::drawDashedLine(handles[1]+shift, handles[3]+shift);
-        UI::drawDashedLine(handles[3]+shift, handles[2]+shift);
-        UI::drawDashedLine(handles[0]+shift, handles[1]+shift);
-        UI::drawDashedLine(handles[2]+shift, handles[0]+shift);
+        UI::drawDashedLine(handles[1]+shift, handles[3]+shift, 6/scale);
+        UI::drawDashedLine(handles[3]+shift, handles[2]+shift, 6/scale);
+        UI::drawDashedLine(handles[0]+shift, handles[1]+shift, 6/scale);
+        UI::drawDashedLine(handles[2]+shift, handles[0]+shift, 6/scale);
 
     } else {
         ofSetColor(lineColour*0.5);
@@ -166,9 +175,9 @@ void QuadGui :: draw() {
     }
     if(selected) {
         for(int i = 0; i<numHandles; i++) {
-            handles[i].draw(mousePos, scale);
+            handles[i].draw(mousePos, 1/scale);
         }
-        centreHandle.draw(mousePos, scale);
+        centreHandle.draw(mousePos, 1/scale);
     }
     
   
@@ -247,7 +256,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	bool handleHit = false;
 	
     
-	if(centreHandle.hitTest(mousePoint)) {
+	if(centreHandle.hitTest(mousePoint, scale)) {
 		
 		centreHandle.startDrag(mousePoint);
 		handleHit = true;
@@ -259,7 +268,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     } else {
 
 		for(int i = 0; i<numHandles; i++) {
-			if(handles[i].hitTest(mousePoint)) {
+			if(handles[i].hitTest(mousePoint, scale)) {
 				startDragging(i, mousePoint);
 				handleHit = true;
 			}

@@ -10,6 +10,7 @@
 #include "ofMain.h"
 #include "Poco/PriorityDelegate.h"
 #include "RobotoMedium.cpp"
+#include <imgui_internal.h>
 
 namespace ofxLaser {
 
@@ -153,7 +154,7 @@ class UI {
     {
         ImGui::SameLine(0,3);
         ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
+        if (ImGui::IsItemHovered() )
         {
             ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
@@ -162,11 +163,20 @@ class UI {
             ImGui::EndTooltip();
         }
     }
-    
+    static void addDelayedTooltip(const char* desc) {
+        if (ImGui::IsItemHovered() && (GImGui->HoveredIdTimer >1)) {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+        
+    }
     
     static ofMesh dashedLineMesh;
 
-    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2);
+    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6);
     
     
     

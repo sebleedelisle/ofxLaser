@@ -41,6 +41,8 @@ class LaserZone {
     const int getZoneIndex() const {
         return zone.getIndex();
     };
+
+    // scale and offset are only for the visual interface
     void setScale(float _scale) ;
     void setOffset(ofPoint _offset);
     void zoneMaskChanged(ofAbstractParameter& e) ;

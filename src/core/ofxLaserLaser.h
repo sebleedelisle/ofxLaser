@@ -4,10 +4,19 @@
 //
 //  Created by Seb Lee-Delisle on 06/11/2017.
 //
+// The Laser class manages everything to do with an individual laser projector.
+// It keeps a reference to its own DAC (controller), holds all the various settings
+// objects, optimises the laser path and calculates all the points.
 //
+// It also looks after the LaserZone objects which own all the data about how
+// each zone is transformed within this laser output area. They also manage the UI
+// elements for those transformation objects.
+//
+
 #pragma once
 
 #include "constants.h"
+#include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserZone.h"
@@ -20,39 +29,7 @@
 #include "ofxLaserColourSettings.h"
 #include "ofxLaserCircle.h"
 
-
 namespace ofxLaser {
-
-// a container than holds all the points for a shape
-// it extends a vector of ofxLaser::Point objects
-class PointsForShape : public vector<Point> {
-    
-    public:
-    bool tested = false;
-    bool reversed = false;
-    bool reversable = true;
-    Point& getStart() {
-        return reversed?this->back() : this->front();
-    }
-    Point& getEnd() {
-        return reversed?this->front() : this->back();
-    }
-    
-    glm::vec3 getStartGlm() {
-        glm::vec3 p;
-        p.x = reversed ? this->back().x : this->front().x;
-        p.y = reversed ? this->back().y : this->front().y;
-        return p;
-    }
-    glm::vec3 getEndGlm() {
-        glm::vec3 p;
-        p.x = reversed ? this->front().x : this->back().x;
-        p.y = reversed ? this->front().y : this->back().y;
-        return p;
-    }
-    
-};
-
 
 class Laser {
     
@@ -100,9 +77,21 @@ class Laser {
     void addZone(Zone* zone, float srcwidth, float srcheight);
     bool hasZone(Zone* zone);
     bool removeZone(Zone* zone);
-    void drawLaserPath(ofRectangle rect, bool drawDots = true, float radius = 4);
-    void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
-    void drawTransformUI(float x=0, float y=0, float w=800, float h=800);
+    
+    vector<LaserZone*>getActiveZones();
+    bool areAnyZonesSoloed();
+    
+    //void drawLaserPath(ofRectangle rect, bool drawDots = true, float radius = 4);
+    //void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
+    void drawLaserPath(bool drawDots = true, float radius = 4);
+   //void drawTransformUI(float x=0, float y=0, float w=800, float h=800);
+    void drawTransformUI();
+    
+    void zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier);
+    void startDrag(glm::vec2 p);
+    void stopDrag();
+    void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1); 
+    
     void disableTransformGui();
     void enableTransformGui();
     
@@ -182,16 +171,22 @@ class Laser {
     int frameTimeHistorySize = 200;
     float frameTimeHistory[200];
     int frameTimeHistoryOffset = 0;
-    bool ignoreParamChange = false; 
-
+    bool ignoreParamChange = false;
+    
+    // for the ui representation
+    glm::vec2 previewOffset;
+    float previewScale;
+    bool previewDragging;
+    glm::vec2 dragStartPoint;
+  
     //-----------------------------------
     protected :
   
+    
     void setDacArmed(bool& armed);
     
     DacEmpty emptyDac;
-
-    
+ 
     float defaultHandleSize = 8;
 
     DacBase* dac;

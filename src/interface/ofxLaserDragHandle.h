@@ -25,8 +25,9 @@ namespace ofxLaser {
 
 	void set(glm::vec3 pos);
 	void set(glm::vec2 pos);
-	void draw(const glm::vec3& mousepos, float scale = 1) ;
-
+	void draw(const glm::vec3& mousepos, float scale = 1);
+    void draw(bool isOver = true, float scale = 1);
+        
 	void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 
 	bool updateDrag(glm::vec3 pos);

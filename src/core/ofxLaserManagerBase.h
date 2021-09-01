@@ -53,7 +53,6 @@ class ManagerBase {
    
     virtual bool deleteLaser(Laser* laser);
     
-    
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);
     bool deleteZone(Zone* zone); 
@@ -62,8 +61,7 @@ class ManagerBase {
     
     void addZoneToLaser(unsigned int zonenum, unsigned int lasernum);
     
- 
-    void setCanvasSize(int width, int height);
+    virtual void setCanvasSize(int width, int height);
     
     void beginDraw();
     void endDraw();
@@ -118,8 +116,6 @@ class ManagerBase {
     bool setTargetZone(unsigned int zone);
     bool setZoneMode(ofxLaserZoneMode newmode);
     
-    // should be called before initGui
-    bool setGuideImage(string filename);
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
     
@@ -132,10 +128,6 @@ class ManagerBase {
     
     int width, height;
 
-    // converts openGL coords to screen coords //
-    
-    
-    
     ofParameter<int> testPattern;
     
     ofParameter<bool> showLaserSettings;
@@ -148,10 +140,11 @@ class ManagerBase {
     ofParameter<bool> laserMasks;
     ofParameter<int> numLasers; // << not used except for load / save
     
+    
     float defaultHandleSize = 10;
     
     ofParameter<float>globalBrightness;
-    ofImage guideImage;
+
     
     BitmapMaskManager laserMask;
     

@@ -45,8 +45,11 @@ class QuadGui {
 	void startDragging(int handleIndex, glm::vec3 clickPos);
 	
 	void updateCentreHandle();
-    void updatePoly(); 
-
+    void updatePoly();
+    
+    int getWidth();
+    int getHeight();
+    
 	virtual void serialize(ofJson&json);
 	virtual bool deserialize(ofJson&jsonGroup);
 
