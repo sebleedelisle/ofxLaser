@@ -47,9 +47,11 @@ class Manager : public ManagerBase {
     void setDefaultHandleSize(float size);
     
     void drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
-    void processLaserGui();
-    void renderLaserUI() ;
-    
+    void drawLaserGui();
+    void startLaserUI() ;
+    void finishLaserUI() ;
+    void renderCustomCursors(); 
+   
     bool togglePreview();
     bool toggleGui();
     void setGuiVisible(bool visible);

@@ -81,7 +81,7 @@ class Laser {
     vector<LaserZone*>getActiveZones();
     bool areAnyZonesSoloed();
     
-    //void drawLaserPath(ofRectangle rect, bool drawDots = true, float radius = 4);
+    void drawLaserPath(ofRectangle rect, bool drawDots = true, float radius = 4);
     //void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
     void drawLaserPath(bool drawDots = true, float radius = 4);
    //void drawTransformUI(float x=0, float y=0, float w=800, float h=800);

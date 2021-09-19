@@ -292,23 +292,29 @@ void UI::addParameterGroup(ofParameterGroup& parameterGroup) {
 }
 
 ofMesh UI::dashedLineMesh;
-void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing){
-   UI::dashedLineMesh.clear();
-   
-   float l = glm::length(p2-p1);
-
-   for(float p = 0; p<l; p+=spacing) {
-       UI::dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
-   }
-   ofPushStyle();
-   ofNoFill();
-//   ofSetColor(colour);
-   //ofSetLineWidth(5);
-
-//   UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
-    UI::dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
-   UI::dashedLineMesh.draw();
-   ofPopStyle();
+void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing, float scale){
+    
+    UI::dashedLineMesh.clear();
+    
+    float l = glm::length(p2-p1);
+    
+    
+    spacing/=scale; 
+    float dotsize = ofGetStyle().lineWidth / scale; // assumes proportional scaling
+    for(float p = 0; p<l; p+=spacing) {
+        UI::dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
+        UI::dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p+dotsize,0,l,0,1)));
+    }
+    ofPushStyle();
+    ofNoFill();
+    //   ofSetColor(colour);
+    //ofSetLineWidth(5);
+    
+    UI::dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
+    //UI::dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
+    UI::dashedLineMesh.draw();
+    ofPopStyle();
 
 }
+
 

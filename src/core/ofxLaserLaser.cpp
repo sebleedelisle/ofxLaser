@@ -442,15 +442,21 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
 //void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
 //	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
 //}
+
 void Laser :: drawLaserPath(bool drawDots, float radius) {
+    ofRectangle previewRect(previewOffset.x, previewOffset.y, previewScale*800, previewScale*800);
+    drawLaserPath(previewRect, drawDots, radius);
+}
+
+void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
 	ofPushStyle();
 	
     ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
-	ofTranslate(previewOffset);
-	ofScale(previewScale);
-
+	ofTranslate(rect.getTopLeft());
+	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
+    float scale = rect.getWidth()/800.0f; 
 	ofTranslate(outputOffset);
 
 	ofPoint p;
@@ -459,7 +465,7 @@ void Laser :: drawLaserPath(bool drawDots, float radius) {
 	ofSetColor(255);
     //ofSetColor(MIN(255 * w / 800.0f, 255));// what's this for?
 	
-    ofSetLineWidth(0.5/previewScale);
+    ofSetLineWidth(0.5/scale);
 	
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	if(drawDots) previewPathMesh.draw();
@@ -471,7 +477,7 @@ void Laser :: drawLaserPath(bool drawDots, float radius) {
 
 	
 	
-	ofSetLineWidth(2 * previewScale);
+	ofSetLineWidth(2 * scale);
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
 	

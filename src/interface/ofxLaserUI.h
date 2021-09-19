@@ -176,13 +176,29 @@ class UI {
     
     static ofMesh dashedLineMesh;
 
-    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6);
+    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6, float scale = 1);
     
     
     
     static ImU32 getColourForState(int state) {
         const ImVec4 stateCols[] = {{0,1,0,1}, {1,1,0,1}, {1,0,0,1}};
         return ImGui::GetColorU32(stateCols[state]);
+    }
+    
+    static glm::vec3 getScaleFromMatrix(const glm::mat4& m) {
+        glm::vec3 pos;
+        glm::quat rot;
+        glm::vec3 scale;
+        
+        pos = m[3];
+        for(int i = 0; i < 3; i++)
+            scale[i] = glm::length(glm::vec3(m[i]));
+        const glm::mat3 rotMtx(
+            glm::vec3(m[0]) / scale[0],
+            glm::vec3(m[1]) / scale[1],
+            glm::vec3(m[2]) / scale[2]);
+        rot = glm::quat_cast(rotMtx);
+        return scale;
     }
     
 };

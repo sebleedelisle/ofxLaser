@@ -10,7 +10,8 @@ using namespace ofxLaser;
 
 QuadGui::QuadGui() {
     initListeners();
-    
+    initialised = true;
+   
     visible = true;
     isDirty=true;
     selected = false;
@@ -63,6 +64,14 @@ void QuadGui::set(float x, float y, float w, float h) {
     
 }
 
+void QuadGui::set(const QuadGui& quadToCopy){
+    // should probably do size tests huh
+    for(size_t i = 0; i<allHandles.size(); i++) {
+        allHandles[i]->set(*quadToCopy.allHandles[i]);
+    }
+    updatePoly();
+       
+}
 void QuadGui::setConstrained(const ofRectangle &rect) {
     constrainRect = rect;
     constrained = true;
@@ -84,6 +93,8 @@ int QuadGui::getHeight() {
     
 }
 void QuadGui :: initListeners() {
+    
+   // mousePressedListener = ofEvents().mousePressed.newListener(this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     
     ofAddListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseMoved, this, &QuadGui::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
@@ -129,7 +140,7 @@ void QuadGui :: draw() {
     
 	ofPushStyle();
 	ofNoFill();
-	ofSetLineWidth(1);
+	ofSetLineWidth(lineWidth);
 
     
     ofSetColor(lineColour);
@@ -139,10 +150,10 @@ void QuadGui :: draw() {
     glm::vec3 shift(0.5,0.5,0);
     if(editable) {
 		
-        UI::drawDashedLine(handles[1]+shift, handles[3]+shift, 6/scale);
-        UI::drawDashedLine(handles[3]+shift, handles[2]+shift, 6/scale);
-        UI::drawDashedLine(handles[0]+shift, handles[1]+shift, 6/scale);
-        UI::drawDashedLine(handles[2]+shift, handles[0]+shift, 6/scale);
+        UI::drawDashedLine(handles[1]+shift, handles[3]+shift, 6, scale);
+        UI::drawDashedLine(handles[3]+shift, handles[2]+shift, 6, scale);
+        UI::drawDashedLine(handles[0]+shift, handles[1]+shift, 6, scale);
+        UI::drawDashedLine(handles[2]+shift, handles[0]+shift, 6, scale);
 
     } else {
         ofSetColor(lineColour*0.5);
@@ -157,13 +168,16 @@ void QuadGui :: draw() {
     
     if(!displayLabel.empty()) {
         float textwidth = displayLabel.size()*8;
-
+        
         ofFill();
         ofPushMatrix();
         ofTranslate(handles[1]);
         ofScale(1/scale, 1/scale, 1); //-ofPoint(textwidth+12,1.5));
         ofTranslate(-textwidth-10, 1);
+       // ofBlendMode restoreblendmode = ofGetStyle().blendingMode;
+        ofEnableAlphaBlending();
         ofSetColor(0,150);
+        
         
         ofDrawRectangle(0,0,textwidth+10,18);
         ofSetColor(labelColour * (editable?1:0.5));
@@ -175,9 +189,9 @@ void QuadGui :: draw() {
     }
     if(selected) {
         for(int i = 0; i<numHandles; i++) {
-            handles[i].draw(mousePos, 1/scale);
+            handles[i].draw(mousePos, scale);
         }
-        centreHandle.draw(mousePos, 1/scale);
+        centreHandle.draw(mousePos, scale);
     }
     
   
@@ -239,6 +253,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 
     bool hit = hitTestScreen(e);
     if((hit) &&(!selected)) {
+        // make sure events stop bubbling
         selected = true;
         return true;
     }
@@ -279,7 +294,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if(!handleHit && !hit) {
         selected = false;
     }
-	return handleHit;
+    return handleHit;
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){
@@ -288,6 +303,7 @@ void QuadGui :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
+    isDirty = true;
     
 }
 bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
@@ -321,7 +337,7 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
         updatePoly();
 	}
 	
-	//isDirty |= dragging;
+	isDirty |= dragging;
 	
 	
 	return dragging;
@@ -378,12 +394,12 @@ void QuadGui::updateCentreHandle() {
 
 
 
-void QuadGui::serialize(ofJson&json) {
+void QuadGui::serialize(ofJson&json) const{
 	
     // adds json node for the handles, which is an array
     ofJson& handlesjson = json["quadguihandles"];
 	for(int i = 0; i<4; i++) {
-		DragHandle& pos = handles[i];
+		const DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
 

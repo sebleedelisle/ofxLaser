@@ -122,7 +122,7 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-			UI::drawDashedLine(dstHandles[i], dstHandles[i+1], 6/scale);
+			UI::drawDashedLine(dstHandles[i], dstHandles[i+1], 6, scale);
 		}
 		if(y<yDivisions) {
 			if((x>0)&&(x<xDivisions)) {
@@ -130,13 +130,13 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1], 6/scale );
+            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1], 6,scale );
 		}
 	}
 	
 	if(selected && editable) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
-			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, 1/scale);
+			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos,scale);
 		}
 	}
 	ofPopMatrix();
@@ -440,8 +440,12 @@ bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
 
 bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
-	
+	// TODO there is currently an issue where if a zone is on top of another
+    // zone, you can't click on a handle underneath. Not sure of how to fix this...
+    // but possibly needs some higher level logic than here.
+    
 	if((!editable) || (!visible)) return false;
+    if(ofGetKeyPressed(' ')) return false; // for dragging around previews. 
 
 	mousePos = e;
     mousePos-=offset;
@@ -451,7 +455,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
-		return true;
+		return false; // keeps the event propogating
 	}
 	
 	
@@ -459,15 +463,10 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 		return false;
 	}
 	
-	
-	
-	
-	
 	bool handleHit = false;
 	
 	// this section of code if we click drag anywhere in the zone
 
-	
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		if(dstHandles[i].hitTest(mousePos)) {
 			

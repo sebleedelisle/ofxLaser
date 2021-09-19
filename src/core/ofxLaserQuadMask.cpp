@@ -19,12 +19,10 @@ QuadMask::QuadMask() : QuadGui() {
 };
 
 QuadMask::~QuadMask() {
-    
     maskLevel.removeListener(this, &QuadMask::maskLevelChanged);
-    
-    
 }
-void QuadMask::serialize(ofJson&json) {
+
+void QuadMask::serialize(ofJson&json) const {
     QuadGui::serialize(json);
     json["masklevel"] = (int)maskLevel;
   
@@ -49,11 +47,10 @@ void QuadMask:: draw() {
     
     ofFill();
     
-    ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+    //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
     
     ofSetColor(ofMap(maskLevel,0,100,255,0));
-    
-   
+
     ofBeginShape();
     ofVertex(handles[0]);
     ofVertex(handles[1]);
@@ -61,8 +58,6 @@ void QuadMask:: draw() {
     ofVertex(handles[2]);
     ofEndShape();
     
-
-   
     ofPopMatrix();
     ofPopStyle();
     

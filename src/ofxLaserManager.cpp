@@ -211,25 +211,34 @@ void Manager:: drawUI(bool expandPreview){
     
     drawPreviews(expandPreview);
     
-    ofxLaser::UI::updateGui();
     ofxLaser::UI::startGui();
     
-    processLaserGui();
+    drawLaserGui();
     
-    renderLaserUI();
+    finishLaserUI();
     
 }
 
-
-void Manager :: renderLaserUI() {
-    ofxLaser::UI::render();
+void Manager :: startLaserUI() {
+    ofxLaser::UI::updateGui(); 
+    ofxLaser::UI::startGui();
     
+}
+void Manager :: finishLaserUI() {
+    ofxLaser::UI::render();
+    renderCustomCursors();
+   
+    
+}
+
+void Manager :: renderCustomCursors() {
     if(previewNavigationEnabled && ofGetKeyPressed(' ')) {
         ofHideCursor(); // TODO add so that it only happens over the preview
         ofPushMatrix();
         ofTranslate(ofGetMouseX(), ofGetMouseY());
         ofScale(0.6);
-        ofTranslate(-12,-12); 
+        ofTranslate(-12,-12);
+       // ofEnableDepthTest();
         if(ofGetKeyPressed(OF_KEY_COMMAND)) {
             iconMagPlus.draw();
         } else if(ofGetKeyPressed(OF_KEY_ALT)) {
@@ -239,17 +248,18 @@ void Manager :: renderLaserUI() {
         } else {
             iconGrabOpen.draw();
         }
+       // ofDisableDepthTest();
         ofPopMatrix();
     } else ofShowCursor();
     
 }
+
 void Manager :: drawPreviews(bool expandPreview) {
     
     if(previewNavigationEnabled) { // do new preview style
         if(selectedLaser<0) {
             if(showInputPreview) {
-                renderPreview();
-                
+                 
                 
                 // this renders the input zones in the graphics source space
                 for(size_t i= 0; i<zones.size(); i++) {
@@ -261,6 +271,8 @@ void Manager :: drawPreviews(bool expandPreview) {
                     zones[i]->draw();
                 }
                 
+                renderPreview();
+               
                 if(showBitmapMask) {
                     ofPushMatrix();
                     laserMask.setOffsetAndScale(previewOffset,previewScale);
@@ -339,9 +351,13 @@ void Manager :: drawPreviews(bool expandPreview) {
                     ofDrawRectangle(laserOutputPreviewRect);
                     
                     lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                   
-                    // disables the warp interfaces
-                    lasers[i]->disableTransformGui();
+                    if((int)i==selectedLaser) {
+                        ofNoFill();
+                        ofSetLineWidth(1);
+                        ofSetColor(255);
+                        ofDrawRectangle(laserOutputPreviewRect);
+                        
+                    }
                 }
                 
             }
@@ -408,7 +424,6 @@ void Manager :: drawPreviews(bool expandPreview) {
                 
             }
             
-            renderPreview();
             
             // this renders the input zones in the graphics source space
             for(size_t i= 0; i<zones.size(); i++) {
@@ -419,7 +434,8 @@ void Manager :: drawPreviews(bool expandPreview) {
                 
                 zones[i]->draw();
             }
-            
+            renderPreview();
+          
             ofPushMatrix();
             laserMask.setOffsetAndScale(previewOffset,previewScale);
             laserMask.draw(showBitmapMask);
@@ -595,7 +611,10 @@ void Manager :: renderPreview() {
     
     ofPopStyle();
     canvasPreviewFbo.end();
+    ofPushStyle();
+    ofEnableBlendMode(OF_BLENDMODE_ADD);
     canvasPreviewFbo.draw(previewOffset);
+    ofPopStyle();
 }
 
  void Manager::setCanvasSize(int width, int height) {
@@ -663,7 +682,7 @@ glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
     
 }
 
-void Manager::processLaserGui() {
+void Manager::drawLaserGui() {
     
     ofxLaser::ManagerBase& laserManager = *this;
     
