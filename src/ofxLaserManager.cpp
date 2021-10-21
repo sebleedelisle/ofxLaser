@@ -130,6 +130,7 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
         laser->stopDrag();
         
     }
+    return false;
 }
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
     if(draggingPreview) {
