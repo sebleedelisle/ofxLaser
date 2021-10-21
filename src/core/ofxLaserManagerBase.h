@@ -110,7 +110,8 @@ class ManagerBase {
   
     
      
-    Zone& getZone(int zonenum);
+   // Zone& getZone(int zonenum);
+    Zone* getZone(int zonenum);
     int getNumZones();
     Zone* getSelectedZone(); 
     bool setTargetZone(unsigned int zone);
@@ -133,6 +134,7 @@ class ManagerBase {
     ofParameter<bool> showLaserSettings;
     
     ofParameter<bool> lockInputZones;
+    ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
     ofParameter<bool> useBitmapMask;

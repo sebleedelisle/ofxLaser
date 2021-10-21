@@ -38,8 +38,8 @@ class Manager : public ManagerBase {
     void setSelectedLaser(int i);
     bool isAnyLaserSelected();
 
-    void drawUI(bool fullscreen = false);
-    void drawPreviews(bool fullscreen = false);
+    void drawUI();
+    void drawPreviews();
     
     void renderPreview();
    
@@ -53,6 +53,7 @@ class Manager : public ManagerBase {
     void renderCustomCursors(); 
    
     bool togglePreview();
+    // TODO I think this functionality is broken
     bool toggleGui();
     void setGuiVisible(bool visible);
     bool isGuiVisible();
@@ -73,7 +74,9 @@ class Manager : public ManagerBase {
     OF_DEPRECATED_MSG("ofxLaser::Manager::nextProjector - use selectNextLaser() ", void nextProjector());
     OF_DEPRECATED_MSG("ofxLaser::Manager::previousProjector - use selectPreviousLaser() ", void previousProjector());
 
-    
+    int guiLaserSettingsPanelWidth;
+    int guiSpacing;
+
     protected :
     
     ofParameter<bool> showGuideImage;
@@ -85,8 +88,6 @@ class Manager : public ManagerBase {
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
-    int guiLaserSettingsPanelWidth;
-    int guiSpacing;
     
     ofImage guideImage;
   

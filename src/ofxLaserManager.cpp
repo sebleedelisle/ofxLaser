@@ -23,7 +23,7 @@ Manager :: Manager() {
     params.add(showGuideImage.set("Show guide image", false));
     params.add(guideImageColour.set("Guide image colour", ofColor::white));
     // bit of a hack - ideally UI elements should be completely separate from
-    // the ManagerBase but I'm not quite there yet. 
+    // the ManagerBase but I'm not quite there yet.
     if(!loadJson.empty()) {
         if(loadJson.contains("Laser")) {
             //cout << loadJson["Laser"]["Show_guide_image"].dump(3)<< endl;
@@ -33,9 +33,9 @@ Manager :: Manager() {
                 ofDeserialize(loadJson["Laser"], previewNavigationEnabled);
                 ofDeserialize(loadJson["Laser"], showGuideImage);
                 ofDeserialize(loadJson["Laser"], guideImageColour);
-
+                
             } catch(...) {
-            //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
+                //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
             }
             
             
@@ -53,14 +53,14 @@ Manager :: Manager() {
     iconMagPlus.loadFromString("<?xml version='1.0' encoding='UTF-8' standalone='no'?> <!-- Created with Vectornator for iOS (http://vectornator.io/) --><!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg height='100%' style='fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg' xml:space='preserve' width='100%' xmlns:vectornator='http://vectornator.io' version='1.1' viewBox='0 0 25 25'><defs/><g id='Untitled' vectornator:layerName='Untitled'><g opacity='1'><path d='M23.359+20.1039L20.4339+17.1788C19.5811+18.4307+18.4979+19.5139+17.246+20.3666L20.1711+23.2918C21.0517+24.1724+22.4798+24.1724+23.359+23.2918C24.2396+22.4111+24.2396+20.9845+23.359+20.1039Z' opacity='1' fill='#ffffff'/><path d='M21.0134+10.4223C21.0134+4.61158+16.3035-0.098298+10.4928-0.098298C4.68212-0.098298-0.0277553+4.61158-0.0277553+10.4223C-0.0277553+16.233+4.68212+20.9428+10.4928+20.9428C16.3035+20.9428+21.0134+16.2329+21.0134+10.4223ZM10.4928+18.6884C5.93482+18.6884+2.22665+14.9795+2.22665+10.4223C2.22665+5.86428+5.93482+2.15611+10.4928+2.15611C15.05+2.15611+18.759+5.86428+18.759+10.4223C18.759+14.9795+15.05+18.6884+10.4928+18.6884Z' opacity='1' fill='#ffffff'/></g><path d='M14.0491+8.87293L6.96295+8.88761C6.0614+8.88952+5.33189+9.62109+5.33379+10.5226C5.3357+11.4242+6.06874+12.1537+6.97029+12.1518L14.0564+12.1371C14.958+12.1352+15.6875+11.4036+15.6856+10.5021C15.6837+9.60054+14.9506+8.87103+14.0491+8.87293ZM12.1612+14.0485L12.1466+6.96241C12.1447+6.06085+11.4131+5.33134+10.5115+5.33325C9.60997+5.33515+8.88046+6.06819+8.88237+6.96975L8.89704+14.0559C8.89895+14.9574+9.63052+15.6869+10.5321+15.685C11.4336+15.6831+12.1631+14.9501+12.1612+14.0485Z' opacity='1' fill='#ffffff'/></g></svg>");
     
     iconMagMinus.loadFromString("<?xml version='1.0' encoding='UTF-8' standalone='no'?> <!-- Created with Vectornator for iOS (http://vectornator.io/) --><!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'><svg height='100%' style='fill-rule:nonzero;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;' xmlns:xlink='http://www.w3.org/1999/xlink' xmlns='http://www.w3.org/2000/svg' xml:space='preserve' width='100%' xmlns:vectornator='http://vectornator.io' version='1.1' viewBox='0 0 25 25'><defs/><g id='Untitled' vectornator:layerName='Untitled'><g opacity='1'><path d='M23.359+20.1039L20.4339+17.1788C19.5811+18.4307+18.4979+19.5139+17.246+20.3666L20.1711+23.2918C21.0517+24.1724+22.4798+24.1724+23.359+23.2918C24.2396+22.4111+24.2396+20.9845+23.359+20.1039Z' fill-rule='evenodd' fill='#ffffff' opacity='1'/><path d='M21.0134+10.4223C21.0134+4.61158+16.3035-0.098298+10.4928-0.098298C4.68212-0.098298-0.0277553+4.61158-0.0277553+10.4223C-0.0277553+16.233+4.68212+20.9428+10.4928+20.9428C16.3035+20.9428+21.0134+16.2329+21.0134+10.4223ZM10.4928+18.6884C5.93482+18.6884+2.22665+14.9795+2.22665+10.4223C2.22665+5.86428+5.93482+2.15611+10.4928+2.15611C15.05+2.15611+18.759+5.86428+18.759+10.4223C18.759+14.9795+15.05+18.6884+10.4928+18.6884Z' fill-rule='evenodd' fill='#ffffff' opacity='1'/></g><path d='M14.0491+8.87293L6.96295+8.88761C6.0614+8.88952+5.33189+9.62109+5.33379+10.5226C5.3357+11.4242+6.06874+12.1537+6.97029+12.1518L14.0564+12.1371C14.958+12.1352+15.6875+11.4036+15.6856+10.5021C15.6837+9.60054+14.9506+8.87103+14.0491+8.87293Z' opacity='1' fill='#ffffff'/></g></svg>");
-
+    
 }
 
 Manager::~Manager() {
     ofRemoveListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
-  
+    
 }
 
 
@@ -79,7 +79,7 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
                 return true;
             } else if(ofGetKeyPressed(OF_KEY_CONTROL)) {
                 setDefaultPreviewOffsetAndScale();
-            
+                
             } else {
                 // start dragging
                 draggingPreview = true;
@@ -99,7 +99,7 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
                 return true;
             } else if(ofGetKeyPressed(OF_KEY_CONTROL)) {
                 currentLaser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing), 1);
-            
+                
             } else {
                 // start dragging
                 currentLaser.startDrag(e); //  - previewOffset;
@@ -117,6 +117,9 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
     
     if(height>(thirdOfHeight*2)) {
         previewScale = (float)(thirdOfHeight*2) / (float)height;
+    }
+    if(width * previewScale> ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth) {
+        previewScale = (float)(ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth)/width;
     }
     
 }
@@ -176,7 +179,7 @@ bool Manager :: deleteLaser(Laser* laser) {
 }
 
 void Manager::selectNextLaser() {
-        int next = selectedLaser+1;
+    int next = selectedLaser+1;
     if(next>=(int)lasers.size()) next=-1;
     
     setSelectedLaser(next);
@@ -207,9 +210,11 @@ bool Manager::setGuideImage(string filename){
     
 }
 
-void Manager:: drawUI(bool expandPreview){
+void Manager:: drawUI(){
     
-    drawPreviews(expandPreview);
+    
+    
+    drawPreviews();
     
     ofxLaser::UI::startGui();
     
@@ -220,14 +225,14 @@ void Manager:: drawUI(bool expandPreview){
 }
 
 void Manager :: startLaserUI() {
-    ofxLaser::UI::updateGui(); 
+    ofxLaser::UI::updateGui();
     ofxLaser::UI::startGui();
     
 }
 void Manager :: finishLaserUI() {
     ofxLaser::UI::render();
     renderCustomCursors();
-   
+    
     
 }
 
@@ -238,7 +243,7 @@ void Manager :: renderCustomCursors() {
         ofTranslate(ofGetMouseX(), ofGetMouseY());
         ofScale(0.6);
         ofTranslate(-12,-12);
-       // ofEnableDepthTest();
+        // ofEnableDepthTest();
         if(ofGetKeyPressed(OF_KEY_COMMAND)) {
             iconMagPlus.draw();
         } else if(ofGetKeyPressed(OF_KEY_ALT)) {
@@ -248,284 +253,189 @@ void Manager :: renderCustomCursors() {
         } else {
             iconGrabOpen.draw();
         }
-       // ofDisableDepthTest();
+        // ofDisableDepthTest();
         ofPopMatrix();
     } else ofShowCursor();
     
 }
 
-void Manager :: drawPreviews(bool expandPreview) {
+void Manager :: drawPreviews() {
     
-    if(previewNavigationEnabled) { // do new preview style
-        if(selectedLaser<0) {
-            if(showInputPreview) {
-                 
-                
-                // this renders the input zones in the graphics source space
-                for(size_t i= 0; i<zones.size(); i++) {
-                    
-                    
-                    zones[i]->offset.set(previewOffset);
-                    zones[i]->scale = previewScale;
-                    
-                    zones[i]->draw();
-                }
-                
-                renderPreview();
-               
-                if(showBitmapMask) {
-                    ofPushMatrix();
-                    laserMask.setOffsetAndScale(previewOffset,previewScale);
-                    laserMask.draw(showBitmapMask);
-                    ofTranslate(previewOffset);
-                    ofScale(previewScale, previewScale);
-                    ofPopMatrix();
-                }
-            }
-            
-            if(showOutputPreviews) {
-                
-                
-                for(size_t i= 0; i<lasers.size(); i++) {
-                    float outputpreviewscale = 0.375;
-                   
-                    float outputpreviewsize = 800*outputpreviewscale;
-                    float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
-                    if (spaceatbottom<50) spaceatbottom = 50;
-                    if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-                    ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-                    
-                    ofFill();
-                    ofSetColor(0);
-                    ofDrawRectangle(laserOutputPreviewRect);
-                    
-                    lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                   
-                    // disables the warp interfaces
-                    lasers[i]->disableTransformGui();
-                }
-                
-            }
-        
-            
-        } else {
-            float thirdOfHeight = ofGetHeight()/3;
-            ofxLaser::Laser* selectedlaser = nullptr;
-            // draw laser adjustment screen
-            for(size_t i= 0; i<lasers.size(); i++) {
-                if((int)i==selectedLaser) {
-                    selectedlaser = lasers[i];
-                    //ofFill();
-                    //ofSetColor(0);
-                    float size = 800;
-                    if(size>thirdOfHeight*2) size = thirdOfHeight*2;
-                    if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
-                    
-                    //ofDrawRectangle(guiSpacing,guiSpacing,size,size);
-                    selectedlaser->enableTransformGui();
-                    selectedlaser->drawTransformUI();
-                    selectedlaser->drawLaserPath();
-                    
-                    
-                } else {
-                    lasers[i]->disableTransformGui();
-                }
-                
-            }
-            
-            if(showOutputPreviews) {
-                
-                
-                for(size_t i= 0; i<lasers.size(); i++) {
-                    float outputpreviewscale = 0.375;
-                   
-                    float outputpreviewsize = 800*outputpreviewscale;
-                    float previewbotton = (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
-                    float spaceatbottom = (ofGetHeight() - previewbotton) -(guiSpacing*2);
-                    if (spaceatbottom<50) spaceatbottom = 50;
-                    if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-                    ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-                    
-                    ofFill();
-                    ofSetColor(0);
-                    ofDrawRectangle(laserOutputPreviewRect);
-                    
-                    lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                    if((int)i==selectedLaser) {
-                        ofNoFill();
-                        ofSetLineWidth(1);
-                        ofSetColor(255);
-                        ofDrawRectangle(laserOutputPreviewRect);
-                        
-                    }
-                }
-                
-            }
-            
-//            if(showInputPreview) {
-//                previewOffset = glm::vec2(guiSpacing,thirdOfHeight*2);
-//                previewScale = (float)thirdOfHeight/(float)height;
-//                renderPreview();
-//            }
-            
-            
-        }
-    } else {
-    // if expandPreview is true, then we expand the preview area to the
-        // maximum space that we have available.
-        
-        // figure out the top and bottom section height
-        
-        // If the height of the laser is > 2/3 of the screen height (including spacing)
-        // then shrink it to be 2/3 of the height.
-        
-        // we're showing the previews then they go at the top
-        
-        int lowerSectionHeight = 310;
-        
-        int thirdOfHeight = (ofGetHeight()-(guiSpacing*3))/3;
-      
-        if(lowerSectionHeight>thirdOfHeight) lowerSectionHeight = thirdOfHeight;
-        
-        // showPreview determines whether we show the preview
-        // laser graphics on screen or not.
+    // if none of the lasers are selected, then draw the
+    // input preview
+    // Note that the scale and offset is adjusted with
+    // key commands.
+    if(selectedLaser<0) {
         if(showInputPreview) {
-            
+        
+        
             ofPushStyle();
-            
-            // work out the scale for the preview...
-            // default scale is 1 with an 8 pixel margin
-            previewScale = 1;
-            previewOffset = glm::vec2(guiSpacing,guiSpacing);
-            
-            if(height>(thirdOfHeight*2)) {
-                previewScale = (float)(thirdOfHeight*2) / (float)height;
-            }
-            // but if we're viewing a laser transform ui
-            // then shrink the preview down and move it underneath
-            if(selectedLaser>=0) {
-                int positionY = 800 + guiSpacing*2;
-                if((thirdOfHeight*2)+(guiSpacing*2) < positionY ) {
-                    positionY = (thirdOfHeight*2)+(guiSpacing*2);
-                    
-                }
-                previewOffset = glm::vec2(guiSpacing,positionY);
-                previewScale = (float)lowerSectionHeight/(float)height;
-                
-                
-                // but if we're expanding the preview, then work out the scale
-                // to fill the whole screen
-            } else if(expandPreview) {
-                previewOffset = glm::vec2(0,0);
-                previewScale = (float)ofGetWidth()/(float)width;
-                if(height*previewScale>ofGetHeight()) {
-                    previewScale = (float)ofGetHeight()/(float)height;
-                }
-                
-            }
-            
-            
-            // this renders the input zones in the graphics source space
-            for(size_t i= 0; i<zones.size(); i++) {
-                
-                
-                zones[i]->offset.set(previewOffset);
-                zones[i]->scale = previewScale;
-                
-                zones[i]->draw();
-            }
-            renderPreview();
-          
+            ofFill();
+            ofSetColor(0);
             ofPushMatrix();
-            laserMask.setOffsetAndScale(previewOffset,previewScale);
-            laserMask.draw(showBitmapMask);
             ofTranslate(previewOffset);
-            ofScale(previewScale, previewScale);
-            
-            
+            ofScale(previewScale);
+            ofDrawRectangle(0,0,width, height);
             ofPopMatrix();
             ofPopStyle();
-            
-        }
         
-        
-        ofPushStyle();
-        
-        // if none of the lasers are selected then draw
-        // the path previews below
-        if(selectedLaser==-1) {
-            ofPushMatrix();
-            float scale = 1 ;
-            if((lowerSectionHeight+guiSpacing)*(int)lasers.size()>ofGetWidth()-(guiSpacing*2)) {
-                scale = ((float)ofGetWidth()-(guiSpacing*(1+lasers.size())))/((float)(lowerSectionHeight+guiSpacing)*(float)lasers.size());
 
+            if(showInputZones) {
+                // this renders the input zones in the graphics source space
+                for(size_t i= 0; i<zones.size(); i++) {
+                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
+                    zones[i]->draw();
+                }
             }
             
+            renderPreview();
+            
+            if(showBitmapMask) {
+                ofPushMatrix();
+                laserMask.setOffsetAndScale(previewOffset,previewScale);
+                laserMask.draw(showBitmapMask);
+                ofTranslate(previewOffset);
+                ofScale(previewScale, previewScale);
+                ofPopMatrix();
+            }
+        }
+        
+        if(showOutputPreviews) {
+           // int numrows = 1;
+            float outputpreviewscale = 0.375;
+            float outputpreviewsize = 800*outputpreviewscale;
+            
+            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
+            if (spaceatbottom<50) spaceatbottom = 50;
+            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+            
+            // so we have spaceatbottom which is the gap at the bottom
+            // then we have the height and width of the previews
+            // which is outputpreviewsize.
+            // We know this will fit vertically but we don't know if it
+            // fit horizontally
+            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
+            if(outputpreviewsize*lasers.size() > availablespace) {
+                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
+            }
+//            if(spaceatbottom>(outputpreviewsize*2)+guiSpacing) {
+//                numrows=2;
+//                outputpreviewsize = (spaceatbottom/2)-guiSpacing;
+//            }
             
             for(size_t i= 0; i<lasers.size(); i++) {
-                if((!expandPreview)&&(showOutputPreviews)) {
-                    ofRectangle laserOutputPreviewRect(guiSpacing+((lowerSectionHeight*scale) +guiSpacing)*i,(height*previewScale)+(guiSpacing*2),lowerSectionHeight*scale, lowerSectionHeight*scale);
-                    
-                    ofFill();
-                    ofSetColor(0);
-                    ofDrawRectangle(laserOutputPreviewRect);
-                    
-                    lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                   
-                   
-                }
+                
+                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+               
+//                if(numrows>1) {
+//                    int numinrow = lasers.size()/numrows;
+//                    int rownum = floor(i/numinrow);
+//                    laserOutputPreviewRect.y-=(rownum*(outputpreviewsize+guiSpacing));
+//                    laserOutputPreviewRect.x =guiSpacing+ ((outputpreviewsize+guiSpacing)*(i%numinrow));
+//
+//                }
+                
+                ofFill();
+                ofSetColor(0);
+                ofDrawRectangle(laserOutputPreviewRect);
+                
+                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+                
                 // disables the warp interfaces
                 lasers[i]->disableTransformGui();
             }
             
-            ofPopMatrix();
-            
-            // if we're not filling the preview to fit the screen, draw the laser
-            // gui elements
-            
-            
-        } else  {
-            // ELSE we have a currently selected laser, so draw the various UI elements
-            // for that...
-            
-            for(size_t i= 0; i<lasers.size(); i++) {
-                if((int)i==selectedLaser) {
-                    
-                    ofFill();
-                    ofSetColor(0);
-                    float size = 800;
-                    if(size>thirdOfHeight*2) size = thirdOfHeight*2;
-                    if(expandPreview) size =  (float)ofGetHeight()-(guiSpacing*2);
-                    
-                    ofDrawRectangle(guiSpacing,guiSpacing,size,size);
-                    lasers[i]->enableTransformGui();
-                    lasers[i]->drawTransformUI();
-                    lasers[i]->drawLaserPath();
-                    
-                    
-                } else {
-                    lasers[i]->disableTransformGui();
-                }
+        }
+        
+        
+    } else {
+        float thirdOfHeight = ofGetHeight()/3;
+        ofxLaser::Laser* selectedlaser = nullptr;
+        // draw laser adjustment screen
+        for(size_t i= 0; i<lasers.size(); i++) {
+            if((int)i==selectedLaser) {
+                selectedlaser = lasers[i];
+                //ofFill();
+                //ofSetColor(0);
+                float size = 800;
+                if(size>thirdOfHeight*2) size = thirdOfHeight*2;
                 
+                //ofDrawRectangle(guiSpacing,guiSpacing,size,size);
+                selectedlaser->enableTransformGui();
+                selectedlaser->drawTransformUI();
+                selectedlaser->drawLaserPath();
+                
+                
+            } else {
+                lasers[i]->disableTransformGui();
             }
             
         }
         
-        ofPopStyle();
+        if(showOutputPreviews) {
+            
+            
+            for(size_t i= 0; i<lasers.size(); i++) {
+                float outputpreviewscale = 0.375;
+                
+                float outputpreviewsize = 800*outputpreviewscale;
+                float previewbotton = (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
+                float spaceatbottom = (ofGetHeight() - previewbotton) -(guiSpacing*2);
+                if (spaceatbottom<50) spaceatbottom = 50;
+                if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+                
+                ofFill();
+                ofSetColor(0);
+                ofDrawRectangle(laserOutputPreviewRect);
+                
+                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+                if((int)i==selectedLaser) {
+                    ofNoFill();
+                    ofSetLineWidth(1);
+                    ofSetColor(255);
+                    ofDrawRectangle(laserOutputPreviewRect);
+                    
+                }
+            }
+            
+        }
         
-
-       
+        //            if(showInputPreview) {
+        //                previewOffset = glm::vec2(guiSpacing,thirdOfHeight*2);
+        //                previewScale = (float)thirdOfHeight/(float)height;
+        //                renderPreview();
+        //            }
+        
+        
     }
+    
     
 }
 void Manager :: renderPreview() {
     
-    int fbowidth = width*previewScale;
-    int fboheight = height*previewScale;
-  
+    //
+    //    ofPushStyle();
+    //    ofFill();
+    //    ofSetColor(0);
+    //    ofPushMatrix();
+    //    ofTranslate(previewOffset);
+    //    ofScale(previewScale);
+    //    ofDrawRectangle(0,0,width, height);
+    //    ofPopMatrix();
+    //    ofPopStyle();
+    //
+    
+    ofRectangle previewRect = getPreviewRect();
+    ofRectangle screenRect(0,0,ofGetWidth(), ofGetHeight());
+    ofRectangle visibleRect = previewRect.getIntersection(screenRect);
+    
+    int fbowidth = visibleRect.getWidth();
+    int fboheight = visibleRect.getHeight();
+    
     if((canvasPreviewFbo.getWidth()!=fbowidth) || (canvasPreviewFbo.getHeight()!=fboheight)) {
-       // previewFbo.clear();
-        canvasPreviewFbo.allocate(fbowidth, fboheight, GL_RGB, 0);
+        // previewFbo.clear();
+        canvasPreviewFbo.allocate(fbowidth, fboheight, GL_RGB, 3);
     }
     
     canvasPreviewFbo.begin();
@@ -534,6 +444,7 @@ void Manager :: renderPreview() {
     ofPushStyle();
     // ofEnableSmoothing();
     ofPushMatrix();
+    ofTranslate(previewRect.getTopLeft()-visibleRect.getTopLeft());
     //ofTranslate(previewOffset);
     ofScale(previewScale, previewScale);
     
@@ -600,7 +511,7 @@ void Manager :: renderPreview() {
     
     if(showGuideImage && guideImage.isAllocated()) {
         ofSetColor(guideImageColour);
-        guideImage.draw(0,0,width, height); 
+        guideImage.draw(0,0,width, height);
         
         
     }
@@ -613,13 +524,13 @@ void Manager :: renderPreview() {
     canvasPreviewFbo.end();
     ofPushStyle();
     ofEnableBlendMode(OF_BLENDMODE_ADD);
-    canvasPreviewFbo.draw(previewOffset);
+    canvasPreviewFbo.draw(visibleRect.getTopLeft());
     ofPopStyle();
 }
 
- void Manager::setCanvasSize(int width, int height) {
-     ManagerBase::setCanvasSize(width, height);
-     setDefaultPreviewOffsetAndScale();
+void Manager::setCanvasSize(int width, int height) {
+    ManagerBase::setCanvasSize(width, height);
+    setDefaultPreviewOffsetAndScale();
 }
 
 bool Manager ::toggleGui(){
@@ -648,10 +559,10 @@ void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettin
         //loadJson.find("custom");
         if(!loadJson.empty()) {
             if(loadJson.contains("Laser")) {
-                if(loadJson["Laser"].contains("Custom")) {
-                   //     auto value = loadJson["Laser"]["Custom"][param.getName()];
+                if(loadJson["Laser"].contains("CUSTOM_PARAMETERS")) {
+                    //     auto value = loadJson["Laser"]["Custom"][param.getName()];
                     try {
-                        ofDeserialize(loadJson["Laser"]["Custom"], param);
+                        ofDeserialize(loadJson["Laser"]["CUSTOM_PARAMETERS"], param);
                     } catch(...) {
                         
                     }
@@ -678,7 +589,7 @@ glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
     
     glm::vec2 returnpos= pos - glm::vec2(guiSpacing, guiSpacing);
     returnpos/=previewScale;
-    return returnpos; 
+    return returnpos;
     
 }
 
@@ -694,11 +605,11 @@ void Manager::drawLaserGui() {
     int x = ofGetWidth() - mainpanelwidth - spacing;
     
     UI::startWindow("Settings", ImVec2(x, spacing), ImVec2(mainpanelwidth, 0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize, true );
-
+    
     
     // START BIG BUTTONS
     UI::largeItemStart();
-
+    
     // the arm and disarm buttons
     bool useRedButton =laserManager.areAllLasersArmed();
     if(useRedButton) UI::secondaryColourButtonStart();
@@ -714,7 +625,7 @@ void Manager::drawLaserGui() {
         laserManager.disarmAllLasers();
     }
     
-      // change width of slider vs label
+    // change width of slider vs label
     ImGui::PushItemWidth(ImGui::GetWindowWidth() - 120.0f);
     
     // add intensity slide
@@ -736,7 +647,7 @@ void Manager::drawLaserGui() {
             showLaserSettings = !showLaserSettings;
         }
     }
-        
+    
     if(ImGui::Button("ADD LASER", ImVec2(buttonwidth, 0.0f))) {
         createAndAddLaser();
     }
@@ -747,7 +658,7 @@ void Manager::drawLaserGui() {
     }
     // END BIG BUTTONS
     UI::largeItemEnd();
-  
+    
     
     
     // SHOW LIST OF LASERS
@@ -787,9 +698,11 @@ void Manager::drawLaserGui() {
         // DAC STATUSES
         ImGui::SameLine();
         
+        
+        
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-      
+        
         int radius = 4;
         ImVec2 p = ImGui::GetCursorScreenPos();
         p.x+=radius-2;
@@ -798,13 +711,16 @@ void Manager::drawLaserGui() {
         
         draw_list->AddCircleFilled(p,radius, col);
         ImGui::InvisibleButton("##invisible", ImVec2(radius*2, radius*2) - ImVec2(2,2));
- 
+        
+        ImGui::SameLine();
+        ImGui::Text("%s",ofToString(round(laserobject.getFrameRate())).c_str());
+        
         
         
         
         
     }
-
+    
     UI::addIntSlider(laserManager.testPattern);
     
     UI::addParameterGroup(laserManager.interfaceParams);
@@ -821,7 +737,7 @@ void Manager::drawLaserGui() {
         ImGui::Separator();
         
         for(Zone* zone : zones) {
-
+            
             string buttonlabel ="DELETE "+zone->zoneLabel;
             string modallabel ="Delete "+zone->zoneLabel+"?";
             
@@ -835,7 +751,7 @@ void Manager::drawLaserGui() {
             {
                 ImGui::Text("Are you sure? All the zone settings will be deleted.\n\n");
                 ImGui::Separator();
-
+                
                 UI::secondaryColourButtonStart();
                 if (ImGui::Button("DELETE", ImVec2(120, 0))) {
                     ImGui::CloseCurrentPopup();
@@ -852,40 +768,40 @@ void Manager::drawLaserGui() {
                 }
                 ImGui::EndPopup();
             }
-
-             
             
             
-        
+            
+            
+            
         }
     }
     
     
     if(laserManager.customParams.size()>0) {
         ImGui::Separator();
-        ImGui::Text("CUSTOM PARAMETERS");
+        //ImGui::Text("CUSTOM PARAMETERS");
         UI::addParameterGroup(laserManager.customParams);
-
+        
     }
     
     
-   // ImGui::PopStyleVar(2);
+    // ImGui::PopStyleVar(2);
     
     ImGui::PopItemWidth();
     
     UI::endWindow();
-   // ImGui::End();
+    // ImGui::End();
     
     
     // show laser settings :
     
     if(laserManager.showLaserSettings) {
         x-=(laserpanelwidth+spacing);
-
+        
         int laserIndexToShow = selectedLaser;
         if(laserIndexToShow ==-1) laserIndexToShow = 0;
         drawLaserSettingsPanel(&getLaser(laserIndexToShow), laserpanelwidth, spacing, x);
-
+        
         
     }
     
@@ -899,14 +815,14 @@ void Manager::drawLaserGui() {
         glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
         UI::startWindow("Laser output zones", ImVec2(laserZonePos.x+spacing, laserZonePos.y), ImVec2(340,0));
-    
+        
         ImGui::Columns(3, "Laser zones columns");
         ImGui::SetColumnWidth(0, 80.0f);
         ImGui::SetColumnWidth(1, 80.0f);
         ImGui::SetColumnWidth(2, 180.0f);
         
         bool soloActive = laser->areAnyZonesSoloed();
-       
+        
         // MUTE SOLO
         vector<LaserZone*> activeZones = laser->getActiveZones();
         for(LaserZone* laserZone : laser->laserZones) {
@@ -923,7 +839,7 @@ void Manager::drawLaserGui() {
             };
             UI::addDelayedTooltip("Mute zone");
             
-                
+            
             if(zonemuted) UI::secondaryColourButtonEnd();
             ImGui::PopStyleVar();
             
@@ -936,13 +852,13 @@ void Manager::drawLaserGui() {
             }
             if(soloed) UI::secondaryColourButtonEnd();
             UI::addDelayedTooltip("Solo zone");
-
+            
             ImGui::SameLine();
             ImGui::Text("%s",laserZone->getLabel().c_str());
             
         }
         ImGui::NextColumn();
-       // ImGui::SetCursorPosX(200);
+        // ImGui::SetCursorPosX(200);
         for(Zone* zone : zones) {
             bool checked = laser->hasZone(zone);
             
@@ -1005,13 +921,13 @@ void Manager::drawLaserGui() {
         // Laser Output Masks
         
         for(LaserZone* laserZone : laser->laserZones) {
-        
+            
             if(laserZone->zoneTransform.getSelected()) {
                 ImVec2 pos(laserZone->zoneTransform.getRight(),laserZone->zoneTransform.getCentre().y);
                 ImVec2 size(200,0);
                 UI::startWindow(laserZone->getLabel()+"##"+laser->getLabel(),pos, size, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-
-
+                
+                
                 UI::addParameterGroup(laserZone->zoneTransform.params);
                 ImGui::Text("Edge masks");
                 UI::addFloatSlider(laserZone->bottomEdge);
@@ -1023,7 +939,7 @@ void Manager::drawLaserGui() {
             }
         }
         
-     
+        
     }
     
 }
@@ -1033,7 +949,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     UI::startWindow(laser->getLabel(), ImVec2(x, spacing), ImVec2(laserpanelwidth,0), ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, true, (bool*)&showLaserSettings.get());
     
-   
+    
     
     UI::largeItemStart();
     // change width of slider vs label
@@ -1061,7 +977,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     {
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
         ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-      
+        
         ImVec2 p = ImGui::GetCursorScreenPos();
         int state = laser->getDacConnectedState();
         
@@ -1069,7 +985,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
         draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
         ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
-       
+        
     }
     
     ImGui::SameLine();
@@ -1083,7 +999,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     } else {
         ImGui::Text("%s", laser->getDacLabel().c_str());
     }
-
+    
     ImGui::SameLine(laserpanelwidth-30);
     if(ImGui::Button("^", ImVec2(19,19))){
         
@@ -1096,16 +1012,16 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     // get the dacs from the dacAssigner
     const vector<DacData>& dacList = dacAssigner.getDacList();
-        
+    
     if (ImGui::ListBoxHeader("##listbox", MIN(5, MAX(1,dacList.size())))){
         
         if(dacList.empty()) {
-         
+            
             ImGui::Selectable("No laser controllers found", false, ImGuiSelectableFlags_Disabled );
-   
+            
         } else {
-                
-                
+            
+            
             // add a combo box item for every element in the list
             for(const DacData& dacdata : dacList) {
                 
@@ -1115,11 +1031,11 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
                 ImGuiSelectableFlags selectableflags = 0;
                 
                 if(!dacdata.available) {
-                   // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
-                   //itemlabel += " - no longer available";
+                    // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+                    //itemlabel += " - no longer available";
                     selectableflags|=ImGuiSelectableFlags_Disabled;
                 } else {
-                   //
+                    //
                 }
                 // if this dac is assigned to a laser, show which laser
                 //  - this could be done at the other end?
@@ -1163,7 +1079,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     // ----------------------------------------------
     
     
-
+    
     ImGui::Separator();
     ImGui::Text("OUTPUT / ZONE SETTINGS");
     
@@ -1178,15 +1094,15 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::PopItemWidth();
     UI::largeItemEnd();
     
-   
- 
+    
+    
     // ZONES
     UI::addCheckbox(laser->flipX);
     UI::addCheckbox(laser->flipY);
     
     // FINE OUTPUT SETTINGS
     bool treevisible = ImGui::TreeNode("Fine position adjustments");
-        
+    
     UI::toolTip("These affect all output zones for this laser and can be used to re-align the output if moved slightly since setting them up");
     if (treevisible){
         
@@ -1212,49 +1128,49 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             if (ImGui::Button("Reset")) laser->outputOffset.set(zero2);
         }
-       // ImGui::PopItemWidth();
+        // ImGui::PopItemWidth();
         ImGui::TreePop();
     }
-
-   
+    
+    
     
     
     // TODO IMPLEMENT LASER PROFILES
     /*
-    // LASER PROFILE
-    ImGui::Separator();
-    ImGui::Text("LASER PROFILE");
-    
-    // TODO :
-    // check if the settings are different from the preset, if they are
-    // show a "save" button, also save as?
-    //
-    // when an option is selected, update all the params
-    
-    if (ImGui::BeginCombo("##combo", "LightSpace Unicorn RGB11000")) // The second parameter is the label previewed before opening the combo.
-    {
-        
-        if (ImGui::Selectable("LightSpace Unicorn RGB11000", true)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("OPT PD4", false)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("OPT PD25", false)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("LaserCube 2W", false)) {
-            //item_current = items[n];
-        }
-        if (ImGui::Selectable("LaserCube 1W", false)) {
-            //item_current = items[n];
-        }
-        
-        //    if (is_selected)
-        //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
-        ImGui::EndCombo();
-    }
-    */
+     // LASER PROFILE
+     ImGui::Separator();
+     ImGui::Text("LASER PROFILE");
+     
+     // TODO :
+     // check if the settings are different from the preset, if they are
+     // show a "save" button, also save as?
+     //
+     // when an option is selected, update all the params
+     
+     if (ImGui::BeginCombo("##combo", "LightSpace Unicorn RGB11000")) // The second parameter is the label previewed before opening the combo.
+     {
+     
+     if (ImGui::Selectable("LightSpace Unicorn RGB11000", true)) {
+     //item_current = items[n];
+     }
+     if (ImGui::Selectable("OPT PD4", false)) {
+     //item_current = items[n];
+     }
+     if (ImGui::Selectable("OPT PD25", false)) {
+     //item_current = items[n];
+     }
+     if (ImGui::Selectable("LaserCube 2W", false)) {
+     //item_current = items[n];
+     }
+     if (ImGui::Selectable("LaserCube 1W", false)) {
+     //item_current = items[n];
+     }
+     
+     //    if (is_selected)
+     //       ImGui::SetItemDefaultFocus();   // Set the initial focus when opening the combo (scrolling + for keyboard navigation support in the upcoming navigation branch)
+     ImGui::EndCombo();
+     }
+     */
     
     // SCANNER PROFILE SETTINGS
     
@@ -1272,7 +1188,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     const vector<string>& presets = presetManager.getPresetNames();
     string label =laser->scannerSettings.getLabel();
     ScannerSettings& currentPreset = *presetManager.getPreset(label);
-   
+    
     
     bool presetEdited = (laser->scannerSettings!=currentPreset);
     if (presetEdited){
@@ -1280,19 +1196,19 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
         
     }
-   
+    
     
     if (ImGui::BeginCombo("##Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
-
+        
         for(const string presetName : presets) {
-
+            
             if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
                 laser->scannerSettings = *presetManager.getPreset(presetName);
             }
         }
-     
+        
         ImGui::EndCombo();
     }
     ImGui::SameLine();
@@ -1302,12 +1218,12 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         showEditScannerPreset = true;
     }
     
-//    ImGui::SetNextWindowPos,
+    //    ImGui::SetNextWindowPos,
     ImGui::SetNextWindowSize({760,0});
     // centre popup
- 
+    
     ImGui::SetNextWindowPos({(float)ofGetWidth()/2, (float)ofGetHeight()/2}, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
+    
     // SCANNER PRESET POPUP
     
     if (showEditScannerPreset && ImGui::Begin("Edit Scanner Preset", &showEditScannerPreset, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoDocking))
@@ -1315,21 +1231,21 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         ImGui::Text("SCANNER SETTINGS - %s",laser->getLabel().c_str());
         ImGui::Separator();
         if (ImGui::BeginCombo("Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
-
+            
             for(const string presetName : presets) {
-
+                
                 if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                     //get the preset and make a copy of it
                     // uses operator overloading to create a clone
                     laser->scannerSettings = *presetManager.getPreset(presetName);
                 }
             }
-         
+            
             ImGui::EndCombo();
         }
         
         ImGui::SameLine();
-      
+        
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * (presetEdited ? 1.0f : 0.5f));
         if(ImGui::Button("SAVE")) {
             if(presetEdited)ImGui::OpenPopup("Save Preset");
@@ -1339,10 +1255,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
         if (ImGui::BeginPopupModal("Save Preset", 0)){
             string presetlabel = laser->scannerSettings.getLabel();
-
+            
             ImGui::Text("Are you sure you want to overwrite the preset \"%s\"?", presetlabel.c_str());
             ImGui::Separator();
-
+            
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 PresetManager::addPreset(presetlabel, laser->scannerSettings);
                 ImGui::CloseCurrentPopup();
@@ -1360,7 +1276,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         }
         static char newPresetLabel[255]; // = presetlabel.c_str();
         
-    
+        
         ImGui::SameLine();
         if(ImGui::Button("SAVE AS")){
             strcpy(newPresetLabel, laser->scannerSettings.getLabel().c_str());
@@ -1375,7 +1291,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             }
             
             ImGui::Separator();
-
+            
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 string presetlabel = newPresetLabel;
                 // TODO CHECK PRESET EXISTS AND ADD POP UP
@@ -1396,34 +1312,34 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
         
         UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
-
+        
         ImGui::Columns(2);
         UI::addResettableIntSlider(laser->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
-     
+        
         UI::addResettableIntSlider(laser->scannerSettings.shapePreOn, currentPreset.shapePreOn, "The length of time that the laser is switched on and held at the beginning of a shape");
         ImGui::NextColumn();
-       
+        
         UI::addResettableIntSlider(laser->scannerSettings.shapePostBlank, currentPreset.shapePostBlank,"The length of time that the laser is switched off and held at the end of a shape" );
         UI::addResettableIntSlider(laser->scannerSettings.shapePostOn, currentPreset.shapePostOn,"The length of time that the laser is switched on and held at the end of a shape" );
-
+        
         ImGui::Columns(1);
         
         ImGui::Text("Render profiles");
         UI::toolTip("Every scanner setting has three profiles for rendering different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
-
+        
         ImGui::Separator();
         //bool firsttreeopen = true;
         ImGui::Columns(3);
         ImGui::SetColumnWidth(0, 250);
         ImGui::SetColumnWidth(1, 250);
         ImGui::SetColumnWidth(1, 250);
-       
-
+        
+        
         for (auto & renderProfilePair : laser->scannerSettings.renderProfiles) {
             ImGui::PushItemWidth(120);
             string name =renderProfilePair.first;
             RenderProfile& profile = renderProfilePair.second;
-           
+            
             RenderProfile& resetProfile = currentPreset.renderProfiles.at(name);
             
             ImGui::Text("%s", name.c_str());
@@ -1436,16 +1352,16 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             ImGui::NextColumn();
         }
         
-       
+        
         ImGui::End();
     }
-
+    
     
     
     // COLOUR SETTINGS
     ImGui::Separator();
     ImGui::Text("COLOUR");
-   
+    
     if(ImGui::TreeNode("Colour calibration")){
         
         UI::addParameterGroup(laser->colourSettings.params);
@@ -1453,13 +1369,13 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         ImGui::TreePop();
     }
     
-   
+    
     
     ImGui::Separator();
     ImGui::Text("ADVANCED SETTINGS");
-
+    
     // ADVANCED
-  
+    
     
     if(ImGui::TreeNode("Advanced")){
         // POINT RATE
@@ -1469,7 +1385,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         string ppsstring = "Point rate : " + ofToString(ppsslider);
         if(ImGui::SliderInt("##Point rate", &ppsslider, laser->pps.getMin(), laser->pps.getMax(), ppsstring.c_str())){
             laser->pps.set(ppsslider/100*100);
-          
+            
         }
         UI::toolTip("The actual points sent to the laser - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
         ImGui::PopItemWidth();
@@ -1493,7 +1409,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     {
         ImGui::Text("Are you sure? All the zone settings will be deleted.\n\n");
         ImGui::Separator();
-      
+        
         UI::secondaryColourButtonStart();
         
         if (ImGui::Button("DELETE", ImVec2(120, 0))) {
@@ -1511,10 +1427,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         }
         ImGui::EndPopup();
     }
-
-     
     
-  
+    
+    
+    
     
     
     ImGui::PopItemWidth();
@@ -1526,7 +1442,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         ImVec2 p = ImGui::GetWindowPos();
         p.x+=ImGui::GetContentRegionAvailWidth();
         p.y+=30;// + ImGui::GetScrollY();
-       // if(ImGui::GetScrollY()>0) p.x-=14;
+        // if(ImGui::GetScrollY()>0) p.x-=14;
         //ImGui::GetContentRegionAvailWidth()
         draw_list->AddCircleFilled(p, 4, ImGui::GetColorU32(ImGuiCol_Border));
     }

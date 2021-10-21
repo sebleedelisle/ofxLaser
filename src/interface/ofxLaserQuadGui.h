@@ -24,7 +24,16 @@ class QuadGui {
 	void set(const ofRectangle& rect);
     virtual void set(float x, float y, float w, float h) ;
     void set(const QuadGui& quadToCopy);
-    
+    void setOffsetAndScale(glm::vec2 newoffset, float newscale) {
+        offset = newoffset;
+        scale = newscale;
+    }
+    void setOffset(glm::vec2 newoffset) {
+        offset = newoffset;
+    }
+    void setScale(float newscale) {
+        scale = newscale;
+    } 
     void setConstrained(const ofRectangle& rect); 
     void setColours(ofColor lineColour, ofColor handleColour, ofColor labelColour);
 	virtual void draw();
@@ -86,17 +95,20 @@ class QuadGui {
 	float width;
 	float height;
 	
-    ofPoint offset;
-	float scale = 1;
-    ofPoint mousePos; 
+    ofPoint mousePos;
     bool selected; 
     
 	protected :
+    
+    ofPoint offset;
+    float scale = 1;
+ 
     bool visible = true;
     bool editable = true;
     bool isDirty = true;
-    
     bool initialised = false;
+    
+    
     
     private :
     ofColor lineColour;

@@ -61,8 +61,7 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
     
-    quad->offset = offset;
-    quad->scale = scale;
+    quad->setOffsetAndScale(offset, scale);
     return *quad;
 }
 
@@ -71,14 +70,13 @@ void MaskManager  ::init(int w, int h){
     height = h;
 }
 
-void MaskManager::setOffsetAndScale(ofPoint newoffset, float newscale){
+void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     if((offset == newoffset) && (newscale==scale)) return;
     offset = newoffset;
     scale = newscale;
     dirty = true;
     for(QuadMask* quad : quads) {
-        quad->offset = offset;
-        quad->scale = scale;
+        quad->setOffsetAndScale(offset, scale);
     }
     
 }
@@ -153,7 +151,7 @@ bool MaskManager::deserialize(ofJson& jsonGroup) {
    // cout << maskJson.size() << endl;
     bool success = true;
     for(auto quadjson : maskJson) {
-        cout << quadjson.dump(3) << endl; 
+        //cout << quadjson.dump(3) << endl;
         addQuadMask();
         success &= quads.back()->deserialize(quadjson);
     }

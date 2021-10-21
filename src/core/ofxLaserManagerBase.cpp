@@ -70,7 +70,7 @@ void ManagerBase :: setCanvasSize(int w, int h){
 	width = w;
 	height = h;
 	laserMask.init(w,h);
-    canvasPreviewFbo.allocate(w, h, GL_RGBA, 3);
+   // canvasPreviewFbo.allocate(w, h, GL_RGB, 3);
     ofRectangle canvasRectangle(0,0,w,h);
     for(Zone* zone : zones) {
         zone->setConstrained(canvasRectangle); 
@@ -323,7 +323,7 @@ void ManagerBase:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		zones[i]->setEditable((!lockInputZones));
+		zones[i]->setEditable((!lockInputZones) && showInputZones);
 		updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
 	}
 	
@@ -456,7 +456,7 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
         return;
     }
-    laser->sendRawPoints(points, &getZone(zonenum), globalBrightness);
+    laser->sendRawPoints(points, getZone(zonenum), globalBrightness);
 	
 }
 
@@ -476,8 +476,9 @@ void ManagerBase::initAndLoadSettings() {
 	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
 	
 	interfaceParams.setName("Interface");
-	interfaceParams.add(lockInputZones.set("Lock input zones", true));
-	interfaceParams.add(showInputPreview.set("Show preview", true));
+    interfaceParams.add(lockInputZones.set("Lock input zones", true));
+    interfaceParams.add(showInputZones.set("Show input zones", true));
+    interfaceParams.add(showInputPreview.set("Show preview", true));
 	interfaceParams.add(showOutputPreviews.set("Show path previews", true));
 	//interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
 	//interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
@@ -485,7 +486,7 @@ void ManagerBase::initAndLoadSettings() {
     useBitmapMask = showBitmapMask = laserMasks = false;
 	params.add(interfaceParams);
 	
-	customParams.setName("Custom");
+	customParams.setName("CUSTOM PARAMETERS");
 	params.add(customParams);
     params.add(numLasers.set("numLasers", 0));
 	
@@ -636,7 +637,7 @@ ofPoint ManagerBase::gLProject(ofPoint p) {
 	
 }
 ofPoint ManagerBase::gLProject( float x, float y, float z ) {
-	
+    
     ofRectangle rViewport = ofGetCurrentViewport();
 	
 	glm::mat4 modelview, projection;
@@ -671,11 +672,20 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 
 
 
-
-Zone& ManagerBase::getZone(int zonenum) {
-	// TODO bounds check?
-	return *zones.at(zonenum);
-	
+//
+//Zone& ManagerBase::getZone(int zonenum) {
+//    // TODO bounds check?
+//    return *zones.at(zonenum);
+//    
+//}
+Zone* ManagerBase::getZone(int zonenum) {
+    // TODO bounds check?
+    if((zonenum>=0) && (zonenum<zones.size())) {
+        return zones.at(zonenum);
+    } else {
+        return nullptr;
+    }
+    
 }
 
 int ManagerBase::getNumZones() {

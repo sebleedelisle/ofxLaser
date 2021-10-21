@@ -14,6 +14,7 @@
 
 namespace ofxLaser {
 
+
 class UI {
     
     public :
@@ -125,10 +126,11 @@ class UI {
         else return false;
     }
     static bool keyPressed(ofKeyEventArgs &e) {
-        ImGui::GetIO().KeysDown[e.key] = true;
+       // ImGui::GetIO().KeysDown[e.key] = true;
+        
         if(ImGui::GetIO().WantCaptureKeyboard) {
             
-            //ofLogNotice("ImGui captured key press");
+           // ofLogNotice("ImGui captured key press");
             return true;
         }
         else {
@@ -138,7 +140,7 @@ class UI {
     }
     static bool keyReleased(ofKeyEventArgs &e) {
         // TODO check but I think this happens twice...
-        ImGui::GetIO().KeysDown[e.key] = false;
+       // ImGui::GetIO().KeysDown[e.key] = false;
         if(ImGui::GetIO().WantCaptureKeyboard) {
             return false;
         }

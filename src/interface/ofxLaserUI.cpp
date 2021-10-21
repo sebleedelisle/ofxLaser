@@ -62,8 +62,8 @@ void UI::setupGui() {
     ofEvents().mouseDragged.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
-  //  ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
-  //  ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
+    //ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
+    //ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
 }
 
 void UI::updateGui() {
@@ -225,16 +225,39 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
 
 bool UI::addParameter(ofAbstractParameter& param) {
     shared_ptr<ofAbstractParameter> ref = param.newReference();
-    addParameter(ref);
+    return addParameter(ref);
 }
 bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
     auto parameterGroupPtr = std::dynamic_pointer_cast<ofParameterGroup>(param);
     if(parameterGroupPtr) {
+        if(parameterGroupPtr->getName()!="") {
+            ImGui::Separator();
+            ImGui::Text("%s", parameterGroupPtr->getName().c_str());
+            //ImGui::NewLine();
+        }
+        
+        //    bool treevisible = ImGui::TreeNode(parameterGroupPtr->getName().c_str());
+        //    if (treevisible){
+        
+        
+        
         for(auto& param : *parameterGroupPtr) {
             addParameter(param);
-        
         }
+
+    
+        
+        
+        //       ImGui::TreePop();
+     //   }
+//        } else {
+//            for(auto& param : *parameterGroupPtr) {
+//                addParameter(param);
+//            }
+//
+//        }
+            
     }
     auto parameterBoolPtr = std::dynamic_pointer_cast<ofParameter<bool>>(param);
     if(parameterBoolPtr) {
@@ -272,10 +295,22 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
     auto parameterString = std::dynamic_pointer_cast<ofParameter<string>>(param);
     if (parameterString){
-        vector<string> lines = ofSplitString(parameterString->get(), "\n");
-        for(string& line : lines) {
-            ImGui::Text("%s", line.c_str()); 
-        }
+       // if(parameterString->getName()=="") {
+            vector<string> lines = ofSplitString(parameterString->get(), "\n");
+            for(string& line : lines) {
+                ImGui::Text("%s", line.c_str());
+            }
+       // } else {
+            //vector<string> lines = ofSplitString(parameterString->get(), "\n");
+            //if(lines.size>1) {
+            //char *buf = *parameterString.get().c_str();
+           // char* str = parameterString->get().c_str();
+            
+            //string inputtext = parameterString->get();
+            //ImGui::InputTextMultiline("Text", &inputtext);
+            
+        //}
+        
         return true;
     }
     // throw error here?
@@ -284,11 +319,12 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
 }
 
 void UI::addParameterGroup(ofParameterGroup& parameterGroup) {
-    for(auto& param : parameterGroup) {
-        addParameter(param);
-        
-    }
-    
+    addParameter(parameterGroup);
+//    for(auto& param : parameterGroup) {
+//        addParameter(param);
+//
+//    }
+//
 }
 
 ofMesh UI::dashedLineMesh;

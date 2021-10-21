@@ -40,17 +40,21 @@ void QuadGui::setName (string displaylabel) {
 
 
 void QuadGui::set (const ofRectangle& rect) {
-    set(rect.x, rect.y, rect.getWidth(), rect.getHeight());
+//    if(rect.getArea()<1) {
+//        ofLogNotice("QuadGui::set - teeny rect");
+//    }
+    set(rect.getLeft(), rect.getTop(), rect.getWidth(), rect.getHeight());
 }
 
 void QuadGui::set(float x, float y, float w, float h) {
+   // ofLogNotice("QuadGui::set");
     
     allHandles.clear();
     
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
-        
+      //  cout << i<<" "<< xpos << " " << ypos << endl;
         handles[i].set(xpos, ypos);
          
         allHandles.push_back(&handles[i]);
