@@ -225,7 +225,7 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
 
 bool UI::addParameter(ofAbstractParameter& param) {
     shared_ptr<ofAbstractParameter> ref = param.newReference();
-    addParameter(ref);
+    return addParameter(ref);
 }
 bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
