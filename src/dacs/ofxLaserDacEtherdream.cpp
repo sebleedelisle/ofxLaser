@@ -35,7 +35,7 @@ DacEtherdream :: DacEtherdream(){
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
     dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-	pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
+    pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 

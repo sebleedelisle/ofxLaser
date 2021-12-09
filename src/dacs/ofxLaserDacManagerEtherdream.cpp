@@ -16,6 +16,11 @@ DacManagerEtherdream :: DacManagerEtherdream()  {
     
     udpConnection.Setup(settings);
     startThread();
+    
+    labelById = {
+        {"5EE67D9E3666","EtherDream A2"}
+
+    };
 
     
 }
@@ -30,13 +35,14 @@ DacManagerEtherdream :: ~DacManagerEtherdream()  {
 
 void DacManagerEtherdream :: threadedFunction() {
     
+    const int packetSize = 50;
+    char udpMessage[packetSize];
+
     while(isThreadRunning()) {
         
         // LET'S ASSUME FOR NOW...
         // that every packet is a complete message from a single dac.
         
-        const int packetSize = 50;
-        char udpMessage[packetSize];
         memset(udpMessage,0,sizeof(udpMessage));
         int numBytesReceived = udpConnection.Receive(udpMessage,packetSize); //returns number of bytes received
         
@@ -96,9 +102,15 @@ void DacManagerEtherdream :: threadedFunction() {
             sprintf(idchar, "%lX", macAddress);
             string id(idchar);
             
-            EtherdreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
-            etherdreamDataByMacAddress[id] = ed;
-            
+            // if we haven't already got this etherdream, then add it
+            if(etherdreamDataByMacAddress.find(id) == etherdreamDataByMacAddress.end()) {
+                EtherdreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
+                ofLogNotice("Adding etherdream "+ id);
+                etherdreamDataByMacAddress[id] = ed;
+            } else {
+                
+                etherdreamDataByMacAddress[id].lastUpdateTime = ofGetElapsedTimef(); 
+            } 
             
         }
         sleep(10);
@@ -122,6 +134,11 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
         //ofLogNotice("lastUpdateTime : " ) << (ofGetElapsedTimef() - ed.lastUpdateTime);
         if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
             daclist.emplace_back(getType(), id, ed.ipAddress);
+            // here is where to look up the label!
+            if(labelById.find(id)!=labelById.end()) {
+                daclist.back().label = labelById[id];
+                
+            }
         }
         
     }

@@ -81,9 +81,10 @@ class ManagerBase {
     void disarmAllLasers();
     void testPatternAllLasers(int& pattern);
     
-    void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT);
-    void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT);
-    
+    void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT, float brightness = 1);
+    void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+   
     void drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
@@ -181,6 +182,8 @@ class ManagerBase {
     //ofParameter<int> testPattern;
     
     ofPolyline tmpPoly; // to avoid generating polyline objects
+    vector<glm::vec3> tmpPoints;
+  //  vector<ofColor> tmpColours;
     
     private:
 };

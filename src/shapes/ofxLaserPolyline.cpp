@@ -14,7 +14,7 @@ Polyline::Polyline() {
 	
 	reversable = true;
 	colour = ofColor::white;
-	cachedProfile = NULL;
+	cachedProfile = nullptr;
 	multicoloured = false;
 	
 	tested = false;
@@ -22,21 +22,29 @@ Polyline::Polyline() {
 
 }
 
-Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel){
-	init(poly, col, profilelabel);
+Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness){
+	init(poly, col, profilelabel, brightness);
 	
 }
 
-Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
+Polyline::Polyline(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel, float brightness){
 	
-	init(poly, sourcecolours, profilelabel);
+	init(poly, sourcecolours, profilelabel, brightness);
 
 }
 
-void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilelabel){
+Polyline::Polyline(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profilelabel, float brightness) {
+    init(points, colours, profilelabel, brightness);
+    
+}
+
+
+
+
+void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness){
 	
 	reversable = true;
-	colour = col;
+	colour = col*brightness;
 	cachedProfile = NULL;
 	multicoloured = false;
 	
@@ -47,54 +55,90 @@ void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilela
 	
 }
 
-void Polyline::init(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel){
+void Polyline::init(const ofPolyline& poly, const vector<ofColor>& sourcecolours, string profilelabel, float brightness){
 	
 	reversable = true;
 	cachedProfile = NULL;
 	
 	multicoloured = true;
-	colours = sourcecolours; // should copy
+    colours.resize(sourcecolours.size());
+    for(size_t i = 0; i<sourcecolours.size(); i++ ) {
+        colours[i] = sourcecolours[i]*brightness;
+    }
+	//colours = sourcecolours; // should copy
 	
 	tested = false;
 	profileLabel = profilelabel;
 	
 	
 	initPoly(poly);
-	
+    
 	
 }
 
+void Polyline::initPoly(const ofPolyline& poly) {
+    
+    initPoly(poly.getVertices());
+    
+    ofPolyline& polyline = *polylinePointer;
+    if(poly.isClosed()) {
+        polyline.addVertex(polyline.getVertices().front());
+        polyline.setClosed(false);
+    }
+}
 
-void Polyline::initPoly(const ofPolyline& poly){
-	
+
+void Polyline::init(const vector<glm::vec3>& points, const vector<ofColor>& sourcecolours, string profilelabel, float brightness){
+    
+    reversable = true;
+    cachedProfile = NULL;
+    
+    multicoloured = true;
+    colours.resize(sourcecolours.size());
+    for(size_t i = 0; i<sourcecolours.size(); i++ ) {
+        colours[i] = sourcecolours[i]*brightness;
+    }
+    
+    tested = false;
+    profileLabel = profilelabel;
+    
+    initPoly(points); 
+}
+
+//void Polyline::initPoly(const ofPolyline& poly){
+void Polyline::initPoly(const vector<glm::vec3> verticesToCopy){
+   
 	if(polylinePointer==NULL) {
-		polylinePointer = ofxLaser::Factory::getPolyline();
+		polylinePointer = ofxLaser::Factory::getPolyline(false);
 	} else {
-    	polylinePointer->clear();
+    	//polylinePointer->clear();
 	}
+    vector<glm::vec3>& vertices = polylinePointer->getVertices();
+    //const vector<glm::vec3>& verticesToCopy = poly.getVertices();
+    
+    vertices.resize(verticesToCopy.size());
+    
+    //if(polylinePointer->getVertice)
+	//*polylinePointer = poly;  // makes a copy, hopefully
+    
+    for(size_t i = 0; i<verticesToCopy.size(); i++) {
+
+        glm::vec3& vertex = vertices[i];
+        vertex = verticesToCopy[i];
+        if(i==0) {
+            boundingBox.set(vertex, 1,1);
+        } else {
+            boundingBox.growToInclude(vertex);
+        }
+    }
 	
-	*polylinePointer = poly;  // makes a copy, hopefully
-//    auto & vertices =poly.getVertices();
-//    ofPoint p;
-//    for(size_t i = 0; i<vertices.size(); i++) {
-//
-//        //p = ofxLaser::Manager::instance()->gLProject(vertices[i]);
-//        p = vertices[i];
-//        polyline.addVertex(p);
-//
-//    }
 	
-	ofPolyline& polyline = *polylinePointer;
-	if(poly.isClosed()) {
-		polyline.addVertex(polyline.getVertices().front());
-    	polyline.setClosed(false);
-	}
-	const vector<glm::vec3>& vertices = polyline.getVertices();
+	//const vector<glm::vec3>& vertices = polyline.getVertices();
 	
 	startPos = vertices.front();
 	// to avoid a bug in polyline in open polys
 	endPos = vertices.back();
-	boundingBox = polyline.getBoundingBox();
+	//boundingBox = polyline.getBoundingBox();
    
 	
 }

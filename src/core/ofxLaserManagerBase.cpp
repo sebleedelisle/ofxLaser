@@ -228,7 +228,7 @@ void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensit
 	shapes.push_back(d);
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName){
+void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -245,13 +245,13 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
 	
 	
 	
-	Polyline* p =new ofxLaser::Polyline(polyline, col, profileName);
+	Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
 	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName){
+void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName, float brightness){
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -266,14 +266,46 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
 	for(glm::vec3& v : polyline.getVertices()) {
 		v = gLProject(v);
 	}
-	
+    if(brightness<1) {
+        for(ofColor & c : colours) {
+            c*=brightness;
+            
+        }
+    }
 	ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
 	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
-	
-	
 }
+
+void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName, float brightness){
+    
+    if(points.size()==0) return;
+    tmpPoints = points;
+    for(glm::vec3& v : tmpPoints) {
+        v = gLProject(v);
+    }
+    //vector<ofColor>* colourPointer = &colours;
+    
+//    if(brightness<1) {
+//        tmpColours = colours;
+//        for(ofColor & c : tmpColours) {
+//            c*=brightness;
+//
+//        }
+//    }
+    ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
+    
+    if(p->polylinePointer->getPerimeter()>0.1) {
+        p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    
+        shapes.push_back(p);
+    } else {
+        delete p;
+    }
+}
+
+
 void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col,string profileName){
     drawCircle(glm::vec3(x, y, 0), radius, col, profileName);
 }
@@ -323,7 +355,7 @@ void ManagerBase:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		zones[i]->setEditable((!lockInputZones) && showInputZones);
+		zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
 		updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
 	}
 	

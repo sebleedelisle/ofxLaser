@@ -76,6 +76,28 @@ class UI {
         
         
     }
+    
+    static void drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled = false, bool fromCentre=false, float thickness = 2.0f) {
+        
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ofRectangle rect(x, y, w, h);
+        if(fromCentre) rect.setFromCenter(x, y, w, h);
+        
+        ImU32 imCol = ofColorToImU32(colour);
+        
+        if(filled) {
+            draw_list->AddRectFilled(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0);
+        } else {
+            draw_list->AddRect(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0, thickness);
+        }
+    }
+    
+    
+    
+    static ImU32 ofColorToImU32 (ofColor col) {
+        return ImGui::GetColorU32(ImVec4((float)col.r/255.0f, (float)col.g/255.0f, (float)col.b/255.0f, (float)col.a/255.0f));
+        
+    }
     static void endWindow() {
         ImGui::End();
     }
@@ -108,8 +130,9 @@ class UI {
 		return false; // propogate events 
     }
     static bool mousePressed(ofMouseEventArgs &e) {
-        
-        ImGui::GetIO().MouseDown[e.button] = true;
+        int iobutton = e.button;
+        if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MouseDown[iobutton] = true;
         //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
         if(ImGui::GetIO().WantCaptureMouse) {
             //ofLogNotice("ImGui captured mouse press");
@@ -121,7 +144,9 @@ class UI {
         }
     }
     static bool mouseReleased(ofMouseEventArgs &e) {
-        ImGui::GetIO().MouseDown[e.button] = false;
+        int iobutton = e.button;
+        if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MouseDown[iobutton] = false;
         if(ImGui::GetIO().WantCaptureMouse) return true;
         else return false;
     }

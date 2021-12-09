@@ -97,7 +97,7 @@ class Laser {
     
     void drawTransformAndPath(ofRectangle rect); 
 
-    
+    vector<Point>& getLaserPoints() { return laserPoints;}; 
    
     LaserZone* getLaserZoneForZone(Zone* zone);
     
