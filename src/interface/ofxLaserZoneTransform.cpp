@@ -426,7 +426,7 @@ void ZoneTransform :: removeListeners() {
 	
 }
 
-bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
+void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     
     
     if((!editable) || (!visible)) return false;
@@ -434,11 +434,11 @@ bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
-    return false;
+    //return false;
 
 }
 
-bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
+void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	// TODO there is currently an issue where if a zone is on top of another
     // zone, you can't click on a handle underneath. Not sure of how to fix this...
@@ -455,12 +455,12 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
-		return false; // keeps the event propogating
+		return ; // keeps the event propogating
 	}
 	
 	
 	if(!selected) {
-		return false;
+		return ;
 	}
 	
 	bool handleHit = false;
@@ -531,17 +531,17 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	if(!handleHit && !hit) {
 		selected = false;
 	}
-	return handleHit || hit;
+	//return handleHit || hit;
 	
 }
 
 
 
 
-bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
+void ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
-    if((!editable) || (!visible)) return false;
-	if(!selected) return false;
+    if((!editable) || (!visible)) return ;
+	if(!selected) return ;
 
 	ofPoint mousePoint;
     mousePoint.x = e.x;
@@ -565,16 +565,16 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	isDirty |= (dragCount>0);
 	if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
 	
-	return dragCount>0;
+	//return dragCount>0;
 	
 	
 }
 
 
-bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
+void ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	
 	//if(!editable) return false;
-	if(!selected) return false;
+	if(!selected) return;
 	
 	bool wasDragging = false;
 	
@@ -585,7 +585,7 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
     // TODO mark as dirty so auto save ********************
 	//saveSettings();
     isDirty|=wasDragging;
-	return wasDragging;
+	//return wasDragging;
 	
 }
 

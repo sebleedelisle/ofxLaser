@@ -137,6 +137,7 @@ class UI {
         if(ImGui::GetIO().WantCaptureMouse) {
             //ofLogNotice("ImGui captured mouse press");
             return true;
+          
         }
         else {
             //ofLogNotice("ImGui no capture mouse press");

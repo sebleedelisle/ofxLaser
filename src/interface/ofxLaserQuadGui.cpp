@@ -250,7 +250,7 @@ bool QuadGui :: hitTest(const ofPoint& p) {
 }
 
 
-bool QuadGui :: mousePressed(ofMouseEventArgs &e){
+void QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
 	if((!editable) || (!visible)) return false;
 
@@ -258,12 +258,12 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if((hit) &&(!selected)) {
         // make sure events stop bubbling
         selected = true;
-        return true;
+        return ;
     }
     
         
     if(!selected) {
-        return false;
+        return ;
     }
     ofPoint mousePoint = e;
     mousePoint-=offset;
@@ -297,7 +297,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if(!handleHit && !hit) {
         selected = false;
     }
-    return handleHit;
+    //return handleHit;
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){
@@ -309,11 +309,11 @@ void QuadGui :: mouseMoved(ofMouseEventArgs &e){
     isDirty = true;
     
 }
-bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
+void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 
-    if((!editable) || (!visible)) return false;
+    if((!editable) || (!visible)) return ;
 
-	if(!selected) return false;
+	if(!selected) return ;
 
     mousePos = e;
     mousePos-=offset;
@@ -343,7 +343,7 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
 	isDirty |= dragging;
 	
 	
-	return dragging;
+	//return dragging;
 	
 	
 }
@@ -360,10 +360,10 @@ void QuadGui :: updatePoly() {
     
 }
 
-bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
+void QuadGui :: mouseReleased(ofMouseEventArgs &e){
 	
 	//if(!visible) return false;
-	if(!selected) return false;
+	if(!selected) return ;
 
 	
 	bool wasDragging = false;
@@ -380,7 +380,7 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
     }
     
     isDirty |= wasDragging;
-	return wasDragging;
+	//return wasDragging;
 	
 }
 

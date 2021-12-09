@@ -44,10 +44,10 @@ class QuadGui {
     void removeListeners();
     
  
-	bool mousePressed(ofMouseEventArgs &e);
-    bool mouseDragged(ofMouseEventArgs &e);
+	void mousePressed(ofMouseEventArgs &e);
+    void mouseDragged(ofMouseEventArgs &e);
     void mouseMoved(ofMouseEventArgs &e);
-    bool mouseReleased(ofMouseEventArgs &e);
+    void mouseReleased(ofMouseEventArgs &e);
     
     // hit test in screen space
     // (takes into account the offset and scale)
