@@ -50,7 +50,7 @@ class DacAssigner {
     vector<DacData> dacDataList;
     //vector<DacBase*> dacs; 
     DacData emptyDacData;
-
+    map<string, string> aliasByLabel; 
     private:
     
     

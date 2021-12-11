@@ -42,6 +42,7 @@ class DacData {
 
 	}
     string label;   // display label ie "Etherdream #efbd59" - maybe not necessary as we can compile this
+    string alias;   // a friendly name for the DAC 
     string type;    // type ie "Etherdream", "Helios" etc - should this be a class?
     string id;      // id is the Mac address or the serial number
     string address; // IP address for network DACs

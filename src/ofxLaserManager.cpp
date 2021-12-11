@@ -1027,7 +1027,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             for(const DacData& dacdata : dacList) {
                 
                 // get the dac label (usually type + unique ID)
-                string itemlabel = dacdata.label;
+                string itemlabel = dacdata.alias=="" ? dacdata.label : dacdata.alias;
                 
                 ImGuiSelectableFlags selectableflags = 0;
                 

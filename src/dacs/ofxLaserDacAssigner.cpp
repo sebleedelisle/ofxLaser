@@ -29,6 +29,14 @@ DacAssigner :: DacAssigner() {
         throw;
 	}
     
+    aliasByLabel = {
+        {"Etherdream 5EE67D9E3666","EtherDream A2"},
+        {"Etherdream 66E647A5986A", "EtherDream A1"},
+        {"Etherdream 4AE1B1A5006A", "EtherDream A3"},
+        {"Etherdream 66E62D9EFE66", "EtherDream A4"}
+    };
+
+    
     dacManagers.push_back(new DacManagerLaserdock());
     dacManagers.push_back(new DacManagerHelios());
     dacManagers.push_back(new DacManagerEtherdream());
@@ -41,7 +49,7 @@ DacAssigner :: ~DacAssigner() {
 }
 
 const vector<DacData>& DacAssigner ::getDacList(){
-    return dacDataList; 
+    return dacDataList;
 }
 
 const vector<DacData>& DacAssigner ::updateDacList(){
@@ -56,6 +64,12 @@ const vector<DacData>& DacAssigner ::updateDacList(){
         newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
         
     }
+    for(DacData& newdacdata : newdaclist) {
+        if(aliasByLabel.find(newdacdata.label)!=aliasByLabel.end()) {
+            newdacdata.alias = aliasByLabel[newdacdata.label];
+            
+        }
+    }
     
     // go through the existing list, check against the new
     // list and if it can't find it any more, mark it as
@@ -63,6 +77,8 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     
     for(DacData& dacdata : dacDataList) {
         bool nowavailable = false;
+        // Look up alias here!
+       
         for(DacData& newdacdata : newdaclist) {
             // compare the new dac to the existing one
             if(newdacdata.id == dacdata.id) {
@@ -79,8 +95,11 @@ const vector<DacData>& DacAssigner ::updateDacList(){
                 // So let's get the dac and assign it to the laser!
                 if(!dacdata.available && (dacdata.assignedLaser!=nullptr)) {
                     DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
-                    dacdata.assignedLaser->setDac(dacToAssign);
-                    dacdata.available = true;
+                    if(dacToAssign!=nullptr) {
+                        dacToAssign->alias = dacdata.alias;
+                        dacdata.assignedLaser->setDac(dacToAssign);
+                        dacdata.available = true;
+                    }
                 }
                 break;
             }
@@ -103,6 +122,7 @@ const vector<DacData>& DacAssigner ::updateDacList(){
         
         // if it's new, add it to the list
         if(isnew) {
+           
             dacDataList.push_back(newdacdata);
         }
     }
@@ -134,6 +154,10 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         dacDataList.emplace_back(dactype, dacid, "", &laser);
         dacdataptr = &dacDataList.back();
         dacdataptr->available = false;
+        if(aliasByLabel.find(dacdataptr->label)!=aliasByLabel.end()) {
+            dacdataptr->alias = aliasByLabel[dacdataptr->label];
+            
+        }
        
         return false;
         
@@ -173,6 +197,10 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     }
     // if success
     if(dacToAssign!=nullptr) {
+        
+        // is there a better place to assign this?
+        dacToAssign->alias = dacdata.alias;
+        
         // give the dac to the laser
         laser.setDac(dacToAssign);
         // store a reference to the laser in the

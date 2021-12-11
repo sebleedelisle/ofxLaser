@@ -17,10 +17,10 @@ DacManagerEtherdream :: DacManagerEtherdream()  {
     udpConnection.Setup(settings);
     startThread();
     
-    labelById = {
-        {"5EE67D9E3666","EtherDream A2"}
-
-    };
+//    labelById = {
+//        {"5EE67D9E3666","EtherDream A2"}
+//
+//    };
 
     
 }
@@ -135,10 +135,10 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
         if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
             daclist.emplace_back(getType(), id, ed.ipAddress);
             // here is where to look up the label!
-            if(labelById.find(id)!=labelById.end()) {
-                daclist.back().label = labelById[id];
-                
-            }
+//            if(labelById.find(id)!=labelById.end()) {
+//                daclist.back().label = labelById[id];
+//
+//            }
         }
         
     }

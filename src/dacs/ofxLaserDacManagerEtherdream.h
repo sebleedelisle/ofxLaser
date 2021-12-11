@@ -48,7 +48,7 @@ class DacManagerEtherdream : public DacManagerBase, ofThread{
     ofxUDPManager udpConnection;
 
     map<string, EtherdreamData> etherdreamDataByMacAddress;
-    map<string, string> labelById; 
+   // map<string, string> labelById; 
     
 };
 }
