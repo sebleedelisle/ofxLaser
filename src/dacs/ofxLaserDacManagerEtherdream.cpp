@@ -97,7 +97,7 @@ void DacManagerEtherdream :: threadedFunction() {
 //            cout << "Max point rate   :" << maxPointRate << endl;
 //            cout << "Buffer           :" << status.buffer_fullness << endl;
 //            cout << "Point count      :" << status.point_count << endl;
-           
+//           
             char idchar[100];
             sprintf(idchar, "%lX", macAddress);
             string id(idchar);

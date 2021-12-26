@@ -102,7 +102,7 @@ class ZoneTransform {
 	
 	ofParameterGroup params;
 
-
+    ofParameter<bool>locked; 
 	ofParameter<bool>editSubdivisions;
 	ofParameter<bool>useHomography;
 	ofParameter<int>xDivisionsNew;

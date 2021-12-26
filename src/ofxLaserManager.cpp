@@ -348,6 +348,10 @@ void Manager :: drawPreviews() {
             
         }
         
+        for(Laser* laser : lasers) {
+            laser->disableTransformGui();
+        }
+        
         
     } else {
         float thirdOfHeight = ofGetHeight()/3;

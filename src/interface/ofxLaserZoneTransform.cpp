@@ -30,8 +30,9 @@ ZoneTransform::ZoneTransform() {
     // Used for serialize / deserialize
 	params.setName("ZoneTransformParams");
 
-	params.add(xDivisionsNew.set("x divisions", 1,1,6));
-	params.add(yDivisionsNew.set("y divisions", 1,1,6));
+    params.add(locked.set("locked", false));
+    params.add(xDivisionsNew.set("x divisions", 1,1,6));
+    params.add(yDivisionsNew.set("y divisions", 1,1,6));
 	params.add(editSubdivisions.set("edit subdivisions", false));
 	params.add(useHomography.set("perspective", true));
 
@@ -83,6 +84,7 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 
 bool ZoneTransform::update(){
 	if(isDirty) {
+        //if(locked) selected = false;
 		updateQuads();
         
         isDirty = false;
@@ -465,69 +467,70 @@ void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	bool handleHit = false;
 	
-	// this section of code if we click drag anywhere in the zone
+        if(!locked) {
+        // this section of code if we click drag anywhere in the zone
 
-	for(size_t i= 0; i<dstHandles.size(); i++) {
-		if(dstHandles[i].hitTest(mousePos)) {
-			
-			if(!editSubdivisions && !isCorner((int)i)) continue;
-			
-			dstHandles[i].startDrag(mousePos);
-			handleHit = true;
-			
-			if(!editSubdivisions) {
-				
-				DragHandle& currentHandle = dstHandles[i];
-				
-				vector<DragHandle*> corners;
-				DragHandle& topLeft = dstHandles[0];
-				DragHandle& topRight = dstHandles[xDivisions+1-1];
-				DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
-				DragHandle& bottomRight = dstHandles.back();
-				
-				corners.push_back(&topLeft);
-				corners.push_back(&topRight);
-				corners.push_back(&bottomLeft);
-				corners.push_back(&bottomRight);
-			
-				int handleIndex = 0;
-				if(currentHandle == topLeft) handleIndex = 0;
-				else if(currentHandle == topRight) handleIndex = 1;
-				else if(currentHandle == bottomLeft) handleIndex = 2;
-				else if(currentHandle == bottomRight) handleIndex =3;
-				
-				int x = ((handleIndex%2)+1)%2;
-				int y = handleIndex/2;
-				
-				int xhandleindex = x+(y*2);
-				
-				x = handleIndex%2;
-				y = ((handleIndex/2)+1)%2;
-				int yhandleindex = x+(y*2);
-				
-				corners[xhandleindex]->startDrag(mousePos, false,true, true);
-				corners[yhandleindex]->startDrag(mousePos, true,false, true);
-				
-//				bottomLeft.startDrag(mousePoint, false,true, true);
-//				topRight.startDrag(mousePoint, true,false, true);
-				
-			}
-		}
-		
-	}
-	
-	// drag all the handles!
-	if(!handleHit && hit) {
+        for(size_t i= 0; i<dstHandles.size(); i++) {
+            if(dstHandles[i].hitTest(mousePos)) {
+                
+                if(!editSubdivisions && !isCorner((int)i)) continue;
+                
+                dstHandles[i].startDrag(mousePos);
+                handleHit = true;
+                
+                if(!editSubdivisions) {
+                    
+                    DragHandle& currentHandle = dstHandles[i];
+                    
+                    vector<DragHandle*> corners;
+                    DragHandle& topLeft = dstHandles[0];
+                    DragHandle& topRight = dstHandles[xDivisions+1-1];
+                    DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
+                    DragHandle& bottomRight = dstHandles.back();
+                    
+                    corners.push_back(&topLeft);
+                    corners.push_back(&topRight);
+                    corners.push_back(&bottomLeft);
+                    corners.push_back(&bottomRight);
+                
+                    int handleIndex = 0;
+                    if(currentHandle == topLeft) handleIndex = 0;
+                    else if(currentHandle == topRight) handleIndex = 1;
+                    else if(currentHandle == bottomLeft) handleIndex = 2;
+                    else if(currentHandle == bottomRight) handleIndex =3;
+                    
+                    int x = ((handleIndex%2)+1)%2;
+                    int y = handleIndex/2;
+                    
+                    int xhandleindex = x+(y*2);
+                    
+                    x = handleIndex%2;
+                    y = ((handleIndex/2)+1)%2;
+                    int yhandleindex = x+(y*2);
+                    
+                    corners[xhandleindex]->startDrag(mousePos, false,true, true);
+                    corners[yhandleindex]->startDrag(mousePos, true,false, true);
+                    
+    //				bottomLeft.startDrag(mousePoint, false,true, true);
+    //				topRight.startDrag(mousePoint, true,false, true);
+                    
+                }
+            }
+            
+        }
+        
+        // drag all the handles!
+        if(!handleHit && hit) {
 
-		//centreHandle.startDrag(mousePoint);
-		handleHit = true;
-		for(size_t i= 0; i<dstHandles.size(); i++) {
-			dstHandles[i].startDrag(mousePos);
-		}
+            //centreHandle.startDrag(mousePoint);
+            handleHit = true;
+            for(size_t i= 0; i<dstHandles.size(); i++) {
+                dstHandles[i].startDrag(mousePos);
+            }
 
 
-	}
-	
+        }
+    }
 	if(!handleHit && !hit) {
 		selected = false;
 	}

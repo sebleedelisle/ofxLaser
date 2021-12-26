@@ -250,7 +250,7 @@ bool QuadGui :: hitTest(const ofPoint& p) {
 }
 
 
-void QuadGui :: mousePressed(ofMouseEventArgs &e){
+bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
 	if((!editable) || (!visible)) return false;
 
@@ -297,7 +297,7 @@ void QuadGui :: mousePressed(ofMouseEventArgs &e){
     if(!handleHit && !hit) {
         selected = false;
     }
-    //return handleHit;
+    return handleHit;
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){

@@ -340,9 +340,18 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 }
 
 void ManagerBase:: update(){
+    
+    // etherdreams aren't always available at start time, so here's a hacky delay to check 
+    if((!dacsInitialised) && (ofGetElapsedTimef()>3)) {
+        dacAssigner.updateDacList();
+        dacsInitialised = true;
+    }
+    
 	if(doArmAll) armAllLasers();
 	if(doDisarmAll) disarmAllLasers();
-	zonesChanged = false;
+	
+    
+    zonesChanged = false;
 	
 	if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!

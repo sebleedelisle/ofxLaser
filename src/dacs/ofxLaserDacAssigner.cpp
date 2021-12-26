@@ -30,10 +30,31 @@ DacAssigner :: DacAssigner() {
 	}
     
     aliasByLabel = {
-        {"Etherdream 5EE67D9E3666","EtherDream A2"},
-        {"Etherdream 66E647A5986A", "EtherDream A1"},
-        {"Etherdream 4AE1B1A5006A", "EtherDream A3"},
-        {"Etherdream 66E62D9EFE66", "EtherDream A4"}
+       
+        {"Etherdream 66E647A5986A", "SebLee ED A01"},
+        {"Etherdream 5EE67D9E3666", "SebLee ED A02"},
+        {"Etherdream 4AE1B1A5006A", "SebLee ED A03"},
+        {"Etherdream 66E62D9EFE66", "SebLee ED A04"},
+        {"Etherdream 66E653A5686A", "SebLee ED A05"},
+        {"Etherdream 76E6069EE666", "SebLee ED A06"},
+        {"Etherdream 4EE1A5A5246A", "SebLee ED A07"},
+        {"Etherdream 76E6FA9D2267", "SebLee ED A08"},
+        {"Etherdream 3AE1D9A5386A", "SebLee ED A09"},
+        {"Etherdream 66E641A5BC6A", "SebLee ED A10"},
+        {"Etherdream 4AE1AAA51C6A", "SebLee ED A11"},
+        {"Etherdream 36E1E6A5346A", "SebLee ED A12"},
+        {"Etherdream 124DACB1EF44", "SebLee ED B01"},
+        {"Etherdream 124DACE7DAFB", "SebLee ED B02"},
+        {"Etherdream 124DAC75882B", "SebLee ED B03"},
+        {"Etherdream 124DACCE68EA", "SebLee ED B04"},
+        {"Etherdream 124DAC730C99", "SebLee ED B05"},
+        {"Etherdream 124DACD146EB", "SebLee ED B06"},
+        {"Etherdream 124DACF2D99A", "SebLee ED B07"},
+        {"Etherdream 124DACE6D0CC", "SebLee ED B08"},
+        {"Etherdream 124DAC193A1B", "SebLee ED B09"},
+        {"Etherdream 124DAC1BBFD3", "SebLee ED B10"},
+        {"Etherdream 124DAC62CB62", "SebLee ED B11"},
+        {"Etherdream 124DACC90945", "SebLee ED B12"}
     };
 
     

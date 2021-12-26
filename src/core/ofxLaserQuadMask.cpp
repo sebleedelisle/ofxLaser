@@ -48,8 +48,8 @@ void QuadMask:: draw() {
     ofFill();
     
     //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
-    
-    ofSetColor(ofMap(maskLevel,0,100,255,0));
+    //ofDisableBlendMode();
+    ofSetColor(0,0,0,ofMap(maskLevel,0,100,0,255));
 
     ofBeginShape();
     ofVertex(handles[0]);

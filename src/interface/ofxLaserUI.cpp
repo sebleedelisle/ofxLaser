@@ -96,7 +96,10 @@ bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, s
     //cout << param.getName()<< " " << param << " " << resetParam.getName() << " " << resetParam << endl; 
     if(param!=resetParam) {
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-        if (ImGui::Button("R")) param.set(resetParam);
+        if (ImGui::Button("R")) {
+            param.set(resetParam);
+            returnvalue = true; 
+        }
     }
 	return returnvalue; 
 }

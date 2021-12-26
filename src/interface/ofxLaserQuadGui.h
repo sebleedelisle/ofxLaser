@@ -44,7 +44,7 @@ class QuadGui {
     void removeListeners();
     
  
-	void mousePressed(ofMouseEventArgs &e);
+	bool mousePressed(ofMouseEventArgs &e);
     void mouseDragged(ofMouseEventArgs &e);
     void mouseMoved(ofMouseEventArgs &e);
     void mouseReleased(ofMouseEventArgs &e);

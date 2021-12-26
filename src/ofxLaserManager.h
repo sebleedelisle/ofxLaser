@@ -28,6 +28,12 @@ class Manager : public ManagerBase {
         return ofRectangle(previewOffset.x, previewOffset.y, width*previewScale, height*previewScale); 
         
     }
+    void fitPreviewInRect(ofRectangle fitrect ) {
+        previewScale = fitrect.width/width;
+        if(height*previewScale>fitrect.height) previewScale = fitrect.height/height;
+        previewOffset = fitrect.getTopLeft();
+        
+    }
     
     virtual void setCanvasSize(int width, int height) override; 
     bool setGuideImage(string filename);
