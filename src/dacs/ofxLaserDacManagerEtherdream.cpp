@@ -17,11 +17,6 @@ DacManagerEtherdream :: DacManagerEtherdream()  {
     udpConnection.Setup(settings);
     startThread();
     
-//    labelById = {
-//        {"5EE67D9E3666","EtherDream A2"}
-//
-//    };
-
     
 }
 DacManagerEtherdream :: ~DacManagerEtherdream()  {
@@ -57,7 +52,7 @@ void DacManagerEtherdream :: threadedFunction() {
 //            std::cout << "Packet Size: " << numBytesReceived << std::endl;
 //            std::cout << "UDP Packet: " << std::endl;
 //
-            unsigned long macAddress=0;
+            uint64_t macAddress=0;
             int i = 0;
             for(i = 0; i < 6 ; i++) {
                 macAddress<<=8;
