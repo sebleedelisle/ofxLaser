@@ -55,11 +55,14 @@ void DacManagerEtherdream :: threadedFunction() {
             uint64_t macAddress=0;
             int i = 0;
             for(i = 0; i < 6 ; i++) {
-                macAddress<<=8;
+				macAddress = macAddress<<8;
                 macAddress|=(unsigned char)udpMessage[i];
+				//printf("addingbyte : %llx\n", (unsigned char)udpMessage[i]);
+				//printf("Mac Address : %llx\n", macAddress);
+
             }
             //cout << endl;
-           // printf("Mac Address : %lx\n", macAddress);
+            //printf("Mac Address : %llx\n", macAddress);
             uint16_t hardwareRevision, softwareRevision, bufferCapacity;
             uint32_t maxPointRate;
             unsigned char* byteaddress = (unsigned char*)&udpMessage[i];
@@ -94,7 +97,7 @@ void DacManagerEtherdream :: threadedFunction() {
 //            cout << "Point count      :" << status.point_count << endl;
 //           
             char idchar[100];
-            sprintf(idchar, "%lX", macAddress);
+            sprintf(idchar, "%llX", macAddress);
             string id(idchar);
             
             // if we haven't already got this etherdream, then add it
