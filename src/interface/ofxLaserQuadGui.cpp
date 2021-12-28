@@ -258,12 +258,12 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if((hit) &&(!selected)) {
         // make sure events stop bubbling
         selected = true;
-        return ;
+        return true;
     }
     
         
     if(!selected) {
-        return ;
+        return false;
     }
     ofPoint mousePoint = e;
     mousePoint-=offset;

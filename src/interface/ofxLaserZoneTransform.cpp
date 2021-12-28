@@ -431,7 +431,7 @@ void ZoneTransform :: removeListeners() {
 void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     
     
-    if((!editable) || (!visible)) return false;
+    if((!editable) || (!visible)) return;
 
     mousePos = e;
     mousePos-=offset;
@@ -446,8 +446,8 @@ void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
     // zone, you can't click on a handle underneath. Not sure of how to fix this...
     // but possibly needs some higher level logic than here.
     
-	if((!editable) || (!visible)) return false;
-    if(ofGetKeyPressed(' ')) return false; // for dragging around previews. 
+	if((!editable) || (!visible)) return ;
+    if(ofGetKeyPressed(' ')) return ; // for dragging around previews. 
 
 	mousePos = e;
     mousePos-=offset;
