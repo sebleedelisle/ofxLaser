@@ -776,7 +776,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 		
 	}
 	else {
-		ofLog(OF_LOG_NOTICE, "data received from Etherdream not 22 bytes :" + ofToString(n));
+		ofLog(OF_LOG_NOTICE, "Network failure or data received from Etherdream not 22 bytes :" + ofToString(n));
 		// what do we do now?
 		
 	}
@@ -834,8 +834,8 @@ inline bool DacEtherdream :: sendPrepare(){
 	ofLog(OF_LOG_NOTICE, "sendPrepare()");
 	prepareSendCount++;
 	uint8_t send = 0x70; //'p'
-	return sendBytes(&send,1);
-	//cout << "sent " << n << " bytes" << endl;
+    
+    return sendBytes(&send,1);
 	//prepareSent = true;
 
 }
