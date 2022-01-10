@@ -58,6 +58,7 @@ void Line::addPreviewToMesh(ofMesh& mesh){
 }
 
 bool Line::intersectsRect(ofRectangle & rect) {
+    // TODO fix intersection - openFrameworks line intersection has a bug
     return rect.intersects(startPos, endPos);
     
 }

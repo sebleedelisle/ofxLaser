@@ -17,11 +17,13 @@ namespace ofxLaser {
 		
 		Polyline(); 
 		
-		Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel);
-		Polyline(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel);
-		void init(const ofPolyline& poly, const ofColor& col, string profilelabel);
-		void init(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel);
-		
+        Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness = 1);
+        Polyline(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel, float brightness = 1);
+        Polyline(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profilelabel, float brightness = 1);
+		void init(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness);
+        void init(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel, float brightness);
+        void init(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profilelabel, float brightness);
+    
 		
 		~Polyline();
 		
@@ -29,10 +31,13 @@ namespace ofxLaser {
 		
 		void addPreviewToMesh(ofMesh& mesh);
 		virtual bool intersectsRect(ofRectangle & rect);
-		
+        
+        ofPolyline* polylinePointer = nullptr;
+
 		protected :
-		void initPoly(const ofPolyline& poly);
-		ofPolyline* polylinePointer = NULL;
+        void initPoly(const ofPolyline& poly);
+        void initPoly(const vector<glm::vec3> verticesToCopy);
+        
 		const RenderProfile* cachedProfile;
 		std::vector<ofxLaser::Point> cachedPoints;
 		std::vector<ofColor> colours;

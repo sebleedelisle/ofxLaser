@@ -30,8 +30,9 @@ ZoneTransform::ZoneTransform() {
     // Used for serialize / deserialize
 	params.setName("ZoneTransformParams");
 
-	params.add(xDivisionsNew.set("x divisions", 1,1,6));
-	params.add(yDivisionsNew.set("y divisions", 1,1,6));
+    params.add(locked.set("locked", false));
+    params.add(xDivisionsNew.set("x divisions", 1,1,6));
+    params.add(yDivisionsNew.set("y divisions", 1,1,6));
 	params.add(editSubdivisions.set("edit subdivisions", false));
 	params.add(useHomography.set("perspective", true));
 
@@ -83,6 +84,7 @@ void ZoneTransform::init(ofRectangle& srcRect) {
 
 bool ZoneTransform::update(){
 	if(isDirty) {
+        //if(locked) selected = false;
 		updateQuads();
         
         isDirty = false;
@@ -122,7 +124,7 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-			UI::drawDashedLine(dstHandles[i], dstHandles[i+1]);
+			UI::drawDashedLine(dstHandles[i], dstHandles[i+1], 6, scale);
 		}
 		if(y<yDivisions) {
 			if((x>0)&&(x<xDivisions)) {
@@ -130,13 +132,13 @@ void ZoneTransform::draw(string label) {
 			} else {
 				ofSetColor(edge);
 			}
-            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1]);
+            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1], 6,scale );
 		}
 	}
 	
 	if(selected && editable) {
 		for(size_t i = 0; i<dstHandles.size(); i++) {
-			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos, scale);
+			if((editSubdivisions) || (isCorner((int)i))) dstHandles[i].draw(mousePos,scale);
 		}
 	}
 	ofPopMatrix();
@@ -426,22 +428,26 @@ void ZoneTransform :: removeListeners() {
 	
 }
 
-bool ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
+void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     
     
-    if((!editable) || (!visible)) return false;
+    if((!editable) || (!visible)) return;
 
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
-    return false;
+    //return false;
 
 }
 
-bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
+void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
-	
-	if((!editable) || (!visible)) return false;
+	// TODO there is currently an issue where if a zone is on top of another
+    // zone, you can't click on a handle underneath. Not sure of how to fix this...
+    // but possibly needs some higher level logic than here.
+    
+	if((!editable) || (!visible)) return ;
+    if(ofGetKeyPressed(' ')) return ; // for dragging around previews. 
 
 	mousePos = e;
     mousePos-=offset;
@@ -451,98 +457,94 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
-		return true;
+		return ; // keeps the event propogating
 	}
 	
 	
 	if(!selected) {
-		return false;
+		return ;
 	}
-	
-	
-	
-	
 	
 	bool handleHit = false;
 	
-	// this section of code if we click drag anywhere in the zone
+        if(!locked) {
+        // this section of code if we click drag anywhere in the zone
 
-	
-	for(size_t i= 0; i<dstHandles.size(); i++) {
-		if(dstHandles[i].hitTest(mousePos)) {
-			
-			if(!editSubdivisions && !isCorner((int)i)) continue;
-			
-			dstHandles[i].startDrag(mousePos);
-			handleHit = true;
-			
-			if(!editSubdivisions) {
-				
-				DragHandle& currentHandle = dstHandles[i];
-				
-				vector<DragHandle*> corners;
-				DragHandle& topLeft = dstHandles[0];
-				DragHandle& topRight = dstHandles[xDivisions+1-1];
-				DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
-				DragHandle& bottomRight = dstHandles.back();
-				
-				corners.push_back(&topLeft);
-				corners.push_back(&topRight);
-				corners.push_back(&bottomLeft);
-				corners.push_back(&bottomRight);
-			
-				int handleIndex = 0;
-				if(currentHandle == topLeft) handleIndex = 0;
-				else if(currentHandle == topRight) handleIndex = 1;
-				else if(currentHandle == bottomLeft) handleIndex = 2;
-				else if(currentHandle == bottomRight) handleIndex =3;
-				
-				int x = ((handleIndex%2)+1)%2;
-				int y = handleIndex/2;
-				
-				int xhandleindex = x+(y*2);
-				
-				x = handleIndex%2;
-				y = ((handleIndex/2)+1)%2;
-				int yhandleindex = x+(y*2);
-				
-				corners[xhandleindex]->startDrag(mousePos, false,true, true);
-				corners[yhandleindex]->startDrag(mousePos, true,false, true);
-				
-//				bottomLeft.startDrag(mousePoint, false,true, true);
-//				topRight.startDrag(mousePoint, true,false, true);
-				
-			}
-		}
-		
-	}
-	
-	// drag all the handles!
-	if(!handleHit && hit) {
+        for(size_t i= 0; i<dstHandles.size(); i++) {
+            if(dstHandles[i].hitTest(mousePos)) {
+                
+                if(!editSubdivisions && !isCorner((int)i)) continue;
+                
+                dstHandles[i].startDrag(mousePos);
+                handleHit = true;
+                
+                if(!editSubdivisions) {
+                    
+                    DragHandle& currentHandle = dstHandles[i];
+                    
+                    vector<DragHandle*> corners;
+                    DragHandle& topLeft = dstHandles[0];
+                    DragHandle& topRight = dstHandles[xDivisions+1-1];
+                    DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
+                    DragHandle& bottomRight = dstHandles.back();
+                    
+                    corners.push_back(&topLeft);
+                    corners.push_back(&topRight);
+                    corners.push_back(&bottomLeft);
+                    corners.push_back(&bottomRight);
+                
+                    int handleIndex = 0;
+                    if(currentHandle == topLeft) handleIndex = 0;
+                    else if(currentHandle == topRight) handleIndex = 1;
+                    else if(currentHandle == bottomLeft) handleIndex = 2;
+                    else if(currentHandle == bottomRight) handleIndex =3;
+                    
+                    int x = ((handleIndex%2)+1)%2;
+                    int y = handleIndex/2;
+                    
+                    int xhandleindex = x+(y*2);
+                    
+                    x = handleIndex%2;
+                    y = ((handleIndex/2)+1)%2;
+                    int yhandleindex = x+(y*2);
+                    
+                    corners[xhandleindex]->startDrag(mousePos, false,true, true);
+                    corners[yhandleindex]->startDrag(mousePos, true,false, true);
+                    
+    //				bottomLeft.startDrag(mousePoint, false,true, true);
+    //				topRight.startDrag(mousePoint, true,false, true);
+                    
+                }
+            }
+            
+        }
+        
+        // drag all the handles!
+        if(!handleHit && hit) {
 
-		//centreHandle.startDrag(mousePoint);
-		handleHit = true;
-		for(size_t i= 0; i<dstHandles.size(); i++) {
-			dstHandles[i].startDrag(mousePos);
-		}
+            //centreHandle.startDrag(mousePoint);
+            handleHit = true;
+            for(size_t i= 0; i<dstHandles.size(); i++) {
+                dstHandles[i].startDrag(mousePos);
+            }
 
 
-	}
-	
+        }
+    }
 	if(!handleHit && !hit) {
 		selected = false;
 	}
-	return handleHit || hit;
+	//return handleHit || hit;
 	
 }
 
 
 
 
-bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
+void ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	
-    if((!editable) || (!visible)) return false;
-	if(!selected) return false;
+    if((!editable) || (!visible)) return ;
+	if(!selected) return ;
 
 	ofPoint mousePoint;
     mousePoint.x = e.x;
@@ -566,16 +568,16 @@ bool ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
 	isDirty |= (dragCount>0);
 	if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
 	
-	return dragCount>0;
+	//return dragCount>0;
 	
 	
 }
 
 
-bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
+void ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
 	
 	//if(!editable) return false;
-	if(!selected) return false;
+	if(!selected) return;
 	
 	bool wasDragging = false;
 	
@@ -586,7 +588,7 @@ bool ZoneTransform :: mouseReleased(ofMouseEventArgs &e){
     // TODO mark as dirty so auto save ********************
 	//saveSettings();
     isDirty|=wasDragging;
-	return wasDragging;
+	//return wasDragging;
 	
 }
 

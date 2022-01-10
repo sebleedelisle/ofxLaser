@@ -34,10 +34,10 @@ class ZoneTransform {
 	void initListeners();
 	void removeListeners();
 	
-    bool mouseMoved(ofMouseEventArgs &e);
-    bool mousePressed(ofMouseEventArgs &e);
-    bool mouseDragged(ofMouseEventArgs &e);
-	bool mouseReleased(ofMouseEventArgs &e);
+    void mouseMoved(ofMouseEventArgs &e);
+    void mousePressed(ofMouseEventArgs &e);
+    void mouseDragged(ofMouseEventArgs &e);
+    void mouseReleased(ofMouseEventArgs &e);
     void paramChanged(ofAbstractParameter& e);
 
 	//void setName(string labelname, string filename);
@@ -102,7 +102,7 @@ class ZoneTransform {
 	
 	ofParameterGroup params;
 
-
+    ofParameter<bool>locked; 
 	ofParameter<bool>editSubdivisions;
 	ofParameter<bool>useHomography;
 	ofParameter<int>xDivisionsNew;

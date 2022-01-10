@@ -132,6 +132,7 @@ namespace ofxImGui
 	//--------------------------------------------------------------
 	void EngineGLFW::onMousePressed(ofMouseEventArgs& event)
 	{
+       // ofLogNotice("EngineGLFW::onMousePressed"); 
 		int button = event.button;
 		if (button >= 0 && button < 5)
 		{

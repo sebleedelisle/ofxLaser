@@ -35,15 +35,14 @@ namespace ofxLaser {
         virtual void setArmed(bool armed);
 		virtual void close() = 0;
 
-        
-
+        string alias = "";
 		
 	protected :
 	
 		vector<ofAbstractParameter*> displayData;
 		bool resetFlag = false;
         bool armed = false;
-
+        
 	};
 
 }

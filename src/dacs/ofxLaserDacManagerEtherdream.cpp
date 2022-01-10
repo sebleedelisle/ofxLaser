@@ -16,7 +16,7 @@ DacManagerEtherdream :: DacManagerEtherdream()  {
     
     udpConnection.Setup(settings);
     startThread();
-
+    
     
 }
 DacManagerEtherdream :: ~DacManagerEtherdream()  {
@@ -30,13 +30,14 @@ DacManagerEtherdream :: ~DacManagerEtherdream()  {
 
 void DacManagerEtherdream :: threadedFunction() {
     
+    const int packetSize = 50;
+    char udpMessage[packetSize];
+
     while(isThreadRunning()) {
         
         // LET'S ASSUME FOR NOW...
         // that every packet is a complete message from a single dac.
         
-        const int packetSize = 50;
-        char udpMessage[packetSize];
         memset(udpMessage,0,sizeof(udpMessage));
         int numBytesReceived = udpConnection.Receive(udpMessage,packetSize); //returns number of bytes received
         
@@ -51,14 +52,17 @@ void DacManagerEtherdream :: threadedFunction() {
 //            std::cout << "Packet Size: " << numBytesReceived << std::endl;
 //            std::cout << "UDP Packet: " << std::endl;
 //
-            unsigned long macAddress=0;
+            uint64_t macAddress=0;
             int i = 0;
             for(i = 0; i < 6 ; i++) {
-                macAddress<<=8;
+				macAddress = macAddress<<8;
                 macAddress|=(unsigned char)udpMessage[i];
+				//printf("addingbyte : %llx\n", (unsigned char)udpMessage[i]);
+				//printf("Mac Address : %llx\n", macAddress);
+
             }
             //cout << endl;
-           // printf("Mac Address : %lx\n", macAddress);
+            //printf("Mac Address : %llx\n", macAddress);
             uint16_t hardwareRevision, softwareRevision, bufferCapacity;
             uint32_t maxPointRate;
             unsigned char* byteaddress = (unsigned char*)&udpMessage[i];
@@ -91,14 +95,20 @@ void DacManagerEtherdream :: threadedFunction() {
 //            cout << "Max point rate   :" << maxPointRate << endl;
 //            cout << "Buffer           :" << status.buffer_fullness << endl;
 //            cout << "Point count      :" << status.point_count << endl;
-           
+//           
             char idchar[100];
-            sprintf(idchar, "%lX", macAddress);
+            sprintf(idchar, "%llX", macAddress);
             string id(idchar);
             
-            EtherdreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
-            etherdreamDataByMacAddress[id] = ed;
-            
+            // if we haven't already got this etherdream, then add it
+            if(etherdreamDataByMacAddress.find(id) == etherdreamDataByMacAddress.end()) {
+                EtherdreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
+                ofLogNotice("Adding etherdream "+ id);
+                etherdreamDataByMacAddress[id] = ed;
+            } else {
+                
+                etherdreamDataByMacAddress[id].lastUpdateTime = ofGetElapsedTimef(); 
+            } 
             
         }
         sleep(10);
@@ -122,6 +132,11 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
         //ofLogNotice("lastUpdateTime : " ) << (ofGetElapsedTimef() - ed.lastUpdateTime);
         if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
             daclist.emplace_back(getType(), id, ed.ipAddress);
+            // here is where to look up the label!
+//            if(labelById.find(id)!=labelById.end()) {
+//                daclist.back().label = labelById[id];
+//
+//            }
         }
         
     }

@@ -32,16 +32,22 @@ class DacData {
         available = true;
         
     }
+    
 
 	inline bool operator < ( const DacData& rhs) const {
-		return label<rhs.label; 
+        const string* string1 = (alias!="") ? &alias : &label;
+        const string* string2 = (rhs.alias!="") ? &rhs.alias : &rhs.label;
 
+		return *string1<*string2;
 	}
 	inline bool operator > (const DacData& rhs) const{
-		return label > rhs.label;
+        const string* string1 = (alias!="") ? &alias : &label;
+        const string* string2 = (rhs.alias!="") ? &rhs.alias : &rhs.label;
 
+        return *string1>*string2;
 	}
     string label;   // display label ie "Etherdream #efbd59" - maybe not necessary as we can compile this
+    string alias;   // a friendly name for the DAC 
     string type;    // type ie "Etherdream", "Helios" etc - should this be a class?
     string id;      // id is the Mac address or the serial number
     string address; // IP address for network DACs

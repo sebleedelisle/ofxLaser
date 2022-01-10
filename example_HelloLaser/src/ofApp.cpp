@@ -8,7 +8,7 @@ void ofApp::setup(){
     // NOTE that you no longer need to set up anything at all in ofxLaser!
     // If you want to change the size of the laser area, use
     // laser.setCanvasSize(int width, int height) - default is 800 x 800.
-    
+    ofSetVerticalSync(false); 
     starPoly = makeStarPolyline(4);
     
 }
@@ -23,7 +23,7 @@ void ofApp::update(){
 void ofApp::draw() {
     
     ofBackground(15,15,20);
-
+    
     // Drawing a laser line, provide the start point, end point and colour.
     // (you can also use glm::vec3). The final parameter is the render profile.
     // Three profiles are provided, default, fast and detail.
@@ -58,8 +58,8 @@ void ofApp::draw() {
     laser.send();
     // draw the laser UI elements
     laser.drawUI();
-    
-    
+    ofSetColor(255);
+    ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 20);
 }
 
 

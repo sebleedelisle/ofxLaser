@@ -26,7 +26,7 @@ Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
         handle.snapToGrid = true;
         
     }
-    
+    lineWidth = 2;
     setConstrained(rect);
 }
 
@@ -45,9 +45,21 @@ Zone::~Zone() {
 
 void Zone:: set(float x, float y, float w, float h) {
     QuadGui::set(x, y, w, h);
-    rect.set(x,y,w,h); 
+    rect.set(x,y,w,h);
+    isDirty = true;
 
 }
+
+void Zone::draw() {
+    if(editable) {
+        lineWidth =2;
+    } else {
+        lineWidth =1;
+    } 
+    QuadGui::draw();
+}
+
+
 bool Zone::update() {
 
 	if(isDirty) {

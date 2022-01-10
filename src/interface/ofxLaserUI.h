@@ -10,8 +10,10 @@
 #include "ofMain.h"
 #include "Poco/PriorityDelegate.h"
 #include "RobotoMedium.cpp"
+#include <imgui_internal.h>
 
 namespace ofxLaser {
+
 
 class UI {
     
@@ -74,6 +76,28 @@ class UI {
         
         
     }
+    
+    static void drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled = false, bool fromCentre=false, float thickness = 2.0f) {
+        
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ofRectangle rect(x, y, w, h);
+        if(fromCentre) rect.setFromCenter(x, y, w, h);
+        
+        ImU32 imCol = ofColorToImU32(colour);
+        
+        if(filled) {
+            draw_list->AddRectFilled(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0);
+        } else {
+            draw_list->AddRect(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0, thickness);
+        }
+    }
+    
+    
+    
+    static ImU32 ofColorToImU32 (ofColor col) {
+        return ImGui::GetColorU32(ImVec4((float)col.r/255.0f, (float)col.g/255.0f, (float)col.b/255.0f, (float)col.a/255.0f));
+        
+    }
     static void endWindow() {
         ImGui::End();
     }
@@ -106,12 +130,14 @@ class UI {
 		return false; // propogate events 
     }
     static bool mousePressed(ofMouseEventArgs &e) {
-        
-        ImGui::GetIO().MouseDown[e.button] = true;
+        int iobutton = e.button;
+        if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MouseDown[iobutton] = true;
         //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
         if(ImGui::GetIO().WantCaptureMouse) {
             //ofLogNotice("ImGui captured mouse press");
             return true;
+          
         }
         else {
             //ofLogNotice("ImGui no capture mouse press");
@@ -119,15 +145,18 @@ class UI {
         }
     }
     static bool mouseReleased(ofMouseEventArgs &e) {
-        ImGui::GetIO().MouseDown[e.button] = false;
+        int iobutton = e.button;
+        if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MouseDown[iobutton] = false;
         if(ImGui::GetIO().WantCaptureMouse) return true;
         else return false;
     }
     static bool keyPressed(ofKeyEventArgs &e) {
-        ImGui::GetIO().KeysDown[e.key] = true;
+       // ImGui::GetIO().KeysDown[e.key] = true;
+        
         if(ImGui::GetIO().WantCaptureKeyboard) {
             
-            //ofLogNotice("ImGui captured key press");
+           // ofLogNotice("ImGui captured key press");
             return true;
         }
         else {
@@ -137,7 +166,7 @@ class UI {
     }
     static bool keyReleased(ofKeyEventArgs &e) {
         // TODO check but I think this happens twice...
-        ImGui::GetIO().KeysDown[e.key] = false;
+       // ImGui::GetIO().KeysDown[e.key] = false;
         if(ImGui::GetIO().WantCaptureKeyboard) {
             return false;
         }
@@ -153,7 +182,7 @@ class UI {
     {
         ImGui::SameLine(0,3);
         ImGui::TextDisabled("(?)");
-        if (ImGui::IsItemHovered())
+        if (ImGui::IsItemHovered() )
         {
             ImGui::BeginTooltip();
             ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
@@ -162,17 +191,42 @@ class UI {
             ImGui::EndTooltip();
         }
     }
-    
+    static void addDelayedTooltip(const char* desc) {
+        if (ImGui::IsItemHovered() && (GImGui->HoveredIdTimer >1)) {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+        
+    }
     
     static ofMesh dashedLineMesh;
 
-    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2);
+    static void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6, float scale = 1);
     
     
     
     static ImU32 getColourForState(int state) {
         const ImVec4 stateCols[] = {{0,1,0,1}, {1,1,0,1}, {1,0,0,1}};
         return ImGui::GetColorU32(stateCols[state]);
+    }
+    
+    static glm::vec3 getScaleFromMatrix(const glm::mat4& m) {
+        glm::vec3 pos;
+        glm::quat rot;
+        glm::vec3 scale;
+        
+        pos = m[3];
+        for(int i = 0; i < 3; i++)
+            scale[i] = glm::length(glm::vec3(m[i]));
+        const glm::mat3 rotMtx(
+            glm::vec3(m[0]) / scale[0],
+            glm::vec3(m[1]) / scale[1],
+            glm::vec3(m[2]) / scale[2]);
+        rot = glm::quat_cast(rotMtx);
+        return scale;
     }
     
 };

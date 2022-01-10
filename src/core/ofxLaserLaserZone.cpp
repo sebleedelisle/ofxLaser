@@ -48,6 +48,8 @@ bool LaserZone :: update() {
 void LaserZone :: draw() {
      
     if(!visible) return ;
+    ofPushStyle();
+    ofEnableAlphaBlending();
     zoneTransform.draw(ofToString(zone.getIndex()+1));
 
    //if(!enabled) return;
@@ -65,7 +67,7 @@ void LaserZone :: draw() {
     
     //ofPushMatrix();
     //ofTranslate();
-    ofEnableAlphaBlending();
+   
     ofFill();
     ofSetColor(0,0,255,30);
     
@@ -79,7 +81,8 @@ void LaserZone :: draw() {
     p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomLeft());
     ofVertex(p);
     ofEndShape(true);
-    
+    ofDisableAlphaBlending();
+    ofPopStyle();
     ofPopMatrix();
 
 }

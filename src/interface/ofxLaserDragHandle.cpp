@@ -43,33 +43,42 @@ void DragHandle::set(glm::vec2 pos) {
 	z = 0;
 	
 };
+
+
 void DragHandle::draw(const glm::vec3& mousepos, float scale) {
-	if(!active) return;
-	bool isOver = hitTest(mousepos, scale);
-	ofPushStyle();
 	
-	if(isFilled) ofFill();
-	else {
-		ofNoFill();
-		ofSetLineWidth(1);
-	}
+	draw(hitTest(mousepos, scale), scale);
+	
+};
+
+void DragHandle::draw(bool isOver , float scale ) {
+    if(!active) return;
+    ofPushStyle();
+    
+    if(isFilled) ofFill();
+    else {
+        ofNoFill();
+        ofSetLineWidth(1);
+    }
     
     //ofDrawLine(mousepos.x, mousepos.y-4, mousepos.x, mousepos.y+4);
     //ofDrawLine(mousepos.x-4, mousepos.y, mousepos.x+4, mousepos.y);
     
     ofSetColor(isOver?overCol:col);
-	
-	if(isCircular) {
-		ofDrawCircle(*this,size/2*scale);
-	} else {
-		ofSetRectMode(OF_RECTMODE_CENTER);
+    
+    if(isCircular) {
+        ofDrawCircle(*this,size/2/scale);
+    } else {
+        ofSetRectMode(OF_RECTMODE_CENTER);
         ofDrawRectangle(*this,size/scale, size/scale);
         //ofDrawRectRounded(*this,size/scale, size/scale, 2/scale);
     
        
-	}
-	ofPopStyle();
-};
+    }
+    ofPopStyle();
+}
+
+
 
 void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, bool dontMoveWhenAltPressed ) {
 	clickOffset = clickPos - *this;
@@ -120,7 +129,7 @@ bool DragHandle::stopDrag(){
 bool DragHandle::hitTest(glm::vec3 hitpoint, float scale) {
     if(active) {
         if(isCircular) {
-            return (glm::distance( (glm::vec3) *this, hitpoint ) < size/2 );
+            return (glm::distance( (glm::vec3) *this, hitpoint ) < size/2/scale );
         } else {
             ofRectangle rect;
             rect.setFromCenter(*this, size/scale, size/scale );

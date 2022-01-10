@@ -35,24 +35,32 @@ void ofApp::draw() {
     laser.send();
   
     // PLEASE NOTE, if you just want a few custom UI elements, it's best
-    // to add parameters to the Laser UI window using laser.addCustomParameter
+    // to add parameters to the Laser UI window using laser.addCustomParameter -
+    // then you only need to call laser.drawUI() (see other examples).
     //
     // BUT if you want to make your own complex UI with separate windows, this
     // is how you do it :
     
-    ofxLaser::UI::updateGui();
-    ofxLaser::UI::startGui();
+    // calls the necessary functions to prepare the ImGui system
+    laser.startLaserUI();
+    // draw all the input and output previews, including the
+    // laser transformation system
     laser.drawPreviews();
+    // draw all the laser UI panels
     laser.drawLaserGui();
+    
+    
+    // and now we can do custom stuff!
     
     // ofxLaser::UI has a bunch of helper functions in for managing
     // ImGui functions, but you can also call methods on ImGui manually
     
     ofxLaser::UI::startWindow("Extra Window", ImVec2(660,550), ImVec2(500,350));
     
+    // you can call methods directly on ImGui
+    ImGui::Text("These parameters don't do anything but are merely for demonstration");
     // use ofxLaser::UI::addParameter to intelligently work out the
     // correct UI element for a particular type
-    ImGui::Text("These parameters don't do anything but are merely for demonstration");
     ofxLaser::UI::addParameter(boolParam);
     ofxLaser::UI::addParameter(intParam);
     
@@ -101,7 +109,9 @@ void ofApp::draw() {
 
     ofxLaser::UI::endWindow();
     
-    ofxLaser::UI::render();
+    // you always need to call this so that the GUI system can
+    // actually render. 
+    laser.finishLaserUI();
  
     
     

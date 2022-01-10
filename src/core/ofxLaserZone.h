@@ -22,6 +22,8 @@ namespace ofxLaser {
 		~Zone();
         
         virtual void set(float x, float y, float w, float h) override ;
+        virtual void draw() override;
+        
         void setIndex(int _index);
         int getIndex(){ return index; };
 		void setHandleSize(float size);

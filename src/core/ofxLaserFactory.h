@@ -26,20 +26,26 @@ class Factory {
 	static ofPolyline* getPolyline(const ofPolyline& polyToClone) {
 		return Factory::getPolyline(&polyToClone); 
 	}
-	static ofPolyline* getPolyline(const ofPolyline* polyToClone = NULL) {
+	static ofPolyline* getPolyline(const ofPolyline* polyToClone) {
 
 		ofPolyline* poly;
 
 		poly = polylineObjectPool.borrowObject();
-		if(polyToClone!=NULL) {
-			*poly = *polyToClone;
-		} else {
-			poly->clear();
-		}
 		
+        *poly = *polyToClone;
+	
 		return poly;
 	}
-	
+    static ofPolyline* getPolyline(bool clear = true) {
+
+        ofPolyline* poly;
+
+        poly = polylineObjectPool.borrowObject();
+        
+        if(clear) poly->clear();
+        
+        return poly;
+    }
 
 	
 	protected:

@@ -35,7 +35,7 @@ DacEtherdream :: DacEtherdream(){
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
     dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-	pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
+    pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 
@@ -115,6 +115,7 @@ void DacEtherdream :: setup(string _id, string _ip) {
 		// Etherdreams always talk on port 7765
 		Poco::Net::SocketAddress sa(ipaddress, 7765);
 		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
+        
 		socket.connect(sa, timeout);
 		socket.setSendTimeout(timeout);
 		socket.setReceiveTimeout(timeout);
@@ -261,6 +262,8 @@ inline bool DacEtherdream :: sendData(){
 		// send as many points as we can,
 		npointstosend = MIN(bufferedPoints.size(), numPointsToSend);
 		
+//
+        
 		// now calculate the min points before we send the new frame...
 		// if we have a new frame, then send it as long as we have spare points
 		int minpointcount;
@@ -280,7 +283,10 @@ inline bool DacEtherdream :: sendData(){
 			npointstosend = MIN(bufferedPoints.size(), numPointsToSend);
 		
 		}
-		
+        if(npointstosend==0) {
+            if(verbose) ofLogNotice("sendData : no points to send");
+            return false;
+        }
 		
 	}
 	outbuffer[0]= command;
@@ -314,8 +320,11 @@ inline bool DacEtherdream :: sendData(){
 		if(queuedPPSChangeMessages>0) {
 			// bit 15 is a flag to tell the DAC about a new point rate
 			p.control = 0b1000000000000000;
+            ofLogNotice("PPS Change queue "+ofToString(queuedPPSChangeMessages));
 			queuedPPSChangeMessages--;
-		}
+        } else {
+            p.control = 0;
+        }
 		
 		writeUInt16ToBytes(p.control, &outbuffer[pos]);
 		pos+=2;
@@ -344,8 +353,10 @@ inline bool DacEtherdream :: sendData(){
 		ofLog(OF_LOG_ERROR, "ofxLaser::DacEtherdream - too many bytes to send! - " + ofToString(numBytesSent));
 	}
 	
+  
+    
 	if(verbose) {
-		ofLogNotice("sending points : " + ofToString(npointstosend));
+        ofLogNotice("sending points : " + ofToString(npointstosend));
 	}
 	
 	//cout << "sent " << numBytesSent << " bytes" << endl;
@@ -474,13 +485,25 @@ void DacEtherdream :: threadedFunction(){
 		}
 		
 		if(needToSendPrepare) {
-			;
-			bool success = (sendPrepare()	&& waitForAck('p'));
 			
+            bool success = sendPrepare();
+            
+            if(success) {
+                success = waitForAck('p');
+            }
+            else ofLogNotice("sendPrepare() failed");
+            
+            
 			if( success ) {
-				needToSendPrepare = false;
+                ofLogNotice("waitForAck('p') success");
+                needToSendPrepare = false;
 				beginSent = false;
-			}
+                
+               
+            } else {
+                ofLogNotice("waitForAck('p') failed");
+                    
+            }
 			//else prepareSent = false;
 		}
 		
@@ -488,7 +511,7 @@ void DacEtherdream :: threadedFunction(){
 		if(connected && (response.status.playback_state==PLAYBACK_PLAYING) && (newPPS!=pps)) {
 			
 			
-			if(sendPointRate(pps)){
+			if(sendPointRate(newPPS)){
 				pps = newPPS;
 				waitForAck('q');
 				queuedPPSChangeMessages++;
@@ -504,9 +527,12 @@ void DacEtherdream :: threadedFunction(){
 			if(numPointsToSend>pointsToSendBeforePlaying){
 				//check buffer and send the next points
 				while(!lock()) {}
-				sendData();
+				bool dataSent = sendData();
 				unlock();
-				waitForAck('d');
+                if(dataSent) {
+                    if(verbose) logData();
+                    waitForAck('d');
+                }
 			} else if(isThreadRunning()) {
 				// if we're not sending data, then let's ping the etherdream so it can
 				// tell us how many points can fit into its buffer.
@@ -572,6 +598,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 	
 	bool waiting = true;
 	bool failed = false;
+    if(verbose) ofLogNotice("waitForAck - " + ofToString(command));
 //	int count = 0;
 //	int timeoutwait = 1000;// one second - ish
 //	while(waiting && !failed) {
@@ -685,6 +712,13 @@ inline bool DacEtherdream::waitForAck(char command) {
 			data+= "source             : " + to_string(response.status.source) + "\n";
 			data+= "light_engine_flags : " + std::bitset<5>(response.status.light_engine_flags).to_string() + "\n";
 			data+= "playback_flags     : " + std::bitset<3>(response.status.playback_flags).to_string() + "\n";
+            data+= "   shutter         : " ;
+            data += (response.status.playback_flags & 0b100) ? "closed\n" : "open\n";
+            data+= "   underflow       : " ;
+            data += (response.status.playback_flags & 0b010) ? "TRUE\n" : "false\n";
+            data+= "   e-stop          : ";
+            data+= (response.status.playback_flags & 0b001) ? "TRUE\n" : "false\n";
+
 			data+= "source_flags       : " + to_string(response.status.source_flags) + "\n";
 			data+= "buffer_fullness    : " + to_string(response.status.buffer_fullness) + "\n";
 			data+= "point_rate         : " + to_string(response.status.point_rate) + "\n";
@@ -776,7 +810,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 		
 	}
 	else {
-		ofLog(OF_LOG_NOTICE, "data received from Etherdream not 22 bytes :" + ofToString(n));
+		ofLog(OF_LOG_NOTICE, "Network failure or data received from Etherdream not 22 bytes :" + ofToString(n));
 		// what do we do now?
 		
 	}
@@ -834,8 +868,8 @@ inline bool DacEtherdream :: sendPrepare(){
 	ofLog(OF_LOG_NOTICE, "sendPrepare()");
 	prepareSendCount++;
 	uint8_t send = 0x70; //'p'
-	return sendBytes(&send,1);
-	//cout << "sent " << n << " bytes" << endl;
+    
+    return sendBytes(&send,1);
 	//prepareSent = true;
 
 }
@@ -850,37 +884,38 @@ inline bool DacEtherdream :: sendPointRate(uint32_t rate){
 
 void DacEtherdream :: logData() {
     //bytesToUInt16(&buffer[8]
-    string data = "---------------------------------------------------------------\n";
-    data+= "command            : ";
-    data+=(char)outbuffer[0];
-    data+= "\n";
+    string dataStr = "---------------------------------------------------------------\n";
+    dataStr+= "command            : ";
+    dataStr+=(char)outbuffer[0];
+    dataStr+= "\n";
     int numpoints =bytesToUInt16(&outbuffer[1]);
-    data+= "num points         : " + to_string(numpoints) + "\n";
+    dataStr+= "num points         : " + to_string(numpoints) + "\n";
     int pos = 3;
     
     for(int i = 0; i<numpoints; i++) {
-        data+= "------------------------------ npoint # " + to_string(i) + "\n";
+        dataStr+= "------------------------------ npoint # " + to_string(i) + "\n";
         
-        data+= " ctl : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        
+        dataStr+= " ctl : " + std::bitset<16>(bytesToUInt16(&outbuffer[pos])).to_string() + "\n";
         pos+=2;
-        data+= " x   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " x   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " y   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " y   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " r   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " r   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " g   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " g   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " b   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " b   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " i   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " i   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " u1   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " u1   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
-        data+= " u2   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " u2   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
         pos+=2;
     }
-    cout << data << endl;
+    cout << dataStr << endl;
     
 }
 bool DacEtherdream :: sendPing(){
@@ -914,7 +949,7 @@ bool DacEtherdream :: sendBytes(const uint8_t* buffer, int length) {
 		if(verbose && (length>1)) {
 			cout << "command sent : " << buffer[0] << " numBytesSent : " << numBytesSent <<  endl;
 			for(int i = 1; i<length; i++) {
-				
+
 				printf("%X2 ", (uint8_t)buffer[i]);
 				if(i%8==0) cout << endl;
 			}

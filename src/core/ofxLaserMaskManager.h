@@ -30,7 +30,7 @@ public:
     virtual void serialize(ofJson&json);
     virtual bool deserialize(ofJson&jsonGroup);
 
-    void setOffsetAndScale(ofPoint offset, float scale);
+    void setOffsetAndScale(glm::vec2 offset, float scale);
 	
     
     
@@ -43,7 +43,7 @@ public:
 	
     protected :
     bool dirty;
-	ofPoint offset;
+	glm::vec2 offset;
 	float scale = 1;
    // bool firstUpdate = true; 
     

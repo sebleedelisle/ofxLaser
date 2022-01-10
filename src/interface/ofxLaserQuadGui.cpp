@@ -10,7 +10,8 @@ using namespace ofxLaser;
 
 QuadGui::QuadGui() {
     initListeners();
-    
+    initialised = true;
+   
     visible = true;
     isDirty=true;
     selected = false;
@@ -39,17 +40,21 @@ void QuadGui::setName (string displaylabel) {
 
 
 void QuadGui::set (const ofRectangle& rect) {
-    set(rect.x, rect.y, rect.getWidth(), rect.getHeight());
+//    if(rect.getArea()<1) {
+//        ofLogNotice("QuadGui::set - teeny rect");
+//    }
+    set(rect.getLeft(), rect.getTop(), rect.getWidth(), rect.getHeight());
 }
 
 void QuadGui::set(float x, float y, float w, float h) {
+   // ofLogNotice("QuadGui::set");
     
     allHandles.clear();
     
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
         float ypos = (floor((float)(i/2))/1.0f*h)+y;
-        
+      //  cout << i<<" "<< xpos << " " << ypos << endl;
         handles[i].set(xpos, ypos);
          
         allHandles.push_back(&handles[i]);
@@ -63,6 +68,14 @@ void QuadGui::set(float x, float y, float w, float h) {
     
 }
 
+void QuadGui::set(const QuadGui& quadToCopy){
+    // should probably do size tests huh
+    for(size_t i = 0; i<allHandles.size(); i++) {
+        allHandles[i]->set(*quadToCopy.allHandles[i]);
+    }
+    updatePoly();
+       
+}
 void QuadGui::setConstrained(const ofRectangle &rect) {
     constrainRect = rect;
     constrained = true;
@@ -74,7 +87,18 @@ void QuadGui::setConstrained(const ofRectangle &rect) {
     
 }
 
+int QuadGui::getWidth() {
+    return boundingBox.getWidth();
+    
+}
+
+int QuadGui::getHeight() {
+    return boundingBox.getHeight(); 
+    
+}
 void QuadGui :: initListeners() {
+    
+   // mousePressedListener = ofEvents().mousePressed.newListener(this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     
     ofAddListener(ofEvents().mousePressed, this, &QuadGui::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseMoved, this, &QuadGui::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
@@ -120,7 +144,7 @@ void QuadGui :: draw() {
     
 	ofPushStyle();
 	ofNoFill();
-	ofSetLineWidth(1);
+	ofSetLineWidth(lineWidth);
 
     
     ofSetColor(lineColour);
@@ -130,10 +154,10 @@ void QuadGui :: draw() {
     glm::vec3 shift(0.5,0.5,0);
     if(editable) {
 		
-        UI::drawDashedLine(handles[1]+shift, handles[3]+shift);
-        UI::drawDashedLine(handles[3]+shift, handles[2]+shift);
-        UI::drawDashedLine(handles[0]+shift, handles[1]+shift);
-        UI::drawDashedLine(handles[2]+shift, handles[0]+shift);
+        UI::drawDashedLine(handles[1]+shift, handles[3]+shift, 6, scale);
+        UI::drawDashedLine(handles[3]+shift, handles[2]+shift, 6, scale);
+        UI::drawDashedLine(handles[0]+shift, handles[1]+shift, 6, scale);
+        UI::drawDashedLine(handles[2]+shift, handles[0]+shift, 6, scale);
 
     } else {
         ofSetColor(lineColour*0.5);
@@ -148,13 +172,16 @@ void QuadGui :: draw() {
     
     if(!displayLabel.empty()) {
         float textwidth = displayLabel.size()*8;
-
+        
         ofFill();
         ofPushMatrix();
         ofTranslate(handles[1]);
         ofScale(1/scale, 1/scale, 1); //-ofPoint(textwidth+12,1.5));
         ofTranslate(-textwidth-10, 1);
+       // ofBlendMode restoreblendmode = ofGetStyle().blendingMode;
+        ofEnableAlphaBlending();
         ofSetColor(0,150);
+        
         
         ofDrawRectangle(0,0,textwidth+10,18);
         ofSetColor(labelColour * (editable?1:0.5));
@@ -225,11 +252,11 @@ bool QuadGui :: hitTest(const ofPoint& p) {
 
 bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	
-        
 	if((!editable) || (!visible)) return false;
 
     bool hit = hitTestScreen(e);
     if((hit) &&(!selected)) {
+        // make sure events stop bubbling
         selected = true;
         return true;
     }
@@ -247,7 +274,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 	bool handleHit = false;
 	
     
-	if(centreHandle.hitTest(mousePoint)) {
+	if(centreHandle.hitTest(mousePoint, scale)) {
 		
 		centreHandle.startDrag(mousePoint);
 		handleHit = true;
@@ -259,7 +286,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     } else {
 
 		for(int i = 0; i<numHandles; i++) {
-			if(handles[i].hitTest(mousePoint)) {
+			if(handles[i].hitTest(mousePoint, scale)) {
 				startDragging(i, mousePoint);
 				handleHit = true;
 			}
@@ -270,7 +297,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if(!handleHit && !hit) {
         selected = false;
     }
-	return handleHit;
+    return handleHit;
 	
 }
 void QuadGui :: mouseMoved(ofMouseEventArgs &e){
@@ -279,13 +306,14 @@ void QuadGui :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
+    isDirty = true;
     
 }
-bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
+void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 
-    if((!editable) || (!visible)) return false;
+    if((!editable) || (!visible)) return ;
 
-	if(!selected) return false;
+	if(!selected) return ;
 
     mousePos = e;
     mousePos-=offset;
@@ -312,10 +340,10 @@ bool QuadGui :: mouseDragged(ofMouseEventArgs &e){
         updatePoly();
 	}
 	
-	//isDirty |= dragging;
+	isDirty |= dragging;
 	
 	
-	return dragging;
+	//return dragging;
 	
 	
 }
@@ -332,10 +360,10 @@ void QuadGui :: updatePoly() {
     
 }
 
-bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
+void QuadGui :: mouseReleased(ofMouseEventArgs &e){
 	
 	//if(!visible) return false;
-	if(!selected) return false;
+	if(!selected) return ;
 
 	
 	bool wasDragging = false;
@@ -352,7 +380,7 @@ bool QuadGui :: mouseReleased(ofMouseEventArgs &e){
     }
     
     isDirty |= wasDragging;
-	return wasDragging;
+	//return wasDragging;
 	
 }
 
@@ -369,12 +397,12 @@ void QuadGui::updateCentreHandle() {
 
 
 
-void QuadGui::serialize(ofJson&json) {
+void QuadGui::serialize(ofJson&json) const{
 	
     // adds json node for the handles, which is an array
     ofJson& handlesjson = json["quadguihandles"];
 	for(int i = 0; i<4; i++) {
-		DragHandle& pos = handles[i];
+		const DragHandle& pos = handles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
 

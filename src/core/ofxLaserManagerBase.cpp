@@ -70,7 +70,7 @@ void ManagerBase :: setCanvasSize(int w, int h){
 	width = w;
 	height = h;
 	laserMask.init(w,h);
-    canvasPreviewFbo.allocate(w, h, GL_RGBA, 3);
+   // canvasPreviewFbo.allocate(w, h, GL_RGB, 3);
     ofRectangle canvasRectangle(0,0,w,h);
     for(Zone* zone : zones) {
         zone->setConstrained(canvasRectangle); 
@@ -89,7 +89,7 @@ void ManagerBase::createAndAddLaser() {
     
     // TODO should this be here?
     laser->init();
-    
+
 }
 
 bool ManagerBase :: deleteLaser(Laser* laser) {
@@ -228,7 +228,7 @@ void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensit
 	shapes.push_back(d);
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName){
+void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -245,13 +245,13 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
 	
 	
 	
-	Polyline* p =new ofxLaser::Polyline(polyline, col, profileName);
+	Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
 	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName){
+void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName, float brightness){
 	
 	// quick error check to make sure our line has any data!
 	// (useful for dynamically generated lines, or empty lines
@@ -266,14 +266,46 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
 	for(glm::vec3& v : polyline.getVertices()) {
 		v = gLProject(v);
 	}
-	
+    if(brightness<1) {
+        for(ofColor & c : colours) {
+            c*=brightness;
+            
+        }
+    }
 	ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
 	p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
 	shapes.push_back(p);
 	
-	
-	
 }
+
+void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName, float brightness){
+    
+    if(points.size()==0) return;
+    tmpPoints = points;
+    for(glm::vec3& v : tmpPoints) {
+        v = gLProject(v);
+    }
+    //vector<ofColor>* colourPointer = &colours;
+    
+//    if(brightness<1) {
+//        tmpColours = colours;
+//        for(ofColor & c : tmpColours) {
+//            c*=brightness;
+//
+//        }
+//    }
+    ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
+    
+    if(p->polylinePointer->getPerimeter()>0.1) {
+        p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    
+        shapes.push_back(p);
+    } else {
+        delete p;
+    }
+}
+
+
 void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col,string profileName){
     drawCircle(glm::vec3(x, y, 0), radius, col, profileName);
 }
@@ -308,9 +340,18 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 }
 
 void ManagerBase:: update(){
+    
+    // etherdreams aren't always available at start time, so here's a hacky delay to check 
+    if((!dacsInitialised) && (ofGetElapsedTimef()>3)) {
+        dacAssigner.updateDacList();
+        dacsInitialised = true;
+    }
+    
 	if(doArmAll) armAllLasers();
 	if(doDisarmAll) disarmAllLasers();
-	zonesChanged = false;
+	
+    
+    zonesChanged = false;
 	
 	if(useBitmapMask) laserMask.update();
 	// delete all the shapes - all shape objects need a destructor!
@@ -323,7 +364,7 @@ void ManagerBase:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		zones[i]->setEditable((!lockInputZones));
+		zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
 		updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
 	}
 	
@@ -456,7 +497,7 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
         return;
     }
-    laser->sendRawPoints(points, &getZone(zonenum), globalBrightness);
+    laser->sendRawPoints(points, getZone(zonenum), globalBrightness);
 	
 }
 
@@ -476,8 +517,9 @@ void ManagerBase::initAndLoadSettings() {
 	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
 	
 	interfaceParams.setName("Interface");
-	interfaceParams.add(lockInputZones.set("Lock input zones", true));
-	interfaceParams.add(showInputPreview.set("Show preview", true));
+    interfaceParams.add(lockInputZones.set("Lock input zones", true));
+    interfaceParams.add(showInputZones.set("Show input zones", true));
+    interfaceParams.add(showInputPreview.set("Show preview", true));
 	interfaceParams.add(showOutputPreviews.set("Show path previews", true));
 	//interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
 	//interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
@@ -485,7 +527,7 @@ void ManagerBase::initAndLoadSettings() {
     useBitmapMask = showBitmapMask = laserMasks = false;
 	params.add(interfaceParams);
 	
-	customParams.setName("Custom");
+	customParams.setName("CUSTOM PARAMETERS");
 	params.add(customParams);
     params.add(numLasers.set("numLasers", 0));
 	
@@ -543,6 +585,7 @@ bool ManagerBase::loadSettings() {
     if(ofFile(filename).exists()) {
         zonesJson= ofLoadJson(filename);
     }
+    zones.clear();
     for(ofJson& zoneJson : zonesJson) {
         zones.push_back(new Zone());
         zones.back()->deserialize(zoneJson);
@@ -603,7 +646,7 @@ bool ManagerBase::saveSettings() {
     numLasers = lasers.size();
     
     ofJson json;
-    ofSerialize(json, params);
+    ofSerialize(json, params);  
     
 
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
@@ -635,7 +678,7 @@ ofPoint ManagerBase::gLProject(ofPoint p) {
 	
 }
 ofPoint ManagerBase::gLProject( float x, float y, float z ) {
-	
+    
     ofRectangle rViewport = ofGetCurrentViewport();
 	
 	glm::mat4 modelview, projection;
@@ -669,16 +712,21 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 };
 
 
-bool ManagerBase::setGuideImage(string filename){
-	return guideImage.load(filename);
-	
-	
-}
 
-Zone& ManagerBase::getZone(int zonenum) {
-	// TODO bounds check?
-	return *zones.at(zonenum);
-	
+//
+//Zone& ManagerBase::getZone(int zonenum) {
+//    // TODO bounds check?
+//    return *zones.at(zonenum);
+//    
+//}
+Zone* ManagerBase::getZone(int zonenum) {
+    // TODO bounds check?
+    if((zonenum>=0) && (zonenum<zones.size())) {
+        return zones.at(zonenum);
+    } else {
+        return nullptr;
+    }
+    
 }
 
 int ManagerBase::getNumZones() {

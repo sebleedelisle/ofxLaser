@@ -17,6 +17,7 @@ public:
 	ofxLaser::Manager laser;
     
     ofPolyline starPoly;
+
     
 };
 

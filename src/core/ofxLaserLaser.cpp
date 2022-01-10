@@ -21,7 +21,9 @@ Laser::Laser(int _index) {
 	guiInitialised = false;
     maskManager.init(800,800);
    
-    
+    previewScale = 1;
+    previewOffset = glm::vec2(0,0);
+    previewDragging = false; 
 	
 };
 
@@ -250,6 +252,28 @@ void Laser::updateZoneMasks() {
         laserZone->updateZoneMask();
     }
 }
+vector<LaserZone*> Laser::getActiveZones(){
+    bool soloActive = areAnyZonesSoloed();
+    vector<LaserZone*> activeZones;
+    for(LaserZone* laserZone : laserZones) {
+        if(soloActive && laserZone->soloed) {
+            activeZones.push_back(laserZone);
+        } else if(!laserZone->muted) {
+            activeZones.push_back(laserZone);
+        }
+    }
+    return activeZones;
+}
+
+bool Laser::areAnyZonesSoloed() {
+    for(LaserZone* laserZone : laserZones) {
+        if(laserZone->soloed) {
+            return true;
+        }
+    }
+    
+    return false;
+}
 
 string Laser :: getLabel() {
     return "Laser " + ofToString(laserIndex+1);
@@ -272,32 +296,62 @@ int Laser::getDacConnectedState() {
     }
 }
 
-void Laser::drawTransformUI(float x, float y, float w, float h) {
+void Laser::drawTransformUI() {
 	
 	ofPushStyle();
+    
+    ofFill();
+    ofSetColor(0);
+    ofDrawRectangle(previewOffset.x, previewOffset.y, 800*previewScale, 800*previewScale);
 	ofNoFill();
 
-    float scale = w/800.0f;
-    ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
+   // float scale = w/800.0f;
+    //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
     for(LaserZone* laserZone : laserZones) {
         //if(!laserZone->getEnabled()) continue;
-        laserZone->setScale(scale);
-        laserZone->setOffset(offset);
+        laserZone->setScale(previewScale);
+        laserZone->setOffset(previewOffset);
         laserZone->draw();
         
         
     }
-    maskManager.setOffsetAndScale(offset,scale);
+    maskManager.setOffsetAndScale(previewOffset,previewScale);
     maskManager.draw();
    
     ofPopStyle();
 }   
 
+void Laser::zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier){
+    glm::vec2 clickoffset = anchor-previewOffset;
+    clickoffset-=(clickoffset*zoomMultiplier);
+    previewOffset+=clickoffset;
+    previewScale*=zoomMultiplier;
+    
+}
+void Laser::startDrag(glm::vec2 p){
+    
+    previewDragging = true;
+    dragStartPoint = p - previewOffset;
+    
+}
+
+void Laser::stopDrag() {
+    previewDragging = false;
+}
+void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
+    previewOffset = newoffset;
+    previewScale = newscale;
+}
+
 void Laser::drawTransformAndPath(ofRectangle rect) {
     ofRectangle bounds;
+    
+    vector<LaserZone*> activeZones = getActiveZones();
+    
+    
     vector<glm::vec3> perimeterpoints;
     bool firsttime = true;
-    for(LaserZone* zone : laserZones) {
+    for(LaserZone* zone : activeZones) {
         ZoneTransform& zonetransform = zone->zoneTransform;
        
         zonetransform.getPerimeterPoints(perimeterpoints);
@@ -328,40 +382,15 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
     if(scale<1.1) {
         scale = 1;
         bounds.set(0,0,800,800);
-    } else {
-        // draw output scale
-        ofPushMatrix();
-        ofPushStyle();
-        ofTranslate(700,700);
-        ofScale(0.1,0.1);
-        ofFill();
-        ofSetColor(0);
-        ofDrawRectangle(0,0,800,800);
-        ofNoFill();
-        ofSetColor(50,50,200);
-        ofDrawRectangle(0,0,800,800);
-        for(LaserZone* zone : laserZones) {
-
-            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
-            
-            ofBeginShape();
-            for(glm::vec3& p:perimeterpoints) {
-                ofVertex(p);
-            }
-            ofEndShape();
-            
-        }
-        ofPopStyle();
-        ofPopMatrix();
-        
     }
+    ofPushMatrix();
     ofScale(scale, scale);
     ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
-    drawLaserPath(ofRectangle(0,0,800,800), false, 4/(scale*rectscale));
+    drawLaserPath(false, 4/(scale*rectscale));
    
-   // ofDrawRectangle(bounds);
-    for(LaserZone* zone : laserZones) {
-
+    
+    for(LaserZone* zone : activeZones) {
+        
         zone->zoneTransform.getPerimeterPoints(perimeterpoints);
         
         ofBeginShape();
@@ -372,31 +401,71 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
         
     }
     ofPopStyle();
+    
+    ofPopMatrix();
+    if(scale>1) {
+        // draw the scale widget in the bottom right
+        ofPushMatrix();
+        ofPushStyle();
+        ofTranslate(700,700);
+        ofScale(0.1,0.1);
+        ofFill();
+        ofSetColor(0);
+        ofDrawRectangle(0,0,800,800);
+        ofNoFill();
+        ofSetColor(50,50,200);
+        ofDrawRectangle(0,0,800,800);
+        ofDrawRectangle(bounds);
+//        for(LaserZone* zone : laserZones) {
+//
+//            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+//
+//            ofBeginShape();
+//            for(glm::vec3& p:perimeterpoints) {
+//                ofVertex(p);
+//            }
+//            ofEndShape();
+//
+//        }
+        ofPopStyle();
+        ofPopMatrix();
+        
+    }
+    
+    
+    
     ofPopMatrix();
     
 }
 
 
-void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
-	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
+//void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
+//	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
+//}
+
+void Laser :: drawLaserPath(bool drawDots, float radius) {
+    ofRectangle previewRect(previewOffset.x, previewOffset.y, previewScale*800, previewScale*800);
+    drawLaserPath(previewRect, drawDots, radius);
 }
-void Laser :: drawLaserPath(float x, float y, float w, float h, bool drawDots, float radius) {
+
+void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
 	ofPushStyle();
 	
     ofSetColor(100);
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	ofPushMatrix();
-	ofTranslate(x,y);
-	ofScale(w/800, h/800);
-
+	ofTranslate(rect.getTopLeft());
+	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
+    float scale = rect.getWidth()/800.0f; 
 	ofTranslate(outputOffset);
 
 	ofPoint p;
 
   	ofNoFill();
-	//ofSetColor(255);
-    ofSetColor(MIN(255 * w / 800.0f, 255));
-	ofSetLineWidth(0.5);
+	ofSetColor(255);
+    //ofSetColor(MIN(255 * w / 800.0f, 255));// what's this for?
+	
+    ofSetLineWidth(0.5/scale);
 	
 	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
 	if(drawDots) previewPathMesh.draw();
@@ -408,7 +477,7 @@ void Laser :: drawLaserPath(float x, float y, float w, float h, bool drawDots, f
 
 	
 	
-	ofSetLineWidth(2 * w / 800.0f);
+	ofSetLineWidth(2 * scale);
 	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
 	previewPathMesh.draw();
 	
@@ -469,15 +538,13 @@ void Laser :: enableTransformGui() {
 
 void Laser::update(bool updateZones) {
 	
-    bool soloMode = false;
-    bool needsSave = false;
-    for(LaserZone* laserZone : laserZones) {
-        
-        if(laserZone->soloed) {
-            soloMode = true;
-            break;
-        }
+    if(previewDragging) {
+        previewOffset = glm::vec2(ofGetMouseX(), ofGetMouseY())-dragStartPoint;
     }
+        
+    
+    bool soloMode = areAnyZonesSoloed();
+    bool needsSave = false;
     
     if(soloMode) {
         for(LaserZone* laserZone : laserZones) {
@@ -862,7 +929,7 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
         // if we have a really fast frame, let's duplicate it and reverse it
         // (this helps for things like a single line where we maybe don't want to
         // jump back to the beginning if we can draw the line again reversed)
-        if((pps/ laserPoints.size()) >100) {
+        if(sortShapes && ((pps/ laserPoints.size()) >100)) {
             int numpoints = laserPoints.size();
             for(int i = numpoints-1; i>=0; i--) {
                 addPoint(laserPoints[i]);
@@ -1499,12 +1566,13 @@ bool Laser::loadSettings(vector<Zone*>& zones){
     for(auto jsonitem : zoneNumJson) {
         //cout << "Laser::loadSettings " << (int) jsonitem << endl;
         int zoneNum = (int)jsonitem;
-        LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
-        laserZones.push_back(laserZone);
-        ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
+        if(zones.size()>zoneNum) {
+            LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
+            laserZones.push_back(laserZone);
+            ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
 
-        success &= laserZone->deserialize(laserZoneJson);
-        
+            success &= laserZone->deserialize(laserZoneJson);
+        }
     }
     ignoreParamChange = false;
     if(json.empty() || (!success)) {
