@@ -477,6 +477,9 @@ void DacEtherdream :: threadedFunction(){
                 *point = lastPoint;
 				
 			}
+            ofLogNotice ("RESET DAC--------------------------------");
+            cout << lastPoint.x << " "<< lastPoint.y << " "<< lastPoint.r << " "<< lastPoint.g << " "<< lastPoint.b << endl;
+            cout << " framePoints size :" << framePoints.size() << " buffered points size : " << bufferedPoints.size() << endl;
 			
 		}
 
@@ -531,7 +534,7 @@ void DacEtherdream :: threadedFunction(){
 				unlock();
                 if(dataSent) {
                     if(verbose) logData();
-                    waitForAck('d');
+                    if(!waitForAck('d')) resetFlag = true; 
                 }
 			} else if(isThreadRunning()) {
 				// if we're not sending data, then let's ping the etherdream so it can
