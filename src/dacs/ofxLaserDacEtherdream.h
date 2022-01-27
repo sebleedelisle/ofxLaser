@@ -57,7 +57,7 @@ struct begin_command {
 };
 
 
-struct dac_point {
+class dac_point {
 //	public:
 //	dac_point() {
 //		dac_point::createCount++;
@@ -65,17 +65,17 @@ struct dac_point {
 //	~dac_point() {
 //		destroyCount++;
 //	}
+    public :
 	
-	
-	uint16_t control;
-	int16_t x;
-	int16_t y;
-	uint16_t r;
-	uint16_t g;
-	uint16_t b;
-	uint16_t i;
-	uint16_t u1;
-	uint16_t u2;
+	uint16_t control = 0;
+	int16_t x = 0;
+	int16_t y = 0;
+	uint16_t r = 0;
+	uint16_t g = 0;
+	uint16_t b = 0;
+	uint16_t i = 0;
+	uint16_t u1 = 0;
+	uint16_t u2 = 0;
 
 //	static int createCount;
 //	static int destroyCount;

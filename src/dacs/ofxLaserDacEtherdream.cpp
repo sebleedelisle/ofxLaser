@@ -35,7 +35,7 @@ DacEtherdream :: DacEtherdream(){
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
     dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-    pointsToSendBeforePlaying = 500;    //500;//100; 	// the minimum number of points to buffer before
+    pointsToSendBeforePlaying = 800;    //500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 
@@ -155,7 +155,7 @@ void DacEtherdream :: setup(string _id, string _ip) {
 		// only linux and osx
 		//http://www.yonch.com/tech/82-linux-thread-priority
 		struct sched_param param;
-		param.sched_priority = 60; // 89;
+        param.sched_priority = 89; //60; // 89;
 		pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
 #else
 		// windows implementation
@@ -299,6 +299,16 @@ inline bool DacEtherdream :: sendData(){
 		
 		if(bufferedPoints.size()>0) {
 			p = *bufferedPoints[0]; // copy assignment
+            // if we haven't started the laser yet, maybe turn the
+            // brightness off?
+            if(!beginSent) {
+                p.r = p.g = p.b = 0;
+            }
+            
+            p.u1 = 0;
+            p.u2 = 0;
+            p.i = 0;
+            
 			sparePoints.push_back(bufferedPoints[0]); // recycling system
 			bufferedPoints.pop_front(); // no longer destroys point
 			lastpoint = p; //
@@ -309,12 +319,13 @@ inline bool DacEtherdream :: sendData(){
 			
 			p = lastpoint;
 			
-			p.i = 0;
+			
 			p.r = 0;
 			p.g = 0;
 			p.b = 0;
 			p.u1 = 0;
 			p.u2 = 0;
+            p.i = 0;
 		}
 		
 		if(queuedPPSChangeMessages>0) {
@@ -459,6 +470,7 @@ void DacEtherdream :: threadedFunction(){
 				waitForAck('c');
 			}
 			prepareSendCount = 0;
+           // needToSendPrepare = true;
 			
 			// clear frame
             dac_point lastPoint;
@@ -534,7 +546,9 @@ void DacEtherdream :: threadedFunction(){
 				unlock();
                 if(dataSent) {
                     if(verbose) logData();
-                    if(!waitForAck('d')) resetFlag = true; 
+                    // note if this fails, the connected flag is disabled which triggers the reset flag below
+                    waitForAck('d');
+                    
                 }
 			} else if(isThreadRunning()) {
 				// if we're not sending data, then let's ping the etherdream so it can

@@ -285,7 +285,15 @@ void Manager :: drawPreviews() {
                 // this renders the input zones in the graphics source space
                 for(size_t i= 0; i<zones.size(); i++) {
                     zones[i]->setOffsetAndScale(previewOffset,previewScale);
+                    zones[i]->setVisible(true);
                     zones[i]->draw();
+                }
+            } else { 
+                // this renders the input zones in the graphics source space
+                for(size_t i= 0; i<zones.size(); i++) {
+                    
+                    zones[i]->setVisible(false);
+                   
                 }
             }
             
@@ -346,6 +354,8 @@ void Manager :: drawPreviews() {
                 lasers[i]->disableTransformGui();
             }
             
+           
+            
         }
         
         for(Laser* laser : lasers) {
@@ -354,6 +364,14 @@ void Manager :: drawPreviews() {
         
         
     } else {
+        
+        // hide the input zones
+        for(size_t i= 0; i<zones.size(); i++) {
+                
+            zones[i]->setVisible(false);
+               
+        }
+        
         float thirdOfHeight = ofGetHeight()/3;
         ofxLaser::Laser* selectedlaser = nullptr;
         // draw laser adjustment screen

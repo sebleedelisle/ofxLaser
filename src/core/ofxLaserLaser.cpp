@@ -1539,6 +1539,8 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 			p.r = 0;
 			p.g = 0;
 			p.b = 0;
+            p.x = laserHomePosition.x;
+            p.y = laserHomePosition.y;
 		}
 	
 		
