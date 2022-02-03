@@ -8,6 +8,7 @@
 
 #pragma once
 #include "ofxLaserDacBase.h"
+#include "ByteBuffer.h"
 
 #include "Poco/Net/SocketAddress.h"
 #include "Poco/Net/SocketStream.h"
@@ -128,10 +129,10 @@ namespace ofxLaser {
 		// the maximum number of points the etherdream can hold.
 		// in etherdream v1 it's 1799, but you may want it to be lower
 		// for lower latency
-		int dacBufferSize;
+		int maxPointBufferSize;
 		// the minimum number of points in the buffer before the etherdream
 		// starts playing.
-		int pointsToSendBeforePlaying;
+		int minPointBufferSize;
 
 		vector<dac_point> framePoints;
         
@@ -142,8 +143,8 @@ namespace ofxLaser {
             return (uint16_t)(*(byteaddress+1)<<8)|*byteaddress;
             
         }
-        static uint16_t bytesToInt16(unsigned char* byteaddress) {
-            uint16_t i = *(signed char *)(byteaddress);
+        static int16_t bytesToInt16(unsigned char* byteaddress) {
+            int16_t i = *(signed char *)(byteaddress);
             i *= 1 << CHAR_BIT;
             i |= (*byteaddress+1);
             return i;
@@ -187,8 +188,11 @@ namespace ofxLaser {
 		dac_point lastpoint;
 		dac_point sendpoint;
 		
-		uint8_t buffer[1024];
-		uint8_t outbuffer[100000]; // TODO is this enough? is it ever checked ? 
+		uint8_t inBuffer[1024];
+		//uint8_t outBuffer[100000]; //  is this enough? It is checked in send data
+        
+        ByteBuffer outbuffer;
+        
         int numBytesSent;
 		
 		Poco::Net::StreamSocket socket;
@@ -216,7 +220,8 @@ namespace ofxLaser {
 		bool newFrame = false; 
 		bool frameMode = true;
 		bool verbose = false;
-		  
+        
+        uint64_t lastAckTime = 0;
 		
 	};
 

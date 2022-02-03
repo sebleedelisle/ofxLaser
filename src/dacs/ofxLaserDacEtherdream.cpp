@@ -34,8 +34,8 @@ DacEtherdream :: DacEtherdream(){
 	// also make this adjustable
 	// also maxBufferedPoints should be higher on etherdream 2
 	//
-    dacBufferSize = 1200; 				// the maximum points to fill the buffer with
-    pointsToSendBeforePlaying = 800;    //500;//100; 	// the minimum number of points to buffer before
+    maxPointBufferSize = 1100; 				// the maximum points to fill the buffer with
+    minPointBufferSize = 800;    //500;//100; 	// the minimum number of points to buffer before
 										// we tell the ED to start playing
 										// TODO - these should be time based!
 
@@ -155,7 +155,7 @@ void DacEtherdream :: setup(string _id, string _ip) {
 		// only linux and osx
 		//http://www.yonch.com/tech/82-linux-thread-priority
 		struct sched_param param;
-        param.sched_priority = 89; //60; // 89;
+        param.sched_priority = 60; // 89; // - lower is higher?
 		pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
 #else
 		// windows implementation
@@ -253,7 +253,7 @@ inline bool DacEtherdream :: sendData(){
 	
 	// TODO make these params
 	//float minBufferTime = 0.01; // (30 frames at 30k)
-	int minBuffer = pointsToSendBeforePlaying; // pps*minBufferTime;
+	int minBuffer = minPointBufferSize; // pps*minBufferTime;
 	
 	// system for resending existing frames... probably can be optimised
 	// if we're in frame mode and we're replaying frames
@@ -289,9 +289,14 @@ inline bool DacEtherdream :: sendData(){
         }
 		
 	}
-	outbuffer[0]= command;
-	writeUInt16ToBytes(npointstosend, &outbuffer[1]);
-	int pos = 3;
+    
+    outbuffer.clear();
+    outbuffer.appendChar(command);
+    outbuffer.appendUInt16(npointstosend);
+//	outBuffer[0]= command;
+//	writeUInt16ToBytes(npointstosend, &outBuffer[1]);
+    
+//	int pos = 3;
 	
 	dac_point& p = sendpoint;
 	
@@ -337,28 +342,20 @@ inline bool DacEtherdream :: sendData(){
             p.control = 0;
         }
 		
-		writeUInt16ToBytes(p.control, &outbuffer[pos]);
-		pos+=2;
-		writeInt16ToBytes(p.x, &outbuffer[pos]);
-		pos+=2;
-		writeInt16ToBytes(p.y, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.r, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.g, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.b, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.i, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.u1, &outbuffer[pos]);
-		pos+=2;
-		writeUInt16ToBytes(p.u2, &outbuffer[pos]);
-		pos+=2;
+		outbuffer.appendUInt16(p.control);
+        outbuffer.appendInt16(p.x);
+        outbuffer.appendInt16(p.y);
+        outbuffer.appendUInt16(p.r);
+        outbuffer.appendUInt16(p.g);
+        outbuffer.appendUInt16(p.b);
+        outbuffer.appendUInt16(p.i);
+        outbuffer.appendUInt16(p.u1);
+        outbuffer.appendUInt16(p.u2);
+	
 		
 	}
 	
-	numBytesSent = pos;
+	numBytesSent = outbuffer.size();
 	if(numBytesSent>=100000) {
 		
 		ofLog(OF_LOG_ERROR, "ofxLaser::DacEtherdream - too many bytes to send! - " + ofToString(numBytesSent));
@@ -371,7 +368,7 @@ inline bool DacEtherdream :: sendData(){
 	}
 	
 	//cout << "sent " << numBytesSent << " bytes" << endl;
-	return sendBytes(outbuffer, numBytesSent);
+	return sendBytes(outbuffer.getBuffer(), numBytesSent);
 	
 	//cout << "numPointsToSend " << numPointsToSend << endl;
 }
@@ -459,7 +456,7 @@ void DacEtherdream :: threadedFunction(){
 			
 			// clear the socket of data
 			try {
-				int n = socket.receiveBytes(buffer, 1000);
+				int n = socket.receiveBytes(inBuffer, 1000);
 			} catch(...) {
 				// doesn't matter
 			}
@@ -497,6 +494,7 @@ void DacEtherdream :: threadedFunction(){
 
 		if((response.status.playback_state == PLAYBACK_IDLE) && (response.status.light_engine_state == LIGHT_ENGINE_READY)) {
 			needToSendPrepare = true;
+            ofLogNotice("PLAYBACK IDLE and LIGHT ENGINE READY");
 		}
 		
 		if(needToSendPrepare) {
@@ -538,8 +536,11 @@ void DacEtherdream :: threadedFunction(){
 		// if state is prepared or playing, and we have points in the buffer, then send the points
 		if(connected && (response.status.playback_state!=PLAYBACK_IDLE)) {
 			
+            // figure out how many points processed since last ack
+            
+            
 			// min buffer amount
-			if(numPointsToSend>pointsToSendBeforePlaying){
+			if(numPointsToSend>minPointBufferSize){
 				//check buffer and send the next points
 				while(!lock()) {}
 				bool dataSent = sendData();
@@ -551,6 +552,7 @@ void DacEtherdream :: threadedFunction(){
                     
                 }
 			} else if(isThreadRunning()) {
+               // yield();
 				// if we're not sending data, then let's ping the etherdream so it can
 				// tell us how many points can fit into its buffer.
 				sendPing(); // ping is '?' character
@@ -559,9 +561,10 @@ void DacEtherdream :: threadedFunction(){
 			
 		}
 		// if state is prepared and we have sent enough points and we haven't already, send begin
-		if(connected && (response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=pointsToSendBeforePlaying)) {
+		if(connected && (response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=minPointBufferSize)) {
 			sendBegin();
 			beginSent = waitForAck('b');
+            
 
 			
 		}
@@ -650,7 +653,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 		// i think this should block until it gets bytes
 		
 		try {
-			n = socket.receiveBytes(buffer, 22);
+			n = socket.receiveBytes(inBuffer, 22);
 			lastMessageTimeMicros = ofGetElapsedTimeMicros();
 			latencyMicros = lastMessageTimeMicros - startTime;
 		} catch (Poco::Exception& exc) {
@@ -690,21 +693,24 @@ inline bool DacEtherdream::waitForAck(char command) {
 	if(n==22) {
 		
 		connected = true;
-		response.response = buffer[0];
-		response.command = buffer[1];
-		response.status.protocol = buffer[2];
-		response.status.light_engine_state = buffer[3];
-		response.status.playback_state = buffer [4];
-		response.status.source = buffer[5];
-		response.status.light_engine_flags = bytesToUInt16(&buffer[6]);
-		response.status.playback_flags =  bytesToUInt16(&buffer[8]);
-		response.status.source_flags =  bytesToUInt16(&buffer[10]);
-		response.status.buffer_fullness = bytesToUInt16(&buffer[12]);
-		response.status.point_rate = bytesToUInt32(&buffer[14]);
-		response.status.point_count = bytesToUInt32(&buffer[18]);
+		response.response = inBuffer[0];
+		response.command = inBuffer[1];
+		response.status.protocol = inBuffer[2];
+		response.status.light_engine_state = inBuffer[3];
+		response.status.playback_state = inBuffer [4];
+		response.status.source = inBuffer[5];
+		response.status.light_engine_flags = bytesToUInt16(&inBuffer[6]);
+		response.status.playback_flags =  bytesToUInt16(&inBuffer[8]);
+		response.status.source_flags =  bytesToUInt16(&inBuffer[10]);
+		response.status.buffer_fullness = bytesToUInt16(&inBuffer[12]);
+		response.status.point_rate = bytesToUInt32(&inBuffer[14]);
+		response.status.point_count = bytesToUInt32(&inBuffer[18]);
 		
+        
+        lastAckTime = ofGetElapsedTimeMicros();
+        
         if((response.response == 'a') && (response.status.playback_state!= PLAYBACK_IDLE )) {
-            numPointsToSend = dacBufferSize - response.status.buffer_fullness;
+            numPointsToSend = maxPointBufferSize - response.status.buffer_fullness;
             if(numPointsToSend<0) numPointsToSend = 0;
 			
 //			// numpointstosend should be
@@ -718,7 +724,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 			if(command == 'd') logData();
 		}
 		
-		if(verbose || (response.response!='a')) {
+        if(verbose || (response.response!='a')) {// || (command=='p')|| (command=='?')|| (command=='b')) {
             ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
 //            ofLog(OF_LOG_NOTICE, "num points sent : "+ ofToString(numPointsToSend) );
 //
@@ -782,7 +788,7 @@ inline bool DacEtherdream::waitForAck(char command) {
 		// light_engine_flags :
 		// ====================
 		// 00001 : Emergency stop due to E-Stop packet (or weird command)
-		// 00010 : Emergency stop due to E-Stop input to projector (not sure how etherdream would know?)
+		// 00010 : Emergency stop due to E-Stop input to projector (not  sure how etherdream would know?)
 		// 00100 : Emergency stop input to projector is currently active (no idea what this means)
 		// 01000 : Emergency stop due to over temperature (interesting... probably worth looking into...)
 		// 10000 : Emergency stop due to loss of Ethernet (not sure how we'd get the message? unless this is
@@ -865,16 +871,16 @@ inline bool DacEtherdream :: sendBegin(){
 	b.low_water_mark = 0 ;
 	b.point_rate = pps;
 	
-	buffer[0] = b.command;
-	writeUInt16ToBytes(b.low_water_mark, &buffer[1]);
-	writeUInt32ToBytes(b.point_rate, &buffer[3]);
+	inBuffer[0] = b.command;
+	writeUInt16ToBytes(b.low_water_mark, &inBuffer[1]);
+	writeUInt32ToBytes(b.point_rate, &inBuffer[3]);
 	
 	//	for(int i = 0; i<7;i++) {
 	//		cout << i << ":" <<buffer[i]<< "(" << std::dec << (int)buffer[i] << std::dec <<")\n";
 	//	}
 	
 	//int n = socket->sendBytes(&send[0],7);
-	beginSent = sendBytes(buffer, 7);
+	beginSent = sendBytes(inBuffer, 7);
 	
 	return beginSent;
 	
@@ -893,19 +899,22 @@ inline bool DacEtherdream :: sendPrepare(){
 
 
 inline bool DacEtherdream :: sendPointRate(uint32_t rate){
-	outbuffer[0] = 'q';
-	writeUInt32ToBytes(rate, &outbuffer[1]);
-	return sendBytes(outbuffer, 5);
+    outbuffer.clear();
+    outbuffer.appendChar('q');
+    outbuffer.appendUInt32(rate);
+	return sendBytes(outbuffer.getBuffer(), outbuffer.size());
 	
 }
 
 void DacEtherdream :: logData() {
-    //bytesToUInt16(&buffer[8]
+    
+    outbuffer.resetReadIndex();
+    
     string dataStr = "---------------------------------------------------------------\n";
     dataStr+= "command            : ";
-    dataStr+=(char)outbuffer[0];
+    dataStr+=outbuffer.readChar();
     dataStr+= "\n";
-    int numpoints =bytesToUInt16(&outbuffer[1]);
+    int numpoints = outbuffer.readUInt16(); //bytesToUInt16(&outbuffer[1]);
     dataStr+= "num points         : " + to_string(numpoints) + "\n";
     int pos = 3;
     
@@ -913,23 +922,23 @@ void DacEtherdream :: logData() {
         dataStr+= "------------------------------ npoint # " + to_string(i) + "\n";
         
         
-        dataStr+= " ctl : " + std::bitset<16>(bytesToUInt16(&outbuffer[pos])).to_string() + "\n";
+        dataStr+= " ctl : " + std::bitset<16>(outbuffer.readUInt16()).to_string() + "\n";
         pos+=2;
-        dataStr+= " x   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " x   : " + to_string(outbuffer.readInt16()) + "\n";
         pos+=2;
-        dataStr+= " y   : " + to_string(bytesToInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " y   : " + to_string(outbuffer.readInt16()) + "\n";
         pos+=2;
-        dataStr+= " r   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " r   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
-        dataStr+= " g   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " g   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
-        dataStr+= " b   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " b   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
-        dataStr+= " i   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " i   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
-        dataStr+= " u1   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " u1   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
-        dataStr+= " u2   : " + to_string(bytesToUInt16(&outbuffer[pos])) + "\n";
+        dataStr+= " u2   : " + to_string(outbuffer.readUInt16()) + "\n";
         pos+=2;
     }
     cout << dataStr << endl;
