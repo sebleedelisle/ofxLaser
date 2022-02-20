@@ -123,7 +123,16 @@ class UI {
         
         ImGui::PopStyleVar(2);
     }
-    
+    static void extraLargeItemStart() {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(78.0f, 80.0f)); // 3 Size of elements (padding around contents);
+        // increase the side of the slider grabber
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+        
+    }
+    static void extraLargeItemEnd() {
+        
+        ImGui::PopStyleVar(2);
+    }
     static bool updateMouse(ofMouseEventArgs &e) {
 		ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
 		//ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));

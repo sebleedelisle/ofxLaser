@@ -1,6 +1,6 @@
 //
 //  ofxLaserManager.cpp
-//  example_HelloLaser 2
+//  ofxLaser 2
 //
 //  Created by Seb Lee-Delisle on 06/05/2021.
 //
@@ -715,7 +715,7 @@ void Manager::drawLaserGui() {
         ImGui::SameLine();
         label = "##framerate"+laserNumberString;
         ImGui::PushItemWidth(100);
-        ImGui::PlotLines(label.c_str(), laserobject.frameTimeHistory, laserobject.frameTimeHistorySize, laserobject.frameTimeHistoryOffset, "", 0, 0.1f);
+        ImGui::PlotHistogram(label.c_str(), laserobject.frameTimeHistory, laserobject.frameTimeHistorySize, laserobject.frameTimeHistoryOffset, "", 0, 0.1f);
         ImGui::PopItemWidth();
         
         // DAC STATUSES
@@ -1099,6 +1099,15 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         dacAssigner.updateDacList();
         
     }
+    if(laser->hasDac()) {
+       
+        string label = showDacSettings? "Close controller settings" : "Open controller settings";
+        
+        if(ImGui::Button(label.c_str())) {
+            showDacSettings = !showDacSettings;
+        }
+      
+    }
     // ----------------------------------------------
     
     
@@ -1473,4 +1482,69 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     //ImGui::End();
     UI::endWindow();
+    
+    if(showDacSettings) {
+        UI::startWindow("Controller Settings", ImVec2(x- laserpanelwidth-spacing, spacing), ImVec2(laserpanelwidth, 0), ImGuiWindowFlags_None, false );
+        
+        //UI::extraLargeItemStart();
+        
+        label = "Frame time ";
+        //ImGui::PushItemWidth(100);
+        ImGui::PlotHistogram(label.c_str(), laser->frameTimeHistory, laser->frameTimeHistorySize, laser->frameTimeHistoryOffset, "", 0, 0.1f, ImVec2(0,80));
+        //ImGui::PopItemWidth();
+        
+        DacEtherDream* dac =  dynamic_cast<DacEtherDream*> (laser->getDac());
+        if(dac!=nullptr) {
+            uint64_t visibledurationmicros = 0.5 * 1000000; // seconds * million
+            uint64_t endTimeMicros = ofGetElapsedTimeMicros();
+            uint64_t startTimeMicros = endTimeMicros - visibledurationmicros;
+            int numvalues = 1000;
+            
+            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            label = "Latency ";
+            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 10.0f, ImVec2(0,80));
+            //ImGui::Text("%sms",ofToString(latencyms).c_str());
+            
+            dac->stateRecorder.getBufferSizeValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            
+            label = "Buffer ";//+ofToString(dac->bufferStateHistory.size());
+       
+            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, dac->getMaxPointBufferSize(), ImVec2(0,80));
+       
+            UI::addIntSlider(dac->pointBufferMinParam); 
+//             for(int i = 0; i<200; i++) {
+//                int timeMicros = ofGetElapsedTimeMicros() - ((200-i) * visibledurationmicros);
+//
+//                while((bufferIndex<dac->bufferStateHistorySize) && (dac->bufferStateHistory[(bufferIndex+dac->bufferStateHistoryOffset)%dac->bufferStateHistorySize].timeMicros < timeMicros)) bufferIndex ++;
+//
+//                if(bufferIndex<200) {
+//
+//
+//
+//                }
+//
+//            }
+            
+            
+            
+//            for(int i = 0; i<dac->bufferStateHistorySize; i++) {
+//
+//                BufferStateAtTime& bufferState = dac->bufferStateHistory[(i+dac->bufferStateHistoryOffset)%dac->bufferStateHistorySize];
+//
+//                bufferState.timeMs;
+//                bufferState.buffer;
+//                bufferState.playing;
+//                bufferState.pointRate;
+//            }
+            
+            
+           
+        }
+        
+        
+        
+        
+       // UI::extraLargeItemEnd();
+        UI::endWindow();
+    }
 }

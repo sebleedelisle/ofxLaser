@@ -143,7 +143,6 @@ class ManagerBase {
     ofParameter<bool> laserMasks;
     ofParameter<int> numLasers; // << not used except for load / save
     
-    
     float defaultHandleSize = 10;
     
     ofParameter<float>globalBrightness;

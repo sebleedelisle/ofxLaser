@@ -20,7 +20,7 @@
 #include "ofxLaserDacData.h"
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacManagerLaserdock.h"
-#include "ofxLaserDacManagerEtherdream.h"
+#include "ofxLaserDacManagerEtherDream.h"
 #include "ofxLaserDacManagerHelios.h"
 
 namespace ofxLaser {

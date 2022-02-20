@@ -8,35 +8,26 @@
 #pragma once
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacBase.h"
-#include "ofxLaserDacEtherdream.h"
+#include "ofxLaserDacEtherDream.h"
+#include "ofxLaserDacEtherDreamData.h"
 #include "ofxNetwork.h"
 #include "ofThread.h"
 
 
 namespace ofxLaser {
 
-struct EtherdreamData {
-    int hardwareRevision;
-    int softwareRevision;
-    int bufferCapacity;
-    int maxPointRate;
-    string macAddress;
-    string ipAddress;
-    float lastUpdateTime;
-};
-    
 
-class DacManagerEtherdream : public DacManagerBase, ofThread{
+class DacManagerEtherDream : public DacManagerBase, ofThread{
     
     public :
-    DacManagerEtherdream();
-    ~DacManagerEtherdream();
+    DacManagerEtherDream();
+    ~DacManagerEtherDream();
     
     virtual vector<DacData> updateDacList() override;
     virtual DacBase* getAndConnectToDac(const string& id) override;
     virtual bool disconnectAndDeleteDac(const string& id) override;
     virtual string getType() override {
-        return "Etherdream";
+        return "EtherDream";
     }
     virtual void exit() override; 
 
@@ -47,7 +38,7 @@ class DacManagerEtherdream : public DacManagerBase, ofThread{
     bool connected = false;
     ofxUDPManager udpConnection;
 
-    map<string, EtherdreamData> etherdreamDataByMacAddress;
+    map<string, EtherDreamData> etherdreamDataByMacAddress;
    // map<string, string> labelById; 
     
 };

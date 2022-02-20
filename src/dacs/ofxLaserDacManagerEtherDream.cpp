@@ -5,30 +5,27 @@
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
-#include "ofxLaserDacManagerEtherdream.h"
+#include "ofxLaserDacManagerEtherDream.h"
 
 using namespace ofxLaser;
 
-DacManagerEtherdream :: DacManagerEtherdream()  {
+DacManagerEtherDream :: DacManagerEtherDream()  {
     ofxUDPSettings settings;
     settings.bindPort = 7654;
     settings.blocking = false;
-    
+
     udpConnection.Setup(settings);
     startThread();
-    
-    
 }
-DacManagerEtherdream :: ~DacManagerEtherdream()  {
-    
+
+DacManagerEtherDream :: ~DacManagerEtherDream()  {
     stopThread();
     waitForThread();
     // TODO wait for all DACs threads to stop
     udpConnection.Close();
-
 }
 
-void DacManagerEtherdream :: threadedFunction() {
+void DacManagerEtherDream :: threadedFunction() {
     
     const int packetSize = 50;
     char udpMessage[packetSize];
@@ -66,28 +63,19 @@ void DacManagerEtherdream :: threadedFunction() {
             uint16_t hardwareRevision, softwareRevision, bufferCapacity;
             uint32_t maxPointRate;
             unsigned char* byteaddress = (unsigned char*)&udpMessage[i];
-            hardwareRevision = DacEtherdream::bytesToUInt16(byteaddress);
+            hardwareRevision = ByteStreamUtils::bytesToUInt16(byteaddress);
             byteaddress+=2;
-            softwareRevision = DacEtherdream::bytesToUInt16(byteaddress);
+            softwareRevision = ByteStreamUtils::bytesToUInt16(byteaddress);
             byteaddress+=2;
-            bufferCapacity = DacEtherdream::bytesToUInt16(byteaddress);
+            bufferCapacity = ByteStreamUtils::bytesToUInt16(byteaddress);
             byteaddress+=2;
-            maxPointRate = DacEtherdream::bytesToUInt32(byteaddress);
+            maxPointRate = ByteStreamUtils::bytesToUInt32(byteaddress);
             byteaddress+=4;
             
           
-            unsigned char* buffer = byteaddress-2;
-            dac_status status;
-            status.protocol = buffer[2];
-            status.light_engine_state = buffer[3];
-            status.playback_state = buffer [4];
-            status.source = buffer[5];
-            status.light_engine_flags =  DacEtherdream::bytesToUInt16(&buffer[6]);
-            status.playback_flags =   DacEtherdream::bytesToUInt16(&buffer[8]);
-            status.source_flags =   DacEtherdream::bytesToUInt16(&buffer[10]);
-            status.buffer_fullness =  DacEtherdream::bytesToUInt16(&buffer[12]);
-            status.point_rate =  DacEtherdream::bytesToUInt32(&buffer[14]);
-            status.point_count =  DacEtherdream::bytesToUInt32(&buffer[18]);
+            //unsigned char* buffer = byteaddress-2;
+            DacEtherDreamStatus status;
+            status.deserialize(byteaddress);
             
 //            cout << "Hardware version :" << hardwareRevision << endl;
 //            cout << "Software version :" << softwareRevision << endl;
@@ -102,7 +90,7 @@ void DacManagerEtherdream :: threadedFunction() {
             
             // if we haven't already got this etherdream, then add it
             if(etherdreamDataByMacAddress.find(id) == etherdreamDataByMacAddress.end()) {
-                EtherdreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
+                EtherDreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
                 ofLogNotice("Adding etherdream "+ id);
                 etherdreamDataByMacAddress[id] = ed;
             } else {
@@ -117,12 +105,12 @@ void DacManagerEtherdream :: threadedFunction() {
      
 }
     
-vector<DacData> DacManagerEtherdream :: updateDacList(){
+vector<DacData> DacManagerEtherDream :: updateDacList(){
     
     vector<DacData> daclist;
     
     for(auto etherdreampair : etherdreamDataByMacAddress) {
-        EtherdreamData& ed = etherdreampair.second;
+        EtherDreamData& ed = etherdreampair.second;
         ofLogNotice(ed.macAddress);
         
         string id = ed.macAddress;
@@ -146,29 +134,29 @@ vector<DacData> DacManagerEtherdream :: updateDacList(){
 }
 
 
-DacBase* DacManagerEtherdream :: getAndConnectToDac(const string& id){
+DacBase* DacManagerEtherDream :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
     
-    DacEtherdream* dac = (DacEtherdream*) getDacById(id);
+    DacEtherDream* dac = (DacEtherDream*) getDacById(id);
     if(dac!=nullptr) {
-        ofLogNotice("DacManagerEtherdream :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
+        ofLogNotice("DacManagerEtherDream :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
         return dac;
     }
     // todo check it exists!
-    EtherdreamData& ed = etherdreamDataByMacAddress.at(id);
+    EtherDreamData& ed = etherdreamDataByMacAddress.at(id);
     // MAKE DAC
-    dac = new DacEtherdream();
-    dac->setup(id, ed.ipAddress);
+    dac = new DacEtherDream();
+    dac->setup(id, ed.ipAddress, ed);
     dacsById[id] = dac;
     return dac;
 }
 
-bool DacManagerEtherdream :: disconnectAndDeleteDac(const string& id){
+bool DacManagerEtherDream :: disconnectAndDeleteDac(const string& id){
     
-    DacEtherdream* dac = (DacEtherdream*)getDacById(id);
+    DacEtherDream* dac = (DacEtherDream*)getDacById(id);
     if(dac==nullptr) {
-        ofLogError("DacManagerEtherdream::disconnectAndDeleteDac("+id+") - dac not found");
+        ofLogError("DacManagerEtherDream::disconnectAndDeleteDac("+id+") - dac not found");
         return false;
     }
    
@@ -182,6 +170,6 @@ bool DacManagerEtherdream :: disconnectAndDeleteDac(const string& id){
 
 
 
-void DacManagerEtherdream :: exit() {
+void DacManagerEtherDream :: exit() {
     
 }

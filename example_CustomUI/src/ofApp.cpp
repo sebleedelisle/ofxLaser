@@ -6,7 +6,7 @@
 void ofApp::setup(){
     
     // NOTE that you no longer need to set up anything at all in ofxLaser!
-    // If you want to change the size of the laser area, use
+    // If you want to change the size of the laser graphics canvas, use
     // laser.setCanvasSize(int width, int height) - default is 800 x 800.
     
     boolParam.set("Boolean param", true);
@@ -49,7 +49,7 @@ void ofApp::draw() {
     // draw all the laser UI panels
     laser.drawLaserGui();
     
-    
+  
     // and now we can do custom stuff!
     
     // ofxLaser::UI has a bunch of helper functions in for managing
@@ -106,6 +106,7 @@ void ofApp::draw() {
     // impossible to go into here... but have a look at how
     // I've achieved various buttons and UI elements in the
     // laser.drawLaserGui method.
+    ImGui::ShowDemoWindow();
 
     ofxLaser::UI::endWindow();
     

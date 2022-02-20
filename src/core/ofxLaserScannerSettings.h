@@ -1,6 +1,6 @@
 //
 //  ofxLaserScannerSettings.h
-//  example_HelloLaser
+//  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 20/04/2021.
 //
