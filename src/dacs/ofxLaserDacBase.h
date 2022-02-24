@@ -34,6 +34,10 @@ namespace ofxLaser {
 		virtual void reset() = 0;
         virtual void setArmed(bool armed);
 		virtual void close() = 0;
+        virtual bool isReadyForFrame(int maxLatencyMS){
+            return true;
+        }
+        
 
         string alias = "";
 		
@@ -42,7 +46,7 @@ namespace ofxLaser {
 		vector<ofAbstractParameter*> displayData;
 		bool resetFlag = false;
         bool armed = false;
-        
+        bool frameMode = true;
 	};
 
 }

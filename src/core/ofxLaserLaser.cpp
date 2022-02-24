@@ -105,8 +105,9 @@ void Laser :: init() {
     laserparams.add(speedMultiplier.set("Speed", 1,0.12,2));
     
 	 
-	laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
-		
+    laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
+    laserparams.add(maxLatency.set("Frame latency", 300,20,1000));
+    
 	laserparams.add(flipX.set("Flip Horizontal", false));
 	laserparams.add(flipY.set("Flip Vertical",false));
 	laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
@@ -572,8 +573,7 @@ void Laser::update(bool updateZones) {
     needsSave = maskManager.update() | needsSave;
     
     
-	laserPoints.clear();
-	previewPathMesh.clear();
+	
     bool laserZoneChanged = false;
     for(LaserZone* laserZone : laserZones) {
         laserZoneChanged |= laserZone->update();
@@ -682,7 +682,15 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 		ofLog(OF_LOG_ERROR, "Error, ofxLaser::laser not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
 		return;
 	}
+    
+    if(!dac->isReadyForFrame(maxLatency)) {
+        // register skipped frame
+        return;
+    }
 	
+    laserPoints.clear();
+    previewPathMesh.clear();
+    
 	vector<PointsForShape> allzoneshapes;
 
 	// TODO add speed multiplier to getPointsForMove function

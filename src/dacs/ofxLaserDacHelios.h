@@ -108,7 +108,7 @@ class DacHelios : public DacBase, ofThread{
 	uint32_t pps;
 	std::atomic<uint32_t>  newPPS;
 	
-	std::atomic<bool> frameMode;
+	//std::atomic<bool> frameMode;
 	std::atomic<bool> connected ;
     std::atomic<bool> newArmed ;  // as in the PPS system, this knows
                             // if armed status has changed and sends

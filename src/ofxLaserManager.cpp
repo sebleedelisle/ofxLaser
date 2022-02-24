@@ -22,6 +22,9 @@ Manager :: Manager() {
     params.add(previewNavigationEnabled.set("Enable preview navigation", false));
     params.add(showGuideImage.set("Show guide image", false));
     params.add(guideImageColour.set("Guide image colour", ofColor::white));
+    
+    dacSettingsTimeSlice.set("Magnification", 0.5, 0.1, 20);
+    
     // bit of a hack - ideally UI elements should be completely separate from
     // the ManagerBase but I'm not quite there yet.
     if(!loadJson.empty()) {
@@ -1126,7 +1129,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::PopItemWidth();
     UI::largeItemEnd();
     
-    
+    ImGui::PushItemWidth(170);
+    UI::addIntSlider(laser->maxLatency);
+    UI::toolTip("The maximum time in ms between creating a frame and having it displayed on the laser. Increasing this value can improve reliability on slow networks.");
+    ImGui::PopItemWidth();
     
     // ZONES
     UI::addCheckbox(laser->flipX);
@@ -1484,59 +1490,47 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     UI::endWindow();
     
     if(showDacSettings) {
-        UI::startWindow("Controller Settings", ImVec2(x- laserpanelwidth-spacing, spacing), ImVec2(laserpanelwidth, 0), ImGuiWindowFlags_None, false );
+        UI::startWindow("Controller Settings", ImVec2(spacing, ofGetHeight()-spacing-spacing-600), ImVec2(ofGetWidth()-spacing-spacing, 600), ImGuiWindowFlags_None, false );
         
         //UI::extraLargeItemStart();
         
-        label = "Frame time ";
-        //ImGui::PushItemWidth(100);
-        ImGui::PlotHistogram(label.c_str(), laser->frameTimeHistory, laser->frameTimeHistorySize, laser->frameTimeHistoryOffset, "", 0, 0.1f, ImVec2(0,80));
-        //ImGui::PopItemWidth();
+//        label = "Frame time ";
+//        ImGui::PlotHistogram(label.c_str(), laser->frameTimeHistory, laser->frameTimeHistorySize, laser->frameTimeHistoryOffset, "", 0, 0.1f, ImVec2(0,80));
         
         DacEtherDream* dac =  dynamic_cast<DacEtherDream*> (laser->getDac());
         if(dac!=nullptr) {
-            uint64_t visibledurationmicros = 0.5 * 1000000; // seconds * million
+            uint64_t visibledurationmicros = dacSettingsTimeSlice * 1000000; // seconds * million
             uint64_t endTimeMicros = ofGetElapsedTimeMicros();
             uint64_t startTimeMicros = endTimeMicros - visibledurationmicros;
             int numvalues = 1000;
             
-            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Latency ";
-            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 10.0f, ImVec2(0,80));
-            //ImGui::Text("%sms",ofToString(latencyms).c_str());
+//            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+//            label = "Round trip time";
+//            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 10.0f, ImVec2(0,80));
             
             dac->stateRecorder.getBufferSizeValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            
-            label = "Buffer ";//+ofToString(dac->bufferStateHistory.size());
-       
+            label = "Buffer ";
             ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, dac->getMaxPointBufferSize(), ImVec2(0,80));
        
+            
+//            dac->stateRecorder.getDataRateValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+//            label = "Data rate ";
+//            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 5000.0f, ImVec2(0,80));
+
+            dac->frameRecorder.getFrameLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            label = "Frame latency ";
+            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "", 0.0f, 200000.0f, ImVec2(0,80));
+            
+            dac->frameRecorder.getFrameRepeatValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            label = "Frame repeats ";
+            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 5.0f, ImVec2(0,80));
+            
+            dac->frameRecorder.getFrameSkipValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            label = "Frame skips ";
+            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 1.0f, ImVec2(0,80));
+   
             UI::addIntSlider(dac->pointBufferMinParam); 
-//             for(int i = 0; i<200; i++) {
-//                int timeMicros = ofGetElapsedTimeMicros() - ((200-i) * visibledurationmicros);
-//
-//                while((bufferIndex<dac->bufferStateHistorySize) && (dac->bufferStateHistory[(bufferIndex+dac->bufferStateHistoryOffset)%dac->bufferStateHistorySize].timeMicros < timeMicros)) bufferIndex ++;
-//
-//                if(bufferIndex<200) {
-//
-//
-//
-//                }
-//
-//            }
-            
-            
-            
-//            for(int i = 0; i<dac->bufferStateHistorySize; i++) {
-//
-//                BufferStateAtTime& bufferState = dac->bufferStateHistory[(i+dac->bufferStateHistoryOffset)%dac->bufferStateHistorySize];
-//
-//                bufferState.timeMs;
-//                bufferState.buffer;
-//                bufferState.playing;
-//                bufferState.pointRate;
-//            }
-            
+            UI::addFloatSlider(dacSettingsTimeSlice);
             
            
         }

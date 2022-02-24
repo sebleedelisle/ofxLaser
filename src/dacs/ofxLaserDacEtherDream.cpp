@@ -10,9 +10,6 @@
 
 using namespace ofxLaser;
 
-
-
-
 DacEtherDream :: DacEtherDream(){
 
 	pointBufferDisplay.set("Point Buffer", 0,0,1799);
@@ -22,7 +19,6 @@ DacEtherDream :: DacEtherDream(){
 	displayData.push_back(&pointBufferDisplay);
 	displayData.push_back(&latencyDisplay);
 	displayData.push_back(&reconnectCount);
-    
     
     //TODO
     // this should really be dependent on network latency	
@@ -51,7 +47,7 @@ const vector<ofAbstractParameter*>& DacEtherDream :: getDisplayData() {
 		
 		pointBufferDisplay = response.status.buffer_fullness-pointssincelastmessage;
 																 
-		latencyDisplay += (latencyMicros - latencyDisplay)*0.1;
+		latencyDisplay += (roundTripTimeMicros - latencyDisplay)*0.1;
 		reconnectCount = prepareSendCount;
 	
 		unlock();
@@ -63,37 +59,23 @@ const vector<ofAbstractParameter*>& DacEtherDream :: getDisplayData() {
 
 DacEtherDream :: ~DacEtherDream(){
 	
-	close();
-	
-	for (size_t i= 0; i < sparePoints.size(); ++i) {
-		delete sparePoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
-		// and deallocates *tmp[i]
-	}
-	sparePoints.clear();
+    close();
+    
+    // NOTE thread must be stopped by now
+    
+    DacEtherDreamFrame* frame;
+    while(frameThreadChannel.tryReceive(frame)) {
+        delete frame;
+    }
+    while(frames.size()>0) {
+        delete frames[0];
+        frames.pop_front();
+    }
 	for (size_t i= 0; i < bufferedPoints.size(); ++i) {
-		delete bufferedPoints[i]; // Calls ~object (which deallocates tmp[i]->foo)
-		// and deallocates *tmp[i]
+        EtherDreamDacPointFactory :: releasePoint(bufferedPoints[i]); // Calls ~object
 	}
 	bufferedPoints.clear();
-	
-}
-
-void DacEtherDream :: close() {
-	
-    if(isThreadRunning()) {
-        if(connected) {
-            if(lock()) {
-                sendStop();
-                unlock();
-                waitForAck('s');
-            }
-        }
-        // also stops the thread :
-        waitForThread();
-    }
-		
-	socket.close();
-
+    
 }
 
 bool DacEtherDream :: setup(string ip) {
@@ -108,10 +90,11 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 	pps = newPPS = 30000; // this is always sent on begin
 	queuedPPSChangeMessages = 0;
 	connected = false;
-	ipaddress = _ip;
+	ipAddress = _ip;
     id = _id;
     etherDreamData = ed;
     lastAckTime = ofGetElapsedTimeMicros();
+    
     
     // EtherDream Hardware revision :
     // ED v1 : hardwareRevision 2, softwareRevision 2
@@ -121,12 +104,16 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     // TODO update max point rate from dacdata
     pointBufferCapacity = ed.bufferCapacity;
     //pointBufferMin = pointBufferCapacity*0.70;
-	
+    if(etherDreamData.hardwareRevision>=30) {
+        pointBufferMinParam.setMax(pointBufferCapacity-256);
+    } else {
+        pointBufferMinParam.setMax(pointBufferCapacity);
+    }
 	Poco::Timespan timeout( 1000000 * 1 / 1); // 1/1 second timeout
 	
 	try {
 		// EtherDreams always talk on port 7765
-		Poco::Net::SocketAddress sa(ipaddress, 7765);
+		Poco::Net::SocketAddress sa(ipAddress, 7765);
 		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
         
 		socket.connect(sa, timeout);
@@ -136,7 +123,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 		connected = true;
 	} catch (Poco::Exception& exc) {
 		//Handle your network errors.
-		ofLog(OF_LOG_ERROR,  "DacEtherDream setup failed - Network error: " +ipaddress+" "+ exc.displayText());
+		ofLog(OF_LOG_ERROR,  "DacEtherDream setup failed - Network error: " +ipAddress+" "+ exc.displayText());
 		connected = false;
 
 	}catch (Poco::Net::HostNotFoundException& exc) {
@@ -178,7 +165,32 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 
 	}
 }
+bool DacEtherDream :: isReadyForFrame(int maxLatencyMS) {
+   // return true;
+    int bufferFullness = 0;
+    if(lock()) {
+        
+        bufferFullness = getNumPointsInAllBuffers();
+        
+        unlock();
+    }
+    //pointBufferMinParam = maxLatencyMS * newPPS / 1000;
+    return bufferFullness<(maxLatencyMS*newPPS/1000);
+}
 
+int DacEtherDream :: getNumPointsInAllBuffers() {
+    // if not in thread then needs lock!
+    return getCurrentBufferFullness() + bufferedPoints.size() + getNumPointsInFrames();
+    
+}
+
+int DacEtherDream :: getNumPointsInFrames() {
+    int totalpoints = 0;
+    for(DacEtherDreamFrame* frame : frames) {
+        totalpoints+=(frame->getNumPoints());
+    }
+    return totalpoints;
+}
 
 void DacEtherDream :: threadedFunction(){
     
@@ -217,20 +229,24 @@ void DacEtherDream :: threadedFunction(){
            // needToSendPrepare = true;
             
             // clear frame
-            EtherDreamDacPoint lastPoint;
-            if(framePoints.size()>0) {
-                lastPoint = framePoints[0];
-               
-            } else {
-                lastPoint.x = 400;
-                lastPoint.y = 400;
-            }
-            lastPoint.r = 0;
-            lastPoint.g = 0;
-            lastPoint.b = 0;
-            // go through the buffer and clear all the points. Could we just delete the buffer?
-            for(EtherDreamDacPoint* point : bufferedPoints) {
-                *point = lastPoint;
+//            EtherDreamDacPoint lastPoint;
+//            if(frame.framePoints.size()>0) {
+//                lastPoint = *frame.framePoints[0];
+//
+//            } else {
+//                lastPoint.x = 400;
+//                lastPoint.y = 400;
+//            }
+//            lastPoint.r = 0;
+//            lastPoint.g = 0;
+//            lastPoint.b = 0;
+//            // go through the buffer and clear all the points. Could we just delete the buffer?
+//            for(EtherDreamDacPoint* point : bufferedPoints) {
+//                *point = lastPoint;
+//            }
+            while(bufferedPoints.size()>0) {
+                EtherDreamDacPointFactory :: releasePoint(bufferedPoints[0]);
+                bufferedPoints.pop_front();
             }
             
             ofLogNotice ("RESET DAC--------------------------------");
@@ -289,37 +305,24 @@ void DacEtherDream :: threadedFunction(){
         if(connected && (response.status.playback_state!=PLAYBACK_IDLE)) {
             
             // figure out when the next update should be
-            int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
-            // find out buffer based on last update - TODO allow for latency?
-            int bufferFullness =response.status.buffer_fullness - (((float)elapsedMicros/1000000.0f) * pps);
-            
-            if(etherDreamData.hardwareRevision>=30) {
-                // if we have an ether dream v3 then we have to keep a minimum of
-                // 256 points in the buffer otherwise it'll error out.
-                bufferFullness-=256;
-                
-            }
-            bufferFullness = MAX(0,bufferFullness);
+            // figure out the current buffer
+            int bufferFullness = getCurrentBufferFullness();
+                 
             //int pointsToFill = (minPointBufferSize - bufferFullness);
             int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
-            
-            
             int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
-            
-            int maxPointsToSend = pointBufferCapacity - pointBufferMin;
-            if(bufferFullness < pointBufferMin) maxPointsToSend += (pointBufferMin-bufferFullness);
-            //cout << latencyMicros/1000 << " " << microsToWait << " " << bufferFullness << " " << response.status.buffer_fullness <<  " " << maxPointsToSend << endl;
-            
+         
             // min buffer amount
             if(microsToWait>0)
                 usleep(microsToWait);
             
             // recalculate buffer fullness dependent on time
-            elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
-            bufferFullness = MAX(0, response.status.buffer_fullness - (((float)elapsedMicros/1000000.0f) * pps));
+            bufferFullness = getCurrentBufferFullness();
+            int maxPointsToSend = pointBufferCapacity-bufferFullness;
+            int minPointsToSend = pointBufferMin - bufferFullness;
             //check buffer and send the next points
             while(!lock()) {}
-                bool dataSent = sendData(pointBufferMin-bufferFullness, maxPointsToSend-bufferFullness);
+                bool dataSent = sendPointDataToDac(minPointsToSend, maxPointsToSend);
             unlock();
             if(dataSent) {
                 //if(verbose) logData();
@@ -327,7 +330,6 @@ void DacEtherDream :: threadedFunction(){
                 waitForAck('d');
                 
             }
-            
             
         }
         // if state is prepared and we have sent enough points and we haven't already, send begin
@@ -353,7 +355,13 @@ void DacEtherDream :: threadedFunction(){
     }
 }
 
-
+int DacEtherDream :: getCurrentBufferFullness() {
+    int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
+    // figure out the current buffer
+    return MAX(0, response.status.buffer_fullness - (((float)elapsedMicros/1000000.0f) * pps));
+   
+    
+}
 
 void DacEtherDream :: reset() {
 	if(lock()) {
@@ -381,87 +389,152 @@ void DacEtherDream :: closeWhileRunning() {
 
 bool DacEtherDream:: sendFrame(const vector<Point>& points){
 
-//	ofLog(OF_LOG_NOTICE, "point create count  : " + ofToString(dac_point::createCount));
-//	ofLog(OF_LOG_NOTICE, "point destroy count : " + ofToString(dac_point::destroyCount));
+	//ofLog(OF_LOG_NOTICE, "point create count  : " + ofToString(EtherDreamDacPoint::createCount));
+	//ofLog(OF_LOG_NOTICE, "point destroy count : " + ofToString(EtherDreamDacPoint::destroyCount));
 	//int maxBufferSize = 1000;
-	EtherDreamDacPoint& p1 = sendpoint;
+	//EtherDreamDacPoint& p1 = sendpoint;
 	
-	// if we already have too many points in the buffer,
-	// then it means that we need to skip this frame
-	
-	//if(isReplaying || (bufferedPoints.size()<pointsToSendBeforePlaying)) {
+    // framePoints is a vector of EtherDreamDacPoint*
+    // points is a vector of ofxLaser::Point
+    
+    stateRecorder.update();
+    frameRecorder.update();
 
-	
-		if(lock()) {
-			frameMode = true;
-			framePoints.resize(points.size());
+    if(lock()) {
+        frameMode = true;
+        //newFrame = true;
+        unlock();
+    }
+    
+    DacEtherDreamFrame* frame = new DacEtherDreamFrame(ofGetElapsedTimeMicros());
+    
+    //frame->clear();
+    
+    // iterate through all the points, and add into frame
+    for(size_t i= 0; i<points.size(); i++) {
+        frame->addPoint(points[i]);
+    }
+    
+    frameThreadChannel.send(frame);
+    
+    return true;
 
-			for(size_t i= 0; i<points.size(); i++) {
-				
-				const Point& p2 = points[i];
-				p1.x = ofMap(p2.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
-				p1.y = ofMap(p2.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
-				p1.r = p2.r/255.0f*65535;
-				p1.g = p2.g/255.0f*65535;
-				p1.b = p2.b/255.0f*65535;
-				p1.i = 0;
-				p1.u1 = 0;
-				p1.u2 = 0;
-				//addPoint(p1);
-				
-				framePoints[i] = p1;
-			}
-			newFrame = true;
-			unlock();
-		}
-		return true;
-	//} else {
-		// we've skipped this frame... TODO - dropped frame count?
-	//	return false;
-	//}
 }
 
 
-inline bool DacEtherDream :: sendData(int minPointsToSend, int maxPointsToSend){
-	
+inline bool DacEtherDream :: sendPointDataToDac(int minPointsToSend, int maxPointsToSend){
+    
+//    minPointsToSend-=bufferedPoints.size();
+//    maxPointsToSend-=bufferedPoints.size();
+//
+	// to get rid of negative amounts
     minPointsToSend = MAX(0,minPointsToSend);
     maxPointsToSend = MAX(0,maxPointsToSend);
-	
-	// this is to stop sending too many points into the future
-	//float bufferTime = 0.5f; // was 0.1f - TODO make this a param!
-	//if(npoints>pps*bufferTime) npoints = pps*bufferTime;
-	
-		
-	// TODO make these params
-	//float minBufferTime = 0.01; // (30 frames at 30k)
-	//int minBuffer = minPointBufferSize; // pps*minBufferTime;
-	
-    
+    if(minPointsToSend>maxPointsToSend) minPointsToSend = maxPointsToSend;
+    if(maxPointsToSend==0) return false;
     int numpointstosend;
     
-	// system for resending existing frames... probably can be optimised
-	// if we're in frame mode and we're replaying frames
+	// if we're in frame mode we can keep adding frames to the
+    // buffer until we have the minimum points we need
     
 	if(frameMode) {
-		
-        numpointstosend = minPointsToSend;
+       // bool newFrame = false;
+        
+        DacEtherDreamFrame* frame;
+        while(frameThreadChannel.tryReceive(frame)) {
+            frames.push_back(frame);
+            //newFrame = true;
+        }
+        
+        vector<DacEtherDreamFrame*> framesToSend;
+        
+        if(getNumPointsInFrames()<minPointsToSend) {
+            // if we don't have enough points, then keep doubling frames until we do
+            int i = 0;
+            while((i<frames.size()) && (getNumPointsInFrames()<minPointsToSend)) {
+                frames[i]->repeatCount++;
+                cout << "+++ repeating " << i << " " << frames[i]->repeatCount << endl;
+                i++;
+                if(i>=frames.size()) i=0;
+            }
+
+        // if we have too many points, delete frames, but do them alternately so
+        // you still get smooth animation.
+        // NOTE this should go in at the sendFrame place and there can be additional
+        // optimisation
+//
+        } else if(getNumPointsInFrames() > minPointsToSend) {
+            float numFramesToKeep = (float)frames.size() * (float)minPointsToSend / (float)getNumPointsInFrames();
+            float numFramesToSkip = frames.size() - numFramesToKeep;
+            //cout << "--- leep  " << numFramesToKeep << " / " << numFramesToSkip << endl;
+            int framecount = 0;
+
+            for(size_t i = 0; i<frames.size(); i++) {
+                int frameprogress = floor(ofMap(i,0,frames.size(), 0, numFramesToSkip));
+                if(framecount<=frameprogress) {
+                    frames[i]->repeatCount = 0;
+                    //cout << "--- deleting " << i << " " << framecount << " " << numFramesToSkip << " " <<frameprogress << endl;
+                    framecount++;
+                } else {
+                    //cout << "--- keeping " << i << " " << framecount << " " << numFramesToSkip << " " << frameprogress << endl;
+                    frames[i]->repeatCount = 1;
+                }
+            }
+            //cout << "- " << getNumPointsInFrames() << " " << maxPointsToSend <<  endl;
+            //cout << "- " << ofGetElapsedTimeMicros() - frames[0]->frameTime <<  endl;
+            cout << "- " << bufferedPoints.size() <<  endl;
+
+        }
+       
+        
+//        vector<EtherDreamDacPoint*>& framePoints = frame.framePoints;
+       
+        //numpointstosend = minPointsToSend;
         // send points up to the minimum buffer size unless
         // we have a new frame and if we dont already have the max points,
         // then definitely send it all
-        if(newFrame && bufferedPoints.size()<maxPointsToSend) {
-            numpointstosend = MAX(minPointsToSend, framePoints.size());
+//        if(newFrame && bufferedPoints.size()<maxPointsToSend) {
+//            numpointstosend = MAX(minPointsToSend, getNumPointsInFrames());
+//        }
+        // send the frame over and over until we have the minimum
+        // points in the buffer that we need
+        
+        // i think we can just send all the frames now right?
+//
+//		while(getNumPointsInFrames()>0) && (bufferedPoints.size()<minPointsToSend)) {
+//			// send the frame!
+//			for(size_t i= 0; i<framePoints.size(); i++) {
+//				addPoint(*framePoints[i]);
+//			}
+//			newFrame = false;
+//            //cout << "adding " << framePoints.size() << " to buffer " << bufferedPoints.size() << endl;
+//
+//		}
+//
+        
+        for(int i = 0; i<frames.size(); i++ ) {
+            DacEtherDreamFrame& frame = *frames[i];
+            frameRecorder.recordFrameInfoThreadSafe(frame.frameTime, ofGetElapsedTimeMicros() + (( getCurrentBufferFullness() + bufferedPoints.size()) * 1000000 / pps), frame.framePoints.size(), frame.repeatCount, frame.repeatCount == 0);
+            
+          
+            while(frame.repeatCount>0) {
+                for(EtherDreamDacPoint* point : frame.framePoints) {
+                    addPoint(*point);
+                }
+                frame.repeatCount--;
+            }
         }
-		
-		while((framePoints.size()>0) && (bufferedPoints.size()<minPointsToSend)) {
-			//cout << npointstosend << " " << minpointcount << endl;
-			// send the frame!
-			for(size_t i= 0; i<framePoints.size(); i++) {
-				addPoint(framePoints[i]);
-			}
-			newFrame = false;
-			numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
-		
-		}
+        // now clear the frames!
+
+        while(frames.size()>0) { //  && (frames[0]->repeatCount ==0)) {
+            delete frames[0];
+            frames.pop_front();
+        }
+
+        
+        
+        numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
+        
         if(numpointstosend==0) {
             if(verbose) ofLogNotice("sendData : no points to send");
             return false;
@@ -471,10 +544,10 @@ inline bool DacEtherDream :: sendData(int minPointsToSend, int maxPointsToSend){
         // for non-frame mode, just send the buffer
        numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
     }
-    
+    //cout << numpointstosend << " " << minPointsToSend << " " << bufferedPoints.size() << endl;
     dacCommand.setDataCommand(numpointstosend);
 	
-	EtherDreamDacPoint& p = sendpoint;
+	EtherDreamDacPoint& p = sendPoint;
 	
 	for(int i = 0; i<numpointstosend; i++) {
 		
@@ -491,16 +564,17 @@ inline bool DacEtherDream :: sendData(int minPointsToSend, int maxPointsToSend){
             p.u2 = 0;
             p.i = 0;
             
-			sparePoints.push_back(bufferedPoints[0]); // recycling system
+            EtherDreamDacPointFactory :: releasePoint(bufferedPoints[0]); // recycling system
 			bufferedPoints.pop_front(); // no longer destroys point
-			lastpoint = p; //
+			lastPointSent = p; //
 		} else  {
+            
+            // THIS SHOULD NEVER HAPPEN!!!
+            // EXCEPT MAYBE IN STREAM MODE
 			// just send some blank points in the same position as the
 			// last point
-			// TODO count the blanks!
 			
-			p = lastpoint;
-			
+			p = lastPointSent;
 			
 			p.r = 0;
 			p.g = 0;
@@ -551,6 +625,8 @@ inline bool DacEtherDream :: sendData(int minPointsToSend, int maxPointsToSend){
 
 
 bool DacEtherDream:: sendPoints(const vector<Point>& points){
+    
+    stateRecorder.update();
     // max half second buffer
 	//cout << "DacEtherDream::sendPoints -------------------------" << endl;
     if(bufferedPoints.size()>pps*0.5) {
@@ -582,43 +658,6 @@ bool DacEtherDream:: sendPoints(const vector<Point>& points){
   
 }
 
-
-inline bool DacEtherDream :: addPoint(const EtherDreamDacPoint &point ){
-	EtherDreamDacPoint* p = getDacPoint();
-	*p = point; // copy assignment hopefully!
-	bufferedPoints.push_back(p);
-	return true;
-}
-
-
-
-int DacEtherDream::getMaxPointBufferSize() {
-    int returnvalue = 0;
-    if(lock()) {
-        returnvalue = pointBufferCapacity;
-        unlock();
-    }
-    return returnvalue;
-}
-
-bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
-	//ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
-	if(!isThreadRunning()){
-		pps = newPPS = newpps;
-		return true; 
-	} else {
-		while(!lock());
-		newPPS = newpps;
-		if (!beginSent) {
-			pps = newPPS; // pps rate will get sent with begin anyway
-			unlock();
-			return true;
-		} else {
-			unlock();
-			return false;
-		}
-	}
-}
 
 
 inline bool DacEtherDream::waitForAck(char command) {
@@ -685,18 +724,15 @@ inline bool DacEtherDream::waitForAck(char command) {
 	if(n==22) {
         
         lastAckTime = lastMessageTimeMicros ;
-        latencyMicros  = lastMessageTimeMicros - lastCommandSendTime;
+        roundTripTimeMicros  = lastMessageTimeMicros - lastCommandSendTime;
 		connected = true;
         response.deserialize(inBuffer);
 		
-        if((command == 'd') && lock()) {
-//            bufferState.timeMicros = lastDataSentTime;
-//            bufferState.buffer = response.status.buffer_fullness;
-//            bufferState.playing = response.status.playback_state == PLAYBACK_PLAYING;
-//            bufferState.pointRate = response.status.point_rate;
-            unlock();
-            stateRecorder.recordState(lastDataSentTime, response.status.playback_state, response.status.buffer_fullness, latencyMicros, dacCommand.numPoints, response.status.point_rate); 
-            unlock();
+        if(command == 'd') {
+            int numbytes = dacCommand.size()+22;
+           
+            stateRecorder.recordStateThreadSafe(lastDataSentTime, response.status.playback_state, response.status.buffer_fullness, roundTripTimeMicros, dacCommand.numPoints, response.status.point_rate, numbytes);
+          
         }
 
 		
@@ -800,24 +836,15 @@ inline bool DacEtherDream::waitForAck(char command) {
 		
 		return false;
 	} else {
-//        if(lock()) {
-//            addLatencyRecording(latencyMicros);
-//            unlock();
-//        }
+
 		return true;
 	}
 }
 
 
-//void DacEtherDream :: addLatencyRecording(int latency){
-//    latencyHistory[latencyHistoryOffset] = ((float)latency/1000.0f);
-//    latencyHistoryOffset++;
-//    if(latencyHistoryOffset>=latencyHistorySize) latencyHistoryOffset = 0;
-//}
-
 string DacEtherDream :: getId(){
 	return "EtherDream "+id;
-   // string getLabel() override{return "Laserdock " + ofToString(serialNumber);};
+  
 }
 
 int DacEtherDream :: getStatus(){
@@ -918,7 +945,7 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 	if(failed) {
 		if(networkerror) {
 			closeWhileRunning();
-			setup(id, ipaddress, etherDreamData);
+			setup(id, ipAddress, etherDreamData);
 		}
 		beginSent = false;
         
@@ -928,25 +955,58 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 }
 
 
-EtherDreamDacPoint*  DacEtherDream :: getDacPoint() {
-	EtherDreamDacPoint* p;
-	if(sparePoints.size()==0) {
-		p= new EtherDreamDacPoint();
-		//ofLog(OF_LOG_NOTICE, "new point made");
-	} else {
-		p = sparePoints.back();
-		sparePoints.pop_back();
-        // not sure if we need this
-        p->control = 0;
-        p->x =
-        p->y = 0;
-        p->r =
-        p->g =
-        p->b =
-        p->i =
-        p->u1 =
-        p->u2 = 0;
-	}
-   
-	return p;
+
+void DacEtherDream :: close() {
+    
+    if(isThreadRunning()) {
+        if(connected) {
+            if(lock()) {
+                sendStop();
+                unlock();
+                waitForAck('s');
+            }
+        }
+        // also stops the thread :
+        waitForThread();
+    }
+        
+    socket.close();
+
+}
+
+inline bool DacEtherDream :: addPoint(const EtherDreamDacPoint &point ){
+    EtherDreamDacPoint* p = EtherDreamDacPointFactory :: getPoint(point);
+    //*p = point; // copy assignment hopefully!
+    bufferedPoints.push_back(p);
+    return true;
+}
+
+
+
+int DacEtherDream::getMaxPointBufferSize() {
+    int returnvalue = 0;
+    if(lock()) {
+        returnvalue = pointBufferCapacity;
+        unlock();
+    }
+    return returnvalue;
+}
+
+bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
+    //ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
+    if(!isThreadRunning()){
+        pps = newPPS = newpps;
+        return true;
+    } else {
+        while(!lock());
+        newPPS = newpps;
+        if (!beginSent) {
+            pps = newPPS; // pps rate will get sent with begin anyway
+            unlock();
+            return true;
+        } else {
+            unlock();
+            return false;
+        }
+    }
 }

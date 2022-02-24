@@ -56,6 +56,9 @@ void ofApp::draw() {
     
     laser.drawCircle(275, 400, 80, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
     
+    laser.drawCircle(ofGetMouseX(), ofGetMouseY(), 5, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
+    
+    
     // sends points to the DAC
     laser.send();
     // draw the laser UI elements

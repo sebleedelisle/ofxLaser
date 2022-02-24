@@ -89,6 +89,7 @@ class Manager : public ManagerBase {
     ofParameter<ofColor> guideImageColour;
     ofParameter<bool> previewNavigationEnabled;
     bool showDacSettings;
+    ofParameter<float> dacSettingsTimeSlice; 
     
     int selectedLaser;
    

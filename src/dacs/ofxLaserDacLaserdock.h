@@ -66,7 +66,7 @@ class DacLaserdock : public DacBase, ofThread{
 	uint32_t pps, newPPS;
 	uint32_t maxPPS; 
 	
-	bool frameMode = true; 
+	//bool frameMode = true;
 	bool replayFrames = true;
 	bool isReplaying = false;
 	bool connected = false;
