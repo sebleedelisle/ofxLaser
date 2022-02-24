@@ -51,7 +51,7 @@ public:
     
     OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup(string ip));
    
-    bool addPoint(const EtherDreamDacPoint &point );
+    bool addPoint(const ofxLaser::Point& point );
     void closeWhileRunning();
     void close() override;
     void reset() override;
@@ -129,7 +129,7 @@ private:
     string ipAddress;
     string id;
     
-    deque<EtherDreamDacPoint*> bufferedPoints;
+    deque<ofxLaser::Point*> bufferedPoints;
     //vector<EtherDreamDacPoint*> sparePoints;
 
     uint32_t pps, newPPS;

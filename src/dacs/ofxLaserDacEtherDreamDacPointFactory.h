@@ -9,27 +9,27 @@
 #pragma once
 #include "ofMain.h"
 #include "Poco/ObjectPool.h"
-#include "ofxLaserDacEtherDreamDacPoint.h"
+#include "ofxLaserPoint.h"
 
 namespace ofxLaser {
-class EtherDreamDacPointFactory {
+class ofxLaserPointFactory {
 	
 	public:
 	
-	static Poco::ObjectPool<EtherDreamDacPoint> pointObjectPool;
+	static Poco::ObjectPool<Point> pointObjectPool;
 	
 	
-	static void releasePoint(EtherDreamDacPoint* pointToRelease) {
+	static void releasePoint(Point* pointToRelease) {
 
 		pointObjectPool.returnObject( pointToRelease);
 		
 	}
-	static EtherDreamDacPoint* getPoint(const EtherDreamDacPoint& pointToClone) {
-		return EtherDreamDacPointFactory::getPoint(&pointToClone);
+	static Point* getPoint(const Point& pointToClone) {
+		return ofxLaserPointFactory::getPoint(&pointToClone);
 	}
-	static EtherDreamDacPoint* getPoint(const EtherDreamDacPoint* pointToClone) {
+	static Point* getPoint(const Point* pointToClone) {
 
-        EtherDreamDacPoint* point;
+        Point* point;
 
         point = pointObjectPool.borrowObject();
 		
@@ -37,13 +37,13 @@ class EtherDreamDacPointFactory {
 	
 		return point;
 	}
-    static EtherDreamDacPoint* getPoint(bool clear = true) {
+    static Point* getPoint(bool clear = true) {
 
-        EtherDreamDacPoint* point;
+        Point* point;
 
         point = pointObjectPool.borrowObject();
         
-        if(clear) point->clear();
+        //if(clear) point->clear();
         
         return point;
     }

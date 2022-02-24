@@ -72,7 +72,7 @@ DacEtherDream :: ~DacEtherDream(){
         frames.pop_front();
     }
 	for (size_t i= 0; i < bufferedPoints.size(); ++i) {
-        EtherDreamDacPointFactory :: releasePoint(bufferedPoints[i]); // Calls ~object
+        ofxLaserPointFactory :: releasePoint(bufferedPoints[i]); // Calls ~object
 	}
 	bufferedPoints.clear();
     
@@ -245,7 +245,7 @@ void DacEtherDream :: threadedFunction(){
 //                *point = lastPoint;
 //            }
             while(bufferedPoints.size()>0) {
-                EtherDreamDacPointFactory :: releasePoint(bufferedPoints[0]);
+                ofxLaserPointFactory :: releasePoint(bufferedPoints[0]);
                 bufferedPoints.pop_front();
             }
             
@@ -486,31 +486,7 @@ inline bool DacEtherDream :: sendPointDataToDac(int minPointsToSend, int maxPoin
 
         }
        
-        
-//        vector<EtherDreamDacPoint*>& framePoints = frame.framePoints;
-       
-        //numpointstosend = minPointsToSend;
-        // send points up to the minimum buffer size unless
-        // we have a new frame and if we dont already have the max points,
-        // then definitely send it all
-//        if(newFrame && bufferedPoints.size()<maxPointsToSend) {
-//            numpointstosend = MAX(minPointsToSend, getNumPointsInFrames());
-//        }
-        // send the frame over and over until we have the minimum
-        // points in the buffer that we need
-        
-        // i think we can just send all the frames now right?
-//
-//		while(getNumPointsInFrames()>0) && (bufferedPoints.size()<minPointsToSend)) {
-//			// send the frame!
-//			for(size_t i= 0; i<framePoints.size(); i++) {
-//				addPoint(*framePoints[i]);
-//			}
-//			newFrame = false;
-//            //cout << "adding " << framePoints.size() << " to buffer " << bufferedPoints.size() << endl;
-//
-//		}
-//
+
         
         for(int i = 0; i<frames.size(); i++ ) {
             DacEtherDreamFrame& frame = *frames[i];
@@ -518,7 +494,7 @@ inline bool DacEtherDream :: sendPointDataToDac(int minPointsToSend, int maxPoin
             
           
             while(frame.repeatCount>0) {
-                for(EtherDreamDacPoint* point : frame.framePoints) {
+                for(ofxLaser::Point* point : frame.framePoints) {
                     addPoint(*point);
                 }
                 frame.repeatCount--;
@@ -547,26 +523,37 @@ inline bool DacEtherDream :: sendPointDataToDac(int minPointsToSend, int maxPoin
     //cout << numpointstosend << " " << minPointsToSend << " " << bufferedPoints.size() << endl;
     dacCommand.setDataCommand(numpointstosend);
 	
-	EtherDreamDacPoint& p = sendPoint;
+	EtherDreamDacPoint& dacPoint = sendPoint;
 	
 	for(int i = 0; i<numpointstosend; i++) {
 		
 		if(bufferedPoints.size()>0) {
             // pop the point off the front
-			p = *bufferedPoints[0]; // copy assignment
+            ofxLaser::Point& laserPoint = *bufferedPoints[0];
+            
+            dacPoint.x = ofMap(laserPoint.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
+            dacPoint.y = ofMap(laserPoint.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
+            dacPoint.r = laserPoint.r/255.0f*65535;
+            dacPoint.g = laserPoint.g/255.0f*65535;
+            dacPoint.b = laserPoint.b/255.0f*65535;
+            dacPoint.i = 0;
+            dacPoint.u1 = 0;
+            dacPoint.u2 = 0;
+         
+			
             // if we haven't started the laser yet, maybe turn the
             // brightness off?
-            if(!beginSent) {
-                p.r = p.g = p.b = 0;
-            }
+//            if(!beginSent) {
+//                p.r = p.g = p.b = 0;
+//            }
             
-            p.u1 = 0;
-            p.u2 = 0;
-            p.i = 0;
-            
-            EtherDreamDacPointFactory :: releasePoint(bufferedPoints[0]); // recycling system
+//            p.u1 = 0;
+//            p.u2 = 0;
+//            p.i = 0;
+//
+            ofxLaserPointFactory :: releasePoint(bufferedPoints[0]); // recycling system
 			bufferedPoints.pop_front(); // no longer destroys point
-			lastPointSent = p; //
+			lastPointSent = dacPoint; //
 		} else  {
             
             // THIS SHOULD NEVER HAPPEN!!!
@@ -574,27 +561,27 @@ inline bool DacEtherDream :: sendPointDataToDac(int minPointsToSend, int maxPoin
 			// just send some blank points in the same position as the
 			// last point
 			
-			p = lastPointSent;
+            dacPoint = lastPointSent;
 			
-			p.r = 0;
-			p.g = 0;
-			p.b = 0;
-			p.u1 = 0;
-			p.u2 = 0;
-            p.i = 0;
+            dacPoint.r = 0;
+            dacPoint.g = 0;
+            dacPoint.b = 0;
+//			p.u1 = 0;
+//			p.u2 = 0;
+//            p.i = 0;
 		}
 		
 		if(queuedPPSChangeMessages>0) {
 			// bit 15 is a flag to tell the DAC about a new point rate
-			p.control = 0b1000000000000000;
+            dacPoint.control = 0b1000000000000000;
             ofLogNotice("PPS Change queue "+ofToString(queuedPPSChangeMessages));
 			queuedPPSChangeMessages--;
         } else {
-            p.control = 0;
+            dacPoint.control = 0;
         }
        // cout << " ctl : " + std::bitset<16>(p.control).to_string() + "\n";
 
-        dacCommand.addPoint(p);
+        dacCommand.addPoint(dacPoint);
 		
 	}
 	
@@ -634,22 +621,22 @@ bool DacEtherDream:: sendPoints(const vector<Point>& points){
     }
 	
 	
-    EtherDreamDacPoint p1;
+   // EtherDreamDacPoint p1;
 	if(lock()) {
 		frameMode = false;
 		
 		for(size_t i= 0; i<points.size(); i++) {
 			
-			const Point& p2 = points[i];
-			p1.x = ofMap(p2.x,0,800, ETHERDREAM_MIN, ETHERDREAM_MAX);
-			p1.y = ofMap(p2.y,800,0, ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP in ilda specs
-			p1.r = p2.r/255.0f*65535;
-			p1.g = p2.g/255.0f*65535;
-			p1.b = p2.b/255.0f*65535;
-			p1.i = 0;
-			p1.u1 = 0;
-			p1.u2 = 0;
-			addPoint(p1);
+//			const Point& p2 = points[i];
+//			p1.x = ofMap(p2.x,0,800, ETHERDREAM_MIN, ETHERDREAM_MAX);
+//			p1.y = ofMap(p2.y,800,0, ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP in ilda specs
+//			p1.r = p2.r/255.0f*65535;
+//			p1.g = p2.g/255.0f*65535;
+//			p1.b = p2.b/255.0f*65535;
+//			p1.i = 0;
+//			p1.u1 = 0;
+//			p1.u2 = 0;
+			addPoint(points[i]);
 
 		}
 		unlock();
@@ -974,8 +961,8 @@ void DacEtherDream :: close() {
 
 }
 
-inline bool DacEtherDream :: addPoint(const EtherDreamDacPoint &point ){
-    EtherDreamDacPoint* p = EtherDreamDacPointFactory :: getPoint(point);
+inline bool DacEtherDream :: addPoint(const ofxLaser::Point &point ){
+    ofxLaser::Point* p = ofxLaserPointFactory :: getPoint(point);
     //*p = point; // copy assignment hopefully!
     bufferedPoints.push_back(p);
     return true;

@@ -33,22 +33,23 @@ class DacEtherDreamFrame {
     
     void addPoint(const ofxLaser::Point& laserPoint) {
  
-        EtherDreamDacPoint* framePoint = EtherDreamDacPointFactory :: getPoint();
+        Point* framePoint = ofxLaserPointFactory :: getPoint(laserPoint);
 
-        framePoint->x = ofMap(laserPoint.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
-        framePoint->y = ofMap(laserPoint.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
-        framePoint->r = laserPoint.r/255.0f*65535;
-        framePoint->g = laserPoint.g/255.0f*65535;
-        framePoint->b = laserPoint.b/255.0f*65535;
-        framePoint->i = 0;
-        framePoint->u1 = 0;
-        framePoint->u2 = 0;
+//        framePoint->x = ofMap(laserPoint.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
+//        framePoint->y = ofMap(laserPoint.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
+//        framePoint->r = laserPoint.r/255.0f*65535;
+//        framePoint->g = laserPoint.g/255.0f*65535;
+//        framePoint->b = laserPoint.b/255.0f*65535;
+//        framePoint->i = 0;
+//        framePoint->u1 = 0;
+//        framePoint->u2 = 0;
         framePoints.push_back(framePoint);
+        
     }
     
     void clear() {
-        for(EtherDreamDacPoint* point : framePoints) {
-            EtherDreamDacPointFactory :: releasePoint(point);
+        for(Point* point : framePoints) {
+            ofxLaserPointFactory :: releasePoint(point);
         }
         framePoints.clear();
         repeatCount = 1;
@@ -56,8 +57,8 @@ class DacEtherDreamFrame {
     }
     int getNumPoints() {
         return framePoints.size()*repeatCount;
-    } 
-    vector<EtherDreamDacPoint*> framePoints;
+    }
+    vector<Point*> framePoints;
     uint64_t frameTime;
     int repeatCount = 1; // number of times to repeat the frame
    

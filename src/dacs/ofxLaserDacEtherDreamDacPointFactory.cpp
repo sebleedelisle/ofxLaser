@@ -12,4 +12,4 @@ using namespace ofxLaser;
 
 // static class members
 
-Poco::ObjectPool<EtherDreamDacPoint> ofxLaser::EtherDreamDacPointFactory::pointObjectPool(500000,1000000);
+Poco::ObjectPool<ofxLaser::Point> ofxLaser::ofxLaserPointFactory::pointObjectPool(500000,1000000);
