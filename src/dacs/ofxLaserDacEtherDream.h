@@ -49,38 +49,42 @@ public:
     string getId() override;
     int getStatus() override;
     const vector<ofAbstractParameter*>& getDisplayData() override;
+    bool isReadyForFrame(int maxLatencyMS) override;
+   
     
     void setup(string id, string ip, EtherDreamData& ed);
-    
     OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup(string ip));
    
-    bool addPoint(const ofxLaser::Point& point );
+    // adds a point into the buffer ready to be sent to the DAC
+    bool addPointToBuffer(const ofxLaser::Point& point );
+    
     void closeWhileRunning();
     void close() override;
     void reset() override;
-    bool isReadyForFrame(int maxLatencyMS) override; 
+   
     int getMaxPointBufferSize();
     int getCurrentBufferFullness();
-    //output the data that we just sent
+    
+    //output the data that we just sent to the console - for debugging
     void logData();
     
-    
-    ofParameter<int> pointBufferDisplay;
-    ofParameter<int> latencyDisplay;
-    ofParameter<int> reconnectCount;
-    uint64_t lastMessageTimeMicros;
+    // information about the device, IP address, MAC address, version number etc
     EtherDreamData etherDreamData;
     
-    //DacEtherDreamFrame frame;
-   // vector<EtherDreamDacPoint> framePoints;
     ofThreadChannel<DacFrame*> frameThreadChannel;
-    deque<DacFrame*> bufferedFrames;
-    deque<DacFrame*> queuedFrames;
     
+    // buffered frames are all the frames sent but not yet
+    // queued to be sent to the DAC
+    deque<DacFrame*> bufferedFrames;
+
+    // These two objects are for diagnostics...
+    // stateRecorder periodically records the current buffer,
+    // data speed, and roundtrip time
     DacStateRecorder stateRecorder;
+    // frameRecorder records data about every frame
+    // that is sent to the DAC
     DacFrameInfoRecorder frameRecorder; 
     
-   // ofParameter<int>pointBufferMinParam;
     
 private:
     
@@ -96,7 +100,13 @@ private:
     inline bool sendPointRate(uint32_t rate);
     inline bool waitForAck(char command);
     bool sendCommand(DacEtherDreamCommand& command);
-    int getNumPointsInQueuedFrames();
+    
+    // updates the frame buffer with new frames from the threadchannel,
+    // adds frames to the frame queue until we have minPointsToQueue
+    // and up to maxPointsToSend
+    bool updateFrameQueue(int minPointsToQueue );
+    
+    int getNumPointsInFrames(deque<DacFrame*>& frames);
     int getNumPointsInBufferedFrames();
     int getNumPointsInAllBuffers();
 
@@ -104,31 +114,34 @@ private:
     // the maximum number of points the etherdream can hold.
     // in etherdream v1 it's 1799, higher for later models.
     int pointBufferCapacity;
-    // the minimum number of points in the buffer before the etherdream
-    // starts playing / we send a new frame.
-    //int pointBufferMin;
     
-    // remember the last point sent (so we know where the mirrors are in
+    // remember the last point sent (so we know where the scanners are in
     // case of a hold up)
     EtherDreamDacPoint lastPointSent;
     EtherDreamDacPoint sendPoint; // I think used as a spare?
     
     uint8_t inBuffer[1024]; // to receive data from the Ether Dream
+    
+    // the response from the last send. Used to keep track of play state,
+    // TODO - playbackstate should probably be stored somewhere else.
     DacEtherDreamResponse response;
     
+    // stores command data, is replaced every time a command is sent
+    // (it also manages the byte serialization process)
+    // this could potentially be converted into a vector so as to
+    // keep track of the command history
     DacEtherDreamCommand dacCommand;
-    
-    int numBytesSent;
     
     Poco::Net::StreamSocket socket;
     
     int prepareSendCount = 0;
+    // last time any command was sent
     uint64_t lastCommandSendTime = 0; // to measure round trip time
+    // last time any command was acknowleged
     uint64_t lastAckTime = 0;
+    // last time a data command was sent
     uint64_t lastDataSentTime = 0;
-    int roundTripTimeMicros = 0;
- 
-
+   
     bool beginSent = false;
     
     string ipAddress;

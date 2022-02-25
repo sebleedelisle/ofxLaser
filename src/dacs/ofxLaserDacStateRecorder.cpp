@@ -40,22 +40,7 @@ void DacStateRecorder :: update() {
     }
     
 }
-//void DacStateRecorder :: recordState(uint64_t timemicros, int playbackstate, int bufferfullness, int roundtriptime, int numpointssent, int pointrate) {
-//    if(stateHistory.size()>=1000) {
-//        DacStateAtTime* spare = stateHistory.front();
-//        stateHistory.pop_front();
-//        delete spare;
-//    }
-//    stateHistory.push_back(new DacStateAtTime());
-//    DacStateAtTime& bufferState = *stateHistory.back();
-//    bufferState.timeMicros = timemicros;
-//    bufferState.buffer = bufferfullness;
-//    bufferState.playing = playbackstate;
-//    bufferState.pointRate = pointrate;
-//    bufferState.roundTripTime = roundtriptime;
-//    
-//    
-//}
+
 
 const vector<DacStateAtTime*>& DacStateRecorder :: getStateHistoryForTimePeriod(uint64_t starttimemicros, uint64_t endtimemicros) {
     // assumes that history date is sorted by time

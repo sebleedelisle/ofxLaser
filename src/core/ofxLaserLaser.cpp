@@ -105,16 +105,14 @@ void Laser :: init() {
 	
     laserparams.add(speedMultiplier.set("Speed", 1,0.12,2));
     
-	 
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
-    laserparams.add(maxLatencyMS.set("Frame latency", 300,20,1000));
+    laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
     
 	laserparams.add(flipX.set("Flip Horizontal", false));
 	laserparams.add(flipY.set("Flip Vertical",false));
 	laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	laserparams.add(rotation.set("Output rotation",0,-90,90));
 
-	
 	ofParameterGroup& advanced = advancedParams;
     advanced.setName("Advanced");
     laserparams.add(pps.set("Points per second", 30000,1000,80000));
@@ -135,16 +133,10 @@ void Laser :: init() {
 	ofParameterGroup renderparams;
 	renderparams.setName("Render profiles");
 	
-	   
-	
-	
 	params.add(colourSettings.params);
-
-     
-     
+ 
     armed.addListener(this, &ofxLaser::Laser::setDacArmed);
     pps.addListener(this, &Laser::ppsChanged);
-  
 
     //loadSettings();
    
