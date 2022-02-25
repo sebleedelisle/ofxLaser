@@ -1130,7 +1130,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     UI::largeItemEnd();
     
     ImGui::PushItemWidth(170);
-    UI::addIntSlider(laser->maxLatency);
+    UI::addIntSlider(laser->maxLatencyMS);
     UI::toolTip("The maximum time in ms between creating a frame and having it displayed on the laser. Increasing this value can improve reliability on slow networks.");
     ImGui::PopItemWidth();
     
@@ -1529,7 +1529,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             label = "Frame skips ";
             ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 1.0f, ImVec2(0,80));
    
-            UI::addIntSlider(dac->pointBufferMinParam); 
+          //  UI::addIntSlider(dac->pointBufferMinParam); 
             UI::addFloatSlider(dacSettingsTimeSlice);
             
            

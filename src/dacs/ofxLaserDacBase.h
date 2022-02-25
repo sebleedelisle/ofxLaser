@@ -37,7 +37,7 @@ namespace ofxLaser {
         virtual bool isReadyForFrame(int maxLatencyMS){
             return true;
         }
-        
+        int maxLatencyMS; 
 
         string alias = "";
 		

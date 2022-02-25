@@ -12,7 +12,7 @@
 #include "ofxLaserPoint.h"
 
 namespace ofxLaser {
-class ofxLaserPointFactory {
+class PointFactory {
 	
 	public:
 	
@@ -25,7 +25,7 @@ class ofxLaserPointFactory {
 		
 	}
 	static Point* getPoint(const Point& pointToClone) {
-		return ofxLaserPointFactory::getPoint(&pointToClone);
+		return PointFactory::getPoint(&pointToClone);
 	}
 	static Point* getPoint(const Point* pointToClone) {
 

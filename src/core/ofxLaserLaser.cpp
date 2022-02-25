@@ -43,6 +43,7 @@ void Laser::setDac(DacBase* newdac){
     if(dac!=newdac) {
         dac = newdac;
         newdac->setPointsPerSecond(pps);
+        newdac->maxLatencyMS = maxLatencyMS;
         dacId = dac->getId();
         armed = false; // automatically calls setArmed because of listener on parameter
     }
@@ -106,7 +107,7 @@ void Laser :: init() {
     
 	 
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
-    laserparams.add(maxLatency.set("Frame latency", 300,20,1000));
+    laserparams.add(maxLatencyMS.set("Frame latency", 300,20,1000));
     
 	laserparams.add(flipX.set("Flip Horizontal", false));
 	laserparams.add(flipY.set("Flip Vertical",false));
@@ -683,7 +684,7 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 		return;
 	}
     
-    if(!dac->isReadyForFrame(maxLatency)) {
+    if(!dac->isReadyForFrame(maxLatencyMS)) {
         // register skipped frame
         return;
     }

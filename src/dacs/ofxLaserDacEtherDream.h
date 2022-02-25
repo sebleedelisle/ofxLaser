@@ -8,10 +8,10 @@
 
 #pragma once
 #include "ofxLaserDacBase.h"
-#include "ofxLaserDacEtherDreamFrame.h"
+#include "ofxLaserDacFrame.h"
 #include "ofxLaserDacEtherDreamCommand.h"
 #include "ofxLaserDacEtherDreamDacPoint.h"
-#include "ofxLaserDacEtherDreamDacPointFactory.h"
+#include "ofxLaserPointFactory.h"
 #include "ofxLaserDacEtherDreamData.h"
 #include "ofxLaserDacEtherDreamResponse.h"
 #include "ofxLaserDacStateRecorder.h"
@@ -28,6 +28,10 @@
 #endif
 
 
+#define ETHERDREAM_MIN -32768
+#define ETHERDREAM_MAX 32767
+
+
 
 namespace ofxLaser {
 
@@ -38,7 +42,6 @@ public:
     DacEtherDream();
     ~DacEtherDream();
 
-    
     // DacBase functions
     bool sendFrame(const vector<Point>& points) override;
     bool sendPoints(const vector<Point>& points) override;
@@ -70,13 +73,14 @@ public:
     
     //DacEtherDreamFrame frame;
    // vector<EtherDreamDacPoint> framePoints;
-    ofThreadChannel<DacEtherDreamFrame*> frameThreadChannel;
-    deque<DacEtherDreamFrame*> frames;
+    ofThreadChannel<DacFrame*> frameThreadChannel;
+    deque<DacFrame*> bufferedFrames;
+    deque<DacFrame*> queuedFrames;
     
     DacStateRecorder stateRecorder;
     DacFrameInfoRecorder frameRecorder; 
     
-    ofParameter<int>pointBufferMinParam;
+   // ofParameter<int>pointBufferMinParam;
     
 private:
     
@@ -84,7 +88,7 @@ private:
   
     inline bool sendBegin();
     inline bool sendPrepare();
-    inline bool sendPointDataToDac(int minPointsToSend, int maxPointsToSend);
+    inline bool sendPointsToDac();
     inline bool sendPing();
     bool sendEStop();
     bool sendStop();
@@ -92,7 +96,8 @@ private:
     inline bool sendPointRate(uint32_t rate);
     inline bool waitForAck(char command);
     bool sendCommand(DacEtherDreamCommand& command);
-    int getNumPointsInFrames();
+    int getNumPointsInQueuedFrames();
+    int getNumPointsInBufferedFrames();
     int getNumPointsInAllBuffers();
 
     
@@ -101,7 +106,7 @@ private:
     int pointBufferCapacity;
     // the minimum number of points in the buffer before the etherdream
     // starts playing / we send a new frame.
-    int pointBufferMin;
+    //int pointBufferMin;
     
     // remember the last point sent (so we know where the mirrors are in
     // case of a hold up)
@@ -135,6 +140,7 @@ private:
     uint32_t pps, newPPS;
     int queuedPPSChangeMessages;
     bool connected;
+   // int maxLatencyMS;
 
    // bool newFrame = false;
 

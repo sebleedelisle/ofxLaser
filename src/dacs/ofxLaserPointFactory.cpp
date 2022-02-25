@@ -6,10 +6,10 @@
 //
 //
 
-#include "ofxLaserDacEtherDreamDacPointFactory.h"
+#include "ofxLaserPointFactory.h"
 
 using namespace ofxLaser;
 
 // static class members
 
-Poco::ObjectPool<ofxLaser::Point> ofxLaser::ofxLaserPointFactory::pointObjectPool(500000,1000000);
+Poco::ObjectPool<ofxLaser::Point> ofxLaser::PointFactory::pointObjectPool(500000,10000000);
