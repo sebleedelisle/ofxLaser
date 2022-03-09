@@ -136,7 +136,7 @@ bool DacEtherDream :: isReadyForFrame(int maxlatencyms) {
 
 int DacEtherDream :: getNumPointsInAllBuffers() {
     // if not in thread then needs lock!
-      return getCurrentBufferFullness() + bufferedPoints.size() + getNumPointsInBufferedFrames();
+      return getCurrentBufferFullnessMin() + bufferedPoints.size() + getNumPointsInBufferedFrames();
     
 }
 
@@ -251,15 +251,18 @@ void DacEtherDream :: threadedFunction(){
             
             
         }
-        
+        int pointBufferMin = MIN(pointBufferCapacity, maxLatencyMS * pps /1000);
+        if(etherDreamData.softwareRevision>=30) {
+            pointBufferMin = MAX(pointBufferMin, 256);
+        }
         // if state is prepared or playing, and we have points in the buffer, then send the points
         if(connected && (response.status.playback_state!=PLAYBACK_IDLE)) {
             
             // figure out when the next update should be
             // figure out the current buffer
-            int bufferFullness = getCurrentBufferFullness();
+            int bufferFullness = getCurrentBufferFullnessMin();
             
-            int pointBufferMin = maxLatencyMS * pps /1000;
+            //int pointBufferMin = maxLatencyMS * pps /1000;
             int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
             int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
          
@@ -292,10 +295,11 @@ void DacEtherDream :: threadedFunction(){
             }
             
         }
-        int pointBufferMin = MIN(pointBufferCapacity, maxLatencyMS * pps /1000);
+       
+
         // if state is prepared and we have sent enough points and we haven't already, send begin
-        if(connected && (response.status.playback_state==PLAYBACK_PREPARED) && (response.status.buffer_fullness>=pointBufferMin)) {
-            cout << "Send begin, buffer_fullness : " << response.status.buffer_fullness << " pointBufferMin : " << pointBufferMin << endl; 
+        if(connected && (response.status.playback_state==PLAYBACK_PREPARED) && (dacBufferFullness >= pointBufferMin)) {
+            cout << "Send begin, buffer_fullness : " << dacBufferFullness << " pointBufferMin : " << pointBufferMin << endl;
             sendBegin();
             beginSent = waitForAck('b');
             if(beginSent)  {
@@ -317,15 +321,25 @@ void DacEtherDream :: threadedFunction(){
     }
 }
 
-int DacEtherDream :: getCurrentBufferFullness() {
+int DacEtherDream :: getCurrentBufferFullnessMin() {
+    
+    if(response.status.playback_state == PLAYBACK_IDLE) return dacBufferFullness;
     int elapsedMicros = ofGetElapsedTimeMicros() - lastCommandSendTime;
-    if(response.status.playback_state == PLAYBACK_IDLE) return response.status.buffer_fullness;
     // figure out the current buffer
-    return MAX(0, response.status.buffer_fullness - (((float)elapsedMicros/1000000.0f) * pps));
+    return MAX(0, dacBufferFullness - (((float)elapsedMicros/1000000.0f) * pps));
    
     
 }
 
+int DacEtherDream :: getCurrentBufferFullnessMax() {
+   
+    if(response.status.playback_state == PLAYBACK_IDLE) return dacBufferFullness;
+    int elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
+    // figure out the current buffer
+    return MAX(0, dacBufferFullness - (((float)elapsedMicros/1000000.0f) * pps));
+   
+    
+}
 void DacEtherDream :: reset() {
 	if(lock()) {
 		resetFlag = true;
@@ -336,9 +350,9 @@ void DacEtherDream :: reset() {
 
 void DacEtherDream :: closeWhileRunning() {
 	if(!connected) return;
-	while(!lock());
+	
 	sendStop();
-	unlock();
+	
     
 	waitForThread();
 	
@@ -389,15 +403,17 @@ inline bool DacEtherDream :: sendPointsToDac(){
     
     
     // get current buffer
-    int dacBufferFullness = getCurrentBufferFullness();
+    int currentDacBufferFullnessMin = getCurrentBufferFullnessMin();
     int softwareBufferFullness =  bufferedPoints.size();
-    //int pointBufferCount = bufferedPoints.size();
-    //int frameQueueNumPoints = getNumPointsInQueuedFrames();
     
     // get min buffer size
     int minBufferSize = maxLatencyMS * pps / 1000;
-    int minPointsToQueue = MAX(0, minBufferSize - dacBufferFullness - softwareBufferFullness);
-    int maxPointsToSend = MAX(0, pointBufferCapacity - dacBufferFullness - 100);
+    if(etherDreamData.softwareRevision>=30) {
+        minBufferSize = MAX(minBufferSize, 256);
+    }
+    
+    int minPointsToQueue = MAX(0, minBufferSize - currentDacBufferFullnessMin - softwareBufferFullness);
+    int maxPointsToSend = MAX(0, pointBufferCapacity - getCurrentBufferFullnessMax() - 256);
     
     int numpointstosend = 0;
     
@@ -405,17 +421,13 @@ inline bool DacEtherDream :: sendPointsToDac(){
         
         updateFrameQueue(minPointsToQueue);
 
-      
-        
         numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
-        
-        
         
         if(numpointstosend==0) {
             if(verbose) ofLogNotice("sendData : no points to send");
             return false;
         }
-		
+        //cout << dacBufferFullness << " " << currentDacBufferFullnessMin << " " << numpointstosend << endl;
     } else {
         // for non-frame mode, just send the buffer
        numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
@@ -508,7 +520,7 @@ bool DacEtherDream :: updateFrameQueue(int minPointsToQueue){
     }
     deque<DacFrame*> queuedFrames;
    
-    int dacBufferFullness = getCurrentBufferFullness();
+    int dacBufferFullness = getCurrentBufferFullnessMin();
 
     // go through the buffered frames and add them into the buffer until we have enough points
     // or we run out of frames
@@ -549,7 +561,7 @@ bool DacEtherDream :: updateFrameQueue(int minPointsToQueue){
     
     for(int i = 0; i<queuedFrames.size(); i++ ) {
         DacFrame& frame = *queuedFrames[i];
-        frameRecorder.recordFrameInfoThreadSafe(frame.frameTime, ofGetElapsedTimeMicros() + (( getCurrentBufferFullness() + bufferedPoints.size()) * 1000000 / pps), frame.framePoints.size(), frame.repeatCount, frame.repeatCount == 0);
+        frameRecorder.recordFrameInfoThreadSafe(frame.frameTime, ofGetElapsedTimeMicros() + (( getCurrentBufferFullnessMin() + bufferedPoints.size()) * 1000000 / pps), frame.framePoints.size(), frame.repeatCount, frame.repeatCount == 0);
         
       
         while(frame.repeatCount>0) {
@@ -609,6 +621,8 @@ inline bool DacEtherDream::waitForAck(char command) {
 	bool failed = false;
     if(verbose) ofLogNotice("waitForAck - " + ofToString(command));
 	
+    //uint64_t previousLastCommandSendTime = lastCommandSendTime;
+    
 	int n = 0;
     while ((n==0) && (!failed)) {
 		if(!isThreadRunning()) return false;
@@ -651,31 +665,50 @@ inline bool DacEtherDream::waitForAck(char command) {
 	// TODO - handle incomplete data
 	
 	//cout << "received " << n << "bytes" <<endl;
-	
+    int previousStateBufferFullness = dacBufferFullness;
+    
 	if(n==22) {
         
         
         int roundTripTimeMicros  = lastAckTime - lastCommandSendTime;
 		connected = true;
         response.deserialize(inBuffer);
-		
+        dacBufferFullness = response.status._buffer_fullness;
         if(command == 'd') {
             int numbytes = dacCommand.size()+22;
            
-            stateRecorder.recordStateThreadSafe(lastDataSentTime, response.status.playback_state, response.status.buffer_fullness, roundTripTimeMicros, dacCommand.numPoints, response.status.point_rate, numbytes);
+            stateRecorder.recordStateThreadSafe(lastDataSentTime, response.status.playback_state, dacBufferFullness, roundTripTimeMicros, dacCommand.numPoints, response.status.point_rate, numbytes);
           
         }
 
+        // conditions to look out for :
+        // Command was a data command, and we got a NACK back
+        //      Likely to be either an underrun or an overrun. So try to figure out which it is.
+        //      If under :
+        //          CHECK playback mode - are we in idle? If yes, then set to Prepared
+        //          beginSent should be set to false... then it should get set again once the
+        //          buffer is back up to minimum. Shouldn't be any points lost I don't think?
+        
+        //      If over :
+        //          Maybe we lost points? Check.
+        //          Are we still in play state? If not, then send begin.
+        // playback state reverted to IDLE
+        
+        
 		
-        if(verbose || (response.response!='a')) {// || (command=='p')|| (command=='?')|| (command=='b')) {
+        if(verbose || (response.response!='a') || (dacBufferFullness > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
             
            
             
             ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
             if(command == 'd') {
                 ofLogNotice("num points sent : " + ofToString(dacCommand.numPoints));
-                ofLogNotice("estimated buffer size : "+ofToString(getCurrentBufferFullness()));
-                dacCommand.logData(); 
+                ofLogNotice("previous buffer_fullness : " + ofToString(previousStateBufferFullness));
+                //ofLogNotice("time between ack and send : " + ofToString(lastDataSentTime  - previousLastAckTime));
+                ofLogNotice("latest buffer_fullness : "+ofToString(dacBufferFullness));
+                ofLogNotice("estimated buffer_fullness : "+ofToString(getCurrentBufferFullnessMin()));
+
+               // dacCommand.logData();
             }
 			cout << response.toString() << endl;
             
@@ -770,7 +803,7 @@ inline bool DacEtherDream::waitForAck(char command) {
 	
 	if(failed) {
 		beginSent = false;
-		connected = false;
+		
 		
 		return false;
 	} else {
@@ -882,6 +915,7 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 	
 	if(failed) {
 		if(networkerror) {
+            connected = false; 
 			closeWhileRunning();
 			setup(id, ipAddress, etherDreamData);
 		}

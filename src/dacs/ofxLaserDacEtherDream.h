@@ -63,8 +63,11 @@ public:
     void reset() override;
    
     int getMaxPointBufferSize();
-    int getCurrentBufferFullness();
-    
+    // estimate the current dac buffer fullness based on the last time points were sent
+    int getCurrentBufferFullnessMin();
+    // estimate the current dac buffer fullness based on the last time points were acknowledged
+    int getCurrentBufferFullnessMax();
+   
     //output the data that we just sent to the console - for debugging
     void logData();
     
@@ -125,6 +128,8 @@ private:
     // the response from the last send. Used to keep track of play state,
     // TODO - playbackstate should probably be stored somewhere else.
     DacEtherDreamResponse response;
+    int dacBufferFullness =0 ;
+    int dacPlaybackState = 0;
     
     // stores command data, is replaced every time a command is sent
     // (it also manages the byte serialization process)

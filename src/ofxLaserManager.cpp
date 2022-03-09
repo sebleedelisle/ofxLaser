@@ -1137,6 +1137,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     // ZONES
     UI::addCheckbox(laser->flipX);
     UI::addCheckbox(laser->flipY);
+    UI::addIntSlider(laser->orientation); 
     
     // FINE OUTPUT SETTINGS
     bool treevisible = ImGui::TreeNode("Fine position adjustments");

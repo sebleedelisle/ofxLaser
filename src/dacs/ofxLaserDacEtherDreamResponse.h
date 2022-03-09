@@ -30,7 +30,7 @@ class DacEtherDreamStatus {
     uint16_t light_engine_flags;
     uint16_t playback_flags;
     uint16_t source_flags;
-    uint16_t buffer_fullness;
+    uint16_t _buffer_fullness;
     uint32_t point_rate;
     uint32_t point_count;
     
@@ -46,7 +46,7 @@ class DacEtherDreamStatus {
         light_engine_flags =  ByteStreamUtils::bytesToUInt16(&buffer[4]);
         playback_flags =   ByteStreamUtils::bytesToUInt16(&buffer[6]);
         source_flags =   ByteStreamUtils::bytesToUInt16(&buffer[8]);
-        buffer_fullness =  ByteStreamUtils::bytesToUInt16(&buffer[10]);
+        _buffer_fullness =  ByteStreamUtils::bytesToUInt16(&buffer[10]);
         point_rate =  ByteStreamUtils::bytesToUInt32(&buffer[12]);
         point_count =  ByteStreamUtils::bytesToUInt32(&buffer[16]);
     }
@@ -67,7 +67,7 @@ class DacEtherDreamStatus {
         returnstring+= (playback_flags & 0b001) ? "TRUE\n" : "false\n";
 
         returnstring+= "source_flags       : " + to_string(source_flags) + "\n";
-        returnstring+= "buffer_fullness    : " + to_string(buffer_fullness) + "\n";
+        returnstring+= "buffer_fullness    : " + to_string(_buffer_fullness) + "\n";
         returnstring+= "point_rate         : " + to_string(point_rate) + "\n";
         returnstring+= "point_count        : " + to_string(point_count) + "\n";
         

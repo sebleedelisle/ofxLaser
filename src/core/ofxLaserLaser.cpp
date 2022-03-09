@@ -109,8 +109,9 @@ void Laser :: init() {
     laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
     
 	laserparams.add(flipX.set("Flip Horizontal", false));
-	laserparams.add(flipY.set("Flip Vertical",false));
-	laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
+    laserparams.add(flipY.set("Flip Vertical",false));
+    laserparams.add(orientation.set("Orientation",0,0,3));
+    laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	laserparams.add(rotation.set("Output rotation",0,-90,90));
 
 	ofParameterGroup& advanced = advancedParams;
@@ -1514,6 +1515,23 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 			p.y=rotatedVec.y+400;
 
 		}
+        if(orientation == 1) {
+            float y = 800-p.x;
+            p.x = p.y;
+            p.y = y;
+        } else if (orientation ==2) {
+            p.x = 800-p.x;
+            p.y = 800-p.y;
+        } else if (orientation ==3) {
+            float y = 800-p.x;
+            p.x = p.y;
+            p.y = y;
+            
+            p.x = 800-p.x;
+            p.y = 800-p.y;
+        }
+           
+            
 		
 		// bounds check
         if(p.x<0) {

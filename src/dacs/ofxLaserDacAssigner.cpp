@@ -54,7 +54,16 @@ DacAssigner :: DacAssigner() {
         {"EtherDream 124DAC193A1B", "SebLee ED B09"},
         {"EtherDream 124DAC1BBFD3", "SebLee ED B10"},
         {"EtherDream 124DAC62CB62", "SebLee ED B11"},
-        {"EtherDream 124DACC90945", "SebLee ED B12"}
+        {"EtherDream 124DACC90945", "SebLee ED B12"},
+        {"EtherDream 124DACC90945", "SebLee ED B12"},
+        {"EtherDream 66E63CA5C46A", "SebLee OPT4W #1"},
+        {"EtherDream 4EE175A5D86A", "SebLee OPT4W #2"},
+        {"EtherDream 42E6D69E2266", "SebLee OPT4W #3"},
+        {"EtherDream 62E6459EDA66", "SebLee OPT4W #4"},
+        {"EtherDream 4AE188A5A46A", "SebLee LS11W #1"},
+        {"EtherDream 66E6499EA666", "SebLee LS11W #2"},
+        {"EtherDream 4AE18BA5986A", "SebLee LS11W #4"}
+       
     };
 
     

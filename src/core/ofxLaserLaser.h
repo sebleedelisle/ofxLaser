@@ -146,6 +146,7 @@ class Laser {
     int numTestPatterns;
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
+    ofParameter<int> orientation; 
     ofParameter<float> rotation;
     ofParameter<glm::vec2> outputOffset;
     
