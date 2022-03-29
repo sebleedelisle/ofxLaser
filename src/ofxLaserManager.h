@@ -11,7 +11,12 @@
 namespace ofxLaser {
 class Manager : public ManagerBase {
     
-    public : 
+    public :
+    
+    // it's a Singleton so shouldn't ever have more than one.
+    static Manager * instance();
+    static Manager * laserManager;
+    
     Manager();
     ~Manager();
     

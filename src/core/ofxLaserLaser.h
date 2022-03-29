@@ -77,6 +77,9 @@ class Laser {
     void addZone(Zone* zone, float srcwidth, float srcheight);
     bool hasZone(Zone* zone);
     bool removeZone(Zone* zone);
+    bool muteZone(int zonenum);
+    bool unMuteZone(int zonenum); 
+    
     
     vector<LaserZone*>getActiveZones();
     bool areAnyZonesSoloed();

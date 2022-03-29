@@ -107,7 +107,7 @@ class Graphic {
     
     // ----------------------- DEPRECATED ------------------------------
     
-    OF_DEPRECATED_MSG("ofxLaser::Graphic::renderToLaser(laser, brightness, profile) - has been moved into the LaserManager class - use laserManager", void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = ""));
+    OF_DEPRECATED_MSG("ofxLaser::Graphic::renderToLaser(laser, brightness, profile) - has been moved into the LaserManager class - use laserManager.drawLaserGraphic(graphic);", void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = ""));
 	
 	vector<ofPolyline*> polylines;
 	vector<ofColor> colours;

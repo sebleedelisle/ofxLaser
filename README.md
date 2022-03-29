@@ -211,6 +211,7 @@ libsvgtiny
 clipperlib
 heliosdac
 laserdocklib
+ofxHersheyFont by Tobias Zimmer
 
 Compatibility
 ------------

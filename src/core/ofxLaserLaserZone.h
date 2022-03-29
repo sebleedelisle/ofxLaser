@@ -46,6 +46,7 @@ class LaserZone {
     void setScale(float _scale) ;
     void setOffset(ofPoint _offset);
     void zoneMaskChanged(ofAbstractParameter& e) ;
+    void paramChanged(ofAbstractParameter& e) ;
     void updateZoneMask() ;
     
     bool serialize(ofJson& json);

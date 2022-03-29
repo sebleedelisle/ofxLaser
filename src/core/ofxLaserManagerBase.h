@@ -45,8 +45,6 @@ class ManagerBase {
     ManagerBase();
     ~ManagerBase();
     
-    
-    
     void initAndLoadSettings();
     
     virtual void update();

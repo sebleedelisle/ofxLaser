@@ -9,7 +9,24 @@
 
 using namespace ofxLaser;
 
+Manager * Manager :: laserManager = NULL;
+
+Manager * Manager::instance() {
+    if(laserManager == NULL) {
+        laserManager = new Manager();
+    }
+    return laserManager;
+}
+
+
 Manager :: Manager() {
+    
+    if(laserManager == NULL) {
+        laserManager = this;
+    } else {
+        ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
+    }
+    
     selectedLaser = -1;
     guiIsVisible = true;
     guiLaserSettingsPanelWidth = 320;

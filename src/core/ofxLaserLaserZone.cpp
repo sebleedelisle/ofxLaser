@@ -28,6 +28,7 @@ LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
     isDirty = true;
     enabled = true;
     visible = true;
+    ofAddListener(params.parameterChangedE(), this, &LaserZone::paramChanged);
    
 }
 LaserZone :: ~LaserZone() {
@@ -110,7 +111,9 @@ void LaserZone :: updateZoneMask() {
     isDirty = true; 
 }
 
-
+void LaserZone :: paramChanged(ofAbstractParameter& e) {
+    isDirty=true; 
+}
 bool LaserZone :: serialize(ofJson& json){
    
    // ofJson jsonGroup;

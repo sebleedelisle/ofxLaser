@@ -165,7 +165,6 @@ void Laser :: init() {
 
 
 
-
 void Laser ::setDacArmed(bool& _armed){
     dac->setArmed(_armed);
     
@@ -269,6 +268,34 @@ bool Laser::areAnyZonesSoloed() {
     
     return false;
 }
+
+bool Laser ::muteZone(int zonenum) {
+    for(LaserZone* laserZone : laserZones) {
+        if(laserZone->getZoneIndex() == zonenum) {
+            if(!laserZone->muted) {
+                laserZone->muted = true;
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+    return false;
+}
+bool Laser ::unMuteZone(int zonenum){
+    for(LaserZone* laserZone : laserZones) {
+        if(laserZone->getZoneIndex() == zonenum) {
+            if(laserZone->muted) {
+                laserZone->muted = false;
+                return true;
+            } else {
+                return false;
+            } 
+        }
+    }
+    return false;
+}
+
 
 string Laser :: getLabel() {
     return "Laser " + ofToString(laserIndex+1);
