@@ -511,7 +511,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
 // updates the frame buffer with new frames from the threadchannel,
 // adds frames to the frame queue until we have minPointsToQueue
 // and up to maxPointsToSend
-bool DacEtherDream :: updateFrameQueue(int minPointsToQueue){
+void DacEtherDream :: updateFrameQueue(int minPointsToQueue){
     
     // get all the new frames in the channel
     DacFrame* frame;

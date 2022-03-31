@@ -958,7 +958,8 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
         // if we have a really fast frame, let's duplicate it and reverse it
         // (this helps for things like a single line where we maybe don't want to
         // jump back to the beginning if we can draw the line again reversed)
-        if(sortShapes && ((pps/ laserPoints.size()) >100)) {
+        if (sortShapes && (((float)laserPoints.size() / (float)pps < 0.01)) {
+            //if(sortShapes && ((pps/ laserPoints.size()) >100)) {
             int numpoints = laserPoints.size();
             for(int i = numpoints-1; i>=0; i--) {
                 addPoint(laserPoints[i]);
