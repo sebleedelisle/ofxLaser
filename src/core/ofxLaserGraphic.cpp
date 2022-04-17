@@ -298,7 +298,6 @@ void Graphic :: addPolyline(const ofPolyline& poly, ofColor colour, bool filled,
 	breakPolyline(newPoly);
 	newPoly->simplify();
 	
-	
 	polylines.push_back(newPoly);
 	colours.push_back(colour);
 	

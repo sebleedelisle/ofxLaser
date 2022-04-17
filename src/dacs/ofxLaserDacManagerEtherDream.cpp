@@ -91,7 +91,7 @@ void DacManagerEtherDream :: threadedFunction() {
             // if we haven't already got this etherdream, then add it
             if(etherdreamDataByMacAddress.find(id) == etherdreamDataByMacAddress.end()) {
                 EtherDreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
-                ofLogNotice("Adding etherdream "+ id);
+               // ofLogNotice("Adding etherdream "+ id);
                 etherdreamDataByMacAddress[id] = ed;
             } else {
                 

@@ -10,6 +10,8 @@
 #include "ofMain.h"
 #include "ofxLaserGraphic.h"
 #include "ofxHersheyFont.h"
+#include "LaserTextWriter.h"
+
 namespace ofxLaser {
 class StringGraphic : public ofxLaser::Graphic{
 	
@@ -34,12 +36,13 @@ class StringGraphic : public ofxLaser::Graphic{
 	string textString;
 	ofColor colour;
 	
-	
+    vector<vector<ofPolyline*>> polylineCharacters; 
 
 	Alignment alignment = ALIGN_LEFT;
 	
 	
 	ofxHersheyFont hersheyFont;
+    LaserTextWriter textWriter; 
 	
 	protected:
 

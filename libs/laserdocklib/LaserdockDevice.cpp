@@ -310,7 +310,7 @@ void LaserdockDevice::setFlipY(bool flip) {
 
 bool LaserdockDevice::runner_mode_enable(bool v) {
     uint8_t request[] = {0xC0, 0x01, v? (uint8_t)0x01: (uint8_t)0x00};
-    uint32_t rlen = 4;
+    uint32_t rlen = 3;
     uint8_t response[64];
     bool r =  sendraw(d->devh_ctl, request, rlen, response);
     return r;
@@ -318,7 +318,7 @@ bool LaserdockDevice::runner_mode_enable(bool v) {
 
 bool LaserdockDevice::runner_mode_run(bool v) {
     uint8_t request[] = {0xC0, 0x09, v? (uint8_t)0x01: (uint8_t)0x00};
-    uint32_t rlen = 4;
+    uint32_t rlen = 3;
     uint8_t response[64];
     bool r =  sendraw(d->devh_ctl, request, rlen, response);
     return r;

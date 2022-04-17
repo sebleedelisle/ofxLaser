@@ -48,7 +48,6 @@ void SVGLoader::threadedFunction() {
 	
 	string dataString;
 	int dupeCount = 0;
-	loadedCount = 0;
 	
 	// load the file
 	for(size_t i = 0; i<files.size();i++) {
@@ -164,7 +163,7 @@ void SVGLoader::threadedFunction() {
 	unlock();
 	stopThread();
 	
-	ofLog(OF_LOG_NOTICE, "SVGLoader finished : " + dir.getOriginalDirectory());
+	//ofLog(OF_LOG_NOTICE, "SVGLoader finished : " + dir.getOriginalDirectory());
 	SVGLoader::loadNext(); 
 	
 }

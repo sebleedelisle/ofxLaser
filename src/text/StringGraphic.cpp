@@ -34,24 +34,46 @@ bool StringGraphic :: setString (string newString) {
 }
 
 void StringGraphic :: updateGraphic() {
-	clear();
-	textPath.clear();
+    // should also release the polylines
+    clear();
+    
+    
+    
+    polylineCharacters = textWriter.getPolylines(textString, glm::vec3(0,0,0), 4, true);
+    
+    for(vector<ofPolyline*>& polys : polylineCharacters) {
+        for(ofPolyline* poly : polys)  {
+            //poly->draw();
+            addPolyline(poly, colour);
+        }
+        
+        
+    }
+    
+    for(vector<ofPolyline*>& polys : polylineCharacters) {
+        for(ofPolyline* poly : polys)  {
+            ofxLaser::Factory::releasePolyline(poly);
+        }
+
+
+    }
+    polylineCharacters.clear();
+//	clear();
+//	textPath.clear();
+//
+//	hersheyFont.setColor(colour);
+//	textPath = hersheyFont.getPath(textString,1);
+//	//ofPushMatrix();
+//	if(alignment == ALIGN_RIGHT) {
+////		ofTranslate(-getWidth(), 0);
+//        textPath.translate(glm::vec2(-getWidth(), 0));
+//	} else if(alignment == ALIGN_CENTRE) {
+//		//ofTranslate(-getWidth()/2, 0);
+//        textPath.translate(glm::vec2(-getWidth()/2, 0));
+//	}
+//
+//	addPath(textPath, false, false);
 	
-	
-	hersheyFont.setColor(colour);
-	textPath = hersheyFont.getPath(textString,1);
-	//ofPushMatrix();
-	if(alignment == ALIGN_RIGHT) {
-//		ofTranslate(-getWidth(), 0);
-        textPath.translate(glm::vec2(-getWidth(), 0));
-	} else if(alignment == ALIGN_CENTRE) {
-		//ofTranslate(-getWidth()/2, 0);
-        textPath.translate(glm::vec2(-getWidth()/2, 0));
-	}
-		
-	addPath(textPath, false, false);
-	
-	//ofPopMatrix();
 }
 
 float StringGraphic :: getWidth() {

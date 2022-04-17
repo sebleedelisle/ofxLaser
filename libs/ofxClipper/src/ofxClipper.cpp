@@ -72,7 +72,7 @@ std::vector<ofPolyline> Clipper::getClipped(ClipperLib::ClipType clipType,
 
         if (!success)
         {
-            ofLogError("Clipper::getClipped") << "Failed to create clipped paths.";
+            //ofLogError("Clipper::getClipped") << "Failed to create clipped paths.";
         }
     }
     catch (const std::exception& exc)

@@ -52,7 +52,7 @@ class SVGLoader : public ofThread{
 	
 	protected:
 	void threadedFunction();
-    volatile int loadedCount;
+    volatile int loadedCount = 0;
     int totalFileCount;
     
     bool useLoadOptimisation = true;
