@@ -120,7 +120,7 @@ private:
     // updates the frame buffer with new frames from the threadchannel,
     // adds frames to the frame queue until we have minPointsToQueue
     // and up to maxPointsToSend
-    bool updateFrameQueue(int minPointsToQueue );
+    void updateFrameQueue(int minPointsToQueue );
     
     int getNumPointsInFrames(deque<DacFrame*>& frames);
     int getNumPointsInBufferedFrames();
