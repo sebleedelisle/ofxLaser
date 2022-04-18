@@ -751,6 +751,9 @@ bool ManagerBase::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL
 		return true;
 	}
 }
+int ManagerBase::getTargetZone() {
+    return targetZone;
+}
 
 bool ManagerBase::setZoneMode(ofxLaserZoneMode newmode) {
 	zoneMode = newmode;

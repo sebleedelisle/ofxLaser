@@ -114,6 +114,7 @@ class ManagerBase {
     int getNumZones();
     Zone* getSelectedZone(); 
     bool setTargetZone(unsigned int zone);
+    int getTargetZone();
     bool setZoneMode(ofxLaserZoneMode newmode);
     
     bool isLaserArmed(unsigned int i);

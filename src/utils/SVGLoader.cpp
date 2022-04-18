@@ -36,10 +36,13 @@ int SVGLoader:: startLoad(string path) {
 	loadedCount = 0;
 	
     totalFileCount = (int)files.size();
-
+    
+    
 	SVGLoader::addToQueue(this); 
 	SVGLoader::startQueueLoading();
-	
+    
+    loadStarted = true;
+    
 	return totalFileCount;
 }
 void SVGLoader::threadedFunction() {
@@ -169,7 +172,7 @@ void SVGLoader::threadedFunction() {
 }
 
 bool SVGLoader::hasFinishedLoading() {
-    return !isThreadRunning();
+    return ((getLoadedCount() == totalFileCount) && (loadStarted));
 }
 int SVGLoader :: getLoadedPercent(){
     return ofMap(getLoadedCount(), 0, totalFileCount, 0, 100);

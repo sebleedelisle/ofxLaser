@@ -57,6 +57,7 @@ void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
+        
 		
 		ofPolyline& target = *polylines[i];
 		
