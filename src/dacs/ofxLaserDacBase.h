@@ -24,6 +24,7 @@ namespace ofxLaser {
 		virtual bool sendFrame(const vector<Point>& points)  = 0;
 		virtual bool sendPoints(const vector<Point>& points)  = 0;
 		virtual bool setPointsPerSecond(uint32_t pps)  = 0;
+        virtual bool setColourShift(float shiftSeconds) = 0;
 		virtual string getId() = 0;
         
 		//virtual ofColor getStatusColour() = 0;
@@ -40,6 +41,8 @@ namespace ofxLaser {
         int maxLatencyMS; 
 
         string alias = "";
+        
+        bool colourShiftImplemented = false;
 		
 	protected :
 	
@@ -47,6 +50,8 @@ namespace ofxLaser {
 		bool resetFlag = false;
         bool armed = false;
         bool frameMode = true;
+        float colourShift = 0;
+        
 	};
 
 }

@@ -36,6 +36,7 @@ class DacLaserdock : public DacBase, ofThread{
 	bool sendFrame(const vector<Point>& points) override ;
 	bool sendPoints(const vector<Point>& points) override ;
 	bool setPointsPerSecond(uint32_t pps) override;
+    virtual bool setColourShift(float shift) override { return true; }; // TODO implement here in the DAC
 	
 	string getId() override {return "Laserdock " + ofToString(serialNumber);};
 	

@@ -46,6 +46,7 @@ public:
     bool sendFrame(const vector<Point>& points) override;
     bool sendPoints(const vector<Point>& points) override;
     bool setPointsPerSecond(uint32_t newpps) override;
+    bool setColourShift(float shiftSeconds) override; 
     string getId() override;
     int getStatus() override;
     const vector<ofAbstractParameter*>& getDisplayData() override;
@@ -169,6 +170,7 @@ private:
     //vector<EtherDreamDacPoint*> sparePoints;
 
     uint32_t pps, newPPS;
+    
     int queuedPPSChangeMessages;
     bool connected;
    // int maxLatencyMS;

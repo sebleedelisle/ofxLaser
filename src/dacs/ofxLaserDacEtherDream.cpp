@@ -25,6 +25,8 @@ DacEtherDream :: DacEtherDream(){
     lastCommandSendTime = 0;
     lastAckTime = 0;
     lastDataSentTime = 0;
+    
+    colourShiftImplemented = true;
 }
 
 
@@ -436,18 +438,24 @@ inline bool DacEtherDream :: sendPointsToDac(){
     dacCommand.setDataCommand(numpointstosend);
 	
 	EtherDreamDacPoint& dacPoint = sendPoint;
-	
+    int colourShiftPointCount =  (float)pps/10000.0f*colourShift ;
 	for(int i = 0; i<numpointstosend; i++) {
 		
 		if(bufferedPoints.size()>0) {
             // pop the point off the front
-            ofxLaser::Point& laserPoint = *bufferedPoints[0];
+            // TODO figure out how to add extra points in the buffer to accommodate the
+            // colour shift
+            int pointindex = colourShiftPointCount;
+            if(pointindex >= bufferedPoints.size()) pointindex = bufferedPoints.size()-1;
+            
+            ofxLaser::Point& laserPoint = *bufferedPoints[pointindex];
+            ofxLaser::Point& colourPoint = *bufferedPoints[0];
             
             dacPoint.x = ofMap(laserPoint.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
             dacPoint.y = ofMap(laserPoint.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
-            dacPoint.r = laserPoint.r/255.0f*65535;
-            dacPoint.g = laserPoint.g/255.0f*65535;
-            dacPoint.b = laserPoint.b/255.0f*65535;
+            dacPoint.r = colourPoint.r/255.0f*65535;
+            dacPoint.g = colourPoint.g/255.0f*65535;
+            dacPoint.b = colourPoint.b/255.0f*65535;
             dacPoint.i = 0;
             dacPoint.u1 = 0;
             dacPoint.u2 = 0;
@@ -983,6 +991,23 @@ bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
     }
 }
 
+
+bool DacEtherDream::setColourShift(float shift)  {
+
+    if(!isThreadRunning()){
+        colourShift =shift ;;
+        return true;
+    } else {
+        if(lock()){
+            colourShift = shift ;;
+            unlock();
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
+}
 
 const vector<ofAbstractParameter*>& DacEtherDream :: getDisplayData() {
 //    if(lock()) {

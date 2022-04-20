@@ -70,7 +70,7 @@ public:
 		D.addLine(4, 2, 4, 4);
 		D.addLine(4, 4, 3, 6);
 		D.addLine(3, 6, 0, 6);
-		D.addLine(0, 6, 0, 0);
+		D.addLine(0, 6, 0, 0.1);
         
 		letters["D"] = D;
         
@@ -174,7 +174,7 @@ public:
 		O.addLine(0, 0, 4, 0);
 		O.addLine(4, 0, 4, 6);
 		O.addLine(4, 6, 0, 6);
-		O.addLine(0, 6, 0, 0);
+		O.addLine(0, 6, 0, 0.1);
         
         letters["O"] = O;
         
@@ -396,6 +396,21 @@ public:
         lhypen.addLine(1 , 3 , 3 , 3);
         letters["-"] =lhypen;
         
+        Letter lunderscore;
+        lunderscore.addLine(0 , 6 , 4 , 6);
+        letters["_"] =lunderscore;
+       
+        Letter lampersand;
+        lampersand.addLine(5, 6, 0, 2);
+        lampersand.addLine(0, 2, 0, 0);
+        lampersand.addLine(0, 0, 3, 0);
+        lampersand.addLine(3, 0, 0, 4);
+        lampersand.addLine(0, 4, 0, 6);
+        lampersand.addLine(0, 6, 2, 6);
+        lampersand.addLine(0, 6, 2, 6);
+        lampersand.addLine(2, 6, 5, 3);
+        letters["&"] = lampersand;
+        
         Letter lhash;
         lhash.addLine(1 , 1 , 1 , 5);
         lhash.addLine(0 , 2 , 4 , 2);
@@ -410,7 +425,10 @@ public:
         Letter lfslash;
         lfslash.addLine(0 , 6 , 4 , 0);
         letters["/"] =lfslash;
-		
+        Letter backslash;
+        backslash.addLine(4 , 6 , 0 , 0);
+        letters["\\"] =backslash;
+        
 		Letter lfqmark;
 		lfqmark.addLine(0 , 0 , 4 , 0);
         lfqmark.addLine(4 , 0 , 4 , 3);

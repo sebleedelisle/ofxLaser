@@ -43,6 +43,7 @@ void Laser::setDac(DacBase* newdac){
     if(dac!=newdac) {
         dac = newdac;
         newdac->setPointsPerSecond(pps);
+        newdac->setColourShift(colourChangeShift); 
         newdac->maxLatencyMS = maxLatencyMS;
         dacId = dac->getId();
         armed = false; // automatically calls setArmed because of listener on parameter
@@ -138,6 +139,7 @@ void Laser :: init() {
  
     armed.addListener(this, &ofxLaser::Laser::setDacArmed);
     pps.addListener(this, &Laser::ppsChanged);
+    colourChangeShift.addListener(this, &Laser::colourShiftChanged);
 
     //loadSettings();
    
@@ -176,10 +178,16 @@ bool Laser ::toggleArmed() {
 }
 
 void Laser:: ppsChanged(int& e){
-	//ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
-	pps=round(pps/100)*100;
-	if(pps<=100) pps =100;
-	dac->setPointsPerSecond(pps);
+    //ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
+    pps=round(pps/100)*100;
+    if(pps<=100) pps =100;
+    dac->setPointsPerSecond(pps);
+}
+void Laser:: colourShiftChanged(float& e){
+    //ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
+    //pps=round(pps/100)*100;
+    //if(pps<=100) pps =100;
+    dac->setColourShift(e);
 }
 
 
@@ -996,7 +1004,7 @@ void Laser::send(ofPixels* pixels, float masterIntensity) {
 		}
 	}
 	
-	processPoints(masterIntensity);
+	processPoints(masterIntensity, !dac->colourShiftImplemented); // if the colour shift isn't implemented at the DAC level, do it here
 	
 	if(syncToTargetFramerate && (laserPoints.size()!=targetNumPoints)) {
 	

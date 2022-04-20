@@ -99,7 +99,7 @@ vector<vector<ofPolyline*>> LaserTextWriter::getPolylines(vector<string>& lines,
                 polylines.push_back(getGlyphPolylines(letters[nextChar], ofRectangle(pos.x + ofsX + glyphMarginLeft, pos.y + ofsY, glyphRenderWidth, glyphRenderHeight)));
             } else {
                 if((nextChar!=" ") && (nextChar!="\n")&& (nextChar!="\r")) {
-                    ofLog() << "CHARACTER NOT FOUND : '" << nextChar << "' " << nextChar[0];
+                    ofLog() << "CHARACTER NOT FOUND : '" << nextChar << "' " << (int)nextChar[0] << " " << line;
                 }
             }
 //            addGlyphToMesh(letters[line[i]], ofRectangle(pos.x + ofsX + glyphMarginLeft, pos.y + ofsY, glyphRenderWidth, glyphRenderHeight), writingMesh);

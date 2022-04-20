@@ -17,6 +17,7 @@ namespace ofxLaser {
         virtual bool sendFrame(const vector<Point>& points) override { return true; } ;
         virtual bool sendPoints(const vector<Point>& points) override { return true; } ;
         virtual bool setPointsPerSecond(uint32_t pps) override { return true; };
+        virtual bool setColourShift(float shiftSeconds) override { return true; };
         virtual string getId() override {return "";};
         
         virtual int getStatus() override {return OFXLASER_DACSTATUS_ERROR;};
