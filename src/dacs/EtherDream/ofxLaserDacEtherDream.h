@@ -39,17 +39,13 @@ public:
     ~DacEtherDream();
 
     // DacBase functions
-   
-    bool sendPoints(const vector<Point>& points) override;
     bool setPointsPerSecond(uint32_t newpps) override;
     
     string getId() override;
     int getStatus() override;
     const vector<ofAbstractParameter*>& getDisplayData() override;
    
-    
     void setup(string id, string ip, EtherDreamData& ed);
-   
     
     void closeWhileRunning();
     void close() override;

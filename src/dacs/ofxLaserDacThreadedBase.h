@@ -21,7 +21,7 @@ class DacThreadedBase : public DacBase, public ofThread {
     
     // DacBase
     virtual bool sendFrame(const vector<Point>& points) override;
-    virtual bool sendPoints(const vector<Point>& points) override  = 0;
+    virtual bool sendPoints(const vector<Point>& points) override;
     virtual bool setPointsPerSecond(uint32_t pps) override = 0;
     virtual bool setColourShift(float shiftSeconds) override;
     virtual string getId() override = 0;

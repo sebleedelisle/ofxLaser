@@ -36,11 +36,43 @@ bool DacThreadedBase :: sendFrame(const vector<Point>& points){
 
 }
 
+bool DacThreadedBase:: sendPoints(const vector<Point>& points){
+    
+    stateRecorder.update();
+ 
+    if(bufferedPoints.size()>pps*0.5) {
+        return false;
+    }
+    
+    if(lock()) {
+        frameMode = false;
+        for(const Point& p: points) {
+            addPointToBuffer(p);
+        }
+        unlock();
+    }
+    return true;
+  
+}
 
+
+bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
+   // return true;
+    int queuedPoints = 0;
+    if(lock()) {
+        
+        queuedPoints = getNumPointsInAllBuffers();
+        maxLatencyMS = maxlatencyms;
+        unlock();
+    }
+    bool ready = queuedPoints<(maxLatencyMS*newPPS/1000);
+
+    return  ready;
+}
 
 // updates the frame buffer with new frames from the threadchannel,
 // adds frames to the frame queue until we have minPointsToQueue
-// and up to maxPointsToSend
+
 void DacThreadedBase ::  updateFrameQueue(int minPointsToQueue){
     
     // get all the new frames in the channel
@@ -130,19 +162,6 @@ int DacThreadedBase :: getNumPointsInFrames(deque<DacFrame*>& frames) {
 }
 
 
-bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
-   // return true;
-    int queuedPoints = 0;
-    if(lock()) {
-        
-        queuedPoints = getNumPointsInAllBuffers();
-        maxLatencyMS = maxlatencyms;
-        unlock();
-    }
-    bool ready = queuedPoints<(maxLatencyMS*newPPS/1000);
-
-    return  ready;
-}
 
 int DacThreadedBase :: getNumPointsInAllBuffers() {
     // if not in thread then needs lock!

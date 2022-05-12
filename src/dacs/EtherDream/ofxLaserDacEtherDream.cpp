@@ -336,16 +336,19 @@ inline bool DacEtherDream :: sendPointsToDac(){
     
     
     // get current buffer
-    int currentDacBufferFullnessMin = calculateBufferSizeByTimeSent();
-    int softwareBufferFullness =  bufferedPoints.size();
+    int minDacBufferSize = calculateBufferSizeByTimeSent();
+    int bufferSize =  bufferedPoints.size();
     
     // get min buffer size
     int minBufferSize = maxLatencyMS * pps / 1000;
+    // because the newest etherdreams use DMA transfer, they
+    // always need at least 256 bytes in the buffer otherwise
+    // they report a buffer under-run
     if(etherDreamData.softwareRevision>=30) {
         minBufferSize = MAX(minBufferSize, 256);
     }
     
-    int minPointsToQueue = MAX(0, minBufferSize - currentDacBufferFullnessMin - softwareBufferFullness);
+    int minPointsToQueue = MAX(0, minBufferSize - minDacBufferSize - bufferSize);
     int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferSizeByTimeAcked() - 256);
     
     int numpointstosend = 0;
@@ -447,25 +450,6 @@ inline bool DacEtherDream :: sendPointsToDac(){
 	
 }
 
-
-bool DacEtherDream:: sendPoints(const vector<Point>& points){
-    
-    stateRecorder.update();
- 
-    if(bufferedPoints.size()>pps*0.5) {
-        return false;
-    }
-	
-	if(lock()) {
-		frameMode = false;
-		for(const Point& p: points) {
-			addPointToBuffer(p);
-		}
-		unlock();
-	}
-	return true;
-  
-}
 
 
 
