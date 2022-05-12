@@ -50,6 +50,7 @@ namespace ofxLaser {
 		bool resetFlag = false;
         bool armed = false;
         bool frameMode = true;
+        
         float colourShift = 0;
         
 	};

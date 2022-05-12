@@ -23,6 +23,7 @@ class DacManagerEtherDream : public DacManagerBase, ofThread{
     DacManagerEtherDream();
     ~DacManagerEtherDream();
     
+    
     virtual vector<DacData> updateDacList() override;
     virtual DacBase* getAndConnectToDac(const string& id) override;
     virtual bool disconnectAndDeleteDac(const string& id) override;
