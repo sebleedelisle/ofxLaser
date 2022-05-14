@@ -1522,9 +1522,9 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             uint64_t startTimeMicros = endTimeMicros - visibledurationmicros;
             int numvalues = 1000;
             
-//            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-//            label = "Round trip time";
-//            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 10.0f, ImVec2(0,80));
+            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+            label = "Round trip time";
+            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 1000.0f, ImVec2(0,80));
             
             dac->stateRecorder.getBufferSizeValuesForTime(startTimeMicros, endTimeMicros, numvalues);
             label = "Buffer ";
