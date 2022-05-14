@@ -217,6 +217,7 @@ void DacEtherDream :: threadedFunction(){
             
             
         }
+        
         int pointBufferMin = MIN(pointBufferCapacity, maxLatencyMS * pps /1000);
         if(etherDreamData.softwareRevision>=30) {
             pointBufferMin = MAX(pointBufferMin, 256);
@@ -224,17 +225,7 @@ void DacEtherDream :: threadedFunction(){
         // if state is prepared or playing, and we have points in the buffer, then send the points
         if(connected && (response.status.playback_state!=ETHERDREAM_PLAYBACK_IDLE)) {
             
-            // figure out when the next update should be
-            // figure out the current buffer
-            int bufferFullness = calculateBufferSizeByTimeSent();
-            
-            //int pointBufferMin = maxLatencyMS * pps /1000;
-            int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
-            int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
-         
-            // min buffer amount
-            if(microsToWait>0)
-                usleep(microsToWait);
+            waitUntilReadyToSend(pointBufferMin);
             
             //check buffer and send the next points
            // while(!lock()) {}
@@ -290,9 +281,8 @@ void DacEtherDream :: threadedFunction(){
 int DacEtherDream :: calculateBufferSizeByTimeSent() {
     
     if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
-    int elapsedMicros = ofGetElapsedTimeMicros() - lastCommandSendTime;
-    // figure out the current buffer
-    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
+    
+    return DacThreadedBase::calculateBufferSizeByTimeSent();
    
     
 }
@@ -300,10 +290,8 @@ int DacEtherDream :: calculateBufferSizeByTimeSent() {
 int DacEtherDream :: calculateBufferSizeByTimeAcked() {
    
     if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
-    int elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
-    // figure out the current buffer
-    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
-   
+    return DacThreadedBase::calculateBufferSizeByTimeAcked();
+
     
 }
 void DacEtherDream :: reset() {

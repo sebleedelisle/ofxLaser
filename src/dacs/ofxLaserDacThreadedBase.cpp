@@ -55,6 +55,35 @@ bool DacThreadedBase:: sendPoints(const vector<Point>& points){
   
 }
 
+int DacThreadedBase :: calculateBufferSizeByTimeSent() {
+    
+    int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
+    // figure out the current buffer
+    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
+   
+    
+}
+
+int DacThreadedBase :: calculateBufferSizeByTimeAcked() {
+   
+   
+    int elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
+    // figure out the current buffer
+    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
+   
+    
+}
+
+void DacThreadedBase :: waitUntilReadyToSend(int pointBufferMin){
+    
+    int bufferFullness = calculateBufferSizeByTimeSent();
+    int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
+    int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
+    if(microsToWait>0) {
+        usleep(microsToWait);
+    }
+    
+}
 
 bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
    // return true;
@@ -63,11 +92,15 @@ bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
         
         queuedPoints = getNumPointsInAllBuffers();
         maxLatencyMS = maxlatencyms;
+        bool ready = queuedPoints<(maxlatencyms*newPPS/1000);
+       // ofLogNotice() << queuedPoints << " " << (maxlatencyms*(newPPS/1000)) << " " << (queuedPoints<(maxlatencyms*newPPS/1000)) << " " << maxlatencyms << " " << newPPS << " ";
+        
         unlock();
+        return ready;
     }
-    bool ready = queuedPoints<(maxLatencyMS*newPPS/1000);
-
-    return  ready;
+    
+    
+    return false;
 }
 
 // updates the frame buffer with new frames from the threadchannel,

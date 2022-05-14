@@ -22,10 +22,12 @@ class DacThreadedBase : public DacBase, public ofThread {
     // DacBase
     virtual bool sendFrame(const vector<Point>& points) override;
     virtual bool sendPoints(const vector<Point>& points) override;
-    virtual bool setPointsPerSecond(uint32_t pps) override = 0;
     virtual bool setColourShift(float shiftSeconds) override;
+    
     virtual string getId() override = 0;
     virtual int getStatus() override = 0;
+    virtual bool setPointsPerSecond(uint32_t pps) override = 0;
+    virtual int getMaxPointBufferSize() =0; 
     
     virtual void reset() override = 0;
     virtual void close() override = 0;
@@ -36,8 +38,8 @@ class DacThreadedBase : public DacBase, public ofThread {
     //ofThread
     void threadedFunction() override = 0;
     
-    virtual int calculateBufferSizeByTimeSent() = 0;
-    virtual int calculateBufferSizeByTimeAcked() = 0;
+    virtual int calculateBufferSizeByTimeSent();
+    virtual int calculateBufferSizeByTimeAcked();
     
     // These two objects are for diagnostics...
     // stateRecorder periodically records the current buffer,
@@ -65,6 +67,8 @@ class DacThreadedBase : public DacBase, public ofThread {
           CloseHandle(timer);
       }
   #endif
+    
+    void waitUntilReadyToSend(int pointBufferMin);
     
     void updateFrameQueue(int minPointsToQueue );
     int getNumPointsInFrames(deque<DacFrame*>& frames);

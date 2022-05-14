@@ -1515,7 +1515,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
 //        label = "Frame time ";
 //        ImGui::PlotHistogram(label.c_str(), laser->frameTimeHistory, laser->frameTimeHistorySize, laser->frameTimeHistoryOffset, "", 0, 0.1f, ImVec2(0,80));
         
-        DacEtherDream* dac =  dynamic_cast<DacEtherDream*> (laser->getDac());
+        DacThreadedBase* dac =  dynamic_cast<DacThreadedBase*> (laser->getDac());
         if(dac!=nullptr) {
             uint64_t visibledurationmicros = dacSettingsTimeSlice * 1000000; // seconds * million
             uint64_t endTimeMicros = ofGetElapsedTimeMicros();
