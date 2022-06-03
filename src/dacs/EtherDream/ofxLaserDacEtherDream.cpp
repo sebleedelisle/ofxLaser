@@ -282,7 +282,7 @@ int DacEtherDream :: calculateBufferSizeByTimeSent() {
     
     if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
     
-    return DacThreadedBase::calculateBufferSizeByTimeSent();
+    return DacBaseThreaded::calculateBufferSizeByTimeSent();
    
     
 }
@@ -290,7 +290,7 @@ int DacEtherDream :: calculateBufferSizeByTimeSent() {
 int DacEtherDream :: calculateBufferSizeByTimeAcked() {
    
     if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
-    return DacThreadedBase::calculateBufferSizeByTimeAcked();
+    return DacBaseThreaded::calculateBufferSizeByTimeAcked();
 
     
 }

@@ -5,13 +5,13 @@
 //  Created by Seb Lee-Delisle on 11/05/2022.
 //
 
-#include "ofxLaserDacThreadedBase.h"
+#include "ofxLaserDacBaseThreaded.h"
 
 using namespace ofxLaser;
 
 
 
-bool DacThreadedBase :: sendFrame(const vector<Point>& points){
+bool DacBaseThreaded :: sendFrame(const vector<Point>& points){
 
         
     stateRecorder.update();
@@ -36,7 +36,7 @@ bool DacThreadedBase :: sendFrame(const vector<Point>& points){
 
 }
 
-bool DacThreadedBase:: sendPoints(const vector<Point>& points){
+bool DacBaseThreaded:: sendPoints(const vector<Point>& points){
     
     stateRecorder.update();
  
@@ -55,7 +55,7 @@ bool DacThreadedBase:: sendPoints(const vector<Point>& points){
   
 }
 
-int DacThreadedBase :: calculateBufferSizeByTimeSent() {
+int DacBaseThreaded :: calculateBufferSizeByTimeSent() {
     
     int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
     // figure out the current buffer
@@ -64,7 +64,7 @@ int DacThreadedBase :: calculateBufferSizeByTimeSent() {
     
 }
 
-int DacThreadedBase :: calculateBufferSizeByTimeAcked() {
+int DacBaseThreaded :: calculateBufferSizeByTimeAcked() {
    
    
     int elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
@@ -74,7 +74,7 @@ int DacThreadedBase :: calculateBufferSizeByTimeAcked() {
     
 }
 
-void DacThreadedBase :: waitUntilReadyToSend(int pointBufferMin){
+void DacBaseThreaded :: waitUntilReadyToSend(int pointBufferMin){
     
     int bufferFullness = calculateBufferSizeByTimeSent();
     int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
@@ -85,7 +85,7 @@ void DacThreadedBase :: waitUntilReadyToSend(int pointBufferMin){
     
 }
 
-bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
+bool DacBaseThreaded :: isReadyForFrame(int maxlatencyms) {
    // return true;
     int queuedPoints = 0;
     if(lock()) {
@@ -106,7 +106,7 @@ bool DacThreadedBase :: isReadyForFrame(int maxlatencyms) {
 // updates the frame buffer with new frames from the threadchannel,
 // adds frames to the frame queue until we have minPointsToQueue
 
-void DacThreadedBase ::  updateFrameQueue(int minPointsToQueue){
+void DacBaseThreaded ::  updateFrameQueue(int minPointsToQueue){
     
     // get all the new frames in the channel
     DacFrame* frame;
@@ -178,7 +178,7 @@ void DacThreadedBase ::  updateFrameQueue(int minPointsToQueue){
 }
 
 
-inline bool DacThreadedBase :: addPointToBuffer(const ofxLaser::Point &point ){
+inline bool DacBaseThreaded :: addPointToBuffer(const ofxLaser::Point &point ){
     ofxLaser::Point* p = PointFactory :: getPoint(point);
     //*p = point; // copy assignment hopefully!
     bufferedPoints.push_back(p);
@@ -186,7 +186,7 @@ inline bool DacThreadedBase :: addPointToBuffer(const ofxLaser::Point &point ){
 }
 
 
-int DacThreadedBase :: getNumPointsInFrames(deque<DacFrame*>& frames) {
+int DacBaseThreaded :: getNumPointsInFrames(deque<DacFrame*>& frames) {
     int totalpoints = 0;
     for(DacFrame* frame : frames) {
         totalpoints+=(frame->getNumPoints());
@@ -196,7 +196,7 @@ int DacThreadedBase :: getNumPointsInFrames(deque<DacFrame*>& frames) {
 
 
 
-int DacThreadedBase :: getNumPointsInAllBuffers() {
+int DacBaseThreaded :: getNumPointsInAllBuffers() {
     // if not in thread then needs lock!
       return calculateBufferSizeByTimeSent() + bufferedPoints.size() + getNumPointsInBufferedFrames();
     
@@ -204,13 +204,13 @@ int DacThreadedBase :: getNumPointsInAllBuffers() {
 
 
 
-int DacThreadedBase :: getNumPointsInBufferedFrames() {
+int DacBaseThreaded :: getNumPointsInBufferedFrames() {
     return  getNumPointsInFrames(bufferedFrames);
 }
 
 
 // set the colour shift in seconds
-bool DacThreadedBase::setColourShift(float shift)  {
+bool DacBaseThreaded::setColourShift(float shift)  {
 
     if(!isThreadRunning()){
         colourShift =shift;

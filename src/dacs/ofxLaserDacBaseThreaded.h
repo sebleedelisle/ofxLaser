@@ -15,7 +15,7 @@
 
 namespace ofxLaser {
 
-class DacThreadedBase : public DacBase, public ofThread {
+class DacBaseThreaded : public DacBase, public ofThread {
     
     public :
     
@@ -27,7 +27,7 @@ class DacThreadedBase : public DacBase, public ofThread {
     virtual string getId() override = 0;
     virtual int getStatus() override = 0;
     virtual bool setPointsPerSecond(uint32_t pps) override = 0;
-    virtual int getMaxPointBufferSize() =0; 
+    virtual int getMaxPointBufferSize() =0;
     
     virtual void reset() override = 0;
     virtual void close() override = 0;

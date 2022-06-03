@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxLaserDacThreadedBase.h"
+#include "ofxLaserDacBaseThreaded.h"
 #include "ofxLaserDacLaserDockByteStream.h"
 #include "LaserdockDevice.h"
 #include "libusb.h"
@@ -20,7 +20,7 @@
 
 namespace ofxLaser {
 
-class DacLaserdock : public DacThreadedBase{
+class DacLaserdock : public DacBaseThreaded{
 	public:
 	
     DacLaserdock(){

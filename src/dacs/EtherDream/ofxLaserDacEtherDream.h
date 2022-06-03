@@ -7,7 +7,7 @@
 //
 
 #pragma once
-#include "ofxLaserDacThreadedBase.h"
+#include "ofxLaserDacBaseThreaded.h"
 
 #include "ofxLaserDacEtherDreamCommand.h"
 #include "ofxLaserDacEtherDreamDacPoint.h"
@@ -32,7 +32,7 @@
 namespace ofxLaser {
 
 
-class DacEtherDream : public DacThreadedBase {
+class DacEtherDream : public DacBaseThreaded {
 
 public:
     DacEtherDream();
