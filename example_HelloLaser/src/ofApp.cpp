@@ -30,7 +30,7 @@ void ofApp::draw() {
     // (you can also use glm::vec3). The final parameter is the render profile.
     // Three profiles are provided, default, fast and detail.
     ofPushMatrix();
-    if(testscale) ofScale(0,0,0);
+    //if(testscale) ofScale(0,0,0);
     laser.drawLine(200, 200, 600, 200, ofColor::white, OFXLASER_PROFILE_FAST);
     
     // Draw dots. Note that if you leave out the render profile, it
@@ -64,8 +64,8 @@ void ofApp::draw() {
     laser.send();
     // draw the laser UI elements
     laser.drawUI();
-    ofSetColor(255);
-    ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 20);
+    //ofSetColor(255);
+    //ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 20);
 }
 
 
@@ -88,8 +88,8 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
     
     if(e.key==OF_KEY_TAB) {
         laser.selectNextLaser();
-    } if(e.key == ' ') {
-        testscale = !testscale;
-    }
+    }// if(e.key == ' ') {
+     //   testscale = !testscale;
+    //}
     
 }

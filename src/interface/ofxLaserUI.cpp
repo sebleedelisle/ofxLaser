@@ -12,7 +12,9 @@ using namespace ofxLaser;
 
 ofxImGui::Gui ofxLaser::UI::imGui;
 ImFont* ofxLaser::UI::font;
+ImFont* ofxLaser::UI::largeFont;
 bool ofxLaser::UI::initialised = false;
+bool ofxLaser::UI::ghosted = false;
 
 void UI::render() {
     ImGui::Render();
@@ -29,7 +31,8 @@ void UI::setupGui() {
     }
     
     ImGuiIO& io = ImGui::GetIO();
-    io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data,RobotoMedium_compressed_size, 13);
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data,RobotoMedium_compressed_size, 13);
+    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);
@@ -226,6 +229,97 @@ bool UI::addCheckbox(ofParameter<bool>&param) {
     }
 }
 
+bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param) {
+    if(NumberedCheckBox(number, param.getName().c_str(), (bool*)&param.get())) {
+        param.set(param.get()); // trigger the events
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool UI::NumberedCheckBox(int number, const char* label, bool* v){
+    
+    using namespace ImGui;
+    
+    bool useSecondaryColour = *v;
+    
+
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    
+    if (useSecondaryColour) {
+        secondaryColourButtonStart();
+    }
+    
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+
+    const float square_sz = GetFrameHeight();
+    const ImVec2 pos = window->DC.CursorPos;
+    const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
+    ItemSize(total_bb, style.FramePadding.y);
+    if (!ItemAdd(total_bb, id)) {
+        if (useSecondaryColour) {
+            secondaryColourButtonEnd();
+        }
+        return false;
+    }
+  
+    bool hovered, held;
+    bool pressed = ButtonBehavior(total_bb, id, &hovered, &held);
+    if (pressed)
+    {
+        *v = !(*v);
+        MarkItemEdited(id);
+    }
+
+    const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
+    RenderNavHighlight(total_bb, id);
+    
+
+    RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+
+
+    ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
+//    if (window->DC.ItemFlags & ImGuiItemFlags_MixedValue)
+//    {
+//        // Undocumented tristate/mixed/indeterminate checkbox (#2644)
+//        ImVec2 pad(ImMax(1.0f, IM_FLOOR(square_sz / 3.6f)), ImMax(1.0f, IM_FLOOR(square_sz / 3.6f)));
+//        window->DrawList->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
+//    }
+//    else if (*v)
+//    {
+//        const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
+//        RenderCheckMark(window->DrawList, check_bb.Min + ImVec2(pad, pad), check_col, square_sz - pad*2.0f);
+//
+//    }
+    
+    // BIG NUMBER IN CHECK BOX
+    string numString = ofToString(number).c_str();
+    ImGui::PushFont(largeFont);
+    const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
+    ImVec2 textArea   = ImGui::CalcTextSize(numString.c_str());
+    RenderText(check_bb.GetCenter() - (textArea*0.5f), numString.c_str());
+    ImGui::PopFont();
+    
+    if (g.LogEnabled)
+        LogRenderedText(&total_bb.Min, *v ? "[x]" : "[ ]");
+    if (label_size.x > 0.0f)
+        RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y), label);
+
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.ItemFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
+    if (useSecondaryColour) {
+        secondaryColourButtonEnd();
+    }
+    return pressed;
+}
+
+
 bool UI::addParameter(ofAbstractParameter& param) {
     shared_ptr<ofAbstractParameter> ref = param.newReference();
     return addParameter(ref);
@@ -234,11 +328,7 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
     auto parameterGroupPtr = std::dynamic_pointer_cast<ofParameterGroup>(param);
     if(parameterGroupPtr) {
-        if(parameterGroupPtr->getName()!="") {
-            ImGui::Separator();
-            ImGui::Text("%s", parameterGroupPtr->getName().c_str());
-            //ImGui::NewLine();
-        }
+        
         
         //    bool treevisible = ImGui::TreeNode(parameterGroupPtr->getName().c_str());
         //    if (treevisible){
@@ -321,7 +411,16 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
 }
 
-void UI::addParameterGroup(ofParameterGroup& parameterGroup) {
+void UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
+    
+    if(showTitle) {
+        ImGui::Separator();
+        if((parameterGroup.getName()!="")) {
+            ImGui::Text("%s", parameterGroup.getName().c_str());
+        }
+         
+    }
+    
     addParameter(parameterGroup);
 //    for(auto& param : parameterGroup) {
 //        addParameter(param);

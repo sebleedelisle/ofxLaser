@@ -45,6 +45,17 @@ ZoneTransform::ZoneTransform() {
     yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     
     ofAddListener(params.parameterChangedE(), this, &ZoneTransform::paramChanged);
+    
+    uiZoneFillColour  = ofColor::fromHex(0x000b16);
+    uiZoneFillColourSelected = ofColor::fromHex(0x001123);
+    uiZoneStrokeColour  = ofColor::fromHex(0x0E87E7);
+    uiZoneStrokeColourSelected = ofColor::fromHex(0x0E87E7);
+    uiZoneHandleColour = ofColor::fromHex(0x0E87E7);
+    uiZoneHandleColourOver = ofColor :: fromHex(0xffffff);
+    uiZoneStrokeSubdivisionColour = ofColor :: fromHex(0x00386D);;
+    uiZoneStrokeSubdivisionColourSelected = ofColor :: fromHex(0x006ADB);;;
+    
+    
 
 }
 
@@ -107,32 +118,76 @@ void ZoneTransform::draw(string label) {
 	ofPushMatrix();
 	ofTranslate(offset);
 	ofScale(scale, scale);
-	
-	ofSetColor(150,150,255);
+    ofSetColor(selected?uiZoneFillColourSelected : uiZoneFillColour);
+    ofFill();
+    ofBeginShape();
+    for(int i = 0; i<xDivisions; i++) {
+        ofVertex(dstHandles[i]);
+    }
+    for(int i = 0; i<yDivisions; i++) {
+        ofVertex(dstHandles[(i*(xDivisions+1))+xDivisions]);
+    }
+    for(int i = 0; i<xDivisions; i++) {
+        int index = ((xDivisions+1) * (yDivisions+1) )-1-i;
+        ofVertex(dstHandles[index]);
+    }
+    for(int i = 0; i<yDivisions; i++) {
+        int index = (yDivisions-i)*(xDivisions+1);
+        ofVertex(dstHandles[index]);
+    }
+
+    
+    ofEndShape();
+    ofNoFill();
+    
+    
+    
+	ofSetColor(uiZoneStrokeColour);
 	ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
 	
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		int x = i%(xDivisions+1);
 		int y = (int)i/(xDivisions+1);
 				
-		ofColor edge = ofColor(255);
-		ofColor inside  = editSubdivisions?ofColor(100,100,255):ofColor(0,0,255);
 		
 		if(x<xDivisions) {
 			if((y>0)&&(y<yDivisions)) {
-				ofSetColor(inside);
+                // then it's an inner line
+                if(editSubdivisions) {
+                    ofSetColor(selected ? uiZoneStrokeSubdivisionColourSelected : uiZoneStrokeSubdivisionColour);
+                    ofDrawLine(dstHandles[i], dstHandles[i+1]);
+                }
 			} else {
-				ofSetColor(edge);
+				
+                if(selected) {
+                    ofSetLineWidth(2);
+                }
+                ofSetColor(selected ? uiZoneStrokeColourSelected : uiZoneStrokeColour);
+                ofDrawLine(dstHandles[i], dstHandles[i+1]);
+            
+                ofSetLineWidth(1);
 			}
-			UI::drawDashedLine(dstHandles[i], dstHandles[i+1], 6, scale);
+			
 		}
+       
 		if(y<yDivisions) {
 			if((x>0)&&(x<xDivisions)) {
-				ofSetColor(inside);
+                // then it's an inner line
+                if(editSubdivisions) {
+                    ofSetColor(selected ? uiZoneStrokeSubdivisionColourSelected : uiZoneStrokeSubdivisionColour);
+                    ofDrawLine(dstHandles[i], dstHandles[i+xDivisions+1]);
+                }
 			} else {
-				ofSetColor(edge);
+                if(selected) {
+                    ofSetLineWidth(2);
+                }
+                ofSetColor(selected ? uiZoneStrokeColourSelected : uiZoneStrokeColour);
+                ofDrawLine(dstHandles[i], dstHandles[i+xDivisions+1]);
+            
+                ofSetLineWidth(1);
+                
 			}
-            UI::drawDashedLine(dstHandles[i], dstHandles[i+xDivisions+1], 6,scale );
+           
 		}
 	}
 	
@@ -147,9 +202,28 @@ void ZoneTransform::draw(string label) {
 ofPoint ZoneTransform::getCentre() {
 	ofPoint centre = srcRect.getCenter();
 	return getWarpedPoint(centre);
-	
-	
 }
+
+void ZoneTransform :: resetToSquare() {
+    vector<ofPoint> corners = getCorners();
+//    corners[0].x = corners[2].x = ofLerp(corners[0].x,corners[2].x, 0.5);
+//    corners[0].y = corners[1].y = ofLerp(corners[0].y,corners[1].y, 0.5);
+//    corners[1].x = corners[3].x = ofLerp(corners[1].x,corners[3].x,0.5);
+//    corners[3].y = corners[2].y = ofLerp(corners[3].y,corners[2].y,0.5);
+    corners[0].x = corners[2].x = getLeft();
+    corners[0].y = corners[1].y = getTop(); //ofLerp(corners[0].y,corners[1].y, 0.5);
+    corners[1].x = corners[3].x = getRight(); // ofLerp(corners[1].x,corners[3].x,0.5);
+    corners[3].y = corners[2].y = getBottom(); // ofLerp(corners[3].y,corners[2].y,0.5);
+    setDstCorners(corners[0], corners[1], corners[2], corners[3]);
+}
+
+bool ZoneTransform :: isSquare() {
+    
+    vector<ofPoint> corners = getCorners();
+    return (corners[0].x == corners[2].x) && (corners[0].y == corners[1].y) && (corners[1].x == corners[3].x) && (corners[2].y == corners[3].y);
+    
+}
+
 ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
 	ofPoint rp = p - srcRect.getTopLeft();
 	
@@ -275,10 +349,8 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
 		
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		dstHandles[i].set(toOf(dstCVPoints[i]));
-        dstHandles[i].col = ofColor(100,100,255, 196);
-        dstHandles[i].overCol = ofColor(196,196,255, 255);
-       // ofLog(OF_LOG_NOTICE,"setting dstHandles["+ofToString(i)+"] to "+ofToString(dstCVPoints[i].x)+","+ofToString(dstCVPoints[i].y));
-       // ofLog(OF_LOG_NOTICE," ------------------["+ofToString(i)+"] to "+ofToString(dstHandles[i].x)+","+ofToString(dstHandles[i].y));
+        dstHandles[i].setColour(uiZoneHandleColour, uiZoneHandleColourOver);
+      
        
 	}
 	
@@ -290,6 +362,7 @@ void ZoneTransform::resetFromCorners() {
 	setDstCorners(corners[0],corners[1],corners[2],corners[3]);
 
 }
+
 vector<ofPoint> ZoneTransform::getCorners(){
 	vector<ofPoint> corners;
 	corners.push_back(dstHandles[0]);
@@ -440,14 +513,14 @@ void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
 
 }
 
-void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
+bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	
 	// TODO there is currently an issue where if a zone is on top of another
     // zone, you can't click on a handle underneath. Not sure of how to fix this...
     // but possibly needs some higher level logic than here.
     
 	if((!editable) || (!visible)) return ;
-    if(ofGetKeyPressed(' ')) return ; // for dragging around previews. 
+    //if(ofGetKeyPressed(' ')) return ; // for dragging around previews.
 
 	mousePos = e;
     mousePos-=offset;
@@ -457,12 +530,12 @@ void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	bool hit = hitTest(mousePos);
 	if((hit) &&(!selected)) {
 		selected = true;
-		return ; // keeps the event propogating
+		return false; //  propogates
 	}
 	
 	
 	if(!selected) {
-		return ;
+		return false; // propogates
 	}
 	
 	bool handleHit = false;
@@ -534,7 +607,8 @@ void ZoneTransform :: mousePressed(ofMouseEventArgs &e){
 	if(!handleHit && !hit) {
 		selected = false;
 	}
-	//return handleHit || hit;
+    
+    return false; // propogates, was : handleHit || hit;
 	
 }
 
@@ -676,4 +750,55 @@ void ZoneTransform::setHandleSize(float size) {
 		handle.setSize(size);
 	}
 	
+}
+
+
+bool ZoneTransform::getSelected() {
+    return selected;
+    
+};
+void ZoneTransform::setSelected(bool v) {
+    if(selected!=v)  {
+        selected = v;
+        if(!selected) {
+            for(size_t i= 0; i<dstHandles.size(); i++) {
+              dstHandles[i].stopDrag();
+            }
+            
+        }
+    }
+};
+
+float ZoneTransform::getRight() {
+    float right = 0;
+    for(DragHandle& handle : dstHandles) {
+        if(handle.x>right) right = handle.x;
+    }
+           
+    return right;
+}
+float ZoneTransform::getLeft() {
+    float left = 800;
+    for(DragHandle& handle : dstHandles) {
+        if(handle.x<left) left = handle.x;
+    }
+    
+    return left;
+}
+
+float ZoneTransform::getTop() {
+    float top = 800;
+    for(DragHandle& handle : dstHandles) {
+        if(handle.y<top) top = handle.y;
+    }
+    
+    return top;
+}
+float ZoneTransform::getBottom() {
+    float bottom = 0;
+    for(DragHandle& handle : dstHandles) {
+        if(handle.y>bottom) bottom = handle.y;
+    }
+    
+    return bottom;
 }

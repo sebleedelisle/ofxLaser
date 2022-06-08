@@ -19,9 +19,14 @@ class UI {
     
     public :
     
+    
+    
     static ofxImGui::Gui imGui;
     static ImFont* font;
-    static bool initialised; 
+    static ImFont* largeFont;
+    static bool initialised;
+    
+    static bool ghosted;
     
     static void setupGui();
     static void updateGui();
@@ -42,6 +47,9 @@ class UI {
     
 
     static bool addCheckbox(ofParameter<bool>&param);
+    static bool addNumberedCheckbox(int number, ofParameter<bool>&param);
+    
+    static bool NumberedCheckBox(int number, const char* label, bool* v);
     
     static bool addColour(ofParameter<ofFloatColor>& parameter, bool alpha = false);
     static bool addColour(ofParameter<ofColor>& parameter, bool alpha = false);
@@ -49,7 +57,18 @@ class UI {
     static bool addParameter(ofAbstractParameter& param);
     static bool addParameter(shared_ptr<ofAbstractParameter>& param);
     
-    static void addParameterGroup(ofParameterGroup& parameterGroup);
+    static void addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle = true);
+    
+    static void startGhosted() {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+        ghosted = true;
+    }
+    static void stopGhosted() {
+        if(ghosted) {
+            ImGui::PopStyleVar();
+            ghosted = false;
+        } 
+    }
     
     static void startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) {
         ImGuiWindowFlags window_flags = flags;
@@ -102,15 +121,32 @@ class UI {
         ImGui::End();
     }
     
+    static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0)){
+        bool returnvalue;
+        
+        if(large) UI::largeItemStart();
+        if(secondaryColour) UI::secondaryColourButtonStart();
+        returnvalue =  ImGui::ButtonEx(label, size_arg, 0);
+        
+        if(large) UI::largeItemEnd();
+        if(secondaryColour) UI::secondaryColourButtonEnd();
+        return returnvalue;
+    }
     static void secondaryColourButtonStart() {
         ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
         ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
         
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.4f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.8f));
+        
     }
     
     static void secondaryColourButtonEnd() {
-        ImGui::PopStyleColor(3);
+        ImGui::PopStyleColor(7);
     }
     
     static void largeItemStart() {
@@ -237,6 +273,8 @@ class UI {
         rot = glm::quat_cast(rotMtx);
         return scale;
     }
+    
+    
     
 };
 

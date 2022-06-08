@@ -27,6 +27,13 @@ namespace ofxLaser {
 	void set(glm::vec2 pos);
 	void draw(const glm::vec3& mousepos, float scale = 1);
     void draw(bool isOver = true, float scale = 1);
+    
+    void setColour(ofColor colour, ofColor overColour) {
+        col = colour;
+        overCol = overColour; 
+        
+    }
+    
         
 	void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 

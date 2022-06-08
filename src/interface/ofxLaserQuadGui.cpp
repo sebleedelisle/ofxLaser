@@ -306,7 +306,7 @@ void QuadGui :: mouseMoved(ofMouseEventArgs &e){
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
-    isDirty = true;
+    //isDirty = true;
     
 }
 void QuadGui :: mouseDragged(ofMouseEventArgs &e){

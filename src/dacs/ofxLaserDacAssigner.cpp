@@ -271,7 +271,7 @@ bool DacAssigner :: disconnectDacFromLaser(Laser& laser) {
         return false;
     }
 }
-DacManagerBase* DacAssigner :: getManagerForType(string type){
+DacManagerBase* DacAssigner                                      :: getManagerForType(string type){
     for(DacManagerBase* manager : dacManagers) {
         if(manager->getType() == type) {
             return manager;

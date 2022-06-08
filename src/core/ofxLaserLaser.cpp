@@ -95,7 +95,7 @@ void Laser :: init() {
 //    params.add(armed.set("ARMED", false));
     params.add(intensity.set("Brightness", 1,0,1));
 //    params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
-    armed.set("ARMED", false);
+    armed.set("ARM", false);
     testPattern.set("Test Pattern", 0,0,numTestPatterns);
     
     params.add(dacId.set("dacId", ""));
@@ -337,13 +337,13 @@ void Laser::drawTransformUI() {
 
    // float scale = w/800.0f;
     //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
-    for(LaserZone* laserZone : laserZones) {
+    for(int i = laserZones.size()-1; i>=0; i--) {
+        LaserZone* laserZone = laserZones[i];
         //if(!laserZone->getEnabled()) continue;
         laserZone->setScale(previewScale);
         laserZone->setOffset(previewOffset);
         laserZone->draw();
-        
-        
+
     }
     maskManager.setOffsetAndScale(previewOffset,previewScale);
     maskManager.draw();
@@ -502,7 +502,7 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
 	
     // draw the coloured line in the background
 	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,255));
+		previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,128));
 	}
 
 	
@@ -576,6 +576,8 @@ void Laser::update(bool updateZones) {
     bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
     
+    
+    // mute / solo functionality
     if(soloMode) {
         for(LaserZone* laserZone : laserZones) {
             laserZone->setVisible(laserZone->soloed);
@@ -591,6 +593,7 @@ void Laser::update(bool updateZones) {
     // if any of the source rectangles have changed then update all the warps
     // (shouldn't need anything saving)
     if(updateZones) {
+       
         for(LaserZone* laserZone : laserZones) {
             ZoneTransform& warp = laserZone->zoneTransform;
             warp.setSrc(laserZone->zone.rect);
@@ -598,6 +601,19 @@ void Laser::update(bool updateZones) {
             updateZoneMasks();
         }
     }
+    
+    bool zoneTransformSelected = false;
+    for(LaserZone* laserZone : laserZones) {
+        ZoneTransform& warp = laserZone->zoneTransform;
+        if(warp.getSelected()) {
+            if(zoneTransformSelected) {
+                warp.setSelected(false);
+            } else {
+                zoneTransformSelected = true;
+            }
+        }
+    }
+    
     
     needsSave = maskManager.update() | needsSave;
     

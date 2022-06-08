@@ -50,10 +50,9 @@ void LaserZone :: draw() {
      
     if(!visible) return ;
     ofPushStyle();
-    ofEnableAlphaBlending();
+    //ofEnableAlphaBlending();
     zoneTransform.draw(ofToString(zone.getIndex()+1));
 
-   //if(!enabled) return;
    
     ofPushMatrix();
     
@@ -66,23 +65,24 @@ void LaserZone :: draw() {
    
     ofRectangle& mask = zoneMask;
     
-    //ofPushMatrix();
-    //ofTranslate();
-   
-    ofFill();
-    ofSetColor(0,0,255,30);
     
-    ofBeginShape();
-    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopLeft());
-    ofVertex(p);
-    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopRight());
-    ofVertex(p);
-    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomRight());
-    ofVertex(p);
-    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomLeft());
-    ofVertex(p);
-    ofEndShape(true);
-    ofDisableAlphaBlending();
+//
+//    ofFill();
+//    ofSetColor(0,0,255,30);
+//
+//    ofBeginShape();
+//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopLeft());
+//    ofVertex(p);
+//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopRight());
+//    ofVertex(p);
+//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomRight());
+//    ofVertex(p);
+//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomLeft());
+//    ofVertex(p);
+//    ofEndShape(true);
+    
+    //ofDisableAlphaBlending();
+    
     ofPopStyle();
     ofPopMatrix();
 

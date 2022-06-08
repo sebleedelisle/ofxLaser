@@ -17,7 +17,7 @@ public:
 	ofxLaser::Manager laser;
     
     ofPolyline starPoly;
-    bool testscale = false; 
+    //bool testscale = false; 
     
 };
 

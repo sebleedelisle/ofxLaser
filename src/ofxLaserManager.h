@@ -8,6 +8,19 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
 
+
+enum ofxLaserViewMode {
+    OFXLASER_VIEW_CANVAS, // show default canvas view
+    OFXLASER_VIEW_OUTPUT, // show laser output system
+    //OFXLASER_VIEW_3D // show 3D view - not yet implemented
+};
+enum ofxLaserMouseMode {
+    OFXLASER_MOUSE_DEFAULT,
+    OFXLASER_MOUSE_DRAG, //
+    OFXLASER_MOUSE_ZOOM_IN, //
+    OFXLASER_MOUSE_ZOOM_OUT, //
+};
+
 namespace ofxLaser {
 class Manager : public ManagerBase {
     
@@ -47,7 +60,7 @@ class Manager : public ManagerBase {
     void selectPreviousLaser();
     int getSelectedLaser();
     void setSelectedLaser(int i);
-    bool isAnyLaserSelected();
+   // bool isAnyLaserSelected();
 
     void drawUI();
     void drawPreviews();
@@ -93,14 +106,20 @@ class Manager : public ManagerBase {
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;
     ofParameter<bool> previewNavigationEnabled;
-    bool showDacSettings;
+    bool showDacAnalytics;
     ofParameter<float> dacSettingsTimeSlice; 
     
-    int selectedLaser;
+    int selectedLaserIndex;
+    //bool showOutputInterface; // the zone editing interface
+    ofxLaserViewMode viewMode;
+    ofxLaserMouseMode mouseMode;
    
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
+    
+    DacData dacToAssign;
+    ofxLaser::Laser* laserToAssign = nullptr;
     
     ofImage guideImage;
   

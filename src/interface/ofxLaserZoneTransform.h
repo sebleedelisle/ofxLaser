@@ -35,7 +35,7 @@ class ZoneTransform {
 	void removeListeners();
 	
     void mouseMoved(ofMouseEventArgs &e);
-    void mousePressed(ofMouseEventArgs &e);
+    bool mousePressed(ofMouseEventArgs &e);
     void mouseDragged(ofMouseEventArgs &e);
     void mouseReleased(ofMouseEventArgs &e);
     void paramChanged(ofAbstractParameter& e);
@@ -49,6 +49,11 @@ class ZoneTransform {
 	}
 	void updateQuads();
 	
+    // resets to perpendicular corners
+    void resetToSquare();
+    bool isSquare(); 
+    
+    
 	void divisionsChanged(int& e);
 	
 	void setSrc(const ofRectangle& rect);
@@ -60,20 +65,17 @@ class ZoneTransform {
     void getPerimeterPoints(vector<glm::vec3>& points); 
 	void setHandleSize(float size);
 	
-    bool getSelected() {return selected;};
-    float getRight() {
-        float right = 0;
-        for(DragHandle& handle : dstHandles) {
-            if(handle.x>right) right = handle.x;
-        }
-        right*=scale; 
-        right+=offset.x;
-        
-        return right;
-    }
+    bool getSelected();
+    void setSelected(bool v);
+    
+    float getRight();
+    float getLeft() ;
+    float getTop();
+    float getBottom();
     
 	bool hitTest(ofPoint mousePoint);
 	
+    // returns in order top left, top right, bottom left, bottom right
 	void resetFromCorners();
 	vector<ofPoint> getCorners();
 	bool isCorner(int index);
@@ -108,7 +110,16 @@ class ZoneTransform {
 	ofParameter<int>xDivisionsNew;
 	ofParameter<int>yDivisionsNew;
 
-	
+    ofColor uiZoneFillColour;
+    ofColor uiZoneFillColourSelected;
+    ofColor uiZoneStrokeColour;
+    ofColor uiZoneStrokeColourSelected;
+    ofColor uiZoneStrokeSubdivisionColour;
+    ofColor uiZoneStrokeSubdivisionColourSelected;
+    ofColor uiZoneHandleColour;
+    ofColor uiZoneHandleColourOver;
+    
+    
 	ofRectangle srcRect;
 	vector<glm::vec3> srcPoints;
 	vector<DragHandle> dstHandles; // all handles for all points
