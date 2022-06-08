@@ -210,11 +210,11 @@ inline bool DacLaserdock::sendPointsToDac() {
             ofxLaser::Point& laserPoint = *bufferedPoints[pointindex];
             ofxLaser::Point& colourPoint = *bufferedPoints[0];
             
-            dacPoint.x = ofMap(laserPoint.x,0,800,LASERDOCK_MIN, LASERDOCK_MAX);
-            dacPoint.y = ofMap(laserPoint.y,800,0,LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP
-            dacPoint.rg = (int)roundf(colourPoint.r) | ((int)roundf(colourPoint.g)<<8);
+            dacPoint.x = ofMap(armed ? laserPoint.x : 400, 0, 800, LASERDOCK_MIN, LASERDOCK_MAX);
+            dacPoint.y = ofMap(armed ? laserPoint.y : 400, 800, 0, LASERDOCK_MIN, LASERDOCK_MAX); // Y is UP
+            dacPoint.rg = (int)roundf(armed ? colourPoint.r : 0) | ((int)roundf(armed ? colourPoint.g : 0)<<8);
             
-            dacPoint.b = roundf(colourPoint.b);
+            dacPoint.b = roundf(armed ? colourPoint.b : 0);
            
             PointFactory :: releasePoint(bufferedPoints[0]); // recycling system
             bufferedPoints.pop_front(); // no longer destroys point

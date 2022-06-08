@@ -54,7 +54,7 @@ class Laser {
     
     
     void update(bool updateZones);
-    void send(ofPixels* pixels = NULL, float masterIntensity = 1);
+    void send( float masterIntensity = 1, ofPixels* pixelmask = NULL);
     
     bool toggleArmed(); 
    
@@ -83,9 +83,9 @@ class Laser {
     vector<LaserZone*>getActiveZones();
     bool areAnyZonesSoloed();
     
-    void drawLaserPath(ofRectangle rect, bool drawDots = true, float radius = 4);
+    void drawLaserPath(ofRectangle rect, bool drawDots = true, bool showMovement = true, float radius = 4);
     //void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
-    void drawLaserPath(bool drawDots = true, float radius = 4);
+    void drawLaserPath(bool drawDots = true, bool showMovement = true);
    //void drawTransformUI(float x=0, float y=0, float w=800, float h=800);
     void drawTransformUI();
     
@@ -134,6 +134,10 @@ class Laser {
     ofParameter<int> pps;
     ofParameter<float> speedMultiplier;
     ofParameter<float>intensity;
+    
+    ofParameter<bool> paused; // pause frame
+    bool pauseStateRecorded;
+    map<Zone*, deque<Shape*>> pauseShapesByZone;
     
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)

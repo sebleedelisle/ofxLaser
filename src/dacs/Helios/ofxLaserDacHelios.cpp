@@ -39,6 +39,8 @@ DacHelios:: DacHelios() {
                             // signal to DAC
     dacName = "";
 	dacDevice = nullptr;
+    // should keep adding frames until max points is reached
+    while(blankFrame.addPoint(ofxLaser::Point(ofPoint(400,400),ofColor::black)));
 	
 }
 DacHelios:: ~DacHelios() {
@@ -338,7 +340,8 @@ void DacHelios :: threadedFunction(){
                     // If we're not in frame mode then just send
                     // the frame in single mode.
                     
-                    result = dacDevice->SendFrame(pps, frameMode ? HELIOS_FLAGS_DEFAULT : HELIOS_FLAGS_SINGLE_MODE, currentFrame->samples, currentFrame->numSamples);
+                    // if we're not armed send the blank samples
+                    result = dacDevice->SendFrame(pps, frameMode ? HELIOS_FLAGS_DEFAULT : HELIOS_FLAGS_SINGLE_MODE, armed ? currentFrame->samples : blankFrame.samples, currentFrame->numSamples);
                     
                     if(result!=HELIOS_SUCCESS) {
                         ofLogNotice("LaserDacHelios thread SendFrame attempt " + ofToString(attempts) + " failed - error " + ofToString(result));

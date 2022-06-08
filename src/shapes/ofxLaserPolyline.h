@@ -27,10 +27,18 @@ namespace ofxLaser {
 		
 		~Polyline();
 		
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
+        virtual Shape* clone() const override {
+            // todo check for nullptr 
+            if(multicoloured)
+                return new Polyline(*polylinePointer, colours, profileLabel);
+            else
+                return new Polyline(*polylinePointer, colour, profileLabel);
+        }
+        
+		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
 		
-		void addPreviewToMesh(ofMesh& mesh);
-		virtual bool intersectsRect(ofRectangle & rect);
+		void addPreviewToMesh(ofMesh& mesh) override;
+		virtual bool intersectsRect(ofRectangle & rect) override;
         
         ofPolyline* polylinePointer = nullptr;
 

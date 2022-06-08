@@ -57,6 +57,7 @@ void Dot::addPreviewToMesh(ofMesh& mesh){
 }
 
 bool Dot::intersectsRect(ofRectangle & rect) {
+    // TODO check edges!
     return rect.inside(startPos);
     
 };

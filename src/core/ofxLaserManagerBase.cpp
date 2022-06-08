@@ -464,7 +464,7 @@ void ManagerBase::send(){
 		
 		Laser& p = *lasers[i];
 		
-		p.send(useBitmapMask?laserMask.getPixels():NULL, globalBrightness);
+		p.send( globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
 		
 	}
 }

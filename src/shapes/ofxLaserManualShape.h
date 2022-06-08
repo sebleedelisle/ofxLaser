@@ -32,7 +32,12 @@ class ManualShape : public Shape{
 		profileLabel = profilelabel;
 		
 	}
-	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) {
+    
+    virtual Shape* clone() const override {
+        return new ManualShape(points, colours, useCalibration, profileLabel);
+    }
+    
+	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) override {
 		
 		for(size_t i = 0; i<points.size(); i++) {
 			destpoints.push_back(ofxLaser::Point(points[i], colours[i], useCalibration));
@@ -40,7 +45,7 @@ class ManualShape : public Shape{
 	};
 	
 	
-	void addPreviewToMesh(ofMesh& mesh){
+	void addPreviewToMesh(ofMesh& mesh) override {
 		for(size_t i = 0; i<points.size();i++) {
 			mesh.addVertex(points[i]);
 			mesh.addColor(colours[i]); 
@@ -48,7 +53,8 @@ class ManualShape : public Shape{
 		}
 	}
 
-    bool intersectsRect(ofRectangle & rect) {
+    bool intersectsRect(ofRectangle & rect) override {
+        // TODO fix
         return true;
     }
     

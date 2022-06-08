@@ -127,6 +127,8 @@ void Manager :: initAndLoadSettings() {
     customParams.setName("CUSTOM PARAMETERS");
     params.add(customParams);
     
+    params.add(zoneEditorShowLaserPath.set("Show path in zone editor", true));
+    
     loadSettings();
     
     showInputPreview = true;
@@ -463,8 +465,10 @@ void Manager :: drawPreviews() {
                
                 selectedlaser->enableTransformGui();
                 selectedlaser->drawTransformUI();
-                selectedlaser->drawLaserPath();
-                
+                if(zoneEditorShowLaserPath) {
+                    // if the laser is paused then show the movement of the laser
+                    selectedlaser->drawLaserPath(true, selectedlaser->paused);
+                }
                 
             } else {
                 lasers[i]->disableTransformGui();
@@ -1065,6 +1069,8 @@ void Manager::drawLaserGui() {
         UI::addCheckbox(laser->hideContentDuringTestPattern);
         UI::toolTip("Disable this if you want to see the laser content at the same time as the text patterns");
         
+        UI::addParameter(zoneEditorShowLaserPath);
+       
         
         
         
@@ -1081,6 +1087,7 @@ void Manager::drawLaserGui() {
                 ImGui::PushFont(UI::largeFont);
                 ImGui::Text("Zone %d", laserZone->getZoneIndex()+1);
                 ImGui::PopFont();
+                
                 UI::addParameterGroup(laserZone->zoneTransform.params, false);
                 ImGui::Text("Edge masks");
                 UI::addFloatSlider(laserZone->bottomEdge);
@@ -1319,6 +1326,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
     ImGui::PopItemWidth();
     UI::largeItemEnd();
+    
+    UI::addCheckbox(laser->paused);
+    UI::toolTip("Pauses the output of the laser (useful for adjusting the settings)");
+    
     
     ImGui::PushItemWidth(170);
     UI::addIntSlider(laser->maxLatencyMS);

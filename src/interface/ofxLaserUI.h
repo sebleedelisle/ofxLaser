@@ -10,6 +10,7 @@
 #include "ofMain.h"
 #include "Poco/PriorityDelegate.h"
 #include "RobotoMedium.cpp"
+#include "RobotoBold.cpp"
 #include <imgui_internal.h>
 
 namespace ofxLaser {

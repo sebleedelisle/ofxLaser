@@ -101,7 +101,10 @@ class Manager : public ManagerBase {
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
-    float defaultHandleSize = 10;
+    
+    ofParameter<bool> zoneEditorShowLaserPath;
+    ofParameter<bool> zoneEditorShowLaserMovement;
+    ofParameter<int> zoneEditorLaserPathStyle; 
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;

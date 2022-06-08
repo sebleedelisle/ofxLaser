@@ -38,7 +38,13 @@ Polyline::Polyline(const vector<glm::vec3>& points, const vector<ofColor>& colou
     
 }
 
-
+Polyline:: ~Polyline() {
+    // not sure if there's any point clearing the polyline - they should just get destroyed, right?
+    //polyline.clear();
+    if(polylinePointer!=NULL) {
+        ofxLaser::Factory::releasePolyline(polylinePointer);
+    }
+}
 
 
 void Polyline::init(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness){
@@ -145,14 +151,6 @@ void Polyline::initPoly(const vector<glm::vec3> verticesToCopy){
 
 
 
-
-Polyline:: ~Polyline() {
-	// not sure if there's any point clearing the polyline - they should just get destroyed, right?
-	//polyline.clear();
-	if(polylinePointer!=NULL) {
-		ofxLaser::Factory::releasePolyline(polylinePointer);
-	}
-}
 
 void Polyline::appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
 	

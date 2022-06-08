@@ -16,11 +16,16 @@ namespace ofxLaser {
 		public:
 		Circle(){};
 		Circle(const ofPoint& _centre, const float _radius, const ofColor& col, string profilelabel);
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
 		
-		virtual bool intersectsRect(ofRectangle & rect);
+        virtual Shape* clone() const override {
+            return new Circle(centre, radius, colour, profileLabel);
+        }
+        
+        void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
 		
-		void addPreviewToMesh(ofMesh& mesh);
+		virtual bool intersectsRect(ofRectangle & rect)  override;
+		
+		void addPreviewToMesh(ofMesh& mesh) override;
         ofPolyline polyline; // to store the circle shape in once it's been projected
   
 		protected:

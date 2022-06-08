@@ -15,9 +15,13 @@ class Dot : public Shape{
 	public :
 	
     Dot(const ofPoint& dotPosition, const ofColor& dotColour, float dotIntensity, string profilelabel);
-    void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
-    void addPreviewToMesh(ofMesh& mesh);
-    virtual bool intersectsRect(ofRectangle & rect);
+    void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
+    
+    virtual Shape* clone() const override {
+        return new Dot(startPos, colour, intensity, profileLabel);
+    }
+    void addPreviewToMesh(ofMesh& mesh) override;
+    virtual bool intersectsRect(ofRectangle & rect) override;
 
 		
 	float intensity = 1;

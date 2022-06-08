@@ -19,6 +19,8 @@ class Shape {
 	virtual ~Shape(){
 		//cout << "LASER SHAPE DESTROY!!!" << endl;
 	};
+    virtual Shape* clone() const =0;
+    
 	virtual void addPreviewToMesh(ofMesh& mesh) =0;
 	
     vector<float>& getPointsAlongDistance(float distance, float acceleration, float speed, float speedMultiplier);

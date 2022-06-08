@@ -373,11 +373,11 @@ inline bool DacEtherDream :: sendPointsToDac(){
             ofxLaser::Point& laserPoint = *bufferedPoints[pointindex];
             ofxLaser::Point& colourPoint = *bufferedPoints[0];
             
-            dacPoint.x = ofMap(laserPoint.x,0,800,ETHERDREAM_MIN, ETHERDREAM_MAX);
-            dacPoint.y = ofMap(laserPoint.y,800,0,ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
-            dacPoint.r = colourPoint.r/255.0f*65535;
-            dacPoint.g = colourPoint.g/255.0f*65535;
-            dacPoint.b = colourPoint.b/255.0f*65535;
+            dacPoint.x = ofMap(armed ? laserPoint.x : 400, 0, 800, ETHERDREAM_MIN, ETHERDREAM_MAX);
+            dacPoint.y = ofMap(armed ? laserPoint.y : 400, 800, 0, ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
+            dacPoint.r = armed ? colourPoint.r/255.0f*65535 : 0;
+            dacPoint.g = armed ? colourPoint.g/255.0f*65535 : 0;
+            dacPoint.b = armed ? colourPoint.b/255.0f*65535 : 0;
             dacPoint.i = 0;
             dacPoint.u1 = 0;
             dacPoint.u2 = 0;
