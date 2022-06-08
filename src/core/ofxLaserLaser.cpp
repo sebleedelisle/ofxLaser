@@ -78,15 +78,6 @@ float Laser::getFrameRate() {
     else return pps;
 }
 
-void Laser::setDefaultHandleSize(float size) {
-	
-	defaultHandleSize = size;
-	//for(ZoneTransform* zonetrans : zoneTransforms) {
-	//	zonetrans->setHandleSize(defaultHandleSize);
-	//}
-	
-}
-
 void Laser :: init() {
 
     // TODO is this used for anything other than display?

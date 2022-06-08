@@ -45,7 +45,6 @@ class ManagerBase {
     ManagerBase();
     ~ManagerBase();
     
-    void initAndLoadSettings();
     
     virtual void update();
    
@@ -131,18 +130,14 @@ class ManagerBase {
 
     ofParameter<int> testPattern;
     
-    ofParameter<bool> showLaserSettings;
-    
-    ofParameter<bool> lockInputZones;
-    ofParameter<bool> showInputZones;
-    ofParameter<bool> showInputPreview;
-    ofParameter<bool> showOutputPreviews;
+  
+   
     ofParameter<bool> useBitmapMask;
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;
     ofParameter<int> numLasers; // << not used except for load / save
     
-    float defaultHandleSize = 10;
+
     
     ofParameter<float>globalBrightness;
 
@@ -154,14 +149,12 @@ class ManagerBase {
     std::vector<Zone*> zones;
     
     ofParameterGroup params;
-    ofParameterGroup interfaceParams;
-    ofParameterGroup customParams;
+ 
     ofJson loadJson;
     
     protected :
     ofFbo canvasPreviewFbo;
     
-    bool initialised = false;
     
     
     bool doArmAll = false;

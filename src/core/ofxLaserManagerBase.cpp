@@ -29,24 +29,19 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
 	}
     
     setCanvasSize(800,800);
-
-	showInputPreview = true;
-	lockInputZones = false;
-	
-    initAndLoadSettings();
     
-    // if no lasers are loaded make one and add a zone
-    if(lasers.size()==0) {
-        createAndAddLaser();
+    
+     params.setName("Laser");
+     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
+     //params.add(showLaserSettings.set("Edit laser", false));
+     params.add(testPattern.set("Global test pattern", 0,0,9));
+     testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
+     
+     useBitmapMask = showBitmapMask = laserMasks = false;
+     params.add(numLasers.set("numLasers", 0));
+     
+     testPattern = 0;
 
-        if(zones.size()==0) createDefaultZone();
-        for(Laser* laser : lasers) {
-            laser->addZone(zones[0],800,800);
-        }
-        showLaserSettings = true;
-        
-    }
-	
 }
 ManagerBase :: ~ManagerBase() {
 	//ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
@@ -85,7 +80,6 @@ void ManagerBase::createAndAddLaser() {
 	Laser* laser = new Laser(lasers.size());
 	lasers.push_back(laser);
 	
-    laser->setDefaultHandleSize(defaultHandleSize);
     
     // TODO should this be here?
     laser->init();
@@ -364,7 +358,7 @@ void ManagerBase:: update(){
 	// it means that the zone has changed.
 	bool updateZoneRects = false;
 	for(size_t i= 0; i<zones.size(); i++) {
-		zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
+		//zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
 		updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
 	}
 	
@@ -502,42 +496,6 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
 }
 
 
-
-void ManagerBase::initAndLoadSettings() {
-    if(initialised) {
-        ofLogError("ofxLaser::Manager::initAndLoadSettings() called twice - NB you no longer need to call this in your code, it happens automatically");
-        return ;
-    }
-    ofxLaser::UI::setupGui();
-   
-	params.setName("Laser");
-	params.add(globalBrightness.set("Global brightness", 0.2,0,1));
-	params.add(showLaserSettings.set("Edit laser", false));
-	params.add(testPattern.set("Global test pattern", 0,0,9));
-	testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
-	
-	interfaceParams.setName("Interface");
-    interfaceParams.add(lockInputZones.set("Lock input zones", true));
-    interfaceParams.add(showInputZones.set("Show input zones", true));
-    interfaceParams.add(showInputPreview.set("Show preview", true));
-	interfaceParams.add(showOutputPreviews.set("Show path previews", true));
-	//interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
-	//interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
-	//interfaceParams.add(laserMasks.set("Laser mask shapes", false));
-    useBitmapMask = showBitmapMask = laserMasks = false;
-	params.add(interfaceParams);
-	
-	customParams.setName("CUSTOM PARAMETERS");
-	params.add(customParams);
-    params.add(numLasers.set("numLasers", 0));
-	
-    loadSettings();
-    
-	showInputPreview = true;
-    testPattern = 0;
-    initialised = true;
-	
-}
 
 void ManagerBase::armAllLasersListener() {
 	doArmAll = true;

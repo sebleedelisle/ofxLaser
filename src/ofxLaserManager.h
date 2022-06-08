@@ -33,25 +33,17 @@ class Manager : public ManagerBase {
     Manager();
     ~Manager();
     
+    virtual void initAndLoadSettings();
+    virtual void update() override;
+    
+    
     bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
-    glm::vec2 getPreviewOffset() {
-        return previewOffset;
-    }
-    float getPreviewScale() {
-        return previewScale;
-    }
-    ofRectangle getPreviewRect() {
-        return ofRectangle(previewOffset.x, previewOffset.y, width*previewScale, height*previewScale); 
-        
-    }
-    void fitPreviewInRect(ofRectangle fitrect ) {
-        previewScale = fitrect.width/width;
-        if(height*previewScale>fitrect.height) previewScale = fitrect.height/height;
-        previewOffset = fitrect.getTopLeft();
-        
-    }
+    glm::vec2 getPreviewOffset();
+    float getPreviewScale();
+    ofRectangle getPreviewRect();
+    void fitPreviewInRect(ofRectangle fitrect);
     
     virtual void setCanvasSize(int width, int height) override; 
     bool setGuideImage(string filename);
@@ -67,8 +59,7 @@ class Manager : public ManagerBase {
     
     void renderPreview();
    
-    glm::vec2 screenToLaserInput(glm::vec2& pos); 
-    void setDefaultHandleSize(float size);
+    glm::vec2 screenToLaserInput(glm::vec2& pos);
     
     void drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
     void drawLaserGui();
@@ -101,14 +92,28 @@ class Manager : public ManagerBase {
     int guiLaserSettingsPanelWidth;
     int guiSpacing;
 
-    protected :
+    
+    ofParameterGroup interfaceParams;
+    ofParameterGroup customParams;
+    
+    ofParameter<bool> showLaserSettings;
+    ofParameter<bool> lockInputZones;
+    ofParameter<bool> showInputZones;
+    ofParameter<bool> showInputPreview;
+    ofParameter<bool> showOutputPreviews;
+    float defaultHandleSize = 10;
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;
     ofParameter<bool> previewNavigationEnabled;
     bool showDacAnalytics;
-    ofParameter<float> dacSettingsTimeSlice; 
+    ofParameter<float> dacSettingsTimeSlice;
+
     
+    protected :
+    
+    bool initialised = false;
+   
     int selectedLaserIndex;
     //bool showOutputInterface; // the zone editing interface
     ofxLaserViewMode viewMode;

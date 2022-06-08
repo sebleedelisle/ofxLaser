@@ -52,7 +52,6 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
-    void setDefaultHandleSize(float size);
     
     void update(bool updateZones);
     void send(ofPixels* pixels = NULL, float masterIntensity = 1);
@@ -192,7 +191,6 @@ class Laser {
     
     DacEmpty emptyDac;
  
-    float defaultHandleSize = 8;
 
     DacBase* dac;
     

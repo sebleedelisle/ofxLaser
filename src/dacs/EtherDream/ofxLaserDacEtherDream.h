@@ -51,7 +51,7 @@ public:
     void close() override;
     void reset() override;
    
-    int getMaxPointBufferSize();
+    int getMaxPointBufferSize() override;
     // estimate the current dac buffer fullness based on the last time points were sent
     virtual int calculateBufferSizeByTimeSent() override;
     // estimate the current dac buffer fullness based on the last time points were acknowledged

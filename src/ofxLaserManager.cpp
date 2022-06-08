@@ -27,6 +27,24 @@ Manager :: Manager() {
         ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
     }
     
+    showInputPreview = true;
+    lockInputZones = false;
+    
+    initAndLoadSettings();
+    
+    // if no lasers are loaded make one and add a zone
+    if(lasers.size()==0) {
+        createAndAddLaser();
+
+        if(zones.size()==0) createDefaultZone();
+        for(Laser* laser : lasers) {
+            laser->addZone(zones[0],800,800);
+        }
+        showLaserSettings = true;
+        
+    }
+    
+    
     selectedLaserIndex = 0;
     viewMode  = OFXLASER_VIEW_CANVAS;
     mouseMode = OFXLASER_MOUSE_DEFAULT;
@@ -86,6 +104,47 @@ Manager::~Manager() {
 }
 
 
+void Manager :: initAndLoadSettings() {
+    
+    if(initialised) {
+        ofLogError("ofxLaser::Manager::initAndLoadSettings() called twice - NB you no longer need to call this in your code, it happens automatically");
+        return ;
+    }
+    
+    ofxLaser::UI::setupGui();
+   
+    interfaceParams.setName("Interface");
+    interfaceParams.add(lockInputZones.set("Lock input zones", true));
+    interfaceParams.add(showInputZones.set("Show input zones", true));
+    interfaceParams.add(showInputPreview.set("Show preview", true));
+    interfaceParams.add(showOutputPreviews.set("Show path previews", true));
+    //interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
+    //interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
+    //interfaceParams.add(laserMasks.set("Laser mask shapes", false));
+   
+    params.add(interfaceParams);
+    
+    customParams.setName("CUSTOM PARAMETERS");
+    params.add(customParams);
+    
+    loadSettings();
+    
+    showInputPreview = true;
+    
+    
+}
+
+void Manager :: update() {
+    
+    for(size_t i= 0; i<zones.size(); i++) {
+        zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
+    }
+    
+    ManagerBase :: update();
+    
+    
+    
+}
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
     //if(ofGetKeyPressed(' ')) {
@@ -395,18 +454,13 @@ void Manager :: drawPreviews() {
                
         }
         
-        float thirdOfHeight = ofGetHeight()/3;
+        
         ofxLaser::Laser* selectedlaser = nullptr;
         // draw laser adjustment screen
         for(size_t i= 0; i<lasers.size(); i++) {
             if((int)i==selectedLaserIndex) {
                 selectedlaser = lasers[i];
-                //ofFill();
-                //ofSetColor(0);
-                float size = 800;
-                if(size>thirdOfHeight*2) size = thirdOfHeight*2;
-                
-                //ofDrawRectangle(guiSpacing,guiSpacing,size,size);
+               
                 selectedlaser->enableTransformGui();
                 selectedlaser->drawTransformUI();
                 selectedlaser->drawLaserPath();
@@ -585,13 +639,6 @@ bool Manager::isGuiVisible() {
 }
 
 
-void Manager::setDefaultHandleSize(float size) {
-    defaultHandleSize = size;
-    for(Laser* laser : lasers) {
-        laser->setDefaultHandleSize(defaultHandleSize);
-    }
-    
-}
 
 void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettings){
     customParams.add(param);
@@ -635,7 +682,7 @@ glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
 
 void Manager::drawLaserGui() {
     
-    ofxLaser::ManagerBase& laserManager = *this;
+    ofxLaser::Manager& laserManager = *this;
     
     
     UI::startWindow("View", ImVec2(0,0), ImVec2(200,100),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, false, nullptr );
@@ -1046,7 +1093,7 @@ void Manager::drawLaserGui() {
                 }
                 if(UI::Button("Reset to square")) {
                     laserZone->zoneTransform.resetToSquare();
-                    laserZone->isDirty = true; 
+                    laserZone->isDirty = true;
                 }
                 UI::stopGhosted();
                 UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
@@ -1687,4 +1734,22 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
        // UI::extraLargeItemEnd();
         UI::endWindow();
     }
+}
+
+
+glm::vec2 Manager ::getPreviewOffset() {
+    return previewOffset;
+}
+float Manager :: getPreviewScale() {
+    return previewScale;
+}
+ofRectangle Manager :: getPreviewRect() {
+    return ofRectangle(previewOffset.x, previewOffset.y, width*previewScale, height*previewScale);
+    
+}
+void Manager :: fitPreviewInRect(ofRectangle fitrect ) {
+    previewScale = fitrect.width/width;
+    if(height*previewScale>fitrect.height) previewScale = fitrect.height/height;
+    previewOffset = fitrect.getTopLeft();
+    
 }
