@@ -138,6 +138,7 @@ bool LaserZone :: deserialize(ofJson& json){
     ofDeserialize(paramsJson, params);
     ofJson zoneTransformJson = json["zonetransform"];
     zoneTransform.deserialize(zoneTransformJson);
+    updateZoneMask(); 
     
     return true; 
     
