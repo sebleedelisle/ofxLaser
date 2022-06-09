@@ -12,6 +12,7 @@
 #include "RobotoMedium.cpp"
 #include "RobotoBold.cpp"
 #include <imgui_internal.h>
+#include "IconsForkAwesome.h"
 
 namespace ofxLaser {
 
@@ -25,6 +26,7 @@ class UI {
     static ofxImGui::Gui imGui;
     static ImFont* font;
     static ImFont* largeFont;
+    static ImFont* symbolFont;
     static bool initialised;
     
     static bool ghosted;
@@ -120,6 +122,12 @@ class UI {
     }
     static void endWindow() {
         ImGui::End();
+    }
+    
+    
+    static bool Button(string& label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0)){
+       
+        return Button(label.c_str(), large, secondaryColour, size_arg);
     }
     
     static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0)){

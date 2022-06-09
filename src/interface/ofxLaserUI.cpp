@@ -13,6 +13,7 @@ using namespace ofxLaser;
 ofxImGui::Gui ofxLaser::UI::imGui;
 ImFont* ofxLaser::UI::font;
 ImFont* ofxLaser::UI::largeFont;
+ImFont* ofxLaser::UI::symbolFont;
 bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
 
@@ -31,9 +32,18 @@ void UI::setupGui() {
     }
     
     ImGuiIO& io = ImGui::GetIO();
-    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data,RobotoMedium_compressed_size, 13);
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
+    
+    //symbolFont->
+    ImFontConfig config;
+    config.MergeMode = true;
+    config.GlyphMinAdvanceX = 13;
+    static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
+    symbolFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("forkawesome-webfont.ttf").c_str(), 13, &config, icon_ranges);
+    
     largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
-//    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
+    
+    //    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);

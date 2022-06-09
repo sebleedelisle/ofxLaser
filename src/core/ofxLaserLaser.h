@@ -211,6 +211,7 @@ class Laser {
     
     int numPoints;
     ofMesh previewPathMesh;
+    vector<ofColor> previewPathColours; 
     ofEventListener paramsChangedListener;
 
     

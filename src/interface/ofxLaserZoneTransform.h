@@ -25,7 +25,7 @@ class ZoneTransform {
 	ZoneTransform();
 	~ZoneTransform();
     
-    bool update();
+    virtual bool update();
     void draw(string label);
     
 	void init(ofRectangle& srcRect);
@@ -80,8 +80,8 @@ class ZoneTransform {
 	vector<ofPoint> getCorners();
 	bool isCorner(int index);
 	
-	void serialize(ofJson&json);
-	bool deserialize(ofJson&jsonGroup);
+	virtual bool serialize(ofJson&json);
+	virtual bool deserialize(ofJson&jsonGroup);
 
 	void setEditable(bool warpvisible);
     void setVisible(bool warpvisible);
@@ -102,7 +102,7 @@ class ZoneTransform {
 	
 	ofPoint getCentre(); 
 	
-	ofParameterGroup params;
+    ofParameterGroup transformParams; 
 
     ofParameter<bool>locked; 
 	ofParameter<bool>editSubdivisions;

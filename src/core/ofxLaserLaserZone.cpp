@@ -11,12 +11,12 @@ using namespace ofxLaser;
 LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
     // init params?
     soloed = false;
-    zoneTransform.init(zone.rect);
+    ZoneTransform :: init(zone.rect);
     
     // TODO make params object for serialisation / deserialisation?
-    params.setName("laserZone"+ofToString(zone.getIndex()));
-    params.add(muted.set("mute", false));
-    params.add(soloed.set("solo", false));
+    zoneParams.setName("laserZone"+ofToString(zone.getIndex()));
+    zoneParams.add(muted.set("mute", false));
+    zoneParams.add(soloed.set("solo", false));
     
     zoneMaskGroup.setName(getLabel());
     zoneMaskGroup.add(bottomEdge.set("Bottom", 0,0,1));
@@ -24,11 +24,11 @@ LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
     zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
     zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
     ofAddListener(zoneMaskGroup.parameterChangedE(), this, &LaserZone::zoneMaskChanged);
-    params.add(zoneMaskGroup);
+    zoneParams.add(zoneMaskGroup);
     isDirty = true;
     enabled = true;
     visible = true;
-    ofAddListener(params.parameterChangedE(), this, &LaserZone::paramChanged);
+    ofAddListener(zoneParams.parameterChangedE(), this, &LaserZone::paramChanged);
    
 }
 LaserZone :: ~LaserZone() {
@@ -40,7 +40,7 @@ LaserZone :: ~LaserZone() {
 bool LaserZone :: update() {
     
     bool wasDirty = isDirty;
-    wasDirty = zoneTransform.update() | wasDirty;
+    wasDirty = ZoneTransform :: update() | wasDirty;
     isDirty = false;
     
     return wasDirty;
@@ -51,7 +51,7 @@ void LaserZone :: draw() {
     if(!visible) return ;
     ofPushStyle();
     //ofEnableAlphaBlending();
-    zoneTransform.draw(ofToString(zone.getIndex()+1));
+    ZoneTransform::draw(ofToString(zone.getIndex()+1));
 
    
     ofPushMatrix();
@@ -93,11 +93,11 @@ string LaserZone :: getLabel() {
 }
 void LaserZone :: setScale(float _scale) {
     scale = _scale;
-    zoneTransform.scale = scale;
+    //zoneTransform.scale = scale;
 }
 void LaserZone :: setOffset(ofPoint _offset) {
     offset = _offset;
-    zoneTransform.offset = offset;
+    //zoneTransform.offset = offset;
 }
 void LaserZone :: zoneMaskChanged(ofAbstractParameter& e) {
     updateZoneMask();
@@ -120,10 +120,10 @@ bool LaserZone :: serialize(ofJson& json){
     
     // params contain muted, soloed and the mask edge group
     ofJson paramsJson;
-    ofSerialize(paramsJson, params);
-    json["params"] = paramsJson;
+    ofSerialize(paramsJson, zoneParams);
+    json["zoneparams"] = paramsJson;
     ofJson zoneTransformJson;
-    zoneTransform.serialize(zoneTransformJson);
+    ZoneTransform :: serialize(zoneTransformJson);
     json["zonetransform"] = zoneTransformJson;
     // zoneTransform
     //json["laserzone"+ofToString(zone.index))] = jsonGroup);
@@ -134,11 +134,11 @@ bool LaserZone :: serialize(ofJson& json){
 bool LaserZone :: deserialize(ofJson& json){
  
     // TODO Error check! Try / catch
-    ofJson paramsJson = json["params"];
-    ofDeserialize(paramsJson, params);
+    ofJson paramsJson = json["zoneparams"];
+    ofDeserialize(paramsJson, zoneParams);
     ofJson zoneTransformJson = json["zonetransform"];
-    zoneTransform.deserialize(zoneTransformJson);
-    updateZoneMask(); 
+    ZoneTransform :: deserialize(zoneTransformJson);
+    updateZoneMask();
     
     return true; 
     

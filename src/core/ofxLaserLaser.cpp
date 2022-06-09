@@ -75,8 +75,8 @@ int Laser::getPointRate() {
     return pps;
 };
 float Laser::getFrameRate() {
-    if(numPoints>0) return (float)pps/(float)numPoints;
-    else return pps;
+    if(numPoints>1) return (float)pps/(float)numPoints;
+    else return INFINITY;
 }
 
 void Laser :: init() {
@@ -203,7 +203,7 @@ void Laser::addZone(Zone* zone, float srcwidth, float srcheight) {
         laserZone->deserialize(laserZoneJson);
     } else {
         // initialise zoneTransform
-        laserZone->zoneTransform.init(zone->rect);
+        laserZone->init(zone->rect);
 
         laserZone->zoneMask = zone->rect;
     }
@@ -383,9 +383,9 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
     vector<glm::vec3> perimeterpoints;
     bool firsttime = true;
     for(LaserZone* zone : activeZones) {
-        ZoneTransform& zonetransform = zone->zoneTransform;
+        //ZoneTransform& zonetransform = zone->zoneTransform;
        
-        zonetransform.getPerimeterPoints(perimeterpoints);
+        zone->getPerimeterPoints(perimeterpoints);
         if(firsttime) {
             bounds.setPosition(*perimeterpoints.begin());
             firsttime = false;
@@ -422,7 +422,7 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
     
     for(LaserZone* zone : activeZones) {
         
-        zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+        zone->getPerimeterPoints(perimeterpoints);
         
         ofBeginShape();
         for(glm::vec3& p:perimeterpoints) {
@@ -504,15 +504,25 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
 	
     // draw the coloured line in the background
 	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,128));
+		//previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,128));
+        ofColor col = previewPathColours[i];
+        previewPathMesh.addColor(col);
 	}
-
+    
+    // draw as points just to make sure the dots appear
+    //ofSetLineWidth(4 * scale);
+    previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
+    previewPathMesh.draw();
+    
 	
-	
-	ofSetLineWidth(2 * scale);
-	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
-	previewPathMesh.draw();
-	
+    for(ofFloatColor& colour : previewPathMesh.getColors()) {
+        if(colour.getBrightness()<0.1) colour.setBrightness(0.1);
+    }
+    
+    ofSetLineWidth(2 * scale);
+    previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+    previewPathMesh.draw();
+    
     
     
     
@@ -528,6 +538,7 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
         ofColor c = lp.getColour()*255;
         
         if(c==ofColor::black) {
+            ofSetLineWidth(1 * scale);
             ofSetColor(200);
             ofDrawCircle(p, radius);
         } else {
@@ -536,7 +547,7 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
             ofSetColor(c);
             ofDrawCircle(p, radius);
             ofNoFill();
-            ofSetLineWidth(2); 
+            ofSetLineWidth(2*scale);
             c.setBrightness(128);
             ofSetColor(c);
             ofDrawCircle(p, radius*1.5);
@@ -599,19 +610,19 @@ void Laser::update(bool updateZones) {
     if(updateZones) {
        
         for(LaserZone* laserZone : laserZones) {
-            ZoneTransform& warp = laserZone->zoneTransform;
-            warp.setSrc(laserZone->zone.rect);
-            warp.updateHomography();
+            //ZoneTransform& warp = laserZone->zoneTransform;
+            laserZone->setSrc(laserZone->zone.rect);
+            laserZone->updateHomography();
             updateZoneMasks();
         }
     }
     
     bool zoneTransformSelected = false;
     for(LaserZone* laserZone : laserZones) {
-        ZoneTransform& warp = laserZone->zoneTransform;
-        if(warp.getSelected()) {
+        //ZoneTransform& warp = laserZone->zoneTransform;
+        if(laserZone->getSelected()) {
             if(zoneTransformSelected) {
-                warp.setSelected(false);
+                laserZone->setSelected(false);
             } else {
                 zoneTransformSelected = true;
             }
@@ -649,7 +660,7 @@ void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, flo
         
     }
     ofRectangle& maskRectangle = laserZone->zoneMask;
-    ZoneTransform& warp = laserZone->zoneTransform;
+    //ZoneTransform& warp = laserZone->zoneTransform;
     bool offScreen = true;
     
     vector<Point>segmentpoints;
@@ -710,7 +721,7 @@ void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, flo
     // go through all the points and warp them into output space
 
     for(size_t k= 0; k<segmentpoints.size(); k++) {
-        addPoint(warp.getWarpedPoint(segmentpoints[k]));
+        addPoint(laserZone->getWarpedPoint(segmentpoints[k]));
     }
     
     
@@ -767,6 +778,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
 	
     laserPoints.clear();
     previewPathMesh.clear();
+    previewPathColours.clear();
     
 	vector<PointsForShape> allzoneshapepoints;
 
@@ -1110,7 +1122,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
         if(!laserZone->getVisible()) continue;
         
 		Zone& zone = laserZone->zone;
-        ZoneTransform& warp = laserZone->zoneTransform;
+        //ZoneTransform& warp = laserZone->zoneTransform;
 		ofRectangle& maskRectangle = laserZone->zoneMask;
         
         
@@ -1264,7 +1276,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 					p.b*=brightness;
 				}
                 Point& p = segmentpoints[k];
-                p = warp.getWarpedPoint(p);
+                p = laserZone->getWarpedPoint(p);
                 
                 // check if it's in any of the masks!
                 for(QuadMask* mask : maskManager.quads){
@@ -1529,7 +1541,7 @@ void Laser :: addPoint(ofxLaser::Point p) {
 	laserPoints.push_back(p);
 	
 	previewPathMesh.addVertex(ofPoint(p.x, p.y));
-
+    previewPathColours.push_back(p.getColour());
 }
 
 

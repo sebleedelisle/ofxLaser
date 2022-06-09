@@ -11,25 +11,25 @@
 
 namespace ofxLaser {
 
-class LaserZone {
+class LaserZone : public ZoneTransform {
     
     public :
     
     LaserZone(Zone& _zone) ;
     ~LaserZone();
     
-    bool update() ;
+    virtual bool update() override ;
     
     bool getEnabled() {
         return enabled;
     }
     void setEnabled(bool value) {
         enabled = value;
-        zoneTransform.setEditable(enabled); 
+        setEditable(enabled);
     }
     void setVisible(bool value) {
         visible = value;
-        zoneTransform.setVisible(visible);
+        ZoneTransform :: setVisible(visible);
     }
     bool getVisible() {
         return visible;
@@ -49,11 +49,11 @@ class LaserZone {
     void paramChanged(ofAbstractParameter& e) ;
     void updateZoneMask() ;
     
-    bool serialize(ofJson& json);
-    bool deserialize(ofJson& json);
+    virtual bool serialize(ofJson& json) override;
+    virtual bool deserialize(ofJson& json) override;
     
     Zone& zone;
-    ZoneTransform zoneTransform;
+    //ZoneTransform zoneTransform;
     ofRectangle zoneMask;
     ofParameter<float>leftEdge;
     ofParameter<float>rightEdge;
@@ -62,12 +62,13 @@ class LaserZone {
     ofParameter<bool>muted;
     ofParameter<bool>soloed;
     
-    ofParameterGroup params; 
+    //ofParameterGroup params;
     ofParameterGroup zoneMaskGroup;
+    ofParameterGroup zoneParams;
     bool isDirty; 
     
-    float scale;
-    ofPoint offset;
+    //float scale;
+    //ofPoint offset;
     
     protected :
     bool enabled;

@@ -28,13 +28,13 @@ ZoneTransform::ZoneTransform() {
 	editSubdivisions = false;
 	
     // Used for serialize / deserialize
-	params.setName("ZoneTransformParams");
+    transformParams.setName("ZoneTransformParams");
 
-    params.add(locked.set("locked", false));
-    params.add(xDivisionsNew.set("x divisions", 1,1,6));
-    params.add(yDivisionsNew.set("y divisions", 1,1,6));
-	params.add(editSubdivisions.set("edit subdivisions", false));
-	params.add(useHomography.set("perspective", true));
+    transformParams.add(locked.set("locked", false));
+    transformParams.add(editSubdivisions.set("edit subdivisions", false));
+    transformParams.add(xDivisionsNew.set("x divisions", 1,1,6));
+    transformParams.add(yDivisionsNew.set("y divisions", 1,1,6));
+    transformParams.add(useHomography.set("perspective", true));
 
 	xDivisions = 1;
 	yDivisions = 1;
@@ -44,7 +44,7 @@ ZoneTransform::ZoneTransform() {
     xDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     yDivisionsNew.addListener(this, &ZoneTransform::divisionsChanged);
     
-    ofAddListener(params.parameterChangedE(), this, &ZoneTransform::paramChanged);
+    ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
     
     uiZoneFillColour  = ofColor::fromHex(0x000b16);
     uiZoneFillColourSelected = ofColor::fromHex(0x001123);
@@ -67,7 +67,7 @@ ZoneTransform::~ZoneTransform() {
     removeListeners();
     xDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
     yDivisionsNew.removeListener(this, &ZoneTransform::divisionsChanged);
-    ofRemoveListener(params.parameterChangedE(), this, &ZoneTransform::paramChanged);
+    ofRemoveListener(transformParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
 }
 
 
@@ -215,6 +215,7 @@ void ZoneTransform :: resetToSquare() {
     corners[1].x = corners[3].x = getRight(); // ofLerp(corners[1].x,corners[3].x,0.5);
     corners[3].y = corners[2].y = getBottom(); // ofLerp(corners[3].y,corners[2].y,0.5);
     setDstCorners(corners[0], corners[1], corners[2], corners[3]);
+    isDirty = true; 
 }
 
 bool ZoneTransform :: isSquare() {
@@ -703,22 +704,22 @@ bool ZoneTransform::hitTest(ofPoint mousePoint) {
 //
 //}
 
-void ZoneTransform::serialize(ofJson&json) {
-	ofSerialize(json,params);
+bool ZoneTransform::serialize(ofJson&json) {
+	ofSerialize(json, transformParams);
 	ofJson& handlesjson = json["handles"];
 	for(size_t i= 0; i<dstHandles.size(); i++) {
 		DragHandle& pos = dstHandles[i];
 		handlesjson.push_back({pos.x, pos.y});
 	}
-	//cout << json.dump(3) << endl;
-	//deserialize(json);
+
+    return true;
 }
 
 bool ZoneTransform::deserialize(ofJson& jsonGroup) {
 	//ofLogNotice("ZoneTransform::deserialize()");
     // note that ofDeserialize looks for the json group
     // with the same name as the parameterGroup
-	ofDeserialize(jsonGroup, params);
+	ofDeserialize(jsonGroup, transformParams);
     //cout << paramjson.dump(3) << endl;
     
 	// number of handles could be different now
