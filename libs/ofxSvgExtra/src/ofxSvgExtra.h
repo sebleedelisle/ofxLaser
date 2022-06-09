@@ -33,7 +33,7 @@ class ofxSVGExtra {
 		/// ~~~~
 		void setImprovedCompatibilityMode(bool enabled);
 	
-		void draw();
+		void draw(bool useColour = true);
 
 		int getNumPath();
 		ofPath & getPathAt(int n);
@@ -43,6 +43,17 @@ class ofxSVGExtra {
 	private:
 
 		void fixSvgText(std::string& xmlstring);
+     
+        ofRectangle getBoundingBoxOfPath(ofPath &path) {
+            ofRectangle rect;
+            for (int i=0; i<path.getOutline().size(); i++) {
+                ofRectangle b = path.getOutline().at(i).getBoundingBox();
+                if (i==0) rect = b;
+                else rect.growToInclude(b);
+            }
+            ofLogNotice("getBoundingBoxOfPath") << rect; 
+            return rect;
+        }
 	
 		bool increaseCompatibility = true;
 	

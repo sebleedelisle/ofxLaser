@@ -36,6 +36,8 @@ class Manager : public ManagerBase {
     virtual void initAndLoadSettings();
     virtual void update() override;
     
+    void initSVGs(); 
+    
     
     bool deleteLaser(Laser* laser) override;
     
@@ -92,7 +94,6 @@ class Manager : public ManagerBase {
     int guiLaserSettingsPanelWidth;
     int guiSpacing;
 
-    
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     
@@ -137,7 +138,8 @@ class Manager : public ManagerBase {
     ofxSVGExtra iconGrabOpen;
     ofxSVGExtra iconGrabClosed;
     ofxSVGExtra iconMagPlus;
-    ofxSVGExtra iconMagMinus; 
+    ofxSVGExtra iconMagMinus;
+    vector<ofxSVGExtra> numberSVGs;
 
 };
 }

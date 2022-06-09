@@ -84,6 +84,7 @@ void ManagerBase::createAndAddLaser() {
     // TODO should this be here?
     laser->init();
 
+
 }
 
 bool ManagerBase :: deleteLaser(Laser* laser) {

@@ -233,29 +233,44 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 	
 }
 
-void ofxSVGExtra::draw(){
+void ofxSVGExtra::draw(bool useColour){
 	for(int i = 0; i < (int)paths.size(); i++){
+        paths[i].setUseShapeColor(useColour); 
 		paths[i].draw();
 	}
 }
 
 void ofxSVGExtra::setupDiagram(struct svgtiny_diagram * diagram){
 
-	width = diagram->width;
-	height = diagram->height;
+    // diagram width and height always seem to be 0! svgtiny - the gift that keeps giving :|
+//	width = diagram->width;
+//	height = diagram->height;
 
+    ofRectangle bounds;
+    bool firstShape = true;
 	paths.clear();
 
 	for(int i = 0; i < (int)diagram->shape_count; i++){
 		if(diagram->shape[i].path){
 			paths.push_back(ofPath());
 			setupShape(&diagram->shape[i],paths.back());
+            if(firstShape){
+                bounds = getBoundingBoxOfPath(paths.back());
+                firstShape = false;
+            } else {
+                bounds.growToInclude(getBoundingBoxOfPath(paths.back()));
+            }
+            
 		}else if(diagram->shape[i].text){
 			ofLogWarning("ofxSVGExtra") << "setupDiagram(): text: not implemented yet";
 		}
 	}
+    width = bounds.getWidth();
+    height = bounds.getHeight();
 }
 
+    
+    
 void ofxSVGExtra::setupShape(struct svgtiny_shape * shape, ofPath & path){
 	float * p = shape->path;
 
