@@ -39,7 +39,8 @@ void UI::setupGui() {
     config.MergeMode = true;
     config.GlyphMinAdvanceX = 13;
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
-    symbolFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("forkawesome-webfont.ttf").c_str(), 13, &config, icon_ranges);
+   // symbolFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("forkawesome-webfont.ttf").c_str(), 13, &config, icon_ranges);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
     
     largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
     

@@ -7,12 +7,14 @@
 #pragma once
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
+#include "ofxLaserVisualiser3D.h"
 
 
 enum ofxLaserViewMode {
+    OFXLASER_VIEW_3D, // show 3D view
     OFXLASER_VIEW_CANVAS, // show default canvas view
     OFXLASER_VIEW_OUTPUT, // show laser output system
-    //OFXLASER_VIEW_3D // show 3D view - not yet implemented
+    
 };
 enum ofxLaserMouseMode {
     OFXLASER_MOUSE_DEFAULT,
@@ -37,7 +39,6 @@ class Manager : public ManagerBase {
     virtual void update() override;
     
     void initSVGs(); 
-    
     
     bool deleteLaser(Laser* laser) override;
     
@@ -113,19 +114,21 @@ class Manager : public ManagerBase {
     bool showDacAnalytics;
     ofParameter<float> dacSettingsTimeSlice;
 
-    
+    ofxLaserViewMode viewMode;
+   
     protected :
     
+     
     bool initialised = false;
    
     int selectedLaserIndex;
     //bool showOutputInterface; // the zone editing interface
-    ofxLaserViewMode viewMode;
-    ofxLaserMouseMode mouseMode;
+     ofxLaserMouseMode mouseMode;
    
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
+    Visualiser3D visualiser3D; 
     
     DacData dacToAssign;
     ofxLaser::Laser* laserToAssign = nullptr;

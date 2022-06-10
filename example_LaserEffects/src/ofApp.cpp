@@ -308,7 +308,7 @@ void ofApp::mouseDragged(ofMouseEventArgs& e){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(ofMouseEventArgs& e){
-    if(!laserManager.isAnyLaserSelected()) {
+    if(laserManager.viewMode == OFXLASER_VIEW_CANVAS) {
         polyLines.push_back(ofPolyline());
         drawingShape = true;
     }

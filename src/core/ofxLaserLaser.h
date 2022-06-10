@@ -16,6 +16,7 @@
 #pragma once
 
 #include "constants.h"
+#include "ofxLaserObject3D.h"
 #include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
@@ -31,7 +32,7 @@
 
 namespace ofxLaser {
 
-class Laser {
+class Laser : public Laser3DVisualObject{
     
     public :
     
@@ -152,7 +153,7 @@ class Laser {
     int numTestPatterns;
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
-    ofParameter<int> orientation; 
+    ofParameter<int> mountOrientation;
     ofParameter<float> rotation;
     ofParameter<glm::vec2> outputOffset;
     

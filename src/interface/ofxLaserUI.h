@@ -13,6 +13,7 @@
 #include "RobotoBold.cpp"
 #include <imgui_internal.h>
 #include "IconsForkAwesome.h"
+#include "ForkAwesome.cpp"
 
 namespace ofxLaser {
 

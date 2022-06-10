@@ -12,7 +12,9 @@ namespace ofxLaser {
 
     class DacEmpty : public DacBase{
     public:
-        DacEmpty() {};
+        DacEmpty() {
+            colourShiftImplemented = true;
+        };
         
         virtual bool sendFrame(const vector<Point>& points) override { return true; } ;
         virtual bool sendPoints(const vector<Point>& points) override { return true; } ;

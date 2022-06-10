@@ -46,7 +46,7 @@ Manager :: Manager() {
     
     
     selectedLaserIndex = 0;
-    viewMode  = OFXLASER_VIEW_CANVAS;
+    viewMode  = OFXLASER_VIEW_3D;
     mouseMode = OFXLASER_MOUSE_DEFAULT;
     guiIsVisible = true;
     guiLaserSettingsPanelWidth = 320;
@@ -86,6 +86,7 @@ Manager :: Manager() {
     ofAddListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     initSVGs();
+    //visFbo.allocate(1000,600, GL_RGBA, 4);
     
 }
 
@@ -339,11 +340,65 @@ void Manager :: renderCustomCursors() {
 
 void Manager :: drawPreviews() {
     
-    // if none of the lasers are selected, then draw the
-    // input preview
-    // Note that the scale and offset is adjusted with
-    // key commands.
-    if(viewMode == OFXLASER_VIEW_CANVAS) {
+    
+    
+    
+    if(viewMode == OFXLASER_VIEW_3D) {
+        
+        visualiser3D.draw(ofRectangle(10,30,1000,600), lasers);
+        
+        // this is same as other views - should break it out
+        if(showOutputPreviews) {
+           // int numrows = 1;
+            float outputpreviewscale = 0.375;
+            float outputpreviewsize = 800*outputpreviewscale;
+            
+            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
+            if (spaceatbottom<50) spaceatbottom = 50;
+            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+            
+            // so we have spaceatbottom which is the gap at the bottom
+            // then we have the height and width of the previews
+            // which is outputpreviewsize.
+            // We know this will fit vertically but we don't know if it
+            // fit horizontally
+            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
+            if(outputpreviewsize*lasers.size() > availablespace) {
+                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
+            }
+//            if(spaceatbottom>(outputpreviewsize*2)+guiSpacing) {
+//                numrows=2;
+//                outputpreviewsize = (spaceatbottom/2)-guiSpacing;
+//            }
+            
+            for(size_t i= 0; i<lasers.size(); i++) {
+                
+                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+               
+//                if(numrows>1) {
+//                    int numinrow = lasers.size()/numrows;
+//                    int rownum = floor(i/numinrow);
+//                    laserOutputPreviewRect.y-=(rownum*(outputpreviewsize+guiSpacing));
+//                    laserOutputPreviewRect.x =guiSpacing+ ((outputpreviewsize+guiSpacing)*(i%numinrow));
+//
+//                }
+                
+                ofFill();
+                ofSetColor(0);
+                ofDrawRectangle(laserOutputPreviewRect);
+                
+                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+                
+                // disables the warp interfaces
+                lasers[i]->disableTransformGui();
+            }
+            
+           
+            
+        }
+       
+        
+    } else if(viewMode == OFXLASER_VIEW_CANVAS) {
         if(showInputPreview) {
         
         
@@ -435,12 +490,11 @@ void Manager :: drawPreviews() {
             
         }
         
-        for(Laser* laser : lasers) {
-            laser->disableTransformGui();
-        }
+       
         
-        
-    } else if(viewMode == OFXLASER_VIEW_OUTPUT){
+    }
+    
+    if(viewMode == OFXLASER_VIEW_OUTPUT){
         
         // hide the input zones
         for(size_t i= 0; i<zones.size(); i++) {
@@ -477,7 +531,7 @@ void Manager :: drawPreviews() {
                 ofScale(0.12,-0.12);
                 if((i+1)>9) {
                     numberSVGs[(i+1)/10].draw(false);
-                    ofTranslate(900,0);
+                    ofTranslate(1100,0);
                 }
                 numberSVGs[(i+1)%10].draw(false);
                 ofPopMatrix();
@@ -520,6 +574,11 @@ void Manager :: drawPreviews() {
             
         }
         
+        
+    } else {
+        for(Laser* laser : lasers) {
+            laser->disableTransformGui();
+        }
         
     }
     
@@ -706,6 +765,10 @@ void Manager::drawLaserGui() {
     
     UI::startWindow("Icon bar", ImVec2(0,0), ImVec2(200,100),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, false, nullptr );
 
+    if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
+        viewMode = OFXLASER_VIEW_3D;
+    }
+    ImGui::SameLine();
     if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
         viewMode = OFXLASER_VIEW_CANVAS;
     }
@@ -1203,12 +1266,17 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
     }
     ImGui::PopItemWidth();
-    //UI::secondaryColourButtonEnd();
+
     
     UI::largeItemEnd();
     
     UI::addIntSlider(laser->testPattern);
     //UI::addButton(resetDac);
+    
+    UI::addFloat3Slider(laser->position);
+    UI::addFloat3Slider(laser->orientation);
+    
+    
     
     
     // THE DAC STATUS COLOUR - TO BE IMPROVED
@@ -1239,11 +1307,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         ImGui::Text("%s", laser->getDacLabel().c_str());
     }
     
-//    ImGui::SameLine(laserpanelwidth-30);
-//    if(ImGui::Button("^", ImVec2(19,19))){
-//
-//
-//    }
+
+    
+    
+    
     
     // DAC LIST -------------------------------------------------------------
     
@@ -1411,11 +1478,11 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     static string icon[4] = {ICON_FK_ARROW_UP, ICON_FK_ARROW_RIGHT, ICON_FK_ARROW_DOWN, ICON_FK_ARROW_LEFT};
     for (int i = 0; i < 4; i++)
     {
-        selected[i] = (i==laser->orientation);
+        selected[i] = (i==laser->mountOrientation);
        
-        if(i!=laser->orientation) UI::startGhosted();
+        if(i!=laser->mountOrientation) UI::startGhosted();
         if (UI::Button(icon[i].c_str())){
-            laser->orientation = i;
+            laser->mountOrientation = i;
         }
         UI::stopGhosted();
         ImGui::SameLine();

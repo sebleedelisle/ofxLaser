@@ -107,7 +107,7 @@ void Laser :: init() {
     
 	laserparams.add(flipX.set("Flip Horizontal", false));
     laserparams.add(flipY.set("Flip Vertical",false));
-    laserparams.add(orientation.set("Orientation",0,0,3));
+    laserparams.add(mountOrientation.set("Orientation",0,0,3));
     laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
 	laserparams.add(rotation.set("Output rotation",0,-90,90));
 
@@ -1616,14 +1616,14 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 			p.y=rotatedVec.y+400;
 
 		}
-        if(orientation == 1) {
+        if(mountOrientation == 1) {
             float y = 800-p.x;
             p.x = p.y;
             p.y = y;
-        } else if (orientation ==2) {
+        } else if (mountOrientation ==2) {
             p.x = 800-p.x;
             p.y = 800-p.y;
-        } else if (orientation ==3) {
+        } else if (mountOrientation ==3) {
             float y = 800-p.x;
             p.x = p.y;
             p.y = y;
@@ -1679,7 +1679,7 @@ bool Laser::loadSettings(vector<Zone*>& zones){
     ignoreParamChange = true;
     ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
     ofDeserialize(json, params);
-    
+    ofDeserialize(json, visual3DParams);
     bool success = maskManager.deserialize(json);
     
     ofJson zoneNumJson = json["laserzones"];
@@ -1718,6 +1718,7 @@ bool Laser::saveSettings(){
     
     ofJson json;
     ofSerialize(json, params);
+    ofSerialize(json, visual3DParams);
     
     //scannerSettings.serialize(json);
 
