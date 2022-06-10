@@ -51,7 +51,7 @@ class ofxSVGExtra {
                 if (i==0) rect = b;
                 else rect.growToInclude(b);
             }
-            ofLogNotice("getBoundingBoxOfPath") << rect; 
+            //ofLogNotice("getBoundingBoxOfPath") << rect;
             return rect;
         }
 	
