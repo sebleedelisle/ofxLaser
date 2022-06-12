@@ -16,7 +16,6 @@
 #pragma once
 
 #include "constants.h"
-#include "ofxLaserObject3D.h"
 #include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
@@ -32,7 +31,7 @@
 
 namespace ofxLaser {
 
-class Laser : public Laser3DVisualObject{
+class Laser {
     
     public :
     

@@ -1679,7 +1679,7 @@ bool Laser::loadSettings(vector<Zone*>& zones){
     ignoreParamChange = true;
     ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
     ofDeserialize(json, params);
-    ofDeserialize(json, visual3DParams);
+    //ofDeserialize(json, visual3DParams);
     bool success = maskManager.deserialize(json);
     
     ofJson zoneNumJson = json["laserzones"];
@@ -1718,7 +1718,7 @@ bool Laser::saveSettings(){
     
     ofJson json;
     ofSerialize(json, params);
-    ofSerialize(json, visual3DParams);
+    //ofSerialize(json, visual3DParams);
     
     //scannerSettings.serialize(json);
 

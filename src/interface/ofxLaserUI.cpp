@@ -165,10 +165,10 @@ bool UI::addFloat2Slider(ofParameter<glm::vec2>& parameter, const char* format, 
     return false;
 }
 
-bool UI::addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format, float power) {
-    
+bool UI::addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format, float power, string label) {
+    if(label == "") label =parameter.getName();
     auto tmpRef = parameter.get();
-    if (ImGui::SliderFloat3(parameter.getName().c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
+    if (ImGui::SliderFloat3(label.c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
         parameter.set(tmpRef);
         return true;
     }

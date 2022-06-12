@@ -1239,6 +1239,12 @@ void Manager::drawLaserGui() {
         
     }
     
+    if(viewMode == OFXLASER_VIEW_3D)  {
+        visualiser3D.drawUI(); 
+        
+    }
+    
+    
 }
 
 
@@ -1273,8 +1279,6 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     UI::addIntSlider(laser->testPattern);
     //UI::addButton(resetDac);
     
-    UI::addFloat3Slider(laser->position);
-    UI::addFloat3Slider(laser->orientation);
     
     
     

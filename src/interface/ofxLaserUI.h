@@ -39,7 +39,7 @@ class UI {
     static bool addIntSlider(ofParameter<int>& param);
     static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", float power = 1.0f) ;
     static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", float power = 1.0f) ;
-    static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", float power = 1.0f);
+    static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", float power = 1.0f, string name = "");
 
    
     static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier);
