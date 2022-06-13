@@ -341,8 +341,6 @@ void Manager :: renderCustomCursors() {
 void Manager :: drawPreviews() {
     
     
-    
-    
     if(viewMode == OFXLASER_VIEW_3D) {
         float previewheight = (ofGetHeight()/2)-30;
         ofRectangle rect3D(10,30,previewheight/9*16, previewheight); // 16/9 ratio
@@ -1242,7 +1240,7 @@ void Manager::drawLaserGui() {
         UI::endWindow();
         
     }
-    
+    drawDacAssignerPanel();
     if(viewMode == OFXLASER_VIEW_3D)  {
         visualiser3D.drawUI();
         
@@ -1250,6 +1248,145 @@ void Manager::drawLaserGui() {
     
     
 }
+
+
+void Manager :: drawDacAssignerPanel() {
+    
+    UI::startWindow("Dac Assignment", ImVec2(100, 100), ImVec2(500,0), ImGuiWindowFlags_None, false);
+
+
+    // get the dacs from the dacAssigner
+    const vector<DacData>& dacList = dacAssigner.getDacList();
+   
+    ImGui::Columns(2);
+    ImGui::SetColumnWidth(0, 290);
+    
+    for (int n = 0; n < lasers.size(); n++){
+        Laser* laser = lasers[n];
+        ImGui::PushID(n);
+
+        
+        ImDrawList* draw_list = ImGui::GetWindowDrawList();
+        ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+        
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        int state = laser->getDacConnectedState();
+        
+        ImU32 col = ImGui::GetColorU32({0.3,0.3,0.3,1});
+        if(laser->hasDac()) col = UI::getColourForState(laser->getDacConnectedState());
+        
+        draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
+        ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
+        ImGui::SameLine();
+        
+        ImGui::Text("Laser %d %s", (n+1),ICON_FK_ARROW_RIGHT);
+        ImGui::SameLine();
+
+        string label;
+        if(!laser->hasDac() ) {
+            label = laser->dacId.get();
+            //if(!laser->hasDac()) label = "";
+            UI::startGhosted();
+            ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
+            UI::stopGhosted();
+            
+        } else {
+            
+            label =laser->getDacLabel();
+            ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
+            
+            
+            // only draggable if there is a dac here
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                ImGui::SetDragDropPayload("DAC_ASSIGN", &n, sizeof(int));    // Set payload to carry the index of our item (could be anything)
+                
+                ImGui::Text("Reassign %s", label.c_str());
+                
+                ImGui::EndDragDropSource();
+            }
+        }
+           
+           // but all slots have a drop target
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("DAC_ASSIGN"))
+            {
+                IM_ASSERT(payload->DataSize == sizeof(int));
+                int payload_n = *(const int*)payload->Data;
+               
+                // DO THE SWAP
+                //const char* tmp = names[n];
+                //names[n] = names[payload_n];
+                //names[payload_n] = tmp;
+                string dacId;
+                if(payload_n<lasers.size()) {
+                    dacId = lasers[payload_n]->dacId.get();
+                } else {
+                    dacId = dacList[payload_n-lasers.size()].label;
+                }
+                dacAssigner.assignToLaser(dacId, *laser);
+              
+            }
+            ImGui::EndDragDropTarget();
+        }
+        ImGui::PopID();
+       
+        //ImVec2 pos = ImGui::GetCursorPos();
+        //ImGui::SetCursorPos(ImVec2(200,pos.y));
+        if(laser->dacId.get()!="") {
+            ImGui::SameLine();
+            string label = ofToString(ICON_FK_TIMES) + "##" + ofToString(n);
+            if(UI::Button(label)){
+                if(laser->hasDac()) {
+                    dacAssigner.disconnectDacFromLaser(*laser);
+                } else {
+                    laser->dacId = "";
+                }
+            }
+        }
+        
+    }
+    
+    ImGui::NextColumn();
+    ImGui::Text("Available controllers : ");
+    ImGui::SameLine();
+    if(UI::Button("REFRESH")){
+        dacAssigner.updateDacList();
+    }
+    
+    for(int i = 0; i<dacList.size(); i++) {
+        const DacData& dacdata = dacList[i];
+        if(dacdata.assignedLaser==nullptr) {
+            int id =lasers.size()+i;
+            ImGui::PushID(id);
+            string label =dacdata.label; // ->getDacLabel();
+            ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19));
+            
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                ImGui::SetDragDropPayload("DAC_ASSIGN", &id, sizeof(int));    // Set payload to carry the index of our item (could be anything)
+                
+                ImGui::Text("Assign %s", label.c_str());
+               
+                ImGui::EndDragDropSource();
+            }
+            
+            ImGui::PopID();
+        }
+        
+    }
+    
+    
+    
+    UI::endWindow();
+    
+}
+
+
+
+
+
 
 
 void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x) {

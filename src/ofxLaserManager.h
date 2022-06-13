@@ -65,6 +65,7 @@ class Manager : public ManagerBase {
     glm::vec2 screenToLaserInput(glm::vec2& pos);
     
     void drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
+    void drawDacAssignerPanel();
     void drawLaserGui();
     void startLaserUI() ;
     void finishLaserUI() ;
