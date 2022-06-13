@@ -92,7 +92,7 @@ class UI {
         
         // set the main window size and position
         ImGui::SetNextWindowSize(size, ImGuiCond_Once);
-        ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_Once);
+        ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
         
         // start the main window!
         ImGui::Begin(name.c_str(), openstate, window_flags);

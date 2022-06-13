@@ -344,8 +344,9 @@ void Manager :: drawPreviews() {
     
     
     if(viewMode == OFXLASER_VIEW_3D) {
-        
-        visualiser3D.draw(ofRectangle(10,30,1000,600), lasers);
+        float previewheight = (ofGetHeight()/2)-30;
+        ofRectangle rect3D(10,30,previewheight/9*16, previewheight); // 16/9 ratio
+        visualiser3D.draw(rect3D, lasers);
         
         // this is same as other views - should break it out
         if(showOutputPreviews) {
@@ -817,6 +818,9 @@ void Manager::drawLaserGui() {
             currentLaser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing), 1);
         }
     }
+    
+    ImGui::SameLine();
+    ImGui::Text("%s",ofToString(ofToString(round(ofGetFrameRate()))).c_str()); 
     //ImGui::PopFont();
     UI::endWindow();
     
@@ -1240,7 +1244,7 @@ void Manager::drawLaserGui() {
     }
     
     if(viewMode == OFXLASER_VIEW_3D)  {
-        visualiser3D.drawUI(); 
+        visualiser3D.drawUI();
         
     }
     

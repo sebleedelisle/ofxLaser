@@ -187,6 +187,12 @@ class Laser {
     bool previewDragging;
     glm::vec2 dragStartPoint;
   
+    
+    ofMesh previewPathMesh;
+    vector<ofColor> previewPathColours;
+   
+    
+    
     //-----------------------------------
     protected :
   
@@ -210,8 +216,6 @@ class Laser {
     unsigned long frameCounter = 0;
     
     int numPoints;
-    ofMesh previewPathMesh;
-    vector<ofColor> previewPathColours; 
     ofEventListener paramsChangedListener;
 
     

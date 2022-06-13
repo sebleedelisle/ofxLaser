@@ -31,7 +31,14 @@ class Laser3DVisualObject : public Object3D{
         //if(ignoreParamChange) return;
         //else
         glm::vec3 p = position.get();
-        p.x = round(p.x/50)*50;
+        p.x = round(p.x);
+        p.y = round(p.y);
+        p.z = round(p.z);
+        glm::vec3 o = orientation.get();
+        
+        o.x = round(p.x/5)*5;
+        o.y = round(p.y/5)*5;
+        o.z = round(p.z/5)*5;
         position.set(p);
        
         dirty = true;

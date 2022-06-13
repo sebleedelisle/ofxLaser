@@ -39,6 +39,7 @@ class Visualiser3D {
     ofParameter<glm::vec3> cameraOrientation;
     ofParameter<float> cameraDistance;
     ofParameter<float> cameraFov;
+    ofParameter<float> brightness; 
     
     ofParameterGroup params;
     

@@ -11,7 +11,9 @@ using namespace ofxLaser;
 
 
 Visualiser3D :: Visualiser3D() {
-    params.add(cameraDistance.set("Camera distance", 2000,500,5000));
+    
+    params.add(brightness.set("Brightness adjustment", 1,0.1,10));
+    params.add(cameraDistance.set("Camera distance", 50,0,1000));
     params.add(cameraFov.set("Camera FOV", 45,10,120));
     
     params.add(cameraOrbit.set("Camera orbit", glm::vec3(0,0,0), glm::vec3(-90,-90,0), glm::vec3(90,90,0)));
@@ -63,31 +65,38 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     ofBackground(0);
     
     // ofSetDepthTest(true);
-    ofSetupScreenPerspective(visFbo.getWidth(), visFbo.getHeight(), cameraFov);
+    ofSetupScreenPerspective(800, 350, cameraFov,0.1,100000);
+    
+    float eyeY = 800 / 2;
+    float halfFov = PI * cameraFov / 360;
+    float theTan = tanf(halfFov);
+    float dist = eyeY / theTan;
+    //ofLogNotice()<<dist;
     
     ofPushMatrix();
     ofPushStyle();
     ofEnableBlendMode(OF_BLENDMODE_ADD);
     
-
-    ofTranslate(visFbo.getWidth()/2,visFbo.getHeight()/2,0);
+    //float scalefactor = (float)rect.getWidth()/800.0f;
+   // ofScale(scalefactor);
+    ofTranslate(400,175,600);
     
     
     ofRotateYDeg(cameraOrientation.get().x);
     ofRotateXDeg(cameraOrientation.get().y);
    
-    ofTranslate(0,0,-cameraDistance); // pull back 1000 units
+    ofTranslate(0,0,-cameraDistance); // pull back z units
     
-    ofRotateYDeg(cameraOrbit.get().x);
     ofRotateXDeg(cameraOrbit.get().y);
+    ofRotateYDeg(cameraOrbit.get().x);
    
     
     ofPoint mousepos(ofGetMouseX(), ofGetMouseY());
     
-    ofRectangle fboRect(0,0,visFbo.getWidth(), visFbo.getHeight());
-    if(fboRect.inside(mousepos)) {
-        ofTranslate(ofMap(mousepos.x, 0, fboRect.getWidth(), 30,-30), ofMap (mousepos.y, 0, fboRect.getWidth(), 100,-100) );
-    }
+//    ofRectangle fboRect(0,0,visFbo.getWidth(), visFbo.getHeight());
+//    if(fboRect.inside(mousepos)) {
+//        ofTranslate(ofMap(mousepos.x, 0, fboRect.getWidth(), 30,-30), ofMap (mousepos.y, 0, fboRect.getWidth(), 100,-100) );
+//    }
     
     
     drawGrid();
@@ -99,28 +108,35 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
         
         ofxLaser::Laser& laser = *lasers.at(i);
         Laser3DVisualObject& laser3D = *laser3Ds.at(i);
-        vector<ofxLaser::Point>& laserPoints = laser.getLaserPoints();
+        //vector<ofxLaser::Point>& laserPoints = laser.getLaserPoints();
+        vector<glm::vec3>& points = laser.previewPathMesh.getVertices();
+        vector<ofColor>& colours = laser.previewPathColours;
+
+        float brightnessfactor = MAX(0.01f,5.0f/(float)points.size()) * brightness;
         
         //move to the laser position
         ofTranslate(laser3D.position);
         ofRotateXDeg(laser3D.orientation.get().x);
         ofRotateYDeg(laser3D.orientation.get().y);
         ofRotateZDeg(laser3D.orientation.get().z);
+        
         ofNoFill();
         ofSetLineWidth(1);
         ofSetColor(0,100,0);
         
-        ofDrawBox(0, 0, -50, 70, 50, 160);
+        ofDrawBox(0, 0, -5, 7, 5, 10);
         
         ofMesh laserMesh;
         
-        for(int i = 1; i<laserPoints.size(); i++) {
+        for(int i = 1; i<points.size(); i++) {
             
             
-            ofxLaser::Point& lp1 = laserPoints[i-1];
-            ofxLaser::Point& lp2 = laserPoints[i];
-            ofColor colour1 = lp1.getColour();
-            ofColor colour2 = lp2.getColour();
+            const glm::vec3& lp1 = points[i-1];
+            const glm::vec3& lp2 = points[i];
+            
+            
+            ofFloatColor colour1 = ofFloatColor(colours[i-1])*brightnessfactor; // lp1.getColour();
+            ofFloatColor colour2 = ofFloatColor(colours[i])*brightnessfactor;//lp2.getColour()*brightnessfactor;
             
             // find 3 points that make a triangle
             // the point of the triangle is at the laser position
@@ -129,16 +145,17 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
             // laser positions are relative to 0,0,0 which should be in the
             // distance in the centre of the screen.
             ofPoint p1, p2;
-            //p1.x = ofMap(lp1.x, 0, 800, -2000, 2000);
-            //p1.y = ofMap(lp1.y, 0, 800, -2000, 2000);
-            //p2.x = ofMap(lp2.x, 0, 800, -2000, 2000);
-            //p2.y = ofMap(lp2.y, 0, 800, -2000, 2000);
-            p1.z = 2500;
-            p2.z = 2500;
+      
+            p1.z = 250;
+            p2.z = 250;
             p1.rotate(ofMap(lp1.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(0,1,0));
             p2.rotate(ofMap(lp2.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(0,1,0));
             p1.rotate(ofMap(lp1.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(-1,0,0));
             p2.rotate(ofMap(lp2.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(-1,0,0));
+            
+            //glm::vec3 beamnormal = glm::normalize(p1-laserpos);
+            
+            
             
             laserMesh.addVertex(ofPoint(0,0,0));
             laserMesh.addColor(colour1);
@@ -178,17 +195,17 @@ void Visualiser3D :: drawGrid() {
     if(true) { // grid.size()==0)) {
         grid.clear();
         grid.setMode(OF_PRIMITIVE_LINES);
-        for(int x = -5000; x<5000; x+=100) {
-            grid.addVertex(glm::vec3(x, 400, -2000));
-            grid.addVertex(glm::vec3(x, 400, 2000));
+        for(int x = -500; x<500; x+=10) {
+            grid.addVertex(glm::vec3(x, 40, -200));
+            grid.addVertex(glm::vec3(x, 40, 200));
             grid.addColor(ofColor(0, 0, 0));
             grid.addColor(ofColor(0, 50, 0));
         }
-        for(int z = -2000; z<2000; z+=100) {
-            grid.addVertex(glm::vec3(-5000, 400, z));
-            grid.addVertex(glm::vec3(5000, 400, z));
-            grid.addColor(ofColor(0, ofMap(z,-2000,2000,0,50), 0));
-            grid.addColor(ofColor(0, ofMap(z,-2000,2000,0,50), 0));
+        for(int z = -300; z<100; z+=10) {
+            grid.addVertex(glm::vec3(-500, 40, z));
+            grid.addVertex(glm::vec3(500, 40, z));
+            grid.addColor(ofColor(0, ofMap(z,-300,100,0,50), 0));
+            grid.addColor(ofColor(0, ofMap(z,-300,100,0,50), 0));
         }
 
     }
@@ -228,8 +245,9 @@ void Visualiser3D ::save() {
 
 void Visualiser3D ::drawUI(){
     
-    UI::startWindow("3D Visualiser", ImVec2(100,100));
+    UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0));
     
+    UI::addFloatSlider(brightness); //.set("Camera FOV",
     UI::addFloatSlider(cameraDistance); //.set("Camera FOV", 45,10,120))
     UI::addFloatSlider(cameraFov); //.set("Camera FOV", 45,10,120));
     
