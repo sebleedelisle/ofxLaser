@@ -74,7 +74,7 @@ class UI {
         } 
     }
     
-    static void startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) {
+    static bool startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) {
         ImGuiWindowFlags window_flags = flags;
         window_flags |= ImGuiWindowFlags_NoNav;
         //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
@@ -95,7 +95,7 @@ class UI {
         ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
         
         // start the main window!
-        ImGui::Begin(name.c_str(), openstate, window_flags);
+        return ImGui::Begin(name.c_str(), openstate, window_flags);
         
         
     }

@@ -100,7 +100,7 @@ void Laser :: init() {
 	
     laserparams.add(speedMultiplier.set("Speed", 1,0.12,2));
     
-    laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
+    laserparams.add(colourChangeShift.set("Colour shift", 2,0,12));
     
    
     laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));

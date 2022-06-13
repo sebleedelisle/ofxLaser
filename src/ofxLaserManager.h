@@ -104,6 +104,7 @@ class Manager : public ManagerBase {
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
+    bool dacAssignmentWindowOpen;
     
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserMovement;
