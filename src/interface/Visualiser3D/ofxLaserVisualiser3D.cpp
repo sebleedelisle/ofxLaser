@@ -238,7 +238,7 @@ void Visualiser3D ::save() {
 
     ofSaveJson("ofxLaser/Visualiser3D.json",json);
     
-    ofLogNotice("Visualiser3D json : " ) << json.dump(3);
+    //ofLogNotice("Visualiser3D json : " ) << json.dump(3);
     
 }
 
