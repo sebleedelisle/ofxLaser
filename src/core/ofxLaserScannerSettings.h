@@ -10,9 +10,10 @@
 #include "ofMain.h"
 #include "constants.h"
 #include "ofxLaserRenderProfile.h"
+#include "ofxLaserPresetBase.h"
 
 namespace ofxLaser {
-class ScannerSettings {
+class ScannerSettings: public PresetBase {
     
     public :
     
@@ -21,12 +22,12 @@ class ScannerSettings {
     bool operator == (ScannerSettings& that);
     bool operator != (ScannerSettings& that);
   
-    void serialize(ofJson&json);
-    bool deserialize(ofJson&jsonGroup);
-    const string& getLabel(); 
-    void setLabel(string _label) {
-        label = _label;
-    };
+    virtual void serialize(ofJson&json) override;
+    bool deserialize(ofJson&jsonGroup) override;
+//    const string& getLabel() override; 
+//    void setLabel(string _label) {
+//        label = _label;
+//    };
     
     // scanner settings
     ofParameterGroup params;
@@ -43,9 +44,9 @@ class ScannerSettings {
     
     map<string, RenderProfile&> renderProfiles;
     private :
-    ofParameter<string> label;
-    ofParameter<string> description;
-    
+//    ofParameter<string> label;
+//    ofParameter<string> description;
+//    
     
 };
 

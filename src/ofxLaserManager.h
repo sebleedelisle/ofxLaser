@@ -8,7 +8,8 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserVisualiser3D.h"
-
+#include "ofxLaserPresetManager.h"
+#include "ofxLaserPresetBase.h"
 
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
@@ -145,6 +146,10 @@ class Manager : public ManagerBase {
     ofxSVGExtra iconMagPlus;
     ofxSVGExtra iconMagMinus;
     vector<ofxSVGExtra> numberSVGs;
+    
+    
+    PresetManager<ScannerSettings> scannerPresetManager;
+   
 
 };
 }

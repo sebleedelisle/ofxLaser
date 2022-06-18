@@ -95,7 +95,7 @@ bool ScannerSettings :: deserialize(ofJson&jsonGroup){
 //
 	 return true; 
 }
-
-const string& ScannerSettings :: getLabel() {
-    return label.get();
-}
+//
+//const string& ScannerSettings :: getLabel() {
+//    return label.get();
+//}

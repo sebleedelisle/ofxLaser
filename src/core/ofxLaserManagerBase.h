@@ -20,7 +20,8 @@
 #include "ofxLaserBitmapMaskManager.h"
 #include "ofxLaserGraphic.h"
 #include "ofxLaserLaser.h"
-#include "ofxLaserPresetManager.h"
+
+
 
 
 
@@ -176,8 +177,9 @@ class ManagerBase {
     vector<glm::vec3> tmpPoints;
   //  vector<ofColor> tmpColours;
     
-    bool dacsInitialised = false; 
+    bool dacsInitialised = false;
     
+   
     private:
 };
 }

@@ -1728,15 +1728,15 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::Text("SCANNER SETTINGS");
     
     
-    PresetManager& presetManager = *PresetManager::instance();
+   // PresetManager& presetManager = *PresetManager::instance();
     // TODO :
     // check if the settings are different from the preset, if they are
     // show a "save" button, also save as?
     //
     // when an option is selected, update all the params
-    const vector<string>& presets = presetManager.getPresetNames();
+    const vector<string>& presets = scannerPresetManager.getPresetNames();
     label =laser->scannerSettings.getLabel();
-    ScannerSettings& currentPreset = *presetManager.getPreset(label);
+    ScannerSettings& currentPreset = *scannerPresetManager.getPreset(label);
     
     
     bool presetEdited = (laser->scannerSettings!=currentPreset);
@@ -1754,7 +1754,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
-                laser->scannerSettings = *presetManager.getPreset(presetName);
+                laser->scannerSettings = *scannerPresetManager.getPreset(presetName);
             }
         }
         
@@ -1786,7 +1786,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
                 if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                     //get the preset and make a copy of it
                     // uses operator overloading to create a clone
-                    laser->scannerSettings = *presetManager.getPreset(presetName);
+                    laser->scannerSettings = *scannerPresetManager.getPreset(presetName);
                 }
             }
             
@@ -1810,7 +1810,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             ImGui::Separator();
             
             if (ImGui::Button("OK", ImVec2(120, 0))) {
-                PresetManager::addPreset(presetlabel, laser->scannerSettings);
+                scannerPresetManager.addPreset(presetlabel, laser->scannerSettings);
                 ImGui::CloseCurrentPopup();
                 
             }
@@ -1845,7 +1845,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             if (ImGui::Button("OK", ImVec2(120, 0))) {
                 string presetlabel = newPresetLabel;
                 // TODO CHECK PRESET EXISTS AND ADD POP UP
-                PresetManager::addPreset(presetlabel, laser->scannerSettings);
+                scannerPresetManager.addPreset(presetlabel, laser->scannerSettings);
                 ImGui::CloseCurrentPopup();
                 
             }
