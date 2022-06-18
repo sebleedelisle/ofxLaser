@@ -12,6 +12,7 @@ using namespace ofxLaser;
 
 Visualiser3DSettings :: Visualiser3DSettings(){
     
+    params.add(label.set("label", "Default"));
     
     params.add(brightness.set("Brightness adjustment", 1,0.1,10));
     params.add(cameraDistance.set("Camera distance", 50,0,1000));
@@ -45,25 +46,14 @@ bool Visualiser3DSettings :: operator != (Visualiser3DSettings& that){
 }
 void Visualiser3DSettings :: serialize(ofJson&json){
     ofSerialize(json, params);
-    ofJson& jsonGroup = json["lasers"];
-    for(Object3D& laser : laserObjects ){
-        ofJson laserjson;
-        laser.serialize(laserjson);
-        jsonGroup.push_back(laserjson);
-    }
+    
     
     
 }
 bool Visualiser3DSettings :: deserialize(ofJson&jsonGroup){
-    ofLogNotice("Visualiser json : ") << jsonGroup.dump(3);
+    //ofLogNotice("Visualiser json : ") << jsonGroup.dump(3);
     ofDeserialize(jsonGroup, params);
     
-    ofJson& jsonLaserObjects = jsonGroup["lasers"];
-    laserObjects.resize(jsonLaserObjects.size());
-    for(size_t i = 0; i<jsonLaserObjects.size(); i++)  {
-        laserObjects[i].deserialize(jsonLaserObjects[i]);
-        
-    }
     
     return true;
 }

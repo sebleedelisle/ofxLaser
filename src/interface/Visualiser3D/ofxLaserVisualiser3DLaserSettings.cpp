@@ -11,7 +11,7 @@
 using namespace ofxLaser;
 
 Visualiser3DLaserSettings :: Visualiser3DLaserSettings(){
-    
+    params.add(label.set("label", "Default"));
 }
 
 Visualiser3DLaserSettings& Visualiser3DLaserSettings :: operator=( Visualiser3DLaserSettings& that){
@@ -35,22 +35,23 @@ bool Visualiser3DLaserSettings :: operator == (Visualiser3DLaserSettings& that){
 bool Visualiser3DLaserSettings :: operator != (Visualiser3DLaserSettings& that){
     return !(*this==that);
 }
-void Visualiser3DLaserSettings :: serialize(ofJson&jsonGroup){
-    //ofSerialize(json, params);
-    //ofJson& jsonGroup = json["lasers"];
+void Visualiser3DLaserSettings :: serialize(ofJson&json){
+    ofSerialize(json, params);
+    ofJson& jsonGroup = json["lasers"];
     for(Object3D& laser : laserObjects ){
         ofJson laserjson;
         laser.serialize(laserjson);
         jsonGroup.push_back(laserjson);
     }
-    
+   // ofLogNotice("Visualiser 3D laser json : ") << jsonGroup.dump(3);
     
 }
-bool Visualiser3DLaserSettings :: deserialize(ofJson&jsonGroup){
-    //ofLogNotice("Visualiser json : ") << jsonGroup.dump(3);
-    //ofDeserialize(jsonGroup, params);
+bool Visualiser3DLaserSettings :: deserialize(ofJson&json){
+    //ofLogNotice("Visualiser laser json : ") << json.dump(3);
+    ofDeserialize(json, params);
     
-    ofJson& jsonLaserObjects = jsonGroup;
+    
+    ofJson& jsonLaserObjects = json["lasers"];
     laserObjects.resize(jsonLaserObjects.size());
     for(size_t i = 0; i<jsonLaserObjects.size(); i++)  {
         laserObjects[i].deserialize(jsonLaserObjects[i]);

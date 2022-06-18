@@ -110,8 +110,13 @@ bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, s
     if(tooltip!="") UI::toolTip(tooltip);
     //cout << param.getName()<< " " << param << " " << resetParam.getName() << " " << resetParam << endl; 
     if(param!=resetParam) {
+        
+        string label = ofToString(ICON_FK_UNDO)+"##"+param.getName();
+        if(param.getFirstParent()) label = label+param.getFirstParent().getName();
+        
+        
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-        if (ImGui::Button("R")) {
+        if (ImGui::Button(label.c_str())) {
             param.set(resetParam);
             returnvalue = true; 
         }
@@ -123,8 +128,12 @@ bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string 
     bool returnvalue = UI::addIntSlider(param);
     if(tooltip!="") UI::toolTip(tooltip);
     if(param!=resetParam) {
+        
+        string label = ofToString(ICON_FK_UNDO)+"##"+param.getName();
+        if(param.getFirstParent()) label = label+param.getFirstParent().getName();
+        
         ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-        if (ImGui::Button("R")) param.set(resetParam);
+        if (ImGui::Button(label.c_str())) param.set(resetParam);
     }
 	return returnvalue; 
 }

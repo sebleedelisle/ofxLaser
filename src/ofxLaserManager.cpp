@@ -1734,32 +1734,10 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     // show a "save" button, also save as?
     //
     // when an option is selected, update all the params
-    const vector<string>& presets = scannerPresetManager.getPresetNames();
-    label =laser->scannerSettings.getLabel();
-    ScannerSettings& currentPreset = *scannerPresetManager.getPreset(label);
+
+    ScannerSettings& currentPreset = *scannerPresetManager.getPreset(laser->scannerSettings.getLabel());
+    scannerPresetManager.drawComboBox(laser->scannerSettings);
     
-    
-    bool presetEdited = (laser->scannerSettings!=currentPreset);
-    if (presetEdited){
-        label+="(edited)";
-        
-        
-    }
-    
-    
-    if (ImGui::BeginCombo("##Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
-        
-        for(const string presetName : presets) {
-            
-            if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
-                //get the preset and make a copy of it
-                // uses operator overloading to create a clone
-                laser->scannerSettings = *scannerPresetManager.getPreset(presetName);
-            }
-        }
-        
-        ImGui::EndCombo();
-    }
     ImGui::SameLine();
     
     if(ImGui::Button("EDIT")) {
@@ -1779,88 +1757,12 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     {
         ImGui::Text("SCANNER SETTINGS - %s",laser->getLabel().c_str());
         ImGui::Separator();
-        if (ImGui::BeginCombo("Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
-            
-            for(const string presetName : presets) {
-                
-                if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
-                    //get the preset and make a copy of it
-                    // uses operator overloading to create a clone
-                    laser->scannerSettings = *scannerPresetManager.getPreset(presetName);
-                }
-            }
-            
-            ImGui::EndCombo();
-        }
+        scannerPresetManager.drawComboBox(laser->scannerSettings);
+
         
         ImGui::SameLine();
-        
-//        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * (presetEdited ? 1.0f : 0.5f));
-        if(!presetEdited) UI::startGhosted();
-        if(ImGui::Button("SAVE")) {
-            if(presetEdited)ImGui::OpenPopup("Save Preset");
-            
-        }
-        UI::stopGhosted();
-        
-        if (ImGui::BeginPopupModal("Save Preset", 0)){
-            string presetlabel = laser->scannerSettings.getLabel();
-            
-            ImGui::Text("Are you sure you want to overwrite the preset \"%s\"?", presetlabel.c_str());
-            ImGui::Separator();
-            
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                scannerPresetManager.addPreset(presetlabel, laser->scannerSettings);
-                ImGui::CloseCurrentPopup();
-                
-            }
-            ImGui::SetItemDefaultFocus();
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-                
-            }
-            ImGui::EndPopup();
-            
-            
-        }
-        static char newPresetLabel[255]; // = presetlabel.c_str();
-        
-        
-        ImGui::SameLine();
-        if(ImGui::Button("SAVE AS")){
-            strcpy(newPresetLabel, laser->scannerSettings.getLabel().c_str());
-            ImGui::OpenPopup("Save Preset As");
-            
-        };
-        
-        if (ImGui::BeginPopupModal("Save Preset As", 0)){
-            
-            if(ImGui::InputText("1", newPresetLabel, IM_ARRAYSIZE(newPresetLabel))){
-                
-            }
-            
-            ImGui::Separator();
-            
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                string presetlabel = newPresetLabel;
-                // TODO CHECK PRESET EXISTS AND ADD POP UP
-                scannerPresetManager.addPreset(presetlabel, laser->scannerSettings);
-                ImGui::CloseCurrentPopup();
-                
-            }
-            ImGui::SetItemDefaultFocus();
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-                
-            }
-            ImGui::EndPopup();
-            
-            
-        }
-        
-        
+        scannerPresetManager.drawSaveButtons(laser->scannerSettings);
+
         UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
         
         ImGui::Columns(2);

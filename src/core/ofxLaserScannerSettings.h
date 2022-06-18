@@ -22,7 +22,9 @@ class ScannerSettings: public PresetBase {
     static string getFolderPath(){
         return "ofxLaser/scannerpresets";
     };
-    
+    static string getTypeName() {
+        return "Scanner";
+    }
     ScannerSettings& operator=( ScannerSettings& that);
     bool operator == (ScannerSettings& that);
     bool operator != (ScannerSettings& that);

@@ -17,7 +17,9 @@ class Visualiser3DSettings : public PresetBase {
     static string getFolderPath(){
         return "ofxLaser/visualiserpresets";
     };
-    
+    static string getTypeName() {
+        return "Visualiser 3D";
+    }
     Visualiser3DSettings& operator=( Visualiser3DSettings& that);
     bool operator == (Visualiser3DSettings& that);
     bool operator != (Visualiser3DSettings& that);
@@ -31,7 +33,6 @@ class Visualiser3DSettings : public PresetBase {
     ofParameter<float> cameraFov;
     ofParameter<float> brightness;
 
-    vector<Laser3DVisualObject> laserObjects;
     
 };
 }

@@ -10,6 +10,7 @@
 #include "ofxLaserLaser3DVisualObject.h"
 #include "ofxLaserPresetManager.h"
 #include "ofxLaserVisualiser3DSettings.h"
+#include "ofxLaserVisualiser3DLaserSettings.h"
 
 namespace ofxLaser {
 

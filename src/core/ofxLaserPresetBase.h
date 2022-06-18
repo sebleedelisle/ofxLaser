@@ -25,6 +25,9 @@ class PresetBase {
         return "ofxLaser/Presets"; 
     };
     
+    static string getTypeName() {
+        return "PresetBase";
+    } 
     ofParameterGroup params;
     
     ofParameter<string> label;

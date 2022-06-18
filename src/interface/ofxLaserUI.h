@@ -236,7 +236,7 @@ class UI {
     static void toolTip(const char* desc)
     {
         ImGui::SameLine(0,3);
-        ImGui::TextDisabled("(?)");
+        ImGui::TextDisabled(ICON_FK_QUESTION_CIRCLE);
         if (ImGui::IsItemHovered() )
         {
             ImGui::BeginTooltip();

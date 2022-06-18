@@ -17,7 +17,9 @@ class Visualiser3DLaserSettings : public PresetBase {
     static string getFolderPath(){
         return "ofxLaser/visualiserlaserpresets";
     };
-    
+    static string getTypeName() {
+        return "Visualiser 3D Laser";
+    }
     Visualiser3DLaserSettings& operator=( Visualiser3DLaserSettings& that);
     bool operator == (Visualiser3DLaserSettings& that);
     bool operator != (Visualiser3DLaserSettings& that);

@@ -11,7 +11,17 @@ using namespace ofxLaser;
 
 
 Visualiser3D :: Visualiser3D() {
+    
+    lasersettings.setLabel("Default");
+    settings.setLabel("Default");
     load();
+    
+    if(visualiserPresetManager.getPreset("Default")==nullptr) {
+        visualiserPresetManager.addPreset(settings);
+    }
+    if(visualiserLaserPresetManager.getPreset("Default")==nullptr) {
+        visualiserLaserPresetManager.addPreset(lasersettings);
+    }
     ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
 
     // TODO - listener for laser settings - how? 
@@ -27,7 +37,7 @@ void Visualiser3D :: update() {
     //update view stuff
     
     bool needsSave = dirty;
-    for(Laser3DVisualObject& laser3D : settings.laserObjects) {
+    for(Laser3DVisualObject& laser3D : lasersettings.laserObjects) {
         if(laser3D.dirty) {
             laser3D.dirty = false;
             needsSave = true;
@@ -46,8 +56,8 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     numLasers = lasers.size();
     
     
-    while(lasers.size()>settings.laserObjects.size()) {
-        settings.laserObjects.emplace_back();
+    while(lasers.size()>lasersettings.laserObjects.size()) {
+        lasersettings.laserObjects.emplace_back();
         
     }
     
@@ -96,9 +106,9 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     
     drawGrid();
     
-    for(size_t i= 0; i<settings.laserObjects.size(); i++) {
+    for(size_t i= 0; i<lasersettings.laserObjects.size(); i++) {
         
-        Laser3DVisualObject& laser3D = settings.laserObjects.at(i);
+        Laser3DVisualObject& laser3D = lasersettings.laserObjects.at(i);
         
         ofPushStyle();
         ofPushMatrix();
@@ -220,9 +230,12 @@ void Visualiser3D :: drawGrid() {
 
 
 void Visualiser3D ::load() {
-    ofJson json = ofLoadJson("ofxLaser/Visualiser3D.json");
-    
+    ofJson json = ofLoadJson("ofxLaser/visualiser3D.json");
     settings.deserialize(json);
+    
+    
+    ofJson json2 = ofLoadJson("ofxLaser/visualiser3DLasers.json");
+    lasersettings.deserialize(json2); 
 //
 //    ofDeserialize(json, settings.params);
 //    ofJson& laser3DsJson = json["laser3Ds"];
@@ -238,19 +251,14 @@ void Visualiser3D ::load() {
 void Visualiser3D ::save() {
     ofJson json;
 
-    settings.serialize(json); 
-    //
-//    ofSerialize(json, settings.params);
-//    ofJson& laser3DsJson = json["laser3Ds"];
-//
-//    for(int i = 0; i<laser3Ds.size(); i++) {
-//        ofJson laser3dJson;
-//        ofSerialize(laser3dJson, laser3Ds[i]->visual3DParams);
-//
-//        laser3DsJson.push_back(laser3dJson);
-//    }
+    settings.serialize(json);
+    
 
     ofSavePrettyJson("ofxLaser/Visualiser3D.json",json);
+    
+    ofJson json2;
+    lasersettings.serialize(json2);
+    ofSavePrettyJson("ofxLaser/Visualiser3DLasers.json",json2);
     
     //ofLogNotice("Visualiser3D json : " ) << json.dump(3);
     
@@ -260,104 +268,14 @@ void Visualiser3D ::save() {
 void Visualiser3D ::drawUI(){
     
     UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0));
+
+    visualiserPresetManager.drawComboBox(settings);
+    visualiserPresetManager.drawSaveButtons(settings);
     
+    Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
     
-    const vector<string>& presets = visualiserPresetManager.getPresetNames();
-    string label =settings.getLabel();
-    Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(label);
-    
-    
-    bool presetEdited = (settings!=currentPreset);
-    if (presetEdited){
-        label+="(edited)";
-    }
-    
-    
-    if (ImGui::BeginCombo("##Visualiser presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
-        
-        for(const string presetName : presets) {
-            
-            if (ImGui::Selectable(presetName.c_str(), presetName == settings.getLabel())) {
-                //get the preset and make a copy of it
-                // uses operator overloading to create a clone
-                settings = *visualiserPresetManager.getPreset(presetName);
-            }
-        }
-        
-        ImGui::EndCombo();
-    }
-    
-    if(!presetEdited) UI::startGhosted();
-    if(ImGui::Button("SAVE")) {
-        if(presetEdited)ImGui::OpenPopup("Save Visualiser Preset");
-        
-    }
-    UI::stopGhosted();
-    
-    if (ImGui::BeginPopupModal("Save Visualiser Preset", 0)){
-        string presetlabel = settings.getLabel();
-        
-        ImGui::Text("Are you sure you want to overwrite the preset \"%s\"?", presetlabel.c_str());
-        ImGui::Separator();
-        
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
-            visualiserPresetManager.addPreset(presetlabel, settings);
-            ImGui::CloseCurrentPopup();
-            
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            ImGui::CloseCurrentPopup();
-            
-        }
-        ImGui::EndPopup();
-        
-        
-    }
-    static char newPresetLabel[255]; // = presetlabel.c_str();
-    
-    
-    ImGui::SameLine();
-    if(ImGui::Button("SAVE AS")){
-        strcpy(newPresetLabel, settings.getLabel().c_str());
-        ImGui::OpenPopup("Save Visualiser Preset As");
-        
-    };
-    
-    if (ImGui::BeginPopupModal("Save Visualiser Preset As", 0)){
-        
-        if(ImGui::InputText("1", newPresetLabel, IM_ARRAYSIZE(newPresetLabel))){
-            
-        }
-        
-        ImGui::Separator();
-        
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
-            string presetlabel = newPresetLabel;
-            // TODO CHECK PRESET EXISTS AND ADD POP UP
-            visualiserPresetManager.addPreset(presetlabel, settings);
-            ImGui::CloseCurrentPopup();
-            
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            ImGui::CloseCurrentPopup();
-            
-        }
-        ImGui::EndPopup();
-        
-        
-    }
-    
-    
-    
-    
-    
-    
-    UI::addFloatSlider(settings.brightness); //.set("Camera FOV",
-    UI::addFloatSlider(settings.cameraDistance); //.set("Camera FOV", 45,10,120))
+    UI::addResettableFloatSlider(settings.brightness, currentPreset.brightness); //.set("Camera FOV",
+    UI::addResettableFloatSlider(settings.cameraDistance, currentPreset.brightness); //.set("Camera FOV", 45,10,120))
     UI::addFloatSlider(settings.cameraFov); //.set("Camera FOV", 45,10,120));
     
     UI::addFloat3Slider(settings.cameraOrbit);//.set("Camera position", glm::vec3(0,-2000,0)));
@@ -365,18 +283,20 @@ void Visualiser3D ::drawUI(){
     
     ImGui::Separator();
     
+    visualiserLaserPresetManager.drawComboBox(lasersettings);
+    visualiserLaserPresetManager.drawSaveButtons(lasersettings);
     
-    for(int i = 0; i<settings.laserObjects.size(); i++) {
+    for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
         ImGui::Separator();
         ImGui::Text("Laser %d", i+1);
-        Laser3DVisualObject& laser3D = settings.laserObjects[i];
+        Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
         UI::addFloat3Slider(laser3D.position, "%.0f", 1, "Position##"+ofToString(i));
         UI::addFloat3Slider(laser3D.orientation, "%.0f", 1, "Orientation##"+ofToString(i));
     }
     
-    if(numLasers<settings.laserObjects.size()) {
+    if(numLasers<lasersettings.laserObjects.size()) {
         if(UI::Button("Remove extra 3D laser objects")){
-            settings.laserObjects.resize(numLasers);
+            lasersettings.laserObjects.resize(numLasers);
             
         }
         

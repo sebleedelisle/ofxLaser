@@ -9,6 +9,7 @@
 #include "ofxLaserPresetBase.h"
 #include <type_traits>
 #include "ofMain.h"
+#include "ofxLaserUI.h"
 
 namespace ofxLaser {
 template <typename T>
@@ -24,6 +25,10 @@ class PresetManager {
     void savePreset(string, T& preset);
     T* getPreset(string name);
     const vector<string>& getPresetNames();
+    
+    // UI stuff
+    void drawComboBox(T& currentPreset);
+    void drawSaveButtons(T& currentPreset);
     
     map<string, T> presetMap;
     vector<string> presetNames;
@@ -138,3 +143,116 @@ const vector<string>& PresetManager<T> ::getPresetNames() {
     return presetNames;
     
 }
+
+template <typename T>
+void PresetManager<T> :: drawComboBox(T& settings) {
+    
+    const vector<string>& presets = getPresetNames();
+    string label =settings.getLabel();
+    T& currentPreset = *getPreset(label);
+    
+    bool presetEdited = (settings!=currentPreset);
+    if (presetEdited){
+        label+="(edited)";
+    }
+  
+    string comboname = T::getTypeName() + " presets";
+    if (ImGui::BeginCombo(comboname.c_str(), label.c_str())) { // The second parameter is the label previewed before opening the combo.
+        
+        for(const string presetName : presets) {
+            
+            if (ImGui::Selectable(presetName.c_str(), presetName == settings.getLabel())) {
+                //get the preset and make a copy of it
+                // uses operator overloading to create a clone
+                settings = *getPreset(presetName);
+            }
+        }
+        
+        ImGui::EndCombo();
+    }
+    
+}
+
+template <typename T>
+void PresetManager<T> :: drawSaveButtons(T& settings) {
+    
+    const vector<string>& presets = getPresetNames();
+    string label =settings.getLabel();
+    T& currentPreset = *getPreset(label);
+    
+    bool presetEdited = (settings!=currentPreset);
+    
+    if(!presetEdited) UI::startGhosted();
+    label ="SAVE##"+T::getTypeName();
+    
+    if(ImGui::Button(label.c_str())) {
+        label ="Save "+T::getTypeName()+" Preset";
+        if(presetEdited)ImGui::OpenPopup(label.c_str());
+        
+    }
+    UI::stopGhosted();
+    label = "Save "+T::getTypeName()+" Preset";
+    if (ImGui::BeginPopupModal(label.c_str(), 0)){
+        string presetlabel = settings.getLabel();
+        
+        ImGui::Text("Are you sure you want to overwrite the preset \"%s\"?", presetlabel.c_str());
+        ImGui::Separator();
+        
+        if (ImGui::Button("OK", ImVec2(120, 0))) {
+            addPreset(presetlabel, settings);
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::EndPopup();
+        
+        
+    }
+    static char newPresetLabel[255]; // = presetlabel.c_str();
+    
+    
+    ImGui::SameLine();
+    label = "SAVE AS##%s"+T::getTypeName();
+    
+    if(ImGui::Button(label.c_str() )) {
+        strcpy(newPresetLabel, settings.getLabel().c_str());
+        label = "Save "+T::getTypeName()+" Preset As";
+        ImGui::OpenPopup(label.c_str());
+        
+    };
+    
+    label = "Save "+T::getTypeName()+" Preset As" ;
+    if (ImGui::BeginPopupModal(label.c_str(), 0)){
+        
+        if(ImGui::InputText("1", newPresetLabel, IM_ARRAYSIZE(newPresetLabel))){
+            
+        }
+        
+        ImGui::Separator();
+        label = "OK## "+T::getTypeName();
+        if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
+            string presetlabel = newPresetLabel;
+            // TODO CHECK PRESET EXISTS AND ADD POP UP
+            addPreset(presetlabel, settings);
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        label = "Cancel## "+T::getTypeName();
+        if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::EndPopup();
+        
+        
+    }
+    
+}
+    
