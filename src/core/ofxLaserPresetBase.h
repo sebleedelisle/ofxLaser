@@ -15,15 +15,22 @@ class PresetBase {
     public :
     PresetBase();
     
-    virtual void serialize(ofJson&json){};
-    virtual bool deserialize(ofJson&jsonGroup){};
+    virtual void serialize(ofJson&json);
+    virtual bool deserialize(ofJson&jsonGroup);
     virtual const string& getLabel();
     virtual void setLabel(string _label);
     
-    protected : 
+    // must be implemented
+    static string getFolderPath(){
+        return "ofxLaser/Presets"; 
+    };
+    
+    ofParameterGroup params;
+    
     ofParameter<string> label;
     ofParameter<string> description;
-   
+    protected :
+
     
 };
 }

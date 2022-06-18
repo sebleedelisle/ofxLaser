@@ -28,6 +28,8 @@ class PresetManager {
     map<string, T> presetMap;
     vector<string> presetNames;
     
+    string filepath;
+    
     
 };
 }
@@ -36,6 +38,7 @@ using namespace ofxLaser;
 
 template <typename T>
 PresetManager<T> :: PresetManager() {
+    filepath = T::getFolderPath();
     loadPresets();
 }
 
@@ -43,7 +46,7 @@ PresetManager<T> :: PresetManager() {
 template <typename T>
 bool PresetManager<T> :: loadPresets() {
     // open directory
-    ofDirectory dir = ofDirectory("ofxLaser/scannerpresets");
+    ofDirectory dir = ofDirectory(filepath);
     if(dir.exists()) {
         dir.listDir();
       
@@ -58,7 +61,7 @@ bool PresetManager<T> :: loadPresets() {
         
         for(auto file : allFiles) {
             T settings;
-            ofJson json = ofLoadJson("ofxLaser/scannerpresets/"+file.getFileName());
+            ofJson json = ofLoadJson(filepath+"/"+file.getFileName());
             settings.deserialize(json);
             addPreset(settings);
             
@@ -105,7 +108,7 @@ void PresetManager<T> :: savePreset(string label, T& settings){
     ofJson presetJson;
     settings.serialize(presetJson);
     // save json
-    ofSavePrettyJson("ofxLaser/scannerpresets/"+label+".json", presetJson);
+    ofSavePrettyJson(filepath+"/"+label+".json", presetJson);
     
 }
 

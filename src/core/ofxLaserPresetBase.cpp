@@ -21,3 +21,11 @@ void PresetBase ::setLabel(string _label) {
 const string& PresetBase :: getLabel() {
     return label.get();
 }
+
+void PresetBase :: serialize(ofJson&json){
+    ofSerialize(json, params);
+}
+bool PresetBase :: deserialize(ofJson&jsonGroup){
+     ofDeserialize(jsonGroup, params);
+     return true;
+}

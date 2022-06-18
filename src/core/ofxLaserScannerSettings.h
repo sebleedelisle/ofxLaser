@@ -18,19 +18,17 @@ class ScannerSettings: public PresetBase {
     public :
     
     ScannerSettings();
+    
+    static string getFolderPath(){
+        return "ofxLaser/scannerpresets";
+    };
+    
     ScannerSettings& operator=( ScannerSettings& that);
     bool operator == (ScannerSettings& that);
     bool operator != (ScannerSettings& that);
   
-    virtual void serialize(ofJson&json) override;
-    bool deserialize(ofJson&jsonGroup) override;
-//    const string& getLabel() override; 
-//    void setLabel(string _label) {
-//        label = _label;
-//    };
     
     // scanner settings
-    ofParameterGroup params;
     ofParameterGroup renderParams;
     ofParameter<float> moveSpeed = 5;
     ofParameter<int> shapePreBlank = 0;
@@ -43,10 +41,7 @@ class ScannerSettings: public PresetBase {
     RenderProfile profileDetail;
     
     map<string, RenderProfile&> renderProfiles;
-    private :
-//    ofParameter<string> label;
-//    ofParameter<string> description;
-//    
+
     
 };
 

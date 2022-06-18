@@ -52,10 +52,6 @@ ScannerSettings :: ScannerSettings() {
     profileDetail.dotMaxPoints = 20;
     
     params.add(renderParams);
-    
-//    cout << (&renderProfiles.at("FAST") == &profileFast );
-//    cout << (&renderProfiles.at("DETAIL") == &profileDetail );
-//    cout << (&renderProfiles.at("DEFAULT") == &profileDefault )<< endl;
 
 }
 
@@ -80,22 +76,3 @@ bool ScannerSettings::operator == (ScannerSettings& that){
 bool ScannerSettings::operator != (ScannerSettings& that){
     return !(*this==that); 
 }
-void ScannerSettings :: serialize(ofJson&json){
-    ofSerialize(json, params);
-}
-bool ScannerSettings :: deserialize(ofJson&jsonGroup){
-//    cout << "ScannerSettings :: deserialize" << endl;
-//    cout << (&renderProfiles.at("FAST") == &profileFast );
-//    cout << (&renderProfiles.at("DETAIL") == &profileDetail );
-//    cout << (&renderProfiles.at("DEFAULT") == &profileDefault )<< endl;
-     ofDeserialize(jsonGroup, params);
-//    cout << (&renderProfiles.at("FAST") == &profileFast );
-//    cout << (&renderProfiles.at("DETAIL") == &profileDetail );
-//    cout << (&renderProfiles.at("DEFAULT") == &profileDefault )<< endl;
-//
-	 return true; 
-}
-//
-//const string& ScannerSettings :: getLabel() {
-//    return label.get();
-//}

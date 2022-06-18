@@ -8,6 +8,8 @@
 #pragma once
 #include "ofxLaserLaser.h"
 #include "ofxLaserLaser3DVisualObject.h"
+#include "ofxLaserPresetManager.h"
+#include "ofxLaserVisualiser3DSettings.h"
 
 namespace ofxLaser {
 
@@ -34,14 +36,14 @@ class Visualiser3D {
     int numLasers;
     
     ofFbo visFbo;
-    vector<Laser3DVisualObject*> laser3Ds;
-    ofParameter<glm::vec3> cameraOrbit;
-    ofParameter<glm::vec3> cameraOrientation;
-    ofParameter<float> cameraDistance;
-    ofParameter<float> cameraFov;
-    ofParameter<float> brightness; 
+    //vector<Laser3DVisualObject*> laser3Ds;
     
-    ofParameterGroup params;
+    PresetManager<Visualiser3DSettings> visualiserPresetManager;
+    Visualiser3DSettings settings;
+    PresetManager<Visualiser3DLaserSettings> visualiserLaserPresetManager;
+    Visualiser3DLaserSettings lasersettings;
+   
+    //ofParameterGroup params;
     
     
     ofMesh grid; 
