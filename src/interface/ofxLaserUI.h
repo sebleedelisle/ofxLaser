@@ -36,19 +36,29 @@ class UI {
     static void updateGui();
     static void startGui();
     
+    static bool resetButton(string label);
     static bool addIntSlider(ofParameter<int>& param);
     static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", float power = 1.0f) ;
     static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", float power = 1.0f) ;
     static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", float power = 1.0f, string name = "");
 
-   
+    static bool addIntSlider(string label, int& target, int min, int max);
+    static bool addFloatSlider(string label, float& target, float min, float max, const char* format="%.2f", float power = 1.0f) ;
+    static bool addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format="%.2f", float power = 1.0f) ;
+    static bool addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format="%.2f", float power = 1.0f, string name = "");
+
+    
     static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier);
     static bool addFloatAsIntPercentage(ofParameter<float>& param);
+    static bool addFloatAsIntPercentage(string label, float& target, float min = 0, float max = 1);
+
+    static bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip="", const char* format="%.2f", float power = 1.0f);
     
     static bool addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip="", const char* format="%.2f", float power = 1.0f);
     static bool addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip="");
+    //static bool addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip="");
 
-    
+    static bool addResettableFloatAsIntPercentage(string label, float& target, float resetValue, float min = 0, float max = 1);
 
     static bool addCheckbox(ofParameter<bool>&param);
     static bool addNumberedCheckbox(int number, ofParameter<bool>&param);

@@ -108,34 +108,67 @@ bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, s
     
     bool returnvalue = UI::addFloatSlider(param, format, power);
     if(tooltip!="") UI::toolTip(tooltip);
-    //cout << param.getName()<< " " << param << " " << resetParam.getName() << " " << resetParam << endl; 
+   
     if(param!=resetParam) {
         
-        string label = ofToString(ICON_FK_UNDO)+"##"+param.getName();
+        string label = param.getName();
         if(param.getFirstParent()) label = label+param.getFirstParent().getName();
         
-        
-        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-        if (ImGui::Button(label.c_str())) {
+        if(resetButton(label)) {
             param.set(resetParam);
-            returnvalue = true; 
+            returnvalue = true;
         }
     }
 	return returnvalue; 
 }
+
+bool UI::addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip, const char* format, float power){
+    
+    bool returnvalue = UI::addFloatSlider(label, target, min, max, format, power);
+    if(tooltip!="") UI::toolTip(tooltip);
+
+    if(target!=resetValue) {
+
+       if(resetButton(label)) {
+            target = resetValue;
+           returnvalue = true;
+        }
+    }
+    return returnvalue;
+}
+
+
 bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip){
     
     bool returnvalue = UI::addIntSlider(param);
     if(tooltip!="") UI::toolTip(tooltip);
     if(param!=resetParam) {
         
-        string label = ofToString(ICON_FK_UNDO)+"##"+param.getName();
+        string label = param.getName();
         if(param.getFirstParent()) label = label+param.getFirstParent().getName();
         
-        ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-        if (ImGui::Button(label.c_str())) param.set(resetParam);
+        if(resetButton(label)) {
+            param.set(resetParam);
+            returnvalue = true;
+        }
     }
 	return returnvalue; 
+}
+bool UI::addIntSlider(string label, int& target, int min, int max){
+    
+    return ImGui::SliderInt(label.c_str(), (int*)&target, min, max, "%d");
+    
+}
+bool UI::addFloatSlider(string label, float& target, float min, float max, const char* format, float power) {
+    return ImGui::SliderFloat(label.c_str(), &target, min, max, format, power);
+}
+
+bool UI::addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format, float power){
+    return ImGui::SliderFloat2(label.c_str(), glm::value_ptr(target), min.x, max.x, format, power);
+    
+}
+bool UI::addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format, float power, string name){
+    return ImGui::SliderFloat3(label.c_str(), glm::value_ptr(target), min.x, max.x, format, power);
 }
 
 bool UI::addIntSlider(ofParameter<int>& param) {
@@ -143,9 +176,9 @@ bool UI::addIntSlider(ofParameter<int>& param) {
     string label = param.getName();
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
-    
-    if(ImGui::SliderInt(label.c_str(), (int*)&param.get(), param.getMin(), param.getMax(), "%d")){
-        param.set(ofClamp(param.get(), param.getMin(), param.getMax()));
+    int value = param.get();
+    if(addIntSlider(label, value, param.getMin(), param.getMax())) {
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
         return true;
     } else {
         return false;
@@ -155,9 +188,9 @@ bool UI::addFloatSlider(ofParameter<float>& param, const char* format, float pow
     string label = param.getName();
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
-    
-    if(ImGui::SliderFloat(label.c_str(), (float*)&param.get(), param.getMin(), param.getMax(),format, power)){
-        param.set(ofClamp(param.get(), param.getMin(), param.getMax()));
+    float value =param.get();
+    if(addFloatSlider(label, value, param.getMin(), param.getMax(), format, power)){
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
         return true;
     } else {
         return false;
@@ -176,9 +209,10 @@ bool UI::addFloat2Slider(ofParameter<glm::vec2>& parameter, const char* format, 
 
 bool UI::addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format, float power, string label) {
     if(label == "") label =parameter.getName();
-    auto tmpRef = parameter.get();
-    if (ImGui::SliderFloat3(label.c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
-        parameter.set(tmpRef);
+    glm::vec3 tmp = parameter.get();
+    if(addFloat3Slider(label, tmp, parameter.getMin(), parameter.getMax(), format, power)){
+    //if (ImGui::SliderFloat3(label.c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
+        parameter.set(tmp);
         return true;
     }
     return false;
@@ -222,6 +256,14 @@ bool UI::addColour(ofParameter<ofColor>& parameter, bool alpha) {
     
     return false;
 }
+
+bool UI::resetButton(string label) {
+    
+    label = ofToString(ICON_FK_UNDO)+"##"+label;
+    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+    return (ImGui::Button(label.c_str()));
+        
+}
 bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier) {
     int value = param*multiplier;
     if (ImGui::SliderInt(param.getName().c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d")) {
@@ -241,6 +283,29 @@ bool UI::addFloatAsIntPercentage(ofParameter<float>& param) {
         return false;
     }
 }
+
+bool UI::addFloatAsIntPercentage(string label, float& target, float min, float max) {
+    float multiplier = 100.0f;
+    int value = target*multiplier;
+    if (ImGui::SliderInt(label.c_str(), &value, min*multiplier, max*multiplier, "%d%%")) {
+        target =ofClamp((float)value/multiplier,min,max);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool UI::addResettableFloatAsIntPercentage(string label, float& target, float resetvalue, float min, float max) {
+    
+    bool changed =addFloatAsIntPercentage(label, target, min, max);
+    
+    if((target!=resetvalue) && (resetButton(label))) {
+        target = resetvalue;
+        changed = true;
+    }
+    return changed;
+}
+
 bool UI::addCheckbox(ofParameter<bool>&param) {
     if(ImGui::Checkbox(param.getName().c_str(), (bool*)&param.get())) {
         param.set(param.get()); // trigger the events
