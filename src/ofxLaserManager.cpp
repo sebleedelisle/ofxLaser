@@ -133,7 +133,7 @@ void Manager :: initAndLoadSettings() {
 void Manager :: update() {
     
     for(size_t i= 0; i<zones.size(); i++) {
-        zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
+        zones[i]->setEditable(showInputPreview && (viewMode==OFXLASER_VIEW_CANVAS) && (!lockInputZones) && showInputZones);
     }
     
     ManagerBase :: update();
@@ -144,7 +144,7 @@ void Manager :: update() {
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
     //if(ofGetKeyPressed(' ')) {
-        
+    ofLogNotice("Manager :: mousePressed"); 
     if (viewMode  == OFXLASER_VIEW_CANVAS) {
         if(mouseMode == OFXLASER_MOUSE_ZOOM_IN) { //if(ofGetKeyPressed(OF_KEY_COMMAND)) {
             // zoom in
@@ -182,6 +182,9 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
             currentLaser.startDrag(e); //  - previewOffset;
             return true;
         }
+    } else if(viewMode == OFXLASER_VIEW_3D) {
+        visualiser3D.mousePressed(e);
+        
     }
     //}
     return false;
@@ -207,9 +210,11 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
         laser->stopDrag();
         
     }
+    visualiser3D.mouseReleased(e);
     return false;
 }
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
+    visualiser3D.mouseDragged(e);
     if(draggingPreview) {
         previewOffset = e-dragStartPoint;
         return true;
@@ -416,6 +421,7 @@ void Manager :: drawPreviews() {
                 // this renders the input zones in the graphics source space
                 for(size_t i= 0; i<zones.size(); i++) {
                     zones[i]->setOffsetAndScale(previewOffset,previewScale);
+                   // zones[i]->setEditable(!lockInputZones);
                     zones[i]->setVisible(true);
                     zones[i]->draw();
                 }

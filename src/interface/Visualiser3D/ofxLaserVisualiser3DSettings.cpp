@@ -14,7 +14,7 @@ Visualiser3DSettings :: Visualiser3DSettings(){
     
     params.add(label.set("label", "Default"));
     
-    params.add(brightness.set("Brightness adjustment", 1,0.1,10));
+    params.add(brightness.set("Brightness adjustment", 1,0.1,30));
     params.add(showLaserNumbers.set("Show laser numbers", true)); 
     params.add(cameraDistance.set("Camera distance", 50,0,1000));
     params.add(cameraFov.set("Camera FOV", 45,10,120));

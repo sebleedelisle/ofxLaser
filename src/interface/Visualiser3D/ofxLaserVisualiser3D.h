@@ -25,6 +25,17 @@ class Visualiser3D {
         dirty = true;
     }
     
+    
+    bool mouseMoved(ofMouseEventArgs &e);
+    bool mousePressed(ofMouseEventArgs &e);
+    bool mouseReleased(ofMouseEventArgs &e);
+    bool mouseDragged(ofMouseEventArgs &e);
+    bool mouseScrolled(ofMouseEventArgs &e);
+    
+    glm::vec2 lastMousePosition;
+    bool dragging = false;
+    bool changeTarget = false;
+    
     void load();
     void save();
     
@@ -37,6 +48,7 @@ class Visualiser3D {
     int numLasers;
     
     ofFbo visFbo;
+    ofRectangle fboRect;
     ofCamera camera; 
     //vector<Laser3DVisualObject*> laser3Ds;
     

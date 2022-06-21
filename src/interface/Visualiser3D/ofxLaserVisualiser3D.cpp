@@ -23,15 +23,89 @@ Visualiser3D :: Visualiser3D() {
         visualiserLaserPresetManager.addPreset(lasersettings);
     }
     ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
+    
+//    ofAddListener(ofEvents().mousePressed, this, &Visualiser3D::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
+//    ofAddListener(ofEvents().mouseMoved, this, &Visualiser3D::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
+//    ofAddListener(ofEvents().mouseReleased, this, &Visualiser3D::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
+//    ofAddListener(ofEvents().mouseDragged, this, &Visualiser3D::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
+    ofAddListener(ofEvents().mouseScrolled, this, &Visualiser3D::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
 
     // TODO - listener for laser settings - how? 
 
 }
 Visualiser3D :: ~Visualiser3D() {
+    
     ofRemoveListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
+//    
+//    ofRemoveListener(ofEvents().mousePressed, this, &Visualiser3D::mousePressed, OF_EVENT_ORDER_APP);
+//    ofRemoveListener(ofEvents().mouseMoved, this, &Visualiser3D::mouseMoved, OF_EVENT_ORDER_APP);
+//    ofRemoveListener(ofEvents().mouseReleased, this, &Visualiser3D::mouseReleased, OF_EVENT_ORDER_APP);
+//    ofRemoveListener(ofEvents().mouseDragged, this, &Visualiser3D::mouseDragged, OF_EVENT_ORDER_APP);
+    ofRemoveListener(ofEvents().mouseScrolled, this, &Visualiser3D::mouseScrolled, OF_EVENT_ORDER_APP);
+
 }
 
 
+bool Visualiser3D :: mousePressed(ofMouseEventArgs &e) {
+    //ofLogNotice("Visualiser3D :: mousePressed");
+    if(!fboRect.inside(e)) return false;
+    
+    lastMousePosition = e;
+    dragging = true;
+    if(ofGetKeyPressed(OF_KEY_SHIFT)) {
+        changeTarget = true;
+    } else {
+        changeTarget = false;
+    }
+    return false;
+}
+
+bool Visualiser3D :: mouseScrolled(ofMouseEventArgs &e) {
+    
+    if(!fboRect.inside(e)) return false;
+    
+    if(changeTarget) {
+        
+    } else {
+    
+        settings.cameraDistance += e.scrollY*2;
+        
+        
+    }
+    return false;
+}
+
+bool Visualiser3D :: mouseMoved(ofMouseEventArgs &e) {
+    return false;
+}
+bool Visualiser3D :: mouseReleased(ofMouseEventArgs &e) {
+    dragging = false;
+    return false;
+}
+
+bool Visualiser3D :: mouseDragged(ofMouseEventArgs &e) {
+    
+    if(dragging) {
+        glm::vec2 v = (e-lastMousePosition);
+        lastMousePosition = e;
+        if(changeTarget) {
+            v*=0.2;
+            glm::vec3 target = settings.cameraOrbitTarget.get();
+            target.x-=v.x;
+            target.y-=v.y;
+            settings.cameraOrbitTarget.set(target);
+            
+        } else {
+            //v*=0.2;
+            glm::vec2 orbit = settings.cameraOrbit.get();
+            orbit.y -= v.x*0.2;
+            orbit.x += v.y*0.05f;
+            settings.cameraOrbit.set(orbit);
+        }
+        
+    }
+    return false;
+}
 
 void Visualiser3D :: update() {
     //update view stuff
@@ -55,7 +129,8 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     update();
     numLasers = lasers.size();
     
-    
+    fboRect = rect;
+        
     while(lasers.size()>lasersettings.laserObjects.size()) {
         lasersettings.laserObjects.emplace_back();
         

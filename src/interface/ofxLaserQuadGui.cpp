@@ -251,7 +251,7 @@ bool QuadGui :: hitTest(const ofPoint& p) {
 
 
 bool QuadGui :: mousePressed(ofMouseEventArgs &e){
-	
+    //ofLogNotice("QuadGui::mousePressed ") << editable << " " << visible;
 	if((!editable) || (!visible)) return false;
 
     bool hit = hitTestScreen(e);

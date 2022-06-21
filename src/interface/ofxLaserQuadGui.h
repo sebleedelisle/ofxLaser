@@ -70,6 +70,7 @@ class QuadGui {
 	void setVisible(bool warpvisible);
 	bool isVisible() { return visible; };
     void setEditable(bool _editable) {
+        //ofLogNotice("QuadGui::setEditable : ") << editable; 
         editable = _editable;
     }
     bool getEditable() { return editable; };

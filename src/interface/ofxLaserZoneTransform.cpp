@@ -515,12 +515,12 @@ void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
 }
 
 bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
-	
+    //ofLogNotice("ZoneTransform::mousePressed");
 	// TODO there is currently an issue where if a zone is on top of another
     // zone, you can't click on a handle underneath. Not sure of how to fix this...
     // but possibly needs some higher level logic than here.
     
-	if((!editable) || (!visible)) return ;
+	if((!editable) || (!visible)) return false;
     //if(ofGetKeyPressed(' ')) return ; // for dragging around previews.
 
 	mousePos = e;

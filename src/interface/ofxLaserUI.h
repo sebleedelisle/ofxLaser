@@ -214,8 +214,10 @@ class UI {
 		return false; // propogate events 
     }
     static bool mousePressed(ofMouseEventArgs &e) {
+        ofLogNotice("UI::mousePressed"); 
         int iobutton = e.button;
         if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
         ImGui::GetIO().MouseDown[iobutton] = true;
         //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
         if(ImGui::GetIO().WantCaptureMouse) {
@@ -231,6 +233,7 @@ class UI {
     static bool mouseReleased(ofMouseEventArgs &e) {
         int iobutton = e.button;
         if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+        ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
         ImGui::GetIO().MouseDown[iobutton] = false;
         if(ImGui::GetIO().WantCaptureMouse) return true;
         else return false;
