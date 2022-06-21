@@ -1416,7 +1416,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
    // UI::addNumberedCheckbox(laser->laserIndex+1, laser->armed);
     string label = "ARM";
     
-    if(UI::NumberedCheckBox(laser->laserIndex+1, label.c_str(), (bool*)&laser->armed.get())) {
+    if(UI::addNumberedCheckBox(laser->laserIndex+1, label.c_str(), (bool*)&laser->armed.get())) {
         laser->armed.set(laser->armed.get()); // trigger the events
     }
     ImGui::PushItemWidth(laserpanelwidth-(spacing*2));

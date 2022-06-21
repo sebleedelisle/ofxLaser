@@ -27,11 +27,13 @@ class Visualiser3DSettings : public PresetBase {
     virtual void serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;
 
-    ofParameter<glm::vec3> cameraOrbit;
-    ofParameter<glm::vec3> cameraOrientation;
+    ofParameter<glm::vec2> cameraOrbit;
+    ofParameter<glm::vec3> cameraOrbitTarget;
     ofParameter<float> cameraDistance;
     ofParameter<float> cameraFov;
     ofParameter<float> brightness;
+    ofParameter<bool> showLaserNumbers;
+    
 
     
 };

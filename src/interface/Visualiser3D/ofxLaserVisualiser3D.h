@@ -37,6 +37,7 @@ class Visualiser3D {
     int numLasers;
     
     ofFbo visFbo;
+    ofCamera camera; 
     //vector<Laser3DVisualObject*> laser3Ds;
     
     PresetManager<Visualiser3DSettings> visualiserPresetManager;
@@ -45,7 +46,7 @@ class Visualiser3D {
     Visualiser3DLaserSettings lasersettings;
    
     //ofParameterGroup params;
-    
+     
     
     ofMesh grid; 
     bool dirty = false; 

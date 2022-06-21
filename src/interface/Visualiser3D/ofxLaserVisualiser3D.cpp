@@ -70,13 +70,20 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     ofBackground(0);
     
     // ofSetDepthTest(true);
-    ofSetupScreenPerspective(800, 350, settings.cameraFov,0.1,100000);
+  
+    //ofSetupScreenPerspective(800, 350, settings.cameraFov,0.1,100000);
     
-    float eyeY = 800 / 2;
-    float halfFov = PI * settings.cameraFov / 360;
-    float theTan = tanf(halfFov);
-    float dist = eyeY / theTan;
+    //float eyeY = 800 / 2;
+    //float halfFov = PI * settings.cameraFov / 360;
+    //float theTan = tanf(halfFov);
+    //float dist = eyeY / theTan;
     //ofLogNotice()<<dist;
+    
+    camera.begin();
+    //camera.setPosition(0, 0, 0);
+    camera.setVFlip(true);
+    camera.setFov(settings.cameraFov);
+    camera.orbitDeg(settings.cameraOrbit.get().y, settings.cameraOrbit.get().x, settings.cameraDistance, settings.cameraOrbitTarget);
     
     ofPushMatrix();
     ofPushStyle();
@@ -84,19 +91,19 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     
     //float scalefactor = (float)rect.getWidth()/800.0f;
    // ofScale(scalefactor);
-    ofTranslate(400,175,600);
+    //ofTranslate(400,175,600);
     
-    
-    ofRotateYDeg(settings.cameraOrientation.get().x);
-    ofRotateXDeg(settings.cameraOrientation.get().y);
-   
-    ofTranslate(0,0,-settings.cameraDistance); // pull back z units
-    
-    ofRotateXDeg(settings.cameraOrbit.get().y);
-    ofRotateYDeg(settings.cameraOrbit.get().x);
-   
-    
-    ofPoint mousepos(ofGetMouseX(), ofGetMouseY());
+//
+//    ofRotateYDeg(settings.cameraOrientation.get().x);
+//    ofRotateXDeg(settings.cameraOrientation.get().y);
+//
+//    ofTranslate(0,0,-settings.cameraDistance); // pull back z units
+//
+//    ofRotateXDeg(settings.cameraOrbit.get().y);
+//    ofRotateYDeg(settings.cameraOrbit.get().x);
+//
+//
+//    ofPoint mousepos(ofGetMouseX(), ofGetMouseY());
     
 //    ofRectangle fboRect(0,0,visFbo.getWidth(), visFbo.getHeight());
 //    if(fboRect.inside(mousepos)) {
@@ -116,20 +123,25 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
         
         //move to the laser position
         ofTranslate(laser3D.position);
+        if(i<lasers.size()) {
+            ofSetColor(0,100,0);
+        } else {
+            ofSetColor(0,50,0);
+        }
+        
+        if(settings.showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
+        
+        ofPushMatrix();
         ofRotateXDeg(laser3D.orientation.get().x);
         ofRotateYDeg(laser3D.orientation.get().y);
         ofRotateZDeg(laser3D.orientation.get().z);
         
         ofNoFill();
         ofSetLineWidth(1);
-        if(i<lasers.size()) {
-            ofSetColor(0,100,0);
-        } else {
-            ofSetColor(0,50,0);
-        }
+        
         ofDrawBox(0, 0, -5, 7, 5, 10);
         
-        
+        ofPopMatrix();
         if(i<lasers.size()) {
             ofxLaser::Laser& laser = *lasers.at(i);
            
@@ -149,8 +161,8 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
                 const glm::vec3& lp2 = points[i];
                 
                 
-                ofFloatColor colour1 = ofFloatColor(colours[i-1])*brightnessfactor; // lp1.getColour();
-                ofFloatColor colour2 = ofFloatColor(colours[i])*brightnessfactor;//lp2.getColour()*brightnessfactor;
+                ofFloatColor colour1 = ofFloatColor(colours[i-1]); // lp1.getColour();
+                ofFloatColor colour2 = ofFloatColor(colours[i]);//lp2.getColour()*brightnessfactor;
                 
                 // find 3 points that make a triangle
                 // the point of the triangle is at the laser position
@@ -160,23 +172,32 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
                 // distance in the centre of the screen.
                 ofPoint p1, p2;
           
-                p1.z = 250;
-                p2.z = 250;
-                p1.rotate(ofMap(lp1.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(0,1,0));
-                p2.rotate(ofMap(lp2.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(0,1,0));
-                p1.rotate(ofMap(lp1.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(-1,0,0));
-                p2.rotate(ofMap(lp2.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2), ofPoint(-1,0,0));
+                p1.z = 1000;
+                p2.z = 1000;
+                p1.rotate(ofMap(lp1.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
+                p2.rotate(ofMap(lp2.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
+               
+                p1.rotate(ofMap(lp1.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2) + laser3D.orientation.get().y, ofPoint(0,1,0));
+                p2.rotate(ofMap(lp2.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().y, ofPoint(0,1,0));
                 
-                //glm::vec3 beamnormal = glm::normalize(p1-laserpos);
-                
+                ofPoint beamNormal = p1.getNormalized();
+                ofPoint cameraNormal = ofPoint(laser3D.position)-camera.getGlobalPosition();
+                cameraNormal.normalize();
+                float dotproduct = beamNormal.dot(cameraNormal);
+                dotproduct = ofMap(abs(dotproduct),0.5,1,0,1,true);
+                dotproduct=pow(dotproduct,20);
+                //ofLogNotice()<<dotproduct;
+                // if it's negative it's coming towards us, positive going away from us
+                float directionBrightnessMultiplier = ofMap(abs(dotproduct), 0, 1,0.1,1);
+                //ofLogNotice() << dotproduct << " " << " " << cameraNormal ;
                 
                 
                 laserMesh.addVertex(ofPoint(0,0,0));
-                laserMesh.addColor(colour1);
+                laserMesh.addColor(colour1*directionBrightnessMultiplier*brightnessfactor);
                 laserMesh.addVertex(p1);
-                laserMesh.addColor(colour1*0.1f);
+                laserMesh.addColor(colour1*0.1f*directionBrightnessMultiplier*brightnessfactor);
                 laserMesh.addVertex(p2);
-                laserMesh.addColor(colour2*0.0f);
+                laserMesh.addColor(colour2*0.0f*directionBrightnessMultiplier*brightnessfactor);
                 
                 // laserMesh.draw();
                 
@@ -197,6 +218,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     
     ofPopStyle();
     ofPopMatrix();
+    camera.end();
     visFbo.end();
     visFbo.draw(rect.getTopLeft());
     
@@ -275,23 +297,33 @@ void Visualiser3D ::drawUI(){
     Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
     
     UI::addResettableFloatSlider(settings.brightness, currentPreset.brightness); //.set("Camera FOV",
-    UI::addResettableFloatSlider(settings.cameraDistance, currentPreset.brightness); //.set("Camera FOV", 45,10,120))
-    UI::addFloatSlider(settings.cameraFov); //.set("Camera FOV", 45,10,120));
+    UI::addResettableCheckbox(settings.showLaserNumbers, currentPreset.showLaserNumbers); //.set("Camera FOV",
+    UI::addResettableFloatDrag(settings.cameraDistance, currentPreset.cameraDistance); //.set("Camera FOV", 45,10,120))
+    UI::addResettableFloatDrag(settings.cameraFov, currentPreset.cameraFov); //.set("Camera FOV", 45,10,120));
     
-    UI::addFloat3Slider(settings.cameraOrbit);//.set("Camera position", glm::vec3(0,-2000,0)));
-    UI::addFloat3Slider(settings.cameraOrientation);//.set("Camera orientation", glm::vec3(0,0,0)));
+    UI::addResettableFloat2Drag(settings.cameraOrbit, currentPreset.cameraOrbit, 1, "Orbits around the target point, pitch and yaw");//.set("Camera position", glm::vec3(0,-2000,0)));
+    UI::addResettableFloat3Drag(settings.cameraOrbitTarget, currentPreset.cameraOrbitTarget, 1, "The point the camera is looking at");//.set("Camera orientation", glm::vec3(0,0,0)));
     
     ImGui::Separator();
     
     visualiserLaserPresetManager.drawComboBox(lasersettings);
     visualiserLaserPresetManager.drawSaveButtons(lasersettings);
+    Visualiser3DLaserSettings& currentLaserPreset = *visualiserLaserPresetManager.getPreset(lasersettings.getLabel());
     
     for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
         ImGui::Separator();
         ImGui::Text("Laser %d", i+1);
         Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
-        UI::addFloat3Slider(laser3D.position, "%.0f", 1, "Position##"+ofToString(i));
-        UI::addFloat3Slider(laser3D.orientation, "%.0f", 1, "Orientation##"+ofToString(i));
+    
+        if(currentLaserPreset.laserObjects.size()>i) {
+            Laser3DVisualObject& laser3DCurrentPreset = currentLaserPreset.laserObjects[i];
+            UI::addResettableFloat3Drag(laser3D.position, laser3DCurrentPreset.position, 1, "", "%.0f", "##"+ofToString(i));
+            UI::addResettableFloat3Drag(laser3D.orientation,  laser3DCurrentPreset.orientation, 1, "", "%.0f", "##"+ofToString(i));
+            
+        } else {
+            UI::addFloat3Drag(laser3D.position, 1, "%.0f", "##"+ofToString(i));
+            UI::addFloat3Drag(laser3D.orientation, 1, "%.0f", "##"+ofToString(i));
+        }
     }
     
     if(numLasers<lasersettings.laserObjects.size()) {
