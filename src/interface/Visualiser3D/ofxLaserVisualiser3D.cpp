@@ -110,6 +110,11 @@ bool Visualiser3D :: mouseDragged(ofMouseEventArgs &e) {
 void Visualiser3D :: update() {
     //update view stuff
     
+    if(smoothedCameraOrbit != settings.cameraOrbit.get()) {
+        smoothedCameraOrbit += ((settings.cameraOrbit.get()-smoothedCameraOrbit)*0.4);
+
+    }
+    
     bool needsSave = dirty;
     for(Laser3DVisualObject& laser3D : lasersettings.laserObjects) {
         if(laser3D.dirty) {
@@ -158,7 +163,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
     //camera.setPosition(0, 0, 0);
     camera.setVFlip(true);
     camera.setFov(settings.cameraFov);
-    camera.orbitDeg(settings.cameraOrbit.get().y, settings.cameraOrbit.get().x, settings.cameraDistance, settings.cameraOrbitTarget);
+    camera.orbitDeg(smoothedCameraOrbit.y, smoothedCameraOrbit.x, settings.cameraDistance, settings.cameraOrbitTarget);
     
     ofPushMatrix();
     ofPushStyle();
@@ -272,7 +277,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
                 laserMesh.addVertex(p1);
                 laserMesh.addColor(colour1*0.1f*directionBrightnessMultiplier*brightnessfactor);
                 laserMesh.addVertex(p2);
-                laserMesh.addColor(colour2*0.0f*directionBrightnessMultiplier*brightnessfactor);
+                laserMesh.addColor(colour2*0.1f*directionBrightnessMultiplier*brightnessfactor);
                 
                 // laserMesh.draw();
                 
@@ -305,21 +310,54 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
 void Visualiser3D :: drawGrid() {
     
     if(true) { // grid.size()==0)) {
-        grid.clear();
-        grid.setMode(OF_PRIMITIVE_LINES);
-        for(int x = -500; x<500; x+=10) {
-            grid.addVertex(glm::vec3(x, 40, -200));
-            grid.addVertex(glm::vec3(x, 40, 200));
-            grid.addColor(ofColor(0, 0, 0));
-            grid.addColor(ofColor(0, 50, 0));
-        }
-        for(int z = -300; z<100; z+=10) {
-            grid.addVertex(glm::vec3(-500, 40, z));
-            grid.addVertex(glm::vec3(500, 40, z));
-            grid.addColor(ofColor(0, ofMap(z,-300,100,0,50), 0));
-            grid.addColor(ofColor(0, ofMap(z,-300,100,0,50), 0));
-        }
+    
+//        ofRectangle visibleRectangle(camera.getGlobalPosition(), 0,0);
+//        ofPoint leftEdgePoint(0,0,-1000);
+//        ofPoint rightEdgePoint = leftEdgePoint;
+//        leftEdgePoint.rotate(settings.cameraOrbit.get().y+ (settings.cameraFov/2), ofPoint(0,1,0));
+//        rightEdgePoint.rotate( settings.cameraOrbit.get().y- (settings.cameraFov/2), ofPoint(0,1,0));
+//        leftEdgePoint+=camera.getGlobalPosition();
+//        rightEdgePoint+=camera.getGlobalPosition();
+//        ofFill();
+//        ofSetColor(255);
+//        ofDrawSphere(leftEdgePoint,10);
+//        ofDrawSphere(rightEdgePoint,10);
+//        visibleRectangle.growToInclude(leftEdgePoint);
+//        visibleRectangle.growToInclude(rightEdgePoint);
+//
+//        ofDrawRectangle(visibleRectangle);
+        
+        if(gridDirty) {
+            gridDirty = false;
+            float gridspacing = 20;
+            
+            
+            grid.clear();
+            grid.setMode(OF_PRIMITIVE_LINES);
+            for(int x = -1000; x<1000; x+=gridspacing) {
+                for(int z = -1000; z<1000; z+=gridspacing) {
+                    
+                    ofColor col = ofColor(0,50,0);
+                    ofPoint p (x, 40, z);
+                    ofPoint v = camera.getGlobalPosition();
+                    float dist = v.distance(p);
+                    float brightness = ofMap(dist, 500,1000,1,0,true);
+                    if(brightness>0) {
+                        col*=brightness;
+                        grid.addVertex(glm::vec3(x, 40, z));
+                        grid.addVertex(glm::vec3(x, 40, z+gridspacing));
+                        grid.addColor(col);
+                        grid.addColor(col);
+                        
+                        grid.addVertex(glm::vec3(x, 40, z));
+                        grid.addVertex(glm::vec3(x+gridspacing,40,z));
+                        grid.addColor(col);
+                        grid.addColor(col);
+                    }
+                }
+            }
 
+        }
     }
     grid.draw();
     

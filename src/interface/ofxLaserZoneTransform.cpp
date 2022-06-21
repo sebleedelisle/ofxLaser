@@ -31,6 +31,7 @@ ZoneTransform::ZoneTransform() {
     transformParams.setName("ZoneTransformParams");
 
     transformParams.add(locked.set("locked", false));
+  
     transformParams.add(editSubdivisions.set("edit subdivisions", false));
     transformParams.add(xDivisionsNew.set("x divisions", 1,1,6));
     transformParams.add(yDivisionsNew.set("y divisions", 1,1,6));
@@ -54,7 +55,8 @@ ZoneTransform::ZoneTransform() {
     uiZoneHandleColourOver = ofColor :: fromHex(0xffffff);
     uiZoneStrokeSubdivisionColour = ofColor :: fromHex(0x00386D);;
     uiZoneStrokeSubdivisionColourSelected = ofColor :: fromHex(0x006ADB);;;
-    
+    snapToGrid = false;
+    gridSize  = 1;
     
 
 }

@@ -87,6 +87,8 @@ void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, b
 	yAxis = dragYAxis;
 	altKeyDisable = dontMoveWhenAltPressed;
 	startPos = *this;
+    snapToGrid = true;
+    gridSize = 20; 
 	
 };
 

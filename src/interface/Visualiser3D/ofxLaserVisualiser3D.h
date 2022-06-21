@@ -23,6 +23,7 @@ class Visualiser3D {
     
     void paramsChanged(ofAbstractParameter& e){
         dirty = true;
+        gridDirty = true;
     }
     
     
@@ -49,7 +50,9 @@ class Visualiser3D {
     
     ofFbo visFbo;
     ofRectangle fboRect;
-    ofCamera camera; 
+    ofCamera camera;
+    glm::vec2 smoothedCameraOrbit;
+    glm::vec3 smoothedCameraTarget;
     //vector<Laser3DVisualObject*> laser3Ds;
     
     PresetManager<Visualiser3DSettings> visualiserPresetManager;
@@ -62,7 +65,7 @@ class Visualiser3D {
     
     ofMesh grid; 
     bool dirty = false; 
-    
+    bool gridDirty = true;
 };
 }
 

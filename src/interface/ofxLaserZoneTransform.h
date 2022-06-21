@@ -64,6 +64,19 @@ class ZoneTransform {
 
     void getPerimeterPoints(vector<glm::vec3>& points); 
 	void setHandleSize(float size);
+    
+    bool setGrid(bool snapstate, int gridsize) {
+        if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
+            snapToGrid = snapstate;
+            gridSize = gridsize;
+            for(auto handle : dstHandles) {
+                handle.snapToGrid = snapToGrid;
+                handle.gridSize = gridSize;
+            }
+        } else {
+            return false;
+        }
+    }
 	
     bool getSelected();
     void setSelected(bool v);
@@ -104,6 +117,9 @@ class ZoneTransform {
 	
     ofParameterGroup transformParams; 
 
+    bool snapToGrid;
+    int gridSize;
+    
     ofParameter<bool>locked; 
 	ofParameter<bool>editSubdivisions;
 	ofParameter<bool>useHomography;

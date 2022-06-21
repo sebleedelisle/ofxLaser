@@ -1204,7 +1204,7 @@ void Manager::drawLaserGui() {
         ImGui::Separator();
         UI::addIntSlider(laser->testPattern);
         UI::addCheckbox(laser->hideContentDuringTestPattern);
-        UI::toolTip("Disable this if you want to see the laser content at the same time as the text patterns");
+        UI::toolTip("Disable this if you want to see the laser content at the same time as the test patterns");
         
         UI::addParameter(zoneEditorShowLaserPath);
        
