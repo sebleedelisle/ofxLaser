@@ -162,6 +162,25 @@ void Laser :: init() {
 
 
 
+void Laser :: setGrid(bool gridstate, int gridsize){
+  
+    snapToGrid = gridstate;
+    gridSize = gridsize;
+    for(LaserZone* zone : laserZones) {
+        zone->gridSize = gridsize;
+        zone->snapToGrid = gridstate;
+    }
+    gridMesh.clear();
+    int spacing = gridSize;
+    if(gridSize<5) spacing = 5;
+    for(int x = 0; x<800; x+=spacing) {
+        for(int y = 0; y<800; y+=spacing) {
+            gridMesh.addVertex(ofPoint(x,y));
+        }
+    }
+    gridMesh.setMode(OF_PRIMITIVE_POINTS);
+    
+}
 
 void Laser ::setDacArmed(bool& _armed){
     dac->setArmed(_armed);
@@ -336,6 +355,15 @@ void Laser::drawTransformUI() {
     ofDrawRectangle(previewOffset.x, previewOffset.y, 800*previewScale, 800*previewScale);
 	ofNoFill();
 
+    if(snapToGrid) {
+        ofPushMatrix();
+        ofTranslate(previewOffset);
+        ofScale(previewScale);
+        ofSetColor(ofColor::fromHex(0x0E87E7));
+        gridMesh.draw();
+        ofPopMatrix();
+    }
+    
    // float scale = w/800.0f;
     //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
     for(int i = laserZones.size()-1; i>=0; i--) {

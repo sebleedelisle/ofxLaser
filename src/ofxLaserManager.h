@@ -39,6 +39,10 @@ class Manager : public ManagerBase {
     virtual void initAndLoadSettings();
     virtual void update() override;
     
+    void paramChanged(ofAbstractParameter& e) ;
+    
+    
+    
     void initSVGs(); 
     
     bool deleteLaser(Laser* laser) override;
@@ -105,6 +109,8 @@ class Manager : public ManagerBase {
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
+    ofParameter<bool> zoneGridSnap;
+    ofParameter<int> zoneGridSize; 
     bool dacAssignmentWindowOpen;
     
     ofParameter<bool> zoneEditorShowLaserPath;

@@ -94,6 +94,8 @@ Manager::~Manager() {
     ofRemoveListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
+    ofRemoveListener(params.parameterChangedE(), this, &Manager::paramChanged);
+   
     
 }
 
@@ -115,20 +117,40 @@ void Manager :: initAndLoadSettings() {
     //interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
     //interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
     //interfaceParams.add(laserMasks.set("Laser mask shapes", false));
+    
+
+    
+    
    
     params.add(interfaceParams);
     
     customParams.setName("CUSTOM PARAMETERS");
     params.add(customParams);
     
+    // is this still used ?
     params.add(zoneEditorShowLaserPath.set("Show path in zone editor", true));
+    params.add(zoneGridSnap.set("Zone snap to grid", true));
+    params.add(zoneGridSize.set("Zone grid size", 20,1,50));
     
+    ofAddListener(params.parameterChangedE(), this, &Manager::paramChanged);
+   
     loadSettings();
     
     showInputPreview = true;
     
     
 }
+void Manager :: paramChanged(ofAbstractParameter& e) {
+    for(Laser* laser : lasers) {
+    
+        laser->setGrid(zoneGridSnap, zoneGridSize);
+        
+        
+    }
+    
+    
+}
+
 
 void Manager :: update() {
     
@@ -1218,7 +1240,8 @@ void Manager::drawLaserGui() {
         //UI::addCheckbox(laser->paused);
         UI::toolTip("Pauses the output of the laser (useful for adjusting the settings)");
         
-        
+        UI::addParameter(zoneGridSnap);
+        UI::addParameter(zoneGridSize);
         
         // Laser Output Masks
         

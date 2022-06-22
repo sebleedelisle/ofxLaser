@@ -34,6 +34,10 @@ namespace ofxLaser {
         
     }
     
+    void setGrid(bool snapstate, int gridsize) {
+        snapToGrid = snapstate;
+        gridSize = gridsize; 
+    }
         
 	void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 

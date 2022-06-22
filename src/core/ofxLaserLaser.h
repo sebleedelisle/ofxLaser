@@ -52,6 +52,8 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
+    void setGrid(bool gridstate, int gridsize); 
+    
     
     void update(bool updateZones);
     void send( float masterIntensity = 1, ofPixels* pixelmask = NULL);
@@ -187,7 +189,11 @@ class Laser {
     bool previewDragging;
     glm::vec2 dragStartPoint;
   
-    
+    // parent laser manager is in control of this
+    bool snapToGrid;
+    int gridSize;
+    ofMesh gridMesh; 
+  
     ofMesh previewPathMesh;
     vector<ofColor> previewPathColours;
    
