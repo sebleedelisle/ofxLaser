@@ -76,7 +76,7 @@ class Laser {
     
     // Zones
     
-    void addZone(Zone* zone, float srcwidth, float srcheight);
+    void addZone(Zone* zone, float srcwidth, float srcheight, bool isAlternate = false);
     bool hasZone(Zone* zone);
     bool removeZone(Zone* zone);
     bool muteZone(int zonenum);
@@ -135,7 +135,7 @@ class Laser {
     
     int laserIndex;
     vector<LaserZone*> laserZones;
-    vector<LaserZone*> altLaserZones;
+    //vector<LaserZone*> altLaserZones;
     
     string savePath ="ofxLaser/lasers/";
     
@@ -164,6 +164,9 @@ class Laser {
     ofParameter<bool>hideContentDuringTestPattern;
  
     int numTestPatterns;
+    ofParameter<bool> useAlternate;
+    ofParameter<bool> muteOnAlternate;
+    
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
     ofParameter<int> mountOrientation;

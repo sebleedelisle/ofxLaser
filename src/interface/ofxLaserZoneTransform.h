@@ -30,17 +30,8 @@ class ZoneTransform {
     
 	void init(ofRectangle& srcRect);
 
-    void setHue(int hue) {
-        uiZoneFillColour.setHue(hue);
-        uiZoneFillColourSelected.setHue(hue);
-        uiZoneStrokeColour.setHue(hue);
-        uiZoneStrokeColourSelected.setHue(hue);
-        uiZoneHandleColour.setHue(hue);
-        uiZoneHandleColourOver.setHue(hue);
-        uiZoneStrokeSubdivisionColour.setHue(hue);
-        uiZoneStrokeSubdivisionColourSelected.setHue(hue); 
-      
-    }
+    void setHue(int hue);
+    void updateHandleColours();
 	
 	void initListeners();
 	void removeListeners();
@@ -91,6 +82,9 @@ class ZoneTransform {
 	
     bool getSelected();
     void setSelected(bool v);
+    
+    bool getIsAlternate();
+    void setIsAlternate(bool v);
     
     float getRight();
     float getLeft() ;
@@ -171,6 +165,7 @@ class ZoneTransform {
 	bool editable;  // visible and editable
     bool visible;
 	bool isDirty;
+    bool isAlternate;
 	
 	bool initialised = false;
 	int xDivisions;

@@ -47,7 +47,7 @@ ZoneTransform::ZoneTransform() {
     
     ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
     
-    uiZoneFillColour  = ofColor::fromHex(0x000b16);
+    uiZoneFillColour  = ofColor::fromHex(0x001123, 128);
     uiZoneFillColourSelected = ofColor::fromHex(0x001123);
     uiZoneStrokeColour  = ofColor::fromHex(0x0E87E7);
     uiZoneStrokeColourSelected = ofColor::fromHex(0x0E87E7);
@@ -58,7 +58,9 @@ ZoneTransform::ZoneTransform() {
     snapToGrid = false;
     gridSize  = 1;
     
+    isAlternate = false;
     
+    updateHandleColours();
 }
 
 void ZoneTransform :: paramChanged(ofAbstractParameter& e) {
@@ -138,11 +140,8 @@ void ZoneTransform::draw(string label) {
         ofVertex(dstHandles[index]);
     }
     
-    
     ofEndShape();
     ofNoFill();
-    
-    
     
     ofSetColor(uiZoneStrokeColour);
     ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
@@ -352,12 +351,7 @@ void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::
     
     for(size_t i= 0; i<dstHandles.size(); i++) {
         dstHandles[i].set(toOf(dstCVPoints[i]));
-        dstHandles[i].setColour(uiZoneHandleColour, uiZoneHandleColourOver);
-        
-        
     }
-    
-    
 }
 
 void ZoneTransform::resetFromCorners() {
@@ -759,6 +753,12 @@ void ZoneTransform::setHandleSize(float size) {
     
 }
 
+bool ZoneTransform::getIsAlternate() {
+    return isAlternate;
+}
+void ZoneTransform::setIsAlternate(bool v){
+    isAlternate = v;
+}
 
 bool ZoneTransform::getSelected() {
     return selected;
@@ -808,4 +808,24 @@ float ZoneTransform::getBottom() {
     }
     
     return bottom;
+}
+void ZoneTransform::setHue(int hue) {
+    uiZoneFillColour.setHue(hue);
+    uiZoneFillColourSelected.setHue(hue);
+    uiZoneStrokeColour.setHue(hue);
+    uiZoneStrokeColourSelected.setHue(hue);
+    uiZoneHandleColour.setHue(hue);
+    uiZoneHandleColourOver.setHue(hue);
+    uiZoneStrokeSubdivisionColour.setHue(hue);
+    uiZoneStrokeSubdivisionColourSelected.setHue(hue);
+    updateHandleColours();
+  
+}
+void ZoneTransform::updateHandleColours() {
+    
+    for(size_t i= 0; i<dstHandles.size(); i++) {
+       
+        dstHandles[i].setColour(uiZoneHandleColour, uiZoneHandleColourOver);
+    }
+    
 }

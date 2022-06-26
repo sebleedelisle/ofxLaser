@@ -51,7 +51,9 @@ void LaserZone :: draw() {
     if(!visible) return ;
     ofPushStyle();
     //ofEnableAlphaBlending();
-    ZoneTransform::draw(ofToString(zone.getIndex()+1));
+    string label =ofToString(zone.getIndex()+1);
+    if(isAlternate) label += "ALT";
+    ZoneTransform::draw(label);
 
    
     ofPushMatrix();

@@ -96,6 +96,10 @@ void Laser :: init() {
     
     params.add(dacId.set("dacId", ""));
     params.add(dacAlias.set("dacAlias", ""));
+    
+    params.add(useAlternate.set("Use alternate zones", false));
+    params.add(muteOnAlternate.set("Mute instead of alternates", false));
+ 
    
     hideContentDuringTestPattern.set("Test pattern only", true);
 	ofParameterGroup laserparams;
@@ -209,16 +213,29 @@ void Laser:: colourShiftChanged(float& e){
 }
 
 
-void Laser::addZone(Zone* zone, float srcwidth, float srcheight) {
+void Laser::addZone(Zone* zone, float srcwidth, float srcheight, bool isAlternate) {
 
-	if(hasZone(zone)) {
+	if(hasZone(zone) && !isAlternate) {
 		ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
 		return;
 	}
+    if(hasAltZone(zone) && isAlternate) {
+        ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains alt zone");
+        return;
+    }
+    if((!hasZone(zone)) && isAlternate) {
+        ofLog(OF_LOG_ERROR, "Laser :: addZone(...) can only add alt if laser has zone already");
+    }
     
     LaserZone* laserZone = new LaserZone(*zone);
+    if(isAlternate) {
+        laserZone->setHue(100);
+        laserZone->setIsAlternate(true);
+    }
+    
     laserZones.push_back(laserZone);
-    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zone->getIndex()) + ".json");
+    
+    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zone->getIndex()) + (isAlternate?"alt.json" : ".json"));
 
     
     if(!laserZoneJson.empty()) {
@@ -239,34 +256,7 @@ void Laser::addZone(Zone* zone, float srcwidth, float srcheight) {
 
 
 void Laser::addAltZone(Zone* zone, float srcwidth, float srcheight) {
-
-    if(hasAltZone(zone)) {
-        ofLog(OF_LOG_ERROR, "Laser::addAlt Zone(...) - Laser already contains alt zone");
-        return;
-    }
-    if(!hasZone(zone)) {
-        ofLog(OF_LOG_ERROR, "Laser :: addAltZone(...) can only add alt if laser has zone already");
-    }
-    
-    LaserZone* laserZone = new LaserZone(*zone);
-    laserZone->setHue(100);
-    altLaserZones.push_back(laserZone);
-    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"altzone" + ofToString(zone->getIndex()) + ".json");
-
-    
-    if(!laserZoneJson.empty()) {
-        laserZone->deserialize(laserZoneJson);
-    } else {
-        // initialise zoneTransform
-        laserZone->init(zone->rect);
-
-        laserZone->zoneMask = zone->rect;
-    }
-    // sort the zones... oh a fancy lambda check me out
-    std::sort(altLaserZones.begin(), altLaserZones.end(), [](const LaserZone* a, const LaserZone* b) -> bool {
-        return (a->getZoneIndex()<b->getZoneIndex());
-    });
-    saveSettings();
+    addZone(zone, srcwidth, srcheight, true);
      
 }
 
@@ -282,8 +272,8 @@ bool Laser :: hasZone(Zone* zone){
 
 bool Laser :: hasAltZone(Zone* zone){
     
-    for(LaserZone* laserZone : altLaserZones) {
-        if(zone == &laserZone->zone) return true;
+    for(LaserZone* laserZone : laserZones) {
+        if((laserZone->getIsAlternate()) && (zone == &laserZone->zone)) return true;
     }
     return false;
 }
@@ -295,9 +285,9 @@ bool Laser :: removeZone(Zone* zone){
     
     vector<LaserZone*>::iterator it = std::find(laserZones.begin(), laserZones.end(), laserZone);
 
-    // TODO Check cleanup
     laserZones.erase(it);
     delete laserZone;
+    removeAltZone(zone);
     
     saveSettings();
     
@@ -311,10 +301,9 @@ bool Laser :: removeAltZone(Zone* zone){
     LaserZone* laserZone = getLaserAltZoneForZone(zone);
     if(laserZone==nullptr) return false;
     
-    vector<LaserZone*>::iterator it = std::find(altLaserZones.begin(), altLaserZones.end(), laserZone);
+    vector<LaserZone*>::iterator it = std::find(laserZones.begin(), laserZones.end(), laserZone);
 
-    // TODO Check cleanup
-    altLaserZones.erase(it);
+    laserZones.erase(it);
     delete laserZone;
     
     saveSettings();
@@ -327,14 +316,14 @@ bool Laser :: removeAltZone(Zone* zone){
 
 LaserZone* Laser::getLaserZoneForZone(Zone* zone) {
     for(LaserZone* laserZone : laserZones) {
-        if(&laserZone->zone == zone) return laserZone;
+        if((!laserZone->getIsAlternate()) && (&laserZone->zone == zone)) return laserZone;
     }
     return nullptr;
 }
 
 LaserZone* Laser::getLaserAltZoneForZone(Zone* zone) {
-    for(LaserZone* laserZone : altLaserZones) {
-        if(&laserZone->zone == zone) return laserZone;
+    for(LaserZone* laserZone : laserZones) {
+        if((laserZone->getIsAlternate()) && (&laserZone->zone == zone)) return laserZone;
     }
     return nullptr;
 }
@@ -344,9 +333,7 @@ void Laser::updateZoneMasks() {
     for(LaserZone* laserZone : laserZones) {
         laserZone->updateZoneMask();
     }
-    for(LaserZone* laserZone : altLaserZones) {
-        laserZone->updateZoneMask();
-    }
+   
 }
 
 vector<LaserZone*> Laser::getActiveZones(){
@@ -456,14 +443,6 @@ void Laser::drawTransformUI() {
 
     }
     
-    for(int i = altLaserZones.size()-1; i>=0; i--) {
-        LaserZone* laserZone = altLaserZones[i];
-        //if(!laserZone->getEnabled()) continue;
-        laserZone->setScale(previewScale);
-        laserZone->setOffset(previewOffset);
-        laserZone->draw();
-
-    }
     maskManager.setOffsetAndScale(previewOffset,previewScale);
     maskManager.draw();
    
@@ -736,41 +715,39 @@ void Laser::update(bool updateZones) {
             
         }
         
-        for(LaserZone* laserZone : altLaserZones) {
-            //ZoneTransform& warp = laserZone->zoneTransform;
-            laserZone->setSrc(laserZone->zone.rect);
-            laserZone->updateHomography();
-            
-        }
         updateZoneMasks();
-        
     }
     
     // hack to ensure that only one zone is selected
-    bool zoneTransformSelected = false;
+    LaserZone* selectedZone = nullptr;
     for(LaserZone* laserZone : laserZones) {
         //ZoneTransform& warp = laserZone->zoneTransform;
         if(laserZone->getSelected()) {
-            if(zoneTransformSelected) {
+            if(selectedZone) {
                 laserZone->setSelected(false);
             } else {
-                zoneTransformSelected = true;
+                selectedZone = laserZone;
             }
         }
     }
     
-    
+    if(selectedZone) {
+        if(find(laserZones.begin(), laserZones.end(),selectedZone)!=laserZones.begin()) {
+            // reorder zones!
+            auto it = find(laserZones.begin(), laserZones.end(), selectedZone);
+            laserZones.erase(it);
+
+            laserZones.insert(laserZones.begin(), selectedZone);
+
+        }
+    }
     needsSave = maskManager.update() | needsSave;
-    
     
     bool laserZoneChanged = false;
     for(LaserZone* laserZone : laserZones) {
         laserZoneChanged |= laserZone->update();
 	}
-    for(LaserZone* laserZone : altLaserZones) {
-        laserZoneChanged |= laserZone->update();
-    }
-	
+   
     needsSave |= laserZoneChanged;
     float framerate = getFrameRate();
 	smoothedFrameRate += (framerate - smoothedFrameRate)*0.2;
@@ -887,6 +864,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
             pauseStateRecorded = true;
             
             for(LaserZone* laserZone : laserZones) {
+                if(laserZone->getIsAlternate()) continue; // to ensure we don't get two sets of shapes
                 Zone& zone = laserZone->zone;
                 deque<Shape*>& shapes = pauseShapesByZone[&zone];
                 for(Shape* shape : zone.shapes) {
@@ -907,7 +885,6 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
         
     }
     
-	
     laserPoints.clear();
     previewPathMesh.clear();
     previewPathColours.clear();
@@ -1251,6 +1228,14 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
     for(LaserZone* laserZone : laserZones) {
       
         if(!laserZone->getVisible()) continue;
+        
+        // if we're not using the alternate zones and this is an alternate zone then skip it
+        if((!useAlternate) && (laserZone->getIsAlternate())) continue;
+        
+        // if we are using alternate zones, this is not an alternate zone, and we have an alternate zone, skip it!
+        if((useAlternate) &&
+           ((muteOnAlternate) ||
+            ((!laserZone->getIsAlternate()) && (hasAltZone(&laserZone->zone))))) continue;
         
 		Zone& zone = laserZone->zone;
         //ZoneTransform& warp = laserZone->zoneTransform;
@@ -1830,6 +1815,25 @@ bool Laser::loadSettings(vector<Zone*>& zones){
         }
     }
     
+    ofJson altZoneNumJson = json["laseraltzones"];
+    
+    // if the json node isn't found then this should do nothing
+    for(auto jsonitem : altZoneNumJson) {
+        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
+        int zoneNum = (int)jsonitem;
+        
+        // if a zone exists with this index then add a LaserZone for it
+        if(zones.size()>zoneNum) {
+            LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
+            laserZone->setIsAlternate(true);
+            laserZone->setHue(100);
+            laserZones.push_back(laserZone);
+            ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json");
+
+            success &= laserZone->deserialize(laserZoneJson);
+        }
+    }
+    
     paused = false;
     
     ignoreParamChange = false;
@@ -1849,28 +1853,36 @@ bool Laser::saveSettings(){
     
     ofJson json;
     ofSerialize(json, params);
-    //ofSerialize(json, visual3DParams);
-    
-    //scannerSettings.serialize(json);
 
     vector<int>laserzonenums;
+    vector<int>laseraltzonenums;
     for(LaserZone* laserZone : laserZones) {
-        laserzonenums.push_back(laserZone->getZoneIndex());
+        if(laserZone->getIsAlternate()) {
+            laseraltzonenums.push_back(laserZone->getZoneIndex());
+        } else {
+            laserzonenums.push_back(laserZone->getZoneIndex());
+        }
+        
     }
-    
     json["laserzones"] = laserzonenums;
+    json["laseraltzones"] = laseraltzonenums;
+    
 
     maskManager.serialize(json);
     //cout << json.dump(3) << endl;
     bool success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
-
     
+    
+
     for(LaserZone* laserZone : laserZones) {
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
         //cout << "Laser::saveSettings() " << laserZone->getZoneIndex();
-        success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + ".json", laserzonejson);
+        success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + (laserZone->getIsAlternate()?"alt.json" : ".json"), laserzonejson);
+        
     }
+    
+    
     
     lastSaveTime = ofGetElapsedTimef(); 
     return success;

@@ -1145,15 +1145,9 @@ void Manager::drawLaserGui() {
         
         if (ImGui::CollapsingHeader("Add / remove zones and masks",collapsingheaderflags)) {
                 ImGui::Columns(3, "Laser zones columns");
-            //ImGui::SetColumnWidth(0, 80.0f);
-            //ImGui::SetColumnWidth(1, 80.0f);
-            //ImGui::SetColumnWidth(2, 180.0f);
-            
-            
-            
 
             // ADD / REMOVE ZONES
-            ImGui::Text("Add and remove zones");
+            ImGui::Text("Zones");
             for(Zone* zone : zones) {
                 bool checked = laser->hasZone(zone);
 
@@ -1161,14 +1155,12 @@ void Manager::drawLaserGui() {
                     if(checked) {
                         laser->addZone(zone, width, height);
                     } else {
-
                         laser->removeZone(zone);
                     }
-
                 }
             }
             ImGui::NextColumn();
-            ImGui::Text("Add and remove alt zones");
+            ImGui::Text("Alternate zones");
             for(Zone* zone : zones) {
                 bool checked = laser->hasAltZone(zone);
                 string label = zone->displayLabel + "##alt";
@@ -1176,10 +1168,8 @@ void Manager::drawLaserGui() {
                     if(checked) {
                         laser->addAltZone(zone, width, height);
                     } else {
-
                         laser->removeAltZone(zone);
                     }
-
                 }
             }
             ImGui::NextColumn();
@@ -1222,16 +1212,10 @@ void Manager::drawLaserGui() {
        //
         ImGui::Separator();
         
+        UI::addCheckbox(laser->useAlternate);
+        UI::addCheckbox(laser->muteOnAlternate);
+        
         bool soloActive = laser->areAnyZonesSoloed();
-        
-        
-//        if(UI::Button("ADD/REMOVE ZONES")) {
-//            // open zone window
-//        }
-//        ImGui::SameLine();
-//        if(UI::Button("ADD/REMOVE MASKS")) {
-//            // open mask window
-//        }
         
         // ZONE MUTE SOLO
        
@@ -1709,7 +1693,9 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     UI::toolTip("The maximum time in ms between creating a frame and having it displayed on the laser. Increasing this value can improve reliability on slow networks.");
     ImGui::PopItemWidth();
     
-    // ZONES
+    UI::addCheckbox(laser->useAlternate);
+    UI::addCheckbox(laser->muteOnAlternate);
+   // ZONES
     UI::addCheckbox(laser->flipX);
     ImGui::SameLine();
     UI::addCheckbox(laser->flipY);
