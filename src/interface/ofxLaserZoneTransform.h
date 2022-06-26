@@ -30,6 +30,17 @@ class ZoneTransform {
     
 	void init(ofRectangle& srcRect);
 
+    void setHue(int hue) {
+        uiZoneFillColour.setHue(hue);
+        uiZoneFillColourSelected.setHue(hue);
+        uiZoneStrokeColour.setHue(hue);
+        uiZoneStrokeColourSelected.setHue(hue);
+        uiZoneHandleColour.setHue(hue);
+        uiZoneHandleColourOver.setHue(hue);
+        uiZoneStrokeSubdivisionColour.setHue(hue);
+        uiZoneStrokeSubdivisionColourSelected.setHue(hue); 
+      
+    }
 	
 	void initListeners();
 	void removeListeners();

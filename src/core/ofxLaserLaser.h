@@ -87,7 +87,9 @@ class Laser {
     bool hasAltZone(Zone* zone);
     bool removeAltZone(Zone* zone);
     
-    
+    LaserZone* getLaserZoneForZone(Zone* zone);
+    LaserZone* getLaserAltZoneForZone(Zone* zone);
+
     vector<LaserZone*>getActiveZones();
     bool areAnyZonesSoloed();
     
@@ -109,8 +111,7 @@ class Laser {
 
     vector<Point>& getLaserPoints() { return laserPoints;}; 
    
-    LaserZone* getLaserZoneForZone(Zone* zone);
-    
+   
     // Managing points
     void addPoint(ofxLaser::Point p);
     void addPoint(ofPoint p, ofFloatColor c, bool useCalibration = true);

@@ -1170,14 +1170,14 @@ void Manager::drawLaserGui() {
             ImGui::NextColumn();
             ImGui::Text("Add and remove alt zones");
             for(Zone* zone : zones) {
-                bool checked = laser->hasZone(zone);
+                bool checked = laser->hasAltZone(zone);
                 string label = zone->displayLabel + "##alt";
                 if(ImGui::Checkbox(label.c_str(), &checked)) {
                     if(checked) {
-                        laser->addZone(zone, width, height);
+                        laser->addAltZone(zone, width, height);
                     } else {
 
-                        laser->removeZone(zone);
+                        laser->removeAltZone(zone);
                     }
 
                 }
