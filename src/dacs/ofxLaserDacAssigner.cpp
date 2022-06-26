@@ -97,8 +97,10 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     for(DacData& newdacdata : newdaclist) {
         if(aliasByLabel.find(newdacdata.label)!=aliasByLabel.end()) {
             newdacdata.alias = aliasByLabel[newdacdata.label];
-            
-        }
+        } else {
+            newdacdata.alias =newdacdata.label;
+        } 
+        
     }
     
     // go through the existing list, check against the new
@@ -126,7 +128,7 @@ const vector<DacData>& DacAssigner ::updateDacList(){
                 if(!dacdata.available && (dacdata.assignedLaser!=nullptr)) {
                     DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
                     if(dacToAssign!=nullptr) {
-                        dacToAssign->alias = dacdata.alias;
+                        dacToAssign->setAlias(dacdata.alias);
                         dacdata.assignedLaser->setDac(dacToAssign);
                         dacdata.available = true;
                     }
@@ -229,7 +231,7 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     if(dacToAssign!=nullptr) {
         
         // is there a better place to assign this?
-        dacToAssign->alias = dacdata.alias;
+        dacToAssign->setAlias(dacdata.alias);
         
         // give the dac to the laser
         laser.setDac(dacToAssign);
@@ -271,7 +273,7 @@ bool DacAssigner :: disconnectDacFromLaser(Laser& laser) {
         return false;
     }
 }
-DacManagerBase* DacAssigner                                      :: getManagerForType(string type){
+DacManagerBase* DacAssigner :: getManagerForType(string type){
     for(DacManagerBase* manager : dacManagers) {
         if(manager->getType() == type) {
             return manager;

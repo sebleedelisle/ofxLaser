@@ -47,6 +47,7 @@ void Laser::setDac(DacBase* newdac){
         newdac->setColourShift(colourChangeShift); 
         newdac->maxLatencyMS = maxLatencyMS;
         dacId = dac->getId();
+        dacAlias = dac->getAlias();
         armed = false; // automatically calls setArmed because of listener on parameter
     }
     
@@ -64,6 +65,7 @@ bool Laser::removeDac(){
 	if (dac != &emptyDac) {
 		dac = &emptyDac;
 		dacId = "";
+        dacAlias = "";
 		return true;
 	}
 	else {
@@ -93,7 +95,8 @@ void Laser :: init() {
     paused.set("Paused", false);
     
     params.add(dacId.set("dacId", ""));
-    
+    params.add(dacAlias.set("dacAlias", ""));
+   
     hideContentDuringTestPattern.set("Test pattern only", true);
 	ofParameterGroup laserparams;
 	laserparams.setName("Laser settings");
@@ -336,7 +339,13 @@ string Laser::getDacLabel() {
         return "No laser controller assigned";
     }
 }
-
+string Laser::getDacAlias() {
+    if(dac!=&emptyDac) {
+        return dac->getAlias();
+    } else {
+        return "No laser controller assigned";
+    }
+}
 int Laser::getDacConnectedState() {
     
     if(dac!=nullptr) {
@@ -490,8 +499,6 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
         ofPopMatrix();
         
     }
-    
-    
     
     ofPopMatrix();
     
@@ -776,6 +783,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
         return;
     }
     
+    // PAUSE FUNCTION
     if(paused) {
         if(!pauseStateRecorded) {
             // record all zone shapes;
@@ -787,7 +795,6 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
                 for(Shape* shape : zone.shapes) {
                     shapes.push_back(shape->clone());
                 }
-                //pauseShapesByZone[&zone] = zone.shapes;
             }
             
         }
@@ -824,7 +831,6 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
         PointsForShape* currentShape = nullptr;
         PointsForShape* nextShape = nullptr;
         ofPoint position = laserHomePosition;
-
 
 		if(sortShapes) {
             
@@ -1064,13 +1070,13 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
             currentPosition = laserPoints.back();
         }
         
-		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
+		//if(smoothHomePosition)
+        addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
 	
 	if (laserPoints.size() == 0) {
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
-        // if we have a super short frame, might as well duplicate and reverse it
     }
         
     
@@ -1106,7 +1112,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
 		if(smoothHomePosition) {
 			laserHomePosition += (sortedshapes.front()->getStart()-laserHomePosition)*0.05;
 		} else {
-			laserHomePosition = sortedshapes.back()->getEnd();
+			laserHomePosition = sortedshapes.front()->getStart();
 		}
 	}
 }

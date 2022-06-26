@@ -19,6 +19,7 @@ struct DacStateAtTime {
     uint32_t numBytes = 0;
     float bytesPerSecond = 0; 
     bool playing = false;
+
 };
 
 // TODO make the state history transfer a threadchannel
@@ -41,6 +42,7 @@ class DacStateRecorder {
     ofThreadChannel<DacStateAtTime*> stateChannel;
     
     float values[10000]; // used to store plot data, temporary storage
+    bool recording; 
     
 };
 

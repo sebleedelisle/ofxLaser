@@ -26,6 +26,13 @@ namespace ofxLaser {
 		virtual bool setPointsPerSecond(uint32_t pps)  = 0;
         virtual bool setColourShift(float shiftSeconds) = 0;
 		virtual string getId() = 0;
+        virtual string getAlias() {
+            if(alias!="") return alias;
+            else return getId();
+        }
+        virtual void setAlias(string _alias) {
+            alias = _alias;
+        } 
         
 		//virtual ofColor getStatusColour() = 0;
         virtual int getStatus() = 0; 
@@ -40,7 +47,6 @@ namespace ofxLaser {
         }
         int maxLatencyMS; 
 
-        string alias = "";
         
         bool colourShiftImplemented = false;
 		
@@ -50,6 +56,7 @@ namespace ofxLaser {
 		bool resetFlag = false;
         bool armed = false;
         bool frameMode = true;
+        string alias = "";
         
         float colourShift = 0;
         

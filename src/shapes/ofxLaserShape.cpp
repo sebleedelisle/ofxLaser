@@ -15,6 +15,13 @@ vector<float>& Shape :: getPointsAlongDistance(float distance, float acceleratio
     acceleration*=speedMultiplier;
     unitDistances.clear();
     
+    // otherwise, we'll get NaNs! 
+    if(distance == 0) {
+        unitDistances.push_back(0);
+        return unitDistances;
+        
+    }
+    
     float acceleratedistance = (speed*speed) / (2*acceleration);
     float timetogettospeed = speed / acceleration;
     

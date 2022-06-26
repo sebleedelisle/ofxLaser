@@ -22,6 +22,7 @@ enum ofxLaserMouseMode {
     OFXLASER_MOUSE_DRAG, //
     OFXLASER_MOUSE_ZOOM_IN, //
     OFXLASER_MOUSE_ZOOM_OUT, //
+    
 };
 
 namespace ofxLaser {
@@ -86,6 +87,8 @@ class Manager : public ManagerBase {
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     bool mouseDragged(ofMouseEventArgs &e);
+    bool keyPressed(ofKeyEventArgs &e);
+    bool keyReleased(ofKeyEventArgs &e);
 
     void setDefaultPreviewOffsetAndScale(); 
     void zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier);
@@ -114,8 +117,8 @@ class Manager : public ManagerBase {
     bool dacAssignmentWindowOpen;
     
     ofParameter<bool> zoneEditorShowLaserPath;
-    ofParameter<bool> zoneEditorShowLaserMovement;
-    ofParameter<int> zoneEditorLaserPathStyle; 
+    ofParameter<bool> zoneEditorShowLaserPoints;
+    //ofParameter<int> zoneEditorLaserPathStyle;
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;

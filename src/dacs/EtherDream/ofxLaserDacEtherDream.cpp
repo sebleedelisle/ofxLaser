@@ -70,7 +70,25 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     // ED v1 : hardwareRevision 2, softwareRevision 2
     // ED v2 : hardwareRevision 10, softwareRevision 2
     // ED v3 : hardwareRevision 30, softwareRevision 3
+    // Virtual Etherdream : hardwareRevision 0, softwareRevision portoffset
+    versionNumber = 0; //ed.hardwareRevision
+    if(ed.hardwareRevision == 2) {
+        versionNumber = 1;
+    } else if(ed.hardwareRevision == 10) {
+        versionNumber = 2;
+    } else if(ed.hardwareRevision == 30) {
+        versionNumber = 3;
+    }
+    versionString = "v"+ofToString(versionNumber);
+    if(versionNumber == 0) {
+        versionString = "(virtual)";
+    }
     
+    int port = 7765;
+    if(ed.hardwareRevision == 0) {
+        //ofLogNotice("VIRTUAL ETHERDREAM FOUND! ") << ed.hardwareRevision << " " << ed.softwareRevision;
+        port += ed.softwareRevision;
+    }
     // TODO update max point rate from dacdata
     pointBufferCapacity = ed.bufferCapacity;
  
@@ -78,7 +96,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 	
 	try {
 		// EtherDreams always talk on port 7765
-		Poco::Net::SocketAddress sa(ipAddress, 7765);
+		Poco::Net::SocketAddress sa(ipAddress, port);
 		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
         
 		socket.connect(sa, timeout);
@@ -652,6 +670,7 @@ inline bool DacEtherDream::waitForAck(char command) {
 
 
 string DacEtherDream :: getId(){
+    //return "Ether Dream "+versionString+ " " +id;
 	return "EtherDream "+id;
   
 }

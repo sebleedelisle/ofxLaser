@@ -71,6 +71,7 @@ class Laser {
     // DAC
     
     string getDacLabel() ;
+    string getDacAlias() ;
     int getDacConnectedState();
     
     // Zones
@@ -80,6 +81,11 @@ class Laser {
     bool removeZone(Zone* zone);
     bool muteZone(int zonenum);
     bool unMuteZone(int zonenum); 
+    
+    // Alternative zones
+    void addAltZone(Zone* zone, float srcwidth, float srcheight);
+    bool hasAltZone(Zone* zone);
+    bool removeAltZone(Zone* zone);
     
     
     vector<LaserZone*>getActiveZones();
@@ -128,6 +134,7 @@ class Laser {
     
     int laserIndex;
     vector<LaserZone*> laserZones;
+    vector<LaserZone*> altLaserZones;
     
     string savePath ="ofxLaser/lasers/";
     
@@ -144,7 +151,11 @@ class Laser {
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)
     ofParameter<string> dacId;
-    
+    // Keep track of the dac alias, even when it's not connected.
+    // The ID is unique so should be used to reference the DAC.
+    // The alias can be anything. 
+    ofParameter<string> dacAlias;
+ 
     ofParameter<float> colourChangeShift;
     ofParameter<int> maxLatencyMS; 
     

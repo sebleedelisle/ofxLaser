@@ -9,10 +9,11 @@
 
 
 DacStateRecorder :: DacStateRecorder() {
+    recording = false;
 }
 
 void DacStateRecorder :: recordStateThreadSafe(uint64_t timemicros, int playbackstate, int bufferfullness, int roundtriptime, int numpointssent, int pointrate, int numbytes) {
-    
+    if(!recording) return;
     DacStateAtTime* dacState = new DacStateAtTime();
     DacStateAtTime& bufferState = *dacState;
     bufferState.timeMicros = timemicros;
@@ -45,7 +46,7 @@ void DacStateRecorder :: update() {
 const vector<DacStateAtTime*>& DacStateRecorder :: getStateHistoryForTimePeriod(uint64_t starttimemicros, uint64_t endtimemicros) {
     // assumes that history date is sorted by time
     stateHistoryForTimePeriod.clear();
-    
+
     for(size_t i = 0; i<stateHistory.size(); i++) {
         DacStateAtTime* stateAtTime = stateHistory[i];
         bool firstfound = true;
@@ -58,7 +59,7 @@ const vector<DacStateAtTime*>& DacStateRecorder :: getStateHistoryForTimePeriod(
         }
         
     }
-    
+
     return stateHistoryForTimePeriod;
     
 }

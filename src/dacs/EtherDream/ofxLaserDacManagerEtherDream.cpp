@@ -85,13 +85,19 @@ void DacManagerEtherDream :: threadedFunction() {
 //            cout << "Point count      :" << status.point_count << endl;
 //           
             char idchar[100];
-            sprintf(idchar, "%llX", macAddress);
+            int part0 = macAddress & 0xffff;
+            int part1 = (macAddress>>16) & 0xffff;
+            int part2 = (macAddress>>32) & 0xffff;
+            
+            sprintf(idchar, "%04X%04X%04X", part2, part1, part0); 
+            //sprintf(idchar, "%llX", macAddress);
             string id(idchar);
             
             // if we haven't already got this etherdream, then add it
             if(etherdreamDataByMacAddress.find(id) == etherdreamDataByMacAddress.end()) {
-                EtherDreamData ed = {hardwareRevision, softwareRevision,bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
-               // ofLogNotice("Adding etherdream "+ id);
+                EtherDreamData ed = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
+                ofLogNotice("Adding etherdream "+ id)<< " " << hardwareRevision << " " << softwareRevision << " " << id;
+                //ofLogNotice(status.toString());
                 etherdreamDataByMacAddress[id] = ed;
             } else {
                 
