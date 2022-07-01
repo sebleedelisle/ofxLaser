@@ -272,6 +272,7 @@ bool UI::addFloatDrag(ofParameter<float>&param, float speed, const char* format,
     }
     
 }
+
 bool UI::addFloat2Drag(ofParameter<glm::vec2>&param, float speed, const char* format, string labelSuffix) {
 
     string label = param.getName()+labelSuffix;
@@ -287,6 +288,7 @@ bool UI::addFloat2Drag(ofParameter<glm::vec2>&param, float speed, const char* fo
     }
 
 }
+
 bool UI::addFloat3Drag(ofParameter<glm::vec3>&param, float speed, const char* format, string labelSuffix) {
 
     string label = param.getName()+labelSuffix;
@@ -302,6 +304,43 @@ bool UI::addFloat3Drag(ofParameter<glm::vec3>&param, float speed, const char* fo
     }
 
 }
+
+
+bool UI::addRectDrag(ofParameter<ofRectangle>&param, float speed, const char* format, string labelSuffix) {
+
+    bool changed = false;
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+parent.getName();
+    
+    ofRectangle tempRect = param.get();
+    glm::vec2 topleft = tempRect.getTopLeft();
+    glm::vec2 area (tempRect.getWidth(), tempRect.getHeight());
+    
+    if(addFloat2Drag(label, topleft, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+        
+        changed = true;
+    }
+    label += "area";
+    if(addFloat2Drag(label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+        //param.get().(tmpRef);
+        //param.get().width = (area.x);
+        //param->height = (area.y);
+        changed = true;
+    }
+    if(changed) {
+        tempRect.x = (topleft.x);
+        tempRect.y = (topleft.y);
+        tempRect.width = area.x;
+        tempRect.height = area.y;
+        param.set(tempRect); 
+    }
+
+    return changed;
+}
+
+
 
 bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip, string labelSuffix){
     
@@ -446,7 +485,7 @@ bool UI::addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetP
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
  
-    bool returnvalue = addCheckbox(param, label);
+    bool returnvalue = addCheckbox(param, labelSuffix);
     if(param!=resetParam) {
         
         if(resetButton(label)) {
@@ -597,7 +636,10 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     if (parameterColour){
         return UI::addColour(*parameterColour);
     }
-    
+    auto parameterRect = std::dynamic_pointer_cast<ofParameter<ofRectangle>>(param);
+    if (parameterRect){
+        return UI::addRectDrag(*parameterRect);
+    }
     auto parameterString = std::dynamic_pointer_cast<ofParameter<string>>(param);
     if (parameterString){
        // if(parameterString->getName()=="") {
@@ -667,4 +709,222 @@ void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing, float scale){
 
 }
 
+void UI::startGhosted() {
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+    ghosted = true;
+}
+void UI::stopGhosted() {
+    if(ghosted) {
+        ImGui::PopStyleVar();
+        ghosted = false;
+    }
+}
 
+bool UI::startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flags, bool resetPosition, bool* openstate) {
+    ImGuiWindowFlags window_flags = flags;
+    window_flags |= ImGuiWindowFlags_NoNav;
+    //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
+    //      if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar;
+    //      if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
+    //
+    //
+    //      if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
+    //      if (no_nav)             window_flags |= ImGuiWindowFlags_NoNav;
+    //      if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground;
+    //      if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+    //      if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
+    //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
+    
+    
+    // set the main window size and position
+    ImGui::SetNextWindowSize(size, ImGuiCond_Once);
+    ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    
+    // start the main window!
+    return ImGui::Begin(name.c_str(), openstate, window_flags);
+    
+    
+}
+
+void UI::drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled , bool fromCentre, float thickness ) {
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ofRectangle rect(x, y, w, h);
+    if(fromCentre) rect.setFromCenter(x, y, w, h);
+    
+    ImU32 imCol = ofColorToImU32(colour);
+    
+    if(filled) {
+        draw_list->AddRectFilled(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0);
+    } else {
+        draw_list->AddRect(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, 0.0f,  0, thickness);
+    }
+}
+
+
+
+ImU32 UI::ofColorToImU32 (ofColor col) {
+    return ImGui::GetColorU32(ImVec4((float)col.r/255.0f, (float)col.g/255.0f, (float)col.b/255.0f, (float)col.a/255.0f));
+    
+}
+void UI::endWindow() {
+    ImGui::End();
+}
+
+
+bool UI::Button(string& label, bool large, bool secondaryColour, const ImVec2& size_arg ){
+   
+    return Button(label.c_str(), large, secondaryColour, size_arg);
+}
+
+bool UI::Button(const char* label, bool large, bool secondaryColour, const ImVec2& size_arg ){
+    bool returnvalue;
+    
+    if(large) UI::largeItemStart();
+    if(secondaryColour) UI::secondaryColourButtonStart();
+    returnvalue =  ImGui::ButtonEx(label, size_arg, 0);
+    
+    if(large) UI::largeItemEnd();
+    if(secondaryColour) UI::secondaryColourButtonEnd();
+    return returnvalue;
+}
+void UI::secondaryColourButtonStart() {
+    ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
+    
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
+
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.4f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.8f));
+    
+}
+
+void UI::secondaryColourButtonEnd() {
+    ImGui::PopStyleColor(7);
+}
+
+void UI::largeItemStart() {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f)); // 3 Size of elements (padding around contents);
+    // increase the side of the slider grabber
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+    
+}
+void UI::largeItemEnd() {
+    
+    ImGui::PopStyleVar(2);
+}
+void UI::extraLargeItemStart() {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(78.0f, 80.0f)); // 3 Size of elements (padding around contents);
+    // increase the side of the slider grabber
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+    
+}
+void UI::extraLargeItemEnd() {
+    
+    ImGui::PopStyleVar(2);
+}
+bool UI::updateMouse(ofMouseEventArgs &e) {
+    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    //ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
+    return false; // propogate events
+}
+bool UI::mousePressed(ofMouseEventArgs &e) {
+  //  ofLogNotice("UI::mousePressed");
+    int iobutton = e.button;
+    if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    ImGui::GetIO().MouseDown[iobutton] = true;
+    //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
+    if(ImGui::GetIO().WantCaptureMouse) {
+        //ofLogNotice("ImGui captured mouse press");
+        return true;
+      
+    }
+    else {
+        //ofLogNotice("ImGui no capture mouse press");
+        return false;
+    }
+}
+bool UI::mouseReleased(ofMouseEventArgs &e) {
+    int iobutton = e.button;
+    if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    ImGui::GetIO().MouseDown[iobutton] = false;
+    if(ImGui::GetIO().WantCaptureMouse) return true;
+    else return false;
+}
+bool UI::keyPressed(ofKeyEventArgs &e) {
+   // ImGui::GetIO().KeysDown[e.key] = true;
+    
+    if(ImGui::GetIO().WantCaptureKeyboard) {
+        
+       // ofLogNotice("ImGui captured key press");
+        return true;
+    }
+    else {
+        //ofLogNotice("ImGui no capture key press");
+        return false;
+    }
+}
+bool UI::keyReleased(ofKeyEventArgs &e) {
+    // TODO check but I think this happens twice...
+   // ImGui::GetIO().KeysDown[e.key] = false;
+    if(ImGui::GetIO().WantCaptureKeyboard) {
+        return false;
+    }
+    else return false;
+}
+
+
+void UI::toolTip(string& str) {
+    toolTip(str.c_str());
+}
+
+void UI::toolTip(const char* desc)
+{
+    ImGui::SameLine(0,3);
+    ImGui::TextDisabled(ICON_FK_QUESTION_CIRCLE);
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+void UI::addDelayedTooltip(const char* desc) {
+    if (ImGui::IsItemHovered() && (GImGui->HoveredIdTimer >1)) {
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+    
+}
+
+
+
+ImU32 UI::getColourForState(int state) {
+    const ImVec4 stateCols[] = {{0,1,0,1}, {1,1,0,1}, {1,0,0,1}};
+    return ImGui::GetColorU32(stateCols[state]);
+}
+
+glm::vec3 UI::getScaleFromMatrix(const glm::mat4& m) {
+    glm::vec3 pos;
+    glm::quat rot;
+    glm::vec3 scale;
+    
+    pos = m[3];
+    for(int i = 0; i < 3; i++)
+        scale[i] = glm::length(glm::vec3(m[i]));
+    const glm::mat3 rotMtx(
+        glm::vec3(m[0]) / scale[0],
+        glm::vec3(m[1]) / scale[1],
+        glm::vec3(m[2]) / scale[2]);
+    rot = glm::quat_cast(rotMtx);
+    return scale;
+}

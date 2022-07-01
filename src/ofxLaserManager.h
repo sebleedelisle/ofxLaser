@@ -108,6 +108,7 @@ class Manager : public ManagerBase {
     ofParameterGroup customParams;
     
     ofParameter<bool> showLaserSettings;
+  
     ofParameter<bool> lockInputZones;
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
@@ -122,7 +123,7 @@ class Manager : public ManagerBase {
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;
-    ofParameter<bool> previewNavigationEnabled;
+
     bool showDacAnalytics;
     ofParameter<float> dacSettingsTimeSlice;
 

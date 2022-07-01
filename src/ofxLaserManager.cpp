@@ -56,7 +56,6 @@ Manager :: Manager() {
     
     setDefaultPreviewOffsetAndScale();
     
-    params.add(previewNavigationEnabled.set("Enable preview navigation", false));
     params.add(showGuideImage.set("Show guide image", false));
     params.add(guideImageColour.set("Guide image colour", ofColor::white));
     
@@ -70,10 +69,10 @@ Manager :: Manager() {
             //cout << loadJson["Laser"]["Guide_image_colour"].dump(3)<< endl;
             //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
             try {
-                ofDeserialize(loadJson["Laser"], previewNavigationEnabled);
                 ofDeserialize(loadJson["Laser"], showGuideImage);
                 ofDeserialize(loadJson["Laser"], guideImageColour);
-                
+
+
             } catch(...) {
                 //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
             }
@@ -171,7 +170,7 @@ void Manager :: update() {
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
     //if(ofGetKeyPressed(' ')) {
-    ofLogNotice("Manager :: mousePressed"); 
+   // ofLogNotice("Manager :: mousePressed"); 
     if (viewMode  == OFXLASER_VIEW_CANVAS) {
         if(mouseMode == OFXLASER_MOUSE_ZOOM_IN) { //if(ofGetKeyPressed(OF_KEY_COMMAND)) {
             // zoom in
@@ -355,7 +354,7 @@ void Manager :: finishLaserUI() {
 }
 
 void Manager :: renderCustomCursors() {
-    //if(previewNavigationEnabled && ofGetKeyPressed(' ')) {
+    
     if(mouseMode!=OFXLASER_MOUSE_DEFAULT) {
         ofHideCursor(); // TODO add so that it only happens over the preview
         ofPushMatrix();
@@ -930,7 +929,14 @@ void Manager::drawLaserGui() {
         saveSettings();
     }
     
-    
+    useRedButton =laserManager.areAllLasersUsingAlternateZones();
+    if(useRedButton) UI::secondaryColourButtonStart();
+    // change the colour for the arm all button if we're armed
+   
+    if(ImGui::Button("USE ALTERNATE ZONES") ) {
+        laserManager.useAltZones = !laserManager.useAltZones;
+    }
+    if(useRedButton) UI::secondaryColourButtonEnd();
    
     
     // END BIG BUTTONS
@@ -947,7 +953,7 @@ void Manager::drawLaserGui() {
         bool showsecondarycolour = false;
         
         // LASER BUTTONS
-        if(ImGui::Button(laserNumberString.c_str())) {
+        if(ImGui::Button(laserNumberString.c_str(), ImVec2(20,0))) {
             if((viewMode == OFXLASER_VIEW_CANVAS) || (selectedLaserIndex!=i)) {
                 selectedLaserIndex = i;
                 viewMode = OFXLASER_VIEW_OUTPUT;
@@ -1044,8 +1050,6 @@ void Manager::drawLaserGui() {
     
     UI::addParameterGroup(laserManager.interfaceParams);
     
-    UI::addParameter(previewNavigationEnabled);
-    UI::toolTip("When this is enabled you can hit space to drag around the preview window. While space is pressed click the mouse with command/ctrl pressed to zoom in, with alt pressed to zoom out");
     if(guideImage.isAllocated()) {
         UI::addParameter(showGuideImage);
         UI::addParameter(guideImageColour);

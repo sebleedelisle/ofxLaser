@@ -212,7 +212,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
         if(settings.showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
         
         ofPushMatrix();
-        ofRotateXDeg(laser3D.orientation.get().x);
+        ofRotateXDeg(-laser3D.orientation.get().x);
         ofRotateYDeg(laser3D.orientation.get().y);
         ofRotateZDeg(laser3D.orientation.get().z);
         

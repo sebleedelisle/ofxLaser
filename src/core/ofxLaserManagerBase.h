@@ -78,7 +78,9 @@ class ManagerBase {
     void armAllLasers();
     void disarmAllLasers();
     void testPatternAllLasers(int& pattern);
-    
+    void useAltZonesChanged(bool& state); 
+    bool areAllLasersUsingAlternateZones();
+
     void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT, float brightness = 1);
     void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
     void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
@@ -132,7 +134,7 @@ class ManagerBase {
     ofParameter<int> testPattern;
     
   
-   
+    ofParameter<bool> useAltZones;
     ofParameter<bool> useBitmapMask;
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;
