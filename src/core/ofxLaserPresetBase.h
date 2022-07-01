@@ -15,7 +15,7 @@ class PresetBase {
     public :
     PresetBase();
     
-    virtual void serialize(ofJson&json);
+    virtual void serialize(ofJson&json) const;
     virtual bool deserialize(ofJson&jsonGroup);
     virtual const string& getLabel();
     virtual void setLabel(string _label);

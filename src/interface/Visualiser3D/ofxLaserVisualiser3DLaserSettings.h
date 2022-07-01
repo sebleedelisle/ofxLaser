@@ -24,7 +24,7 @@ class Visualiser3DLaserSettings : public PresetBase {
     bool operator == (Visualiser3DLaserSettings& that);
     bool operator != (Visualiser3DLaserSettings& that);
   
-    virtual void serialize(ofJson&json) override;
+    virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
 
 

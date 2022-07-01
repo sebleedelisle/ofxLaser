@@ -35,10 +35,10 @@ bool Visualiser3DLaserSettings :: operator == (Visualiser3DLaserSettings& that){
 bool Visualiser3DLaserSettings :: operator != (Visualiser3DLaserSettings& that){
     return !(*this==that);
 }
-void Visualiser3DLaserSettings :: serialize(ofJson&json){
+void Visualiser3DLaserSettings :: serialize(ofJson&json) const{
     ofSerialize(json, params);
     ofJson& jsonGroup = json["lasers"];
-    for(Object3D& laser : laserObjects ){
+    for(const Object3D& laser : laserObjects ){
         ofJson laserjson;
         laser.serialize(laserjson);
         jsonGroup.push_back(laserjson);

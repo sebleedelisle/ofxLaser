@@ -24,7 +24,7 @@ class Object3D {
     ofParameter<glm::vec3> orientation; // euler angles in degrees
     ofParameterGroup params;
     
-    void serialize(ofJson& json) {
+    void serialize(ofJson& json) const {
         ofSerialize(json, params);
     }
     bool deserialize(ofJson& json){

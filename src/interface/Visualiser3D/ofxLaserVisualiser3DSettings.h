@@ -24,7 +24,7 @@ class Visualiser3DSettings : public PresetBase {
     bool operator == (Visualiser3DSettings& that);
     bool operator != (Visualiser3DSettings& that);
   
-    virtual void serialize(ofJson&json) override;
+    virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
 
     ofParameter<glm::vec2> cameraOrbit;

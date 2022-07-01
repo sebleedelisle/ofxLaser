@@ -22,7 +22,7 @@ const string& PresetBase :: getLabel() {
     return label.get();
 }
 
-void PresetBase :: serialize(ofJson&json){
+void PresetBase :: serialize(ofJson&json) const {
     ofSerialize(json, params);
 }
 bool PresetBase :: deserialize(ofJson&jsonGroup){

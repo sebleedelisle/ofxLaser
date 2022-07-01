@@ -45,11 +45,8 @@ bool Visualiser3DSettings :: operator == (Visualiser3DSettings& that){
 bool Visualiser3DSettings :: operator != (Visualiser3DSettings& that){
     return !(*this==that);
 }
-void Visualiser3DSettings :: serialize(ofJson&json){
+void Visualiser3DSettings :: serialize(ofJson&json) const{
     ofSerialize(json, params);
-    
-    
-    
 }
 bool Visualiser3DSettings :: deserialize(ofJson&jsonGroup){
     //ofLogNotice("Visualiser json : ") << jsonGroup.dump(3);
