@@ -47,7 +47,7 @@ ScannerSettings :: ScannerSettings() {
     profileFast.dotMaxPoints = 5;
 
     profileDetail.speed = 2.5;
-    profileDetail.acceleration = 0.75;
+    profileDetail.acceleration = 0.4;
     profileDetail.cornerThreshold  = 15;
     profileDetail.dotMaxPoints = 20;
     

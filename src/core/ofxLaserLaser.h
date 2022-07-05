@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "constants.h"
+#include "ofxLaserConstants.h"
 #include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"

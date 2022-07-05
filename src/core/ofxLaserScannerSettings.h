@@ -8,7 +8,7 @@
 #pragma once
 //
 #include "ofMain.h"
-#include "constants.h"
+#include "ofxLaserConstants.h"
 #include "ofxLaserRenderProfile.h"
 #include "ofxLaserPresetBase.h"
 

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "constants.h"
+#include "ofxLaserConstants.h"
 #include "ofxLaserDacAssigner.h"
 #include "ofxLaserZone.h"
 #include "ofxLaserShape.h"
