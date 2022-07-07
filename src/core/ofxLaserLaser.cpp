@@ -46,8 +46,8 @@ void Laser::setDac(DacBase* newdac){
         newdac->setPointsPerSecond(pps);
         newdac->setColourShift(colourChangeShift); 
         newdac->maxLatencyMS = maxLatencyMS;
-        dacId = dac->getId();
-        dacAlias = dac->getAlias();
+        dacLabel = dac->getId();
+       // dacAlias = dac->getAlias();
         armed = false; // automatically calls setArmed because of listener on parameter
     }
     
@@ -64,8 +64,8 @@ bool Laser::hasDac() {
 bool Laser::removeDac(){
 	if (dac != &emptyDac) {
 		dac = &emptyDac;
-		dacId = "";
-        dacAlias = "";
+		dacLabel = "";
+        //dacAlias = "";
 		return true;
 	}
 	else {
@@ -94,8 +94,8 @@ void Laser :: init() {
     
     paused.set("Paused", false);
     
-    params.add(dacId.set("dacId", ""));
-    params.add(dacAlias.set("dacAlias", ""));
+    params.add(dacLabel.set("dacId", ""));
+    //params.add(dacAlias.set("dacAlias", ""));
     
     params.add(useAlternate.set("Use alternate zones", false));
     params.add(muteOnAlternate.set("Mute instead of alternates", false));
@@ -395,16 +395,17 @@ string Laser::getDacLabel() {
     if(dac!=&emptyDac) {
         return dac->getId();
     } else {
-        return "No laser controller assigned";
+        return "";
     }
 }
-string Laser::getDacAlias() {
-    if(dac!=&emptyDac) {
-        return dac->getAlias();
-    } else {
-        return "No laser controller assigned";
-    }
-}
+
+//string Laser::getDacAlias() {
+//    if(dac!=&emptyDac) {
+//        return dac->getAlias();
+//    } else {
+//        return "No laser controller assigned";
+//    }
+//}
 int Laser::getDacConnectedState() {
     
     if(dac!=nullptr) {

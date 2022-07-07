@@ -796,7 +796,7 @@ void DacEtherDream :: close() {
             }
         }
         // also stops the thread :
-        waitForThread();
+        waitForThread(true, 1000); // 1 second time out
     }
         
     socket.close();

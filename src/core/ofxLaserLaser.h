@@ -71,7 +71,7 @@ class Laser {
     // DAC
     
     string getDacLabel() ;
-    string getDacAlias() ;
+    //string getDacAlias() ;
     int getDacConnectedState();
     
     // Zones
@@ -153,11 +153,11 @@ class Laser {
     
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)
-    ofParameter<string> dacId;
+    ofParameter<string> dacLabel;
     // Keep track of the dac alias, even when it's not connected.
     // The ID is unique so should be used to reference the DAC.
     // The alias can be anything. 
-    ofParameter<string> dacAlias;
+    //ofParameter<string> dacAlias;
  
     ofParameter<float> colourChangeShift;
     ofParameter<int> maxLatencyMS; 

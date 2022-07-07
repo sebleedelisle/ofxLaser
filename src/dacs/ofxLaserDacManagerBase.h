@@ -22,6 +22,16 @@ class DacManagerBase {
         }
     
     };
+    
+    bool checkDacsChanged() {
+        if(dacsChanged) {
+            dacsChanged = false;
+            return true;
+        } else {
+            return false;
+        }
+        
+    }
     virtual DacBase* getAndConnectToDac(const string& dacdata) = 0;
     virtual bool disconnectAndDeleteDac(const string& dacdata) = 0;
     virtual string getType() = 0; 
@@ -29,6 +39,9 @@ class DacManagerBase {
     
     protected :
     map<string, DacBase*>dacsById;
+    // TODO thread safe??? 
+    bool dacsChanged;
+    
     private :
     
     

@@ -36,8 +36,12 @@ class DacAssigner {
     DacAssigner();
     ~DacAssigner();
     
+    bool update(); 
+    
     const vector<DacData>& getDacList();
     const vector<DacData>& updateDacList();
+    string getAliasForLabel(const string& label);
+    
     
     bool assignToLaser(const string& label, Laser& laser);
     bool disconnectDacFromLaser(Laser& laser);

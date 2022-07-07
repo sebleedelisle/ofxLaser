@@ -1385,15 +1385,15 @@ void Manager :: drawDacAssignerPanel() {
 
             string label;
             if(!laser->hasDac() ) {
-                label = laser->dacAlias.get();
+                label = laser->dacLabel.get();
                 //if(!laser->hasDac()) label = "";
-                UI::startGhosted();
-                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
-                UI::stopGhosted();
+                //UI::startGhosted();
+                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_Disabled, ImVec2(160,19) );
+                //UI::stopGhosted();
                 
             } else {
                 
-                label =laser->getDacAlias();
+                label = dacAssigner.getAliasForLabel(laser->getDacLabel());
                 ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
                 
                 
@@ -1422,9 +1422,9 @@ void Manager :: drawDacAssignerPanel() {
                     //names[payload_n] = tmp;
                     string dacId;
                     if(payload_n<lasers.size()) {
-                        dacId = lasers[payload_n]->dacId.get();
+                        dacId = lasers[payload_n]->dacLabel.get();
                     } else {
-                        dacId = dacList[payload_n-lasers.size()].label;
+                        dacId = dacList[payload_n-lasers.size()].getLabel();
                     }
                     dacAssigner.assignToLaser(dacId, *laser);
                   
@@ -1435,14 +1435,14 @@ void Manager :: drawDacAssignerPanel() {
            
             //ImVec2 pos = ImGui::GetCursorPos();
             //ImGui::SetCursorPos(ImVec2(200,pos.y));
-            if(laser->dacId.get()!="") {
+            if(laser->dacLabel.get()!="") {
                 ImGui::SameLine();
                 string label = ofToString(ICON_FK_TIMES) + "##" + ofToString(n);
                 if(UI::Button(label)){
                     if(laser->hasDac()) {
                         dacAssigner.disconnectDacFromLaser(*laser);
                     } else {
-                        laser->dacId = "";
+                        laser->dacLabel = "";
                     }
                 }
             }
@@ -1461,8 +1461,19 @@ void Manager :: drawDacAssignerPanel() {
             if(dacdata.assignedLaser==nullptr) {
                 int id =lasers.size()+i;
                 ImGui::PushID(id);
-                string label = dacdata.alias; // ->getDacLabel();
-                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19));
+                string label = dacAssigner.getAliasForLabel(dacdata.getLabel()); // dacdata.alias; // ->getDacLabel();
+                
+                ImGuiSelectableFlags selectableflags = 0;
+                
+                if(!dacdata.available) {
+                    // ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+                    //itemlabel += " - no longer available";
+                    selectableflags|=ImGuiSelectableFlags_Disabled;
+                } else {
+                    //
+                }
+                
+                ImGui::Selectable(label.c_str(), false, selectableflags, ImVec2(160,19));
                 
                 if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
                 {
@@ -1543,14 +1554,16 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     ImGui::SameLine();
     ImGui::SetCursorPos(ImGui::GetCursorPos() + ImVec2(0,2));
-    //ImGui::Text("DAC:");
-    //ImGui::SameLine();
-    if(!laser->hasDac() && (laser->dacId.get()!="") ) {
+
+    string daclabel = dacAssigner.getAliasForLabel(laser->getDacLabel());
+    if(!laser->hasDac() && (daclabel!="") ) {
         UI::startGhosted();
-        ImGui::Text("Waiting for %s", laser->dacId.get().c_str());
+        ImGui::Text("Waiting for %s", dacAssigner.getAliasForLabel(laser->dacLabel).c_str());
         UI::stopGhosted();
     } else {
-        ImGui::Text("%s", laser->getDacLabel().c_str());
+       
+        if(daclabel=="") daclabel = "No laser controller assigned";
+        ImGui::Text("%s", daclabel.c_str());
     }
     
 
@@ -1568,7 +1581,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     
     //if (ImGui::ListBoxHeader("##listbox", MIN(5, MAX(1,dacList.size())))){
-    if (ImGui::BeginCombo("##combo", laser->getDacLabel().c_str(), ImGuiComboFlags_None)){
+    if (ImGui::BeginCombo("##combo", daclabel.c_str(), ImGuiComboFlags_None)){
       
         if(dacList.empty()) {
             
@@ -1581,7 +1594,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
             for(const DacData& dacdata : dacList) {
                 
                 // get the dac label (usually type + unique ID)
-                string itemlabel = dacdata.alias;
+                string itemlabel = dacAssigner.getAliasForLabel(dacdata.getLabel()); // dacdata.alias;
                 
                 ImGuiSelectableFlags selectableflags = 0;
                 
@@ -1598,13 +1611,13 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
                 if (ImGui::Selectable(itemlabel.c_str(), (dacdata.assignedLaser == laser), selectableflags)) {
                     // then select dac
                                        
-                    if((laser->hasDac()  || (dacdata.assignedLaser!=nullptr)) && (laser->getDacLabel()!=dacdata.label)) {
+                    if((laser->hasDac()  || (dacdata.assignedLaser!=nullptr)) && (laser->getDacLabel()!=dacdata.getLabel())) {
                         // if the dac is already being used or the laser has a dac already, then show the popup.
                         dacToAssign = dacdata;
                         laserToAssign = laser;
                        
                     } else {
-                        dacAssigner.assignToLaser(dacdata.label, *laser);
+                        dacAssigner.assignToLaser(dacdata.getLabel(), *laser);
                     }
                 }
                 
@@ -1628,19 +1641,19 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::PopItemWidth();
     
     
-    if(laserToAssign!=nullptr) ImGui::OpenPopup("AssignController");
+    if(laserToAssign!=nullptr) ImGui::OpenPopup("Assign Controller");
 
     /// ----------------------- ASSIGN CONTROLLER POP UP
-    if (ImGui::BeginPopupModal("AssignController", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+    if (ImGui::BeginPopupModal("Assign Controller", NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         
         string message = "";
         if((laser->hasDac()) && (dacToAssign.assignedLaser!=nullptr)) {
-            message = "This laser is already using a controller ("+laser->getDacLabel()+") and "+dacToAssign.label+" is already assigned to laser " + ofToString(dacToAssign.assignedLaser->laserIndex+1) + ".";
+            message = "This laser is already using a controller ("+dacAssigner.getAliasForLabel(laser->getDacLabel())+") and "+dacAssigner.getAliasForLabel(dacToAssign.getLabel())+" is already assigned to laser " + ofToString(dacToAssign.assignedLaser->laserIndex+1) + ".";
         } else if(laser->hasDac()) {
-            message = "This laser is already connected to a controller ("+dacToAssign.label+").";
+            message = "This laser is already connected to a controller ("+dacAssigner.getAliasForLabel(dacToAssign.getLabel())+").";
         } else {
-            message = dacToAssign.label+" is already assigned to laser " + ofToString(dacToAssign.assignedLaser->laserIndex+1) + ".";
+            message = dacAssigner.getAliasForLabel(dacToAssign.getLabel())+" is already assigned to laser " + ofToString(dacToAssign.assignedLaser->laserIndex+1) + ".";
         }
         
         message+="\nAre you sure you want to continue?";
@@ -1653,7 +1666,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         if (ImGui::Button("YES", ImVec2(120, 0))) {
            
             ImGui::CloseCurrentPopup();
-            dacAssigner.assignToLaser(dacToAssign.label, *laserToAssign);
+            dacAssigner.assignToLaser(dacToAssign.getLabel(), *laserToAssign);
             laserToAssign = nullptr;
             
         }

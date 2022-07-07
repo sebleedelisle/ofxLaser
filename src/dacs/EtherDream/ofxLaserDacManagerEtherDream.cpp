@@ -98,13 +98,42 @@ void DacManagerEtherDream :: threadedFunction() {
                 EtherDreamData ed = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
                 ofLogNotice("Adding etherdream "+ id)<< " " << hardwareRevision << " " << softwareRevision << " " << id;
                 //ofLogNotice(status.toString());
-                etherdreamDataByMacAddress[id] = ed;
+                if(lock()) {
+                    etherdreamDataByMacAddress[id] = ed;
+                    dacsChanged = true;
+                    unlock();
+                }
             } else {
                 
-                etherdreamDataByMacAddress[id].lastUpdateTime = ofGetElapsedTimef(); 
-            } 
+                if(lock()) {
+                    etherdreamDataByMacAddress[id].lastUpdateTime = ofGetElapsedTimef();
+                    unlock();
+                }
+            }
             
         }
+        
+        
+        if(ofGetElapsedTimef()-lastCheckTime > 2) {
+            if(lock()) {
+                
+                for (auto it = etherdreamDataByMacAddress.cbegin(); it != etherdreamDataByMacAddress.cend() /* not hoisted */; /* no increment */)  {
+                    const EtherDreamData& ed = it->second;
+                    if ((ofGetElapsedTimef() - ed.lastUpdateTime)>2){
+                        etherdreamDataByMacAddress.erase(it++);    // or "it = m.erase(it)" since C++11
+                        dacsChanged = true;
+                        
+                    } else {
+                        ++it;
+                    }
+                }
+
+                lastCheckTime = ofGetElapsedTimef();
+                unlock();
+            }
+        }
+        
+        
         sleep(10);
     }
             
@@ -117,26 +146,13 @@ vector<DacData> DacManagerEtherDream :: updateDacList(){
     
     for(auto etherdreampair : etherdreamDataByMacAddress) {
         EtherDreamData& ed = etherdreampair.second;
-        ofLogNotice(ed.macAddress);
+       // ofLogNotice(ed.macAddress);
         
         string id = ed.macAddress;
-        
-        // if we last got an update from the etherdream less
-        // than two seconds ago, add it to the list.
-        //ofLogNotice("lastUpdateTime : " ) << (ofGetElapsedTimef() - ed.lastUpdateTime);
-        if((ofGetElapsedTimef() - ed.lastUpdateTime)<2){
-            daclist.emplace_back(getType(), id, ed.ipAddress);
-            // here is where to look up the label!
-//            if(labelById.find(id)!=labelById.end()) {
-//                daclist.back().label = labelById[id];
-//
-//            }
-        }
-        
-    }
+        daclist.emplace_back(getType(), id, ed.ipAddress);
 
+    }
     return daclist;
-    
 }
 
 

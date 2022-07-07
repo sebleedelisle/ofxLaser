@@ -179,7 +179,7 @@ class ManagerBase {
     vector<glm::vec3> tmpPoints;
   //  vector<ofColor> tmpColours;
     
-    bool dacsInitialised = false;
+   // bool dacsInitialised = false;
     
    
     private:

@@ -65,6 +65,16 @@ DacAssigner :: DacAssigner() {
         {"EtherDream 4AE18BA5986A", "SebLee LS11W #4"}
        
     };
+    
+    for(int i =0; i<100; i++) {
+        string label = ofToHex(i);
+        std::transform(label.begin(), label.end(), label.begin(), cv::details::char_toupper);
+        while(label.size()<12) label = "0" + label;
+        string num = ofToString(i+1);
+        while(num.size()<3) num = "0" + num;
+        aliasByLabel["EtherDream " + label] = "Virtual ED " +num;
+        
+    }
 
     
     dacManagers.push_back(new DacManagerLaserdock());
@@ -76,6 +86,18 @@ DacAssigner :: DacAssigner() {
 
 DacAssigner :: ~DacAssigner() {
     //dacAssigner = NULL;
+}
+
+
+bool DacAssigner :: update() {
+    bool changed = false;
+    for(DacManagerBase* dacManager : dacManagers) {
+        if(dacManager->checkDacsChanged()) changed = true;
+    }
+    
+    if(changed) updateDacList();
+    
+    return changed;
 }
 
 const vector<DacData>& DacAssigner ::getDacList(){
@@ -94,13 +116,15 @@ const vector<DacData>& DacAssigner ::updateDacList(){
         newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
         
     }
+    
     for(DacData& newdacdata : newdaclist) {
-        if(aliasByLabel.find(newdacdata.label)!=aliasByLabel.end()) {
-            newdacdata.alias = aliasByLabel[newdacdata.label];
+        ofLogNotice(newdacdata.getLabel());
+        if(aliasByLabel.find(newdacdata.getLabel())!=aliasByLabel.end()) {
+            newdacdata.alias = aliasByLabel[newdacdata.getLabel()];
         } else {
-            newdacdata.alias =newdacdata.label;
-        } 
-        
+            newdacdata.alias = "";
+        }
+
     }
     
     // go through the existing list, check against the new
@@ -128,7 +152,7 @@ const vector<DacData>& DacAssigner ::updateDacList(){
                 if(!dacdata.available && (dacdata.assignedLaser!=nullptr)) {
                     DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
                     if(dacToAssign!=nullptr) {
-                        dacToAssign->setAlias(dacdata.alias);
+                        //dacToAssign->setAlias(dacdata.alias);
                         dacdata.assignedLaser->setDac(dacToAssign);
                         dacdata.available = true;
                     }
@@ -162,8 +186,19 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     // sort the list (the DacData class has overloaded operators
     // that make the list sortable alphanumerically by their IDs
 	std::sort(dacDataList.begin(), dacDataList.end());
-    
+//    std::sort(dacDataList.begin(), dacDataList.end(),[](const DacData* a, const DacData* b) -> bool {
+//        return (a->getAlias() < b->getAlias());
+//    });
     return dacDataList; 
+    
+}
+
+string DacAssigner :: getAliasForLabel(const string& daclabel) {
+    if(aliasByLabel.find(daclabel)!=aliasByLabel.end()) {
+        return aliasByLabel[daclabel];
+    } else {
+        return daclabel;
+    }
     
 }
 
@@ -185,18 +220,24 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         
         dacDataList.emplace_back(dactype, dacid, "", &laser);
         dacdataptr = &dacDataList.back();
-        dacdataptr->available = false;
-        if(aliasByLabel.find(dacdataptr->label)!=aliasByLabel.end()) {
-            dacdataptr->alias = aliasByLabel[dacdataptr->label];
-            
+
+        if(aliasByLabel.find(dacdataptr->getLabel())!=aliasByLabel.end()) {
+            dacdataptr->alias = aliasByLabel[dacdataptr->getLabel()];
+        } else {
+            dacdataptr->alias = "";
         }
+        dacdataptr->available = false;
+//        if(aliasByLabel.find(dacdataptr->label)!=aliasByLabel.end()) {
+//            dacdataptr->alias = aliasByLabel[dacdataptr->label];
+//
+//        }
        
         return false;
         
     }
     DacData& dacdata = *dacdataptr;
     
-    ofLogNotice("DacAssigner::assignToLaser - " + dacdata.label, ofToString(laser.laserIndex));
+    ofLogNotice("DacAssigner::assignToLaser - " + dacdata.getLabel(), ofToString(laser.laserIndex));
     
   
     // get manager for type
@@ -231,7 +272,7 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     if(dacToAssign!=nullptr) {
         
         // is there a better place to assign this?
-        dacToAssign->setAlias(dacdata.alias);
+        //dacToAssign->setAlias(dacdata.alias);
         
         // give the dac to the laser
         laser.setDac(dacToAssign);
@@ -267,7 +308,11 @@ bool DacAssigner :: disconnectDacFromLaser(Laser& laser) {
     if(dacData.assignedLaser!=nullptr) {
         dacData.assignedLaser = nullptr;
         laser.removeDac();
-        getManagerForType(dacData.type)->disconnectAndDeleteDac(dacData.id);
+        ofxLaser::DacManagerBase* manager = getManagerForType(dacData.type);
+        if(manager!=nullptr) manager->disconnectAndDeleteDac(dacData.id);
+        else {
+            ofLogNotice("Error - disconnected non existent dac ");
+        }
         return true;
     } else {
         return false;
@@ -287,7 +332,7 @@ DacManagerBase* DacAssigner :: getManagerForType(string type){
 
 DacData& DacAssigner ::getDacDataForLabel(const string& label){
     for(DacData& dacData : dacDataList) {
-        if(dacData.label == label) {
+        if(dacData.getLabel() == label) {
             return dacData;
         }
     }

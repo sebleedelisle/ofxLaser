@@ -27,13 +27,14 @@ namespace ofxLaser {
         virtual bool setColourShift(float shiftSeconds) = 0;
 		virtual string getId() = 0;
         
-        virtual string getAlias() {
-            if(alias!="") return alias;
-            else return getId();
-        }
-        virtual void setAlias(string _alias) {
-            alias = _alias;
-        }
+//        virtual string getAlias() {
+//            if(alias!="") return alias;
+//            else return getId();
+//        }
+//        virtual void setAlias(string _alias) {
+//            alias = _alias;
+//        }
+//
 		//virtual ofColor getStatusColour() = 0;
         virtual int getStatus() = 0; 
 	
@@ -60,7 +61,7 @@ namespace ofxLaser {
 		bool resetFlag = false;
         bool armed = false;
         bool frameMode = true;
-        string alias = "";
+        //string alias = "";
         
         float colourShift = 0;
         

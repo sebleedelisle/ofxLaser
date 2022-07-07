@@ -340,10 +340,11 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 void ManagerBase:: update(){
     
     // etherdreams aren't always available at start time, so here's a hacky delay to check
-    if((!dacsInitialised) && (ofGetElapsedTimef()>3)) {
-        dacAssigner.updateDacList();
-        dacsInitialised = true;
-    }
+//    if((!dacsInitialised) && (ofGetElapsedTimef()>3)) {
+//        dacAssigner.updateDacList();
+//        dacsInitialised = true;
+//    }
+    dacAssigner.update();
     
     if(doArmAll) armAllLasers();
     if(doDisarmAll) disarmAllLasers();
@@ -581,8 +582,8 @@ bool ManagerBase::loadSettings() {
         
         // if the laser has a dac id saved in the settings,
         // tell the dacAssigner about it
-        if(!laser->dacId->empty()) {
-            dacAssigner.assignToLaser(laser->dacId, *laser);
+        if(!laser->dacLabel->empty()) {
+            dacAssigner.assignToLaser(laser->dacLabel, *laser);
         }
         
     }
