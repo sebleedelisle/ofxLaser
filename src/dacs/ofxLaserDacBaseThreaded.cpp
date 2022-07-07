@@ -87,12 +87,13 @@ void DacBaseThreaded :: waitUntilReadyToSend(int pointBufferMin){
 
 bool DacBaseThreaded :: isReadyForFrame(int maxlatencyms) {
    // return true;
-    int queuedPoints = 0;
+    int queuedPointCount = 0;
     if(lock()) {
-        
-        queuedPoints = getNumPointsInAllBuffers();
+        queuedPointCount = getNumPointsInAllBuffers();
         maxLatencyMS = maxlatencyms;
-        bool ready = queuedPoints<(maxlatencyms*newPPS/1000);
+        
+        bool ready = (queuedPointCount<((maxlatencyms+calculationTimeMS)*newPPS/1000));// || (queuedPointCount<minBufferSize);
+        
        // ofLogNotice() << queuedPoints << " " << (maxlatencyms*(newPPS/1000)) << " " << (queuedPoints<(maxlatencyms*newPPS/1000)) << " " << maxlatencyms << " " << newPPS << " ";
         
         unlock();

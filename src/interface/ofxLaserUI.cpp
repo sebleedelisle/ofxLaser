@@ -494,14 +494,14 @@ bool UI::addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetP
         }
     }
 }
-bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix) {
+bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix, bool large) {
     
     string label = param.getName()+labelSuffix;
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
  
     
-    if(addNumberedCheckBox(number, label.c_str(), (bool*)&param.get())) {
+    if(addNumberedCheckBox(number, label.c_str(), (bool*)&param.get()), large) {
         param.set(param.get()); // trigger the events
         return true;
     } else {
@@ -509,7 +509,14 @@ bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSu
     }
     
 }
-bool UI::addNumberedCheckBox(int number, const char* label, bool* v){
+
+bool UI::addNumberedCheckBox(int number, const string& label, bool* v, bool large){
+    return addNumberedCheckBox(number, label.c_str(), v, large);
+    
+}
+
+
+bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large){
     
     using namespace ImGui;
     
@@ -571,11 +578,11 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v){
     
     // BIG NUMBER IN CHECK BOX
     string numString = ofToString(number).c_str();
-    ImGui::PushFont(largeFont);
+    if(large) ImGui::PushFont(largeFont);
     const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
     ImVec2 textArea   = ImGui::CalcTextSize(numString.c_str());
     RenderText(check_bb.GetCenter() - (textArea*0.5f), numString.c_str());
-    ImGui::PopFont();
+    if(large) ImGui::PopFont();
     
     if (g.LogEnabled)
         LogRenderedText(&total_bb.Min, *v ? "[x]" : "[ ]");
@@ -772,7 +779,7 @@ void UI::endWindow() {
 }
 
 
-bool UI::Button(string& label, bool large, bool secondaryColour, const ImVec2& size_arg ){
+bool UI::Button(string label, bool large, bool secondaryColour, const ImVec2& size_arg ){
    
     return Button(label.c_str(), large, secondaryColour, size_arg);
 }

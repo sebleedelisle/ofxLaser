@@ -7,16 +7,16 @@
 #pragma once
 #include "ofMain.h"
 #include "ofxLaserZoneTransform.h"
-#include "ofxLaserZone.h"
+#include "ofxLaserInputZone.h"
 
 namespace ofxLaser {
 
-class LaserZone : public ZoneTransform {
+class OutputZone : public ZoneTransform {
     
     public :
     
-    LaserZone(Zone& _zone) ;
-    ~LaserZone();
+    OutputZone(InputZone& _zone) ;
+    ~OutputZone();
     
     virtual bool update() override ;
     
@@ -52,7 +52,7 @@ class LaserZone : public ZoneTransform {
     virtual bool serialize(ofJson& json) override;
     virtual bool deserialize(ofJson& json) override;
     
-    Zone& zone;
+    InputZone& zone;
     //ZoneTransform zoneTransform;
     ofRectangle zoneMask;
     ofParameter<float>leftEdge;

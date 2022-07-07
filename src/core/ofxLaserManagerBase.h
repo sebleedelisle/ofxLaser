@@ -11,7 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserConstants.h"
 #include "ofxLaserDacAssigner.h"
-#include "ofxLaserZone.h"
+#include "ofxLaserInputZone.h"
 #include "ofxLaserShape.h"
 #include "ofxLaserLine.h"
 #include "ofxLaserPolyline.h"
@@ -53,7 +53,7 @@ class ManagerBase {
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);
-    bool deleteZone(Zone* zone); 
+    bool deleteZone(InputZone* zone); 
 
     void renumberZones(); 
     
@@ -112,9 +112,9 @@ class ManagerBase {
     
      
    // Zone& getZone(int zonenum);
-    Zone* getZone(int zonenum);
+    InputZone* getZone(int zonenum);
     int getNumZones();
-    Zone* getSelectedZone(); 
+    InputZone* getSelectedZone(); 
     bool setTargetZone(unsigned int zone);
     int getTargetZone();
     bool setZoneMode(ofxLaserZoneMode newmode);
@@ -149,7 +149,7 @@ class ManagerBase {
     
     
     bool zonesChanged;
-    std::vector<Zone*> zones;
+    std::vector<InputZone*> zones;
     
     ofParameterGroup params;
  

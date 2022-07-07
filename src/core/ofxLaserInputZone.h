@@ -13,13 +13,13 @@
 #include "ofxLaserQuadGui.h"
 namespace ofxLaser {
 
-	class Zone : public QuadGui {
+	class InputZone : public QuadGui {
 		
 		public :
 		
 		//Zone();
-		Zone(float x=0, float y=0, float w=800, float h=800);
-		~Zone();
+		InputZone(float x=0, float y=0, float w=800, float h=800);
+		~InputZone();
         
         virtual void set(float x, float y, float w, float h) override ;
         virtual void draw() override;

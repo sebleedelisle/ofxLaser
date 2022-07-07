@@ -45,6 +45,8 @@ Manager :: Manager() {
     }
     
     dacAssignmentWindowOpen = false;
+    copySettingsWindowOpen = false;
+    
     selectedLaserIndex = 0;
     viewMode  = OFXLASER_VIEW_3D;
     mouseMode = OFXLASER_MOUSE_DEFAULT;
@@ -141,6 +143,14 @@ void Manager :: initAndLoadSettings() {
     loadSettings();
     
     showInputPreview = true;
+    
+    
+    copyParams.add(copyScannerSettings.set("Copy scanner / speed settings", false));
+    copyParams.add(copyAdvancedSettings.set("Copy advanced settings", false));
+    copyParams.add(copyColourSettings.set("Copy colour settings", false));
+    //copyParams.add(copyZonePositions.set("Copy output zone positions", false));
+    
+    
     
     
 }
@@ -1059,7 +1069,7 @@ void Manager::drawLaserGui() {
         
         ImGui::Separator();
         
-        for(Zone* zone : zones) {
+        for(InputZone* zone : zones) {
             
             string buttonlabel ="DELETE "+zone->zoneLabel;
             string modallabel ="Delete "+zone->zoneLabel+"?";
@@ -1134,7 +1144,7 @@ void Manager::drawLaserGui() {
         
         // LASER ZONE SETTINGS
         Laser* laser = lasers[selectedLaserIndex];
-        vector<LaserZone*> activeZones = laser->getActiveZones();
+        vector<OutputZone*> activeZones = laser->getActiveZones();
         
         glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
         
@@ -1152,7 +1162,7 @@ void Manager::drawLaserGui() {
 
             // ADD / REMOVE ZONES
             ImGui::Text("Zones");
-            for(Zone* zone : zones) {
+            for(InputZone* zone : zones) {
                 bool checked = laser->hasZone(zone);
 
                 if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
@@ -1165,7 +1175,7 @@ void Manager::drawLaserGui() {
             }
             ImGui::NextColumn();
             ImGui::Text("Alternate zones");
-            for(Zone* zone : zones) {
+            for(InputZone* zone : zones) {
                 bool checked = laser->hasAltZone(zone);
                 string label = zone->displayLabel + "##alt";
                 if(ImGui::Checkbox(label.c_str(), &checked)) {
@@ -1223,7 +1233,7 @@ void Manager::drawLaserGui() {
         
         // ZONE MUTE SOLO
        
-        for(LaserZone* laserZone : laser->laserZones) {
+        for(OutputZone* laserZone : laser->outputZones) {
             
             
             
@@ -1284,7 +1294,7 @@ void Manager::drawLaserGui() {
         
         // Laser Output Masks
         
-        for(LaserZone* laserZone : laser->laserZones) {
+        for(OutputZone* laserZone : laser->outputZones) {
             
             if(laserZone->getSelected()) {
                 
@@ -1322,11 +1332,13 @@ void Manager::drawLaserGui() {
         
     }
     drawDacAssignerPanel();
+    
     if(viewMode == OFXLASER_VIEW_3D)  {
         visualiser3D.drawUI();
         
     }
     
+    drawCopySettingsUIWindow();
     
 }
 
@@ -1669,12 +1681,16 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         
     }
    // ImGui::SameLine();
-    label = "Open controller analytics"; // showDacSettings? "Close controller settings" : "Open controller settings";
+  
+    ImGui::Separator();
     
-    if(ImGui::Button(label.c_str())) {
+    if(ImGui::Button("CONTROLLER ANALYTICS")) {
         showDacAnalytics = !showDacAnalytics;
     }
-      
+    ImGui::SameLine();
+    if(ImGui::Button("COPY LASER SETTINGS")) {
+        copySettingsWindowOpen = !copySettingsWindowOpen;
+    }
     
     
     ImGui::Separator();
@@ -1956,12 +1972,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         }
         ImGui::EndPopup();
     }
-    
-    
-    
-    
-    
-    
+        
     ImGui::PopItemWidth();
     
     
@@ -1980,58 +1991,180 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     //ImGui::End();
     UI::endWindow();
     
-    if(showDacAnalytics) {
-        UI::startWindow("Controller Analytics", ImVec2(spacing, ofGetHeight()-spacing-spacing-600), ImVec2(ofGetWidth()-spacing-spacing, 600), ImGuiWindowFlags_None, false, &showDacAnalytics );
+    drawDacAnalyticsUIWindow();
+
+ 
+
+}
+
+void Manager :: drawCopySettingsUIWindow() {
+
+    if(!copySettingsWindowOpen) return ;
+    
+    UI::startWindow("Copy laser settings", ImVec2(100, 100), ImVec2(0,0), ImGuiWindowFlags_None, false, &copySettingsWindowOpen );
+    
+    while(lasersToCopyTo.size()<numLasers) {
+        lasersToCopyTo.push_back(false);
+    }
+    if(numLasers>lasersToCopyTo.size()) {
+        lasersToCopyTo.resize(numLasers);
+    }
+    
+    
+    ImGui::Text("Copy settings from laser %d to : ", selectedLaserIndex+1);
+    for(int i = 0; i<lasersToCopyTo.size(); i++) {
+        if((i>0) &&(i%8!=0)) ImGui::SameLine();
         
-        //UI::extraLargeItemStart();
+        bool copyactive = (i==selectedLaserIndex) ? false :lasersToCopyTo[i];
+        if(i==selectedLaserIndex) {
+            UI::startGhosted();
+        }
+        if(UI::addNumberedCheckBox(i+1, "##" + ofToString(i) + "laserToCopyTo", &copyactive, false)) {
+            lasersToCopyTo[i] =  copyactive;
+            
+        }
+        UI::stopGhosted();
         
+        if(i%8==7) {
+            ImGui::SameLine();
+            if(UI::Button("ALL##line"+ofToString(i/8))) {
+                for(int j = 0; j<8 ;j++) {
+                    lasersToCopyTo[i-j] = true;
+                }
+            }
+            ImGui::SameLine();
+            if(UI::Button("NONE##line"+ofToString(i/8))) {
+                for(int j = 0; j<8 ;j++) {
+                    lasersToCopyTo[i-j] = false;
+                }
+            }
+        }
+    }
+    
+    if(UI::Button("ALL")) {
+        for(bool& copyvalue : lasersToCopyTo) copyvalue = true;
+    }
+    ImGui::SameLine();
+    if(UI::Button("NONE")) {
+        for(bool& copyvalue : lasersToCopyTo) copyvalue = false;
+    }
+    UI::addParameter(copyParams);
+    
+    UI::secondaryColourButtonStart();
+    if(UI::Button("COPY SETTINGS")) {
+        Laser& sourceLaser = getLaser(getSelectedLaser());
+        
+        for(int i = 0; i<lasersToCopyTo.size(); i++) {
+            
+            if((!lasersToCopyTo[i]) || (i==getSelectedLaser())) continue;
+            
+            Laser& targetLaser = getLaser(i);
+            
+            if(copyScannerSettings) {
+                targetLaser.speedMultiplier = sourceLaser.speedMultiplier;
+                ofJson scannerjson;
+                sourceLaser.scannerSettings.serialize(scannerjson);
+                targetLaser.scannerSettings.deserialize(scannerjson);
+            }
+            
+            if(copyAdvancedSettings) {
+                ofJson advancedjson;
+                ofSerialize(advancedjson, sourceLaser.advancedParams);
+                ofDeserialize(advancedjson, targetLaser.advancedParams);
+            }
+            
+            if(copyColourSettings) {
+                ofJson colourjson;
+                ofSerialize(colourjson, sourceLaser.colourSettings.params);
+                ofDeserialize(colourjson, targetLaser.colourSettings.params);
+            }
+            
+//            if(copyZonePositions) {
+//                 //????????
+//
+//                for(int j=0; j<sourceLaser.outputZones.size() ; j++) {
+//                    if(targetLaser.outputZones.size()>j) {
+//                        OutputZone* sourceZone = sourceLaser.outputZones[j];
+//                        OutputZone* targetZone = targetLaser.outputZones[j];
+//
+//                        //targetZone->zone.
+//
+//                    }
+//
+//
+//                }
+//
+//            }
+            
+            
+        }
+        copySettingsWindowOpen = false;
+        
+    }
+    UI::secondaryColourButtonEnd();
+    UI::endWindow();
+    
+}
+
+
+void Manager::drawDacAnalyticsUIWindow() {
+    
+    if(!showDacAnalytics) return;
+    
+    string label;
+    
+    ofxLaser::Laser* laser = &getLaser(getSelectedLaser());
+    
+    UI::startWindow("Controller Analytics", ImVec2(guiSpacing, ofGetHeight()-guiSpacing-guiSpacing-600), ImVec2(ofGetWidth()-guiSpacing-guiSpacing, 600), ImGuiWindowFlags_None, false, &showDacAnalytics );
+    
+    //UI::extraLargeItemStart();
+    
 //        label = "Frame time ";
 //        ImGui::PlotHistogram(label.c_str(), laser->frameTimeHistory, laser->frameTimeHistorySize, laser->frameTimeHistoryOffset, "", 0, 0.1f, ImVec2(0,80));
+    
+    DacBaseThreaded* dac =  dynamic_cast<DacBaseThreaded*> (laser->getDac());
+    if(dac!=nullptr) {
+        uint64_t visibledurationmicros = dacSettingsTimeSlice * 1000000; // seconds * million
+        uint64_t endTimeMicros = ofGetElapsedTimeMicros();
+        uint64_t startTimeMicros = endTimeMicros - visibledurationmicros;
+        int numvalues = 1000;
+        dac->stateRecorder.recording = true; 
+        dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+        label = "Round trip time";
+        ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 1000.0f, ImVec2(0,80));
         
-        DacBaseThreaded* dac =  dynamic_cast<DacBaseThreaded*> (laser->getDac());
-        if(dac!=nullptr) {
-            uint64_t visibledurationmicros = dacSettingsTimeSlice * 1000000; // seconds * million
-            uint64_t endTimeMicros = ofGetElapsedTimeMicros();
-            uint64_t startTimeMicros = endTimeMicros - visibledurationmicros;
-            int numvalues = 1000;
-            
-            dac->stateRecorder.getLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Round trip time";
-            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 1000.0f, ImVec2(0,80));
-            
-            dac->stateRecorder.getBufferSizeValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Buffer ";
-            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, dac->getMaxPointBufferSize(), ImVec2(0,80));
-       
-            
+        dac->stateRecorder.getBufferSizeValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+        label = "Buffer ";
+        ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, dac->getMaxPointBufferSize(), ImVec2(0,80));
+   
+        
 //            dac->stateRecorder.getDataRateValuesForTime(startTimeMicros, endTimeMicros, numvalues);
 //            label = "Data rate ";
 //            ImGui::PlotHistogram(label.c_str(), dac->stateRecorder.values, numvalues, 0, "", 0.0f, 5000.0f, ImVec2(0,80));
 
-            dac->frameRecorder.getFrameLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Frame latency ";
-            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "", 0.0f, 200000.0f, ImVec2(0,80));
-            
-            dac->frameRecorder.getFrameRepeatValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Frame repeats ";
-            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 5.0f, ImVec2(0,80));
-            
-            dac->frameRecorder.getFrameSkipValuesForTime(startTimeMicros, endTimeMicros, numvalues);
-            label = "Frame skips ";
-            ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 1.0f, ImVec2(0,80));
-   
-          //  UI::addIntSlider(dac->pointBufferMinParam); 
-            UI::addFloatSlider(dacSettingsTimeSlice);
-            
-           
-        }
+        dac->frameRecorder.getFrameLatencyValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+        label = "Frame latency ";
+        ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "", 0.0f, 200000.0f, ImVec2(0,80));
         
+        dac->frameRecorder.getFrameRepeatValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+        label = "Frame repeats ";
+        ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 5.0f, ImVec2(0,80));
         
+        dac->frameRecorder.getFrameSkipValuesForTime(startTimeMicros, endTimeMicros, numvalues);
+        label = "Frame skips ";
+        ImGui::PlotHistogram(label.c_str(), dac->frameRecorder.values, numvalues, 0, "",0.0f, 1.0f, ImVec2(0,80));
+
+      //  UI::addIntSlider(dac->pointBufferMinParam);
+        UI::addFloatSlider(dacSettingsTimeSlice);
         
-        
-       // UI::extraLargeItemEnd();
-        UI::endWindow();
+       
     }
+    
+    
+   // UI::extraLargeItemEnd();
+    UI::endWindow();
+    
+    
 }
 
 

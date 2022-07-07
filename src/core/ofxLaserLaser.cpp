@@ -173,7 +173,7 @@ void Laser :: setGrid(bool gridstate, int gridsize){
   
     snapToGrid = gridstate;
     gridSize = gridsize;
-    for(LaserZone* zone : laserZones) {
+    for(OutputZone* zone : outputZones) {
         zone->gridSize = gridsize;
         zone->snapToGrid = gridstate;
     }
@@ -213,41 +213,41 @@ void Laser:: colourShiftChanged(float& e){
 }
 
 
-void Laser::addZone(Zone* zone, float srcwidth, float srcheight, bool isAlternate) {
+void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool isAlternate) {
 
-	if(hasZone(zone) && !isAlternate) {
+	if(hasZone(inputzone) && !isAlternate) {
 		ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
 		return;
 	}
-    if(hasAltZone(zone) && isAlternate) {
+    if(hasAltZone(inputzone) && isAlternate) {
         ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains alt zone");
         return;
     }
-    if((!hasZone(zone)) && isAlternate) {
+    if((!hasZone(inputzone)) && isAlternate) {
         ofLog(OF_LOG_ERROR, "Laser :: addZone(...) can only add alt if laser has zone already");
     }
     
-    LaserZone* laserZone = new LaserZone(*zone);
+    OutputZone* outputzone = new OutputZone(*inputzone);
     if(isAlternate) {
-        laserZone->setHue(100);
-        laserZone->setIsAlternate(true);
+        outputzone->setHue(100);
+        outputzone->setIsAlternate(true);
     }
     
-    laserZones.push_back(laserZone);
+    outputZones.push_back(outputzone);
     
-    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zone->getIndex()) + (isAlternate?"alt.json" : ".json"));
+    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(inputzone->getIndex()) + (isAlternate?"alt.json" : ".json"));
 
     
     if(!laserZoneJson.empty()) {
-        laserZone->deserialize(laserZoneJson);
+        outputzone->deserialize(laserZoneJson);
     } else {
         // initialise zoneTransform
-        laserZone->init(zone->rect);
+        outputzone->init(inputzone->rect);
 
-        laserZone->zoneMask = zone->rect;
+        outputzone->zoneMask = inputzone->rect;
     }
     // sort the zones... oh a fancy lambda check me out
-    std::sort(laserZones.begin(), laserZones.end(), [](const LaserZone* a, const LaserZone* b) -> bool {
+    std::sort(outputZones.begin(), outputZones.end(), [](const OutputZone* a, const OutputZone* b) -> bool {
         return (a->getZoneIndex()<b->getZoneIndex());
     });
     saveSettings();
@@ -255,37 +255,37 @@ void Laser::addZone(Zone* zone, float srcwidth, float srcheight, bool isAlternat
 }
 
 
-void Laser::addAltZone(Zone* zone, float srcwidth, float srcheight) {
+void Laser::addAltZone(InputZone* zone, float srcwidth, float srcheight) {
     addZone(zone, srcwidth, srcheight, true);
      
 }
 
 
 
-bool Laser :: hasZone(Zone* zone){
+bool Laser :: hasZone(InputZone* zone){
     
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(zone == &laserZone->zone) return true;
     }
     return false;
 }
 
-bool Laser :: hasAltZone(Zone* zone){
+bool Laser :: hasAltZone(InputZone* zone){
     
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if((laserZone->getIsAlternate()) && (zone == &laserZone->zone)) return true;
     }
     return false;
 }
 
-bool Laser :: removeZone(Zone* zone){
+bool Laser :: removeZone(InputZone* zone){
 
-    LaserZone* laserZone = getLaserZoneForZone(zone);
+    OutputZone* laserZone = getLaserZoneForZone(zone);
     if(laserZone==nullptr) return false;
     
-    vector<LaserZone*>::iterator it = std::find(laserZones.begin(), laserZones.end(), laserZone);
+    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), laserZone);
 
-    laserZones.erase(it);
+    outputZones.erase(it);
     delete laserZone;
     removeAltZone(zone);
     
@@ -296,14 +296,14 @@ bool Laser :: removeZone(Zone* zone){
 }
 
 
-bool Laser :: removeAltZone(Zone* zone){
+bool Laser :: removeAltZone(InputZone* zone){
 
-    LaserZone* laserZone = getLaserAltZoneForZone(zone);
+    OutputZone* laserZone = getLaserAltZoneForZone(zone);
     if(laserZone==nullptr) return false;
     
-    vector<LaserZone*>::iterator it = std::find(laserZones.begin(), laserZones.end(), laserZone);
+    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), laserZone);
 
-    laserZones.erase(it);
+    outputZones.erase(it);
     delete laserZone;
     
     saveSettings();
@@ -314,15 +314,15 @@ bool Laser :: removeAltZone(Zone* zone){
 
 
 
-LaserZone* Laser::getLaserZoneForZone(Zone* zone) {
-    for(LaserZone* laserZone : laserZones) {
+OutputZone* Laser::getLaserZoneForZone(InputZone* zone) {
+    for(OutputZone* laserZone : outputZones) {
         if((!laserZone->getIsAlternate()) && (&laserZone->zone == zone)) return laserZone;
     }
     return nullptr;
 }
 
-LaserZone* Laser::getLaserAltZoneForZone(Zone* zone) {
-    for(LaserZone* laserZone : laserZones) {
+OutputZone* Laser::getLaserAltZoneForZone(InputZone* zone) {
+    for(OutputZone* laserZone : outputZones) {
         if((laserZone->getIsAlternate()) && (&laserZone->zone == zone)) return laserZone;
     }
     return nullptr;
@@ -330,16 +330,16 @@ LaserZone* Laser::getLaserAltZoneForZone(Zone* zone) {
 
 void Laser::updateZoneMasks() {
 	
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         laserZone->updateZoneMask();
     }
    
 }
 
-vector<LaserZone*> Laser::getActiveZones(){
+vector<OutputZone*> Laser::getActiveZones(){
     bool soloActive = areAnyZonesSoloed();
-    vector<LaserZone*> activeZones;
-    for(LaserZone* laserZone : laserZones) {
+    vector<OutputZone*> activeZones;
+    for(OutputZone* laserZone : outputZones) {
         if(soloActive && laserZone->soloed) {
             activeZones.push_back(laserZone);
         } else if(!laserZone->muted) {
@@ -350,7 +350,7 @@ vector<LaserZone*> Laser::getActiveZones(){
 }
 
 bool Laser::areAnyZonesSoloed() {
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(laserZone->soloed) {
             return true;
         }
@@ -360,7 +360,7 @@ bool Laser::areAnyZonesSoloed() {
 }
 
 bool Laser ::muteZone(int zonenum) {
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(laserZone->getZoneIndex() == zonenum) {
             if(!laserZone->muted) {
                 laserZone->muted = true;
@@ -373,7 +373,7 @@ bool Laser ::muteZone(int zonenum) {
     return false;
 }
 bool Laser ::unMuteZone(int zonenum){
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(laserZone->getZoneIndex() == zonenum) {
             if(laserZone->muted) {
                 laserZone->muted = false;
@@ -434,8 +434,8 @@ void Laser::drawTransformUI() {
     
    // float scale = w/800.0f;
     //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
-    for(int i = laserZones.size()-1; i>=0; i--) {
-        LaserZone* laserZone = laserZones[i];
+    for(int i = outputZones.size()-1; i>=0; i--) {
+        OutputZone* laserZone = outputZones[i];
         //if(!laserZone->getEnabled()) continue;
         laserZone->setScale(previewScale);
         laserZone->setOffset(previewOffset);
@@ -474,12 +474,12 @@ void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
 void Laser::drawTransformAndPath(ofRectangle rect) {
     ofRectangle bounds;
     
-    vector<LaserZone*> activeZones = getActiveZones();
+    vector<OutputZone*> activeZones = getActiveZones();
     
     
     vector<glm::vec3> perimeterpoints;
     bool firsttime = true;
-    for(LaserZone* zone : activeZones) {
+    for(OutputZone* zone : activeZones) {
         //ZoneTransform& zonetransform = zone->zoneTransform;
        
         zone->getPerimeterPoints(perimeterpoints);
@@ -517,7 +517,7 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
     drawLaserPath(false, false); // 4/(scale*rectscale));
    
     
-    for(LaserZone* zone : activeZones) {
+    for(OutputZone* zone : activeZones) {
         
         zone->getPerimeterPoints(perimeterpoints);
         
@@ -660,14 +660,14 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
 
 void Laser :: disableTransformGui() {
 	
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         laserZone->setEnabled(false);
     }
 	
 	
 }
 void Laser :: enableTransformGui() {
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(laserZone->getVisible()) laserZone->setEnabled(true);
     }
 	
@@ -689,16 +689,16 @@ void Laser::update(bool updateZones) {
     
     // mute / solo functionality
     if(soloMode) {
-        for(LaserZone* laserZone : laserZones) {
+        for(OutputZone* laserZone : outputZones) {
             laserZone->setVisible(laserZone->soloed);
-            LaserZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
+            OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
             if(altZone!=nullptr) altZone->setVisible(laserZone->soloed);
         }
         
     } else {
-        for(LaserZone* laserZone : laserZones) {
+        for(OutputZone* laserZone : outputZones) {
             laserZone->setVisible(!laserZone->muted);
-            LaserZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
+            OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
             if(altZone!=nullptr) altZone->setVisible(!laserZone->muted);
         }
     }
@@ -708,7 +708,7 @@ void Laser::update(bool updateZones) {
     // (shouldn't need anything saving)
     if(updateZones) {
        
-        for(LaserZone* laserZone : laserZones) {
+        for(OutputZone* laserZone : outputZones) {
             //ZoneTransform& warp = laserZone->zoneTransform;
             laserZone->setSrc(laserZone->zone.rect);
             laserZone->updateHomography();
@@ -719,8 +719,8 @@ void Laser::update(bool updateZones) {
     }
     
     // hack to ensure that only one zone is selected
-    LaserZone* selectedZone = nullptr;
-    for(LaserZone* laserZone : laserZones) {
+    OutputZone* selectedZone = nullptr;
+    for(OutputZone* laserZone : outputZones) {
         //ZoneTransform& warp = laserZone->zoneTransform;
         if(laserZone->getSelected()) {
             if(selectedZone) {
@@ -732,19 +732,19 @@ void Laser::update(bool updateZones) {
     }
     
     if(selectedZone) {
-        if(find(laserZones.begin(), laserZones.end(),selectedZone)!=laserZones.begin()) {
+        if(find(outputZones.begin(), outputZones.end(),selectedZone)!=outputZones.begin()) {
             // reorder zones!
-            auto it = find(laserZones.begin(), laserZones.end(), selectedZone);
-            laserZones.erase(it);
+            auto it = find(outputZones.begin(), outputZones.end(), selectedZone);
+            outputZones.erase(it);
 
-            laserZones.insert(laserZones.begin(), selectedZone);
+            outputZones.insert(outputZones.begin(), selectedZone);
 
         }
     }
     needsSave = maskManager.update() | needsSave;
     
     bool laserZoneChanged = false;
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         laserZoneChanged |= laserZone->update();
 	}
    
@@ -760,9 +760,9 @@ void Laser::update(bool updateZones) {
 }
 
 
-void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, float masterIntensity ){
+void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, InputZone* zone, float masterIntensity ){
     
-    LaserZone* laserZone = getLaserZoneForZone(zone);
+    OutputZone* laserZone = getLaserZoneForZone(zone);
     if(laserZone==nullptr) {
         ofLogError("Laser::sendRawPoints(...), zone "+zone->zoneLabel + " not added to laser ");
         return;
@@ -863,9 +863,9 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
             // record all zone shapes;
             pauseStateRecorded = true;
             
-            for(LaserZone* laserZone : laserZones) {
+            for(OutputZone* laserZone : outputZones) {
                 if(laserZone->getIsAlternate()) continue; // to ensure we don't get two sets of shapes
-                Zone& zone = laserZone->zone;
+                InputZone& zone = laserZone->zone;
                 deque<Shape*>& shapes = pauseShapesByZone[&zone];
                 for(Shape* shape : zone.shapes) {
                     shapes.push_back(shape->clone());
@@ -1225,7 +1225,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 	
 	// go through each zone
 	//for(int i = 0; i<(int)laserZones.size(); i++) {
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
       
         if(!laserZone->getVisible()) continue;
         
@@ -1237,7 +1237,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
            ((muteOnAlternate) ||
             ((!laserZone->getIsAlternate()) && (hasAltZone(&laserZone->zone))))) continue;
         
-		Zone& zone = laserZone->zone;
+		InputZone& zone = laserZone->zone;
         //ZoneTransform& warp = laserZone->zoneTransform;
 		ofRectangle& maskRectangle = laserZone->zoneMask;
         
@@ -1435,12 +1435,12 @@ RenderProfile& Laser::getRenderProfile(string profilelabel) {
 	
 }
 
-deque<Shape*> Laser ::getTestPatternShapesForZone(LaserZone& laserZone) {
+deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 	
 	deque<Shape*> shapes;
     if(testPattern==0) return shapes;
    
-	Zone& zone = laserZone.zone;
+	InputZone& zone = laserZone.zone;
 
 	ofRectangle& maskRectangle = laserZone.zoneMask;
 
@@ -1786,7 +1786,7 @@ void Laser::paramsChanged(ofAbstractParameter& e){
 }
 
 
-bool Laser::loadSettings(vector<Zone*>& zones){
+bool Laser::loadSettings(vector<InputZone*>& zones){
     ignoreParamChange = true;
     ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
     ofDeserialize(json, params);
@@ -1802,8 +1802,8 @@ bool Laser::loadSettings(vector<Zone*>& zones){
         
         // if a zone exists with this index then add a LaserZone for it
         if(zones.size()>zoneNum) {
-            LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
-            laserZones.push_back(laserZone);
+            OutputZone* laserZone = new OutputZone(*zones[zoneNum]);
+            outputZones.push_back(laserZone);
             ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
 
             success &= laserZone->deserialize(laserZoneJson);
@@ -1819,10 +1819,10 @@ bool Laser::loadSettings(vector<Zone*>& zones){
         
         // if a zone exists with this index then add a LaserZone for it
         if(zones.size()>zoneNum) {
-            LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
+            OutputZone* laserZone = new OutputZone(*zones[zoneNum]);
             laserZone->setIsAlternate(true);
             laserZone->setHue(100);
-            laserZones.push_back(laserZone);
+            outputZones.push_back(laserZone);
             ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json");
 
             success &= laserZone->deserialize(laserZoneJson);
@@ -1851,7 +1851,7 @@ bool Laser::saveSettings(){
 
     vector<int>laserzonenums;
     vector<int>laseraltzonenums;
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         if(laserZone->getIsAlternate()) {
             laseraltzonenums.push_back(laserZone->getZoneIndex());
         } else {
@@ -1869,7 +1869,7 @@ bool Laser::saveSettings(){
     
     
 
-    for(LaserZone* laserZone : laserZones) {
+    for(OutputZone* laserZone : outputZones) {
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
         //cout << "Laser::saveSettings() " << laserZone->getZoneIndex();

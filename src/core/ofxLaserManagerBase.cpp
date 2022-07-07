@@ -71,7 +71,7 @@ void ManagerBase :: setCanvasSize(int w, int h){
     laserMask.init(w,h);
     // canvasPreviewFbo.allocate(w, h, GL_RGB, 3);
     ofRectangle canvasRectangle(0,0,w,h);
-    for(Zone* zone : zones) {
+    for(InputZone* zone : zones) {
         zone->setConstrained(canvasRectangle);
         
     }
@@ -144,14 +144,14 @@ void ManagerBase::addZone(const ofRectangle& rect) {
 void ManagerBase :: addZone(float x, float y, float w, float h) {
     if(w<=0) w = width;
     if(h<=0) h = height;
-    zones.push_back(new Zone( x, y, w, h));
+    zones.push_back(new InputZone( x, y, w, h));
     //zones.back()->loadSettings();
     renumberZones();
 }
 
-bool ManagerBase :: deleteZone(Zone* zone) {
+bool ManagerBase :: deleteZone(InputZone* zone) {
     
-    vector<Zone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
+    vector<InputZone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
     if(it == zones.end()) return false;
     
     
@@ -417,7 +417,7 @@ void ManagerBase::send(){
     
     if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
         for(size_t j = 0; j<zones.size(); j++) {
-            Zone& z = *zones[j];
+            InputZone& z = *zones[j];
             z.shapes.clear();
             
             for(size_t i= 0; i<shapes.size(); i++) {
@@ -557,7 +557,7 @@ bool ManagerBase::loadSettings() {
     }
     zones.clear();
     for(ofJson& zoneJson : zonesJson) {
-        zones.push_back(new Zone());
+        zones.push_back(new InputZone());
         zones.back()->deserialize(zoneJson);
         
     }
@@ -689,7 +689,7 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 //    return *zones.at(zonenum);
 //    
 //}
-Zone* ManagerBase::getZone(int zonenum) {
+InputZone* ManagerBase::getZone(int zonenum) {
     // TODO bounds check?
     if((zonenum>=0) && (zonenum<zones.size())) {
         return zones.at(zonenum);
@@ -703,8 +703,8 @@ int ManagerBase::getNumZones() {
     return (int)zones.size();
 }
 
-Zone* ManagerBase::getSelectedZone() {
-    for(Zone* zone : zones) {
+InputZone* ManagerBase::getSelectedZone() {
+    for(InputZone* zone : zones) {
         if(zone->selected) {
             return zone;
         }

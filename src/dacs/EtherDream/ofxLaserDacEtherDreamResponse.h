@@ -92,6 +92,8 @@ class DacEtherDreamResponse {
     
     string toString() {
         string data = "";
+        data += "response        : " + ofToString(response) + "\n";
+        data += "command         : " + ofToString(command);
         data+= status.toString();
         return data; 
         

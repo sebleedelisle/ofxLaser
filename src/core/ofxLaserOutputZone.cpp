@@ -5,10 +5,10 @@
 //  Created by Seb Lee-Delisle on 13/04/2021.
 //
 
-#include "ofxLaserLaserZone.h"
+#include "ofxLaserOutputZone.h"
 using namespace ofxLaser;
 
-LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
+OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
     // init params?
     soloed = false;
     ZoneTransform :: init(zone.rect);
@@ -23,21 +23,21 @@ LaserZone :: LaserZone(Zone& _zone) : zone(_zone) {
     zoneMaskGroup.add(topEdge.set("Top", 0,0,1));
     zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
     zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
-    ofAddListener(zoneMaskGroup.parameterChangedE(), this, &LaserZone::zoneMaskChanged);
+    ofAddListener(zoneMaskGroup.parameterChangedE(), this, &OutputZone::zoneMaskChanged);
     zoneParams.add(zoneMaskGroup);
     isDirty = true;
     enabled = true;
     visible = true;
-    ofAddListener(zoneParams.parameterChangedE(), this, &LaserZone::paramChanged);
+    ofAddListener(zoneParams.parameterChangedE(), this, &OutputZone::paramChanged);
    
 }
-LaserZone :: ~LaserZone() {
+OutputZone :: ~OutputZone() {
     // Transform object should be automatically deleted i think
     // make sure destructor cleans up ok
-    ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &LaserZone::zoneMaskChanged);
+    ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &OutputZone::zoneMaskChanged);
 }
 
-bool LaserZone :: update() {
+bool OutputZone :: update() {
     
     bool wasDirty = isDirty;
     wasDirty = ZoneTransform :: update() | wasDirty;
@@ -46,7 +46,7 @@ bool LaserZone :: update() {
     return wasDirty;
 }
 
-void LaserZone :: draw() {
+void OutputZone :: draw() {
      
     if(!visible) return ;
     ofPushStyle();
@@ -90,21 +90,21 @@ void LaserZone :: draw() {
 
 }
 
-string LaserZone :: getLabel() {
+string OutputZone :: getLabel() {
     return ofToString(zone.getIndex()+1);
 }
-void LaserZone :: setScale(float _scale) {
+void OutputZone :: setScale(float _scale) {
     scale = _scale;
     //zoneTransform.scale = scale;
 }
-void LaserZone :: setOffset(ofPoint _offset) {
+void OutputZone :: setOffset(ofPoint _offset) {
     offset = _offset;
     //zoneTransform.offset = offset;
 }
-void LaserZone :: zoneMaskChanged(ofAbstractParameter& e) {
+void OutputZone :: zoneMaskChanged(ofAbstractParameter& e) {
     updateZoneMask();
 }
-void LaserZone :: updateZoneMask() {
+void OutputZone :: updateZoneMask() {
     //zoneTransform.updateZoneMask();
     zoneMask.setX(zone.rect.getLeft()+(leftEdge*zone.rect.getWidth()));
     zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
@@ -113,10 +113,10 @@ void LaserZone :: updateZoneMask() {
     isDirty = true; 
 }
 
-void LaserZone :: paramChanged(ofAbstractParameter& e) {
+void OutputZone :: paramChanged(ofAbstractParameter& e) {
     isDirty=true; 
 }
-bool LaserZone :: serialize(ofJson& json){
+bool OutputZone :: serialize(ofJson& json){
    
    // ofJson jsonGroup;
     
@@ -133,7 +133,7 @@ bool LaserZone :: serialize(ofJson& json){
 }
 
 
-bool LaserZone :: deserialize(ofJson& json){
+bool OutputZone :: deserialize(ofJson& json){
  
     // TODO Error check! Try / catch
     ofJson paramsJson = json["zoneparams"];

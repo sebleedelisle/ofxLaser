@@ -42,8 +42,6 @@ class Manager : public ManagerBase {
     
     void paramChanged(ofAbstractParameter& e) ;
     
-    
-    
     void initSVGs(); 
     
     bool deleteLaser(Laser* laser) override;
@@ -75,7 +73,10 @@ class Manager : public ManagerBase {
     void drawLaserGui();
     void startLaserUI() ;
     void finishLaserUI() ;
-    void renderCustomCursors(); 
+    void renderCustomCursors();
+    
+    void drawCopySettingsUIWindow();
+    void drawDacAnalyticsUIWindow();
    
     bool togglePreview();
     // TODO I think this functionality is broken
@@ -116,6 +117,7 @@ class Manager : public ManagerBase {
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize; 
     bool dacAssignmentWindowOpen;
+    bool copySettingsWindowOpen; 
     
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;
@@ -159,6 +161,17 @@ class Manager : public ManagerBase {
     
     
     PresetManager<ScannerSettings> scannerPresetManager;
+    
+    
+    // copy settings system :
+    // TODO Break into its own object
+    // is actually an array of booleans
+    deque<bool> lasersToCopyTo;
+    ofParameterGroup copyParams; 
+    ofParameter<bool> copyScannerSettings;
+    ofParameter<bool> copyAdvancedSettings;
+    ofParameter<bool> copyColourSettings;
+    ofParameter<bool> copyZonePositions;
    
 
 };

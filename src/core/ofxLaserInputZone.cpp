@@ -6,7 +6,7 @@
 //
 //
 
-#include "ofxLaserZone.h"
+#include "ofxLaserInputZone.h"
 
 using namespace ofxLaser;
 
@@ -15,7 +15,7 @@ using namespace ofxLaser;
 ////	editable = false;
 //}
 
-Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
+InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
     setIndex(0);
 	set(x, y, w,h);
     setColours(ofColor(200,20,200), ofColor(200,20,200), ofColor(200,20,200));
@@ -30,7 +30,7 @@ Zone::Zone(float x, float y, float w, float h) : QuadGui::QuadGui() {
     setConstrained(rect);
 }
 
-void Zone:: setIndex(int _index)  {
+void InputZone:: setIndex(int _index)  {
     index = _index;
     setName("Z"+ofToString(index+1));
     zoneLabel = "ZONE " + ofToString(index+1); 
@@ -38,19 +38,19 @@ void Zone:: setIndex(int _index)  {
     
 }
 
-Zone::~Zone() {
+InputZone::~InputZone() {
 	removeListeners();
 	
 }
 
-void Zone:: set(float x, float y, float w, float h) {
+void InputZone:: set(float x, float y, float w, float h) {
     QuadGui::set(x, y, w, h);
     rect.set(x,y,w,h);
     isDirty = true;
 
 }
 
-void Zone::draw() {
+void InputZone::draw() {
     if(editable) {
         lineWidth =2;
     } else {
@@ -60,7 +60,7 @@ void Zone::draw() {
 }
 
 
-bool Zone::update() {
+bool InputZone::update() {
 
 	if(isDirty) {
 		rect.set(handles[0], handles[3]);
@@ -71,7 +71,7 @@ bool Zone::update() {
 	return false;
 }
 
-bool Zone::addShape(Shape* s){
+bool InputZone::addShape(Shape* s){
 	
 	if(s->intersectsRect(rect)){
 		shapes.push_back(s);
@@ -84,7 +84,7 @@ bool Zone::addShape(Shape* s){
 
 
 
-ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer, ofPoint& currentPosition){
+ofPoint& InputZone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer, ofPoint& currentPosition){
 	
 	deque<ofxLaser::Shape*> sortedShapes;
 	
@@ -225,7 +225,7 @@ ofPoint& Zone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesContainer
 //	//deserialize(json);
 //}
 
-void Zone::setHandleSize(float size) {
+void InputZone::setHandleSize(float size) {
 	//for(DragHandle& handle : handles) {
 	//	handle.setSize(size);
 	//}

@@ -56,7 +56,8 @@ class UI {
     static bool addFloatAsIntPercentage(string label, float& target, float min = 0, float max = 1);
     static bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip="", const char* format="%.2f", float power = 1.0f);
     static bool addResettableFloatAsIntPercentage(string label, float& target, float resetValue, float min = 0, float max = 1);
-    static bool addNumberedCheckBox(int number, const char* label, bool* v);
+    static bool addNumberedCheckBox(int number, const char* label, bool* v, bool large);
+    static bool addNumberedCheckBox(int number, const string& label, bool* v, bool large = true);
 
     
     // ofParameters
@@ -87,8 +88,8 @@ class UI {
     static bool addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip="", string labelSuffix = "");
     
     static bool addCheckbox(ofParameter<bool>&param, string labelSuffix = "");
-    static bool addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix = "");
-        
+    static bool addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix = "", bool large = true);
+   
     static bool addColour(ofParameter<ofFloatColor>& parameter, bool alpha = false, string labelSuffix = "");
     static bool addColour(ofParameter<ofColor>& parameter, bool alpha = false, string labelSuffix = "");
     
@@ -105,7 +106,7 @@ class UI {
     static void endWindow();
     
     
-    static bool Button(string& label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
+    static bool Button(string label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     
     static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     static void secondaryColourButtonStart();
