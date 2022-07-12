@@ -86,6 +86,7 @@ class Laser {
     void addAltZone(InputZone* zone, float srcwidth, float srcheight);
     bool hasAltZone(InputZone* zone);
     bool removeAltZone(InputZone* zone);
+    bool hasAnyAltZones();
     
     OutputZone* getLaserZoneForZone(InputZone* zone);
     OutputZone* getLaserAltZoneForZone(InputZone* zone);

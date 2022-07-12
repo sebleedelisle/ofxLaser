@@ -227,10 +227,7 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
             dacdataptr->alias = "";
         }
         dacdataptr->available = false;
-//        if(aliasByLabel.find(dacdataptr->label)!=aliasByLabel.end()) {
-//            dacdataptr->alias = aliasByLabel[dacdataptr->label];
-//
-//        }
+
        
         return false;
         
@@ -296,6 +293,8 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         // Maybe we should store the laser in the
         // DacData anyway it can be connected if / when
         // it's found?
+        dacdata.assignedLaser = &laser;
+        laser.dacLabel = dacdata.getLabel(); 
         dacdata.available = false;
         return false;
     }

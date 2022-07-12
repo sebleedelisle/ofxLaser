@@ -13,7 +13,7 @@ using namespace ofxLaser;
 
 bool DacBaseThreaded :: sendFrame(const vector<Point>& points){
 
-        
+    if(!isThreadRunning()) return false; 
     stateRecorder.update();
     frameRecorder.update();
 
@@ -76,7 +76,7 @@ int DacBaseThreaded :: calculateBufferSizeByTimeAcked() {
 
 void DacBaseThreaded :: waitUntilReadyToSend(int pointBufferMin){
     
-    int bufferFullness = calculateBufferSizeByTimeSent();
+    int bufferFullness = calculateBufferSizeByTimeAcked();
     int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
     int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
     if(microsToWait>0) {

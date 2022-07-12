@@ -50,11 +50,10 @@ void Laser::setDac(DacBase* newdac){
        // dacAlias = dac->getAlias();
         armed = false; // automatically calls setArmed because of listener on parameter
     }
-    
 }
+
 DacBase* Laser::getDac(){
     return dac;
-    
 }
 
 bool Laser::hasDac() {
@@ -277,6 +276,15 @@ bool Laser :: hasAltZone(InputZone* zone){
     }
     return false;
 }
+
+bool Laser :: hasAnyAltZones() {
+    
+    for(OutputZone* laserZone : outputZones) {
+        if(laserZone->getIsAlternate()) return true;
+    }
+    return false;
+}
+
 
 bool Laser :: removeZone(InputZone* zone){
 

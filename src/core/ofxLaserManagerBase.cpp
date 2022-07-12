@@ -582,6 +582,8 @@ bool ManagerBase::loadSettings() {
         
         // if the laser has a dac id saved in the settings,
         // tell the dacAssigner about it
+        // if the dac isn't available, it'll make the data and store it
+        // ready for when it loads
         if(!laser->dacLabel->empty()) {
             dacAssigner.assignToLaser(laser->dacLabel, *laser);
         }
@@ -751,11 +753,30 @@ bool ManagerBase::areAllLasersArmed(){
 
 bool ManagerBase::areAllLasersUsingAlternateZones(){
     for(Laser* laser : lasers) {
-        if(!laser->useAlternate) return false;
+        if(!laser->useAlternate)  return false;
     }
     return (lasers.size()==0)? false : true;
     
 }
+bool ManagerBase::hasAnyAltZones() {
+    for(Laser* laser : lasers) {
+        if(laser->hasAnyAltZones()) return true;
+    }
+    return false;
+}
+void ManagerBase::setAllAltZones() {
+    for(Laser* laser : lasers) {
+        laser->useAlternate = true;
+    }
+    
+}
+void ManagerBase::unSetAllAltZones(){
+    for(Laser* laser : lasers) {
+        laser->useAlternate = false;
+    }
+    
+}
+
 
 //------------------- DEPRECATED --------------------------
 

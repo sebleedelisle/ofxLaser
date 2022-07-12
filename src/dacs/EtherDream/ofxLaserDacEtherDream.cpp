@@ -253,11 +253,16 @@ void DacEtherDream :: threadedFunction(){
                // cout << "DATA SENT " << endl;
                 //if(verbose) logData();
                 // note if this fails, the connected flag is disabled which triggers the reset flag below
-                waitForAck('d');
+                // actually this is a lie - it doesn't automatically disable the connected flag, so I'm doing it
+                // manually here... TODO - should I do it in the waitForAck function?
+                if(!waitForAck('d')) {
+                    connected = false;
+                    
+                }
                 
             } else {
-                
-                   // cout << "DATA NOT SENT " << endl;
+                // probably because there are no points in the buffer.
+                    //cout << "DATA NOT SENT " << endl;
             }
             
         } else {
@@ -325,7 +330,6 @@ void DacEtherDream :: closeWhileRunning() {
 	
 	sendStop();
 	
-    
 	waitForThread();
 	
 	while(!lock());
@@ -450,14 +454,17 @@ inline bool DacEtherDream :: sendPointsToDac(){
     
 	
 	bool success =  sendCommand(dacCommand);
-    if(success) lastDataSentTime = ofGetElapsedTimeMicros();
-
+    if(success) {
+        lastDataSentTime = ofGetElapsedTimeMicros();
+    }  else {
+        ofLogNotice("sendCommand failed!");
+        
+    }
+    
+    
     return success;
 	
 }
-
-
-
 
 inline bool DacEtherDream::waitForAck(char command) {
 	
@@ -480,6 +487,9 @@ inline bool DacEtherDream::waitForAck(char command) {
     //uint64_t previousLastCommandSendTime = lastCommandSendTime;
     
 	int n = 0;
+    
+    long starttime = ofGetElapsedTimeMillis();
+    
     while ((n==0) && (!failed)) {
 		if(!isThreadRunning()) return false;
 		// i think this should block until it gets bytes
@@ -509,6 +519,12 @@ inline bool DacEtherDream::waitForAck(char command) {
 			failed = true;
 			
 		}
+        
+        if( ofGetElapsedTimeMillis() -starttime >1000) {
+            //TIMEOUT!
+            failed = true;
+        }
+
 		//count ++;
 	
 		//if(count > timeoutwait) {
@@ -668,7 +684,6 @@ inline bool DacEtherDream::waitForAck(char command) {
 	}
 }
 
-
 string DacEtherDream :: getId(){
     //return "Ether Dream "+versionString+ " " +id;
 	return "EtherDream "+id;
@@ -688,6 +703,7 @@ inline bool DacEtherDream :: sendBegin(){
 	beginSent = sendCommand(dacCommand);
 	return beginSent;
 }
+
 inline bool DacEtherDream :: sendPrepare(){
 	ofLog(OF_LOG_NOTICE, "sendPrepare()");
 	prepareSendCount++;
@@ -725,7 +741,6 @@ bool DacEtherDream :: sendClear(){
     return sendCommand(dacCommand);
 	
 }
-
 bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(const uint8_t* buffer, int length) {
 	
     const uint8_t* buffer = command.getBuffer();
@@ -753,13 +768,17 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 		cerr << "sendBytes : Network error: " << exc.displayText() << endl;
 		networkerror = true;
 		failed = true;
-	}
+    
+    }
 	catch (Poco::TimeoutException& exc) {
 		//Handle your network errors.
 		cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
 		//	isOpen = false;
 		failed = true;
-	}
+    } catch (...) {
+        
+        cerr << "sendBytes : unspecified error " << endl;
+    }
 	if(numBytesSent!=length) {
 		//do something!
 		cerr << "send fail, fewer bytes sent than expected : "<< numBytesSent << endl;
@@ -783,8 +802,6 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 	return true;
 }
 
-
-
 void DacEtherDream :: close() {
     
     if(isThreadRunning()) {
@@ -802,8 +819,6 @@ void DacEtherDream :: close() {
     socket.close();
 
 }
-
-
 
 int DacEtherDream::getMaxPointBufferSize() {
     int returnvalue = 0;
@@ -832,7 +847,6 @@ bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
         }
     }
 }
-
 
 const vector<ofAbstractParameter*>& DacEtherDream :: getDisplayData() {
     

@@ -29,12 +29,16 @@ class PointFactory {
 	}
 	static Point* getPoint(const Point* pointToClone) {
 
+       // ofLogNotice("PointFactory :: getPoint : ") << pointObjectPool.available();
         Point* point;
 
         point = pointObjectPool.borrowObject();
-		
-        *point = *pointToClone;
-	
+        try {
+            *point = *pointToClone;
+        } catch(...) {
+            ofLogNotice() << pointObjectPool.available();
+            throw;
+        }
 		return point;
 	}
     static Point* getPoint(bool clear = true) {

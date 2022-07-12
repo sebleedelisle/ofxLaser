@@ -388,11 +388,10 @@ void Manager :: renderCustomCursors() {
 
 void Manager :: drawPreviews() {
     
-    
     if(viewMode == OFXLASER_VIEW_3D) {
         float previewheight = (ofGetHeight()/2)-30;
         ofRectangle rect3D(10,30,previewheight/9*16, previewheight); // 16/9 ratio
-        visualiser3D.draw(rect3D, lasers);
+        visualiser3D.draw(rect3D, lasers, mouseMode == OFXLASER_MOUSE_DRAG);
         
         // this is same as other views - should break it out
         if(showOutputPreviews) {
@@ -811,8 +810,44 @@ void Manager::drawLaserGui() {
     ofxLaser::Manager& laserManager = *this;
     
     
-    UI::startWindow("Icon bar", ImVec2(0,0), ImVec2(200,100),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |ImGuiWindowFlags_AlwaysAutoResize, true, nullptr ); 
+    UI::startWindow("Icon bar", ImVec2(0,0), ImVec2(800,50),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr );
 
+    //ImGui::Columns(3, "Icon bar columns");
+//    ImGui::SetColumnWidth(0, 200);
+//    ImGui::SetColumnWidth(1, 200);
+//    ImGui::SetColumnWidth(3, 100);
+   
+    bool useRedButton = areAllLasersArmed();
+    if(useRedButton) UI::secondaryColourButtonStart();
+    // change the colour for the arm all button if we're armed
+    int buttonwidth = 80;
+    if(ImGui::Button(useRedButton ? "ALL ARMED" : "ARM ALL", ImVec2(buttonwidth, 0.0f) )) {
+        armAllLasers();
+    }
+    if(useRedButton) UI::secondaryColourButtonEnd();
+    
+    ImGui::SameLine();
+    if(ImGui::Button("DISARM ALL",  ImVec2(buttonwidth, 0.0f))) {
+        disarmAllLasers();
+    }
+    if(hasAnyAltZones()) {
+        ImGui::SameLine();
+        if(areAllLasersUsingAlternateZones()) UI::secondaryColourButtonStart();
+        if(ImGui::Button("ALT ZONES",  ImVec2(buttonwidth, 0.0f))) {
+            if(areAllLasersUsingAlternateZones()) {
+                unSetAllAltZones();
+            } else {
+                setAllAltZones();
+            }
+        }
+        UI::secondaryColourButtonEnd();
+        
+    }
+  
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
+   
+    
     if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
         viewMode = OFXLASER_VIEW_3D;
     }
@@ -827,7 +862,8 @@ void Manager::drawLaserGui() {
     
     
     ImGui::SameLine();
-    //ImGui::PushFont(UI::symbolFont);
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
+   //ImGui::PushFont(UI::symbolFont);
     if(UI::Button(ICON_FK_MOUSE_POINTER, false, mouseMode==OFXLASER_MOUSE_DEFAULT)) {
         mouseMode = OFXLASER_MOUSE_DEFAULT;
     }
@@ -867,6 +903,8 @@ void Manager::drawLaserGui() {
     }
     
     ImGui::SameLine();
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
+   
     ImGui::Text("%s",ofToString(ofToString(round(ofGetFrameRate()))).c_str()); 
     //ImGui::PopFont();
     UI::endWindow();
@@ -886,10 +924,10 @@ void Manager::drawLaserGui() {
     UI::largeItemStart();
     
     // the arm and disarm buttons
-    bool useRedButton =laserManager.areAllLasersArmed();
+     useRedButton =laserManager.areAllLasersArmed();
     if(useRedButton) UI::secondaryColourButtonStart();
     // change the colour for the arm all button if we're armed
-    int buttonwidth = (mainpanelwidth-(spacing*3))/2;
+    buttonwidth = (mainpanelwidth-(spacing*3))/2;
     if(ImGui::Button(useRedButton ? "ALL LASERS ARMED" : "ARM ALL LASERS", ImVec2(buttonwidth, 0.0f) )) {
         laserManager.armAllLasers();
     }
@@ -1351,16 +1389,62 @@ void Manager :: drawDacAssignerPanel() {
 
         // get the dacs from the dacAssigner
         const vector<DacData>& dacList = dacAssigner.getDacList();
-       
-        ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, 290);
         
-        if(UI::Button("RECONNECT ALL")){
+        bool useRedButton = areAllLasersArmed();
+        if(useRedButton) UI::secondaryColourButtonStart();
+        // change the colour for the arm all button if we're armed
+        int buttonwidth = 160;
+        if(ImGui::Button(useRedButton ? "ALL LASERS ARMED" : "ARM ALL LASERS", ImVec2(buttonwidth, 0.0f) )) {
+            armAllLasers();
+        }
+        if(useRedButton) UI::secondaryColourButtonEnd();
+        
+        ImGui::SameLine();
+        if(ImGui::Button("DISARM ALL LASERS",  ImVec2(buttonwidth, 0.0f))) {
+            disarmAllLasers();
+        }
+        
+      
+        
+        if(ImGui::Button("RECONNECT ALL",  ImVec2(buttonwidth, 0.0f))){
             for(Laser* laser : lasers) {
-                dacAssigner.assignToLaser(laser->getDacLabel(), *laser);
+                
+                // if dac is available then disconnect it
+                
+                //string daclabel = laser->getDacLabel();
+                //if(!dacAssigner.assignToLaser(daclabel, *laser)) {
+                //    laser->dacLabel = daclabel;
+                //
+                //}
+                string daclabel = laser->dacLabel;
+                
+                dacAssigner.assignToLaser(daclabel, *laser);
                 
             }
         }
+        ImGui::SameLine();
+        if(ImGui::Button("DISCONNECT ALL",  ImVec2(buttonwidth, 0.0f))){
+            for(Laser* laser : lasers) {
+                
+                // if dac is available then disconnect it
+                
+                //string daclabel = laser->getDacLabel();
+                //if(!dacAssigner.assignToLaser(daclabel, *laser)) {
+                //    laser->dacLabel = daclabel;
+                //
+                //}
+                string daclabel = laser->dacLabel;
+                
+                dacAssigner.disconnectDacFromLaser(*laser);
+                laser->dacLabel = daclabel;
+                
+            }
+        }
+        
+        ImGui::Separator();
+        
+        ImGui::Columns(2);
+        ImGui::SetColumnWidth(0, 290);
         
         for (int n = 0; n < lasers.size(); n++){
             Laser* laser = lasers[n];
@@ -1380,12 +1464,25 @@ void Manager :: drawDacAssignerPanel() {
             ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
             ImGui::SameLine();
             
+            // ARM BUTTONS
+            if(laser->armed) {
+                UI::secondaryColourButtonStart();
+               
+            }
+            string armlabel = "ARM##"+ofToString(n+1);
+            if(ImGui::Button(armlabel.c_str())){
+                laser->toggleArmed();
+            }
+            UI::secondaryColourButtonEnd();
+            
+            ImGui::SameLine();
+            
             ImGui::Text("Laser %d %s", (n+1),ICON_FK_ARROW_RIGHT);
             ImGui::SameLine();
 
             string label;
             if(!laser->hasDac() ) {
-                label = laser->dacLabel.get();
+                label = dacAssigner.getAliasForLabel(laser->dacLabel.get());
                 //if(!laser->hasDac()) label = "";
                 //UI::startGhosted();
                 ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_Disabled, ImVec2(160,19) );

@@ -53,7 +53,10 @@ class ManagerBase {
     
     void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addZone(const ofRectangle& zoneRect);
-    bool deleteZone(InputZone* zone); 
+    bool deleteZone(InputZone* zone);
+    bool hasAnyAltZones();
+    void setAllAltZones();
+    void unSetAllAltZones(); 
 
     void renumberZones(); 
     

@@ -14,7 +14,7 @@ Visualiser3D :: Visualiser3D() {
     
     lasersettings.setLabel("Default");
     settings.setLabel("Default");
-    load();
+
     
     if(visualiserPresetManager.getPreset("Default")==nullptr) {
         visualiserPresetManager.addPreset(settings);
@@ -22,8 +22,16 @@ Visualiser3D :: Visualiser3D() {
     if(visualiserLaserPresetManager.getPreset("Default")==nullptr) {
         visualiserLaserPresetManager.addPreset(lasersettings);
     }
-    ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
+    params.setName("Visualiser3D"); 
+    params.add(brightness.set("Brightness adjustment", 1,0.1,30));
+    params.add(showLaserNumbers.set("Show laser numbers", false));
+    params.add(showZoneNumbers.set("Show zone numbers", false));
     
+   
+    load();
+    ofAddListener(params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
+    ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
+   
 //    ofAddListener(ofEvents().mousePressed, this, &Visualiser3D::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
 //    ofAddListener(ofEvents().mouseMoved, this, &Visualiser3D::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
 //    ofAddListener(ofEvents().mouseReleased, this, &Visualiser3D::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
@@ -49,6 +57,7 @@ Visualiser3D :: ~Visualiser3D() {
 bool Visualiser3D :: mousePressed(ofMouseEventArgs &e) {
     //ofLogNotice("Visualiser3D :: mousePressed");
     if(!fboRect.inside(e)) return false;
+    if(!dragActive) return false;
     
     lastMousePosition = e;
     dragging = true;
@@ -63,6 +72,7 @@ bool Visualiser3D :: mousePressed(ofMouseEventArgs &e) {
 bool Visualiser3D :: mouseScrolled(ofMouseEventArgs &e) {
     
     if(!fboRect.inside(e)) return false;
+    if(!dragActive) return false;
     
     if(changeTarget) {
         
@@ -108,6 +118,8 @@ bool Visualiser3D :: mouseDragged(ofMouseEventArgs &e) {
 }
 
 void Visualiser3D :: update() {
+    
+   
     //update view stuff
     
     if(smoothedCameraOrbit != settings.cameraOrbit.get()) {
@@ -129,7 +141,9 @@ void Visualiser3D :: update() {
         
 }
 
-void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers) {
+void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers, bool isdragactive) {
+    
+    dragActive = isdragactive;
     
     update();
     numLasers = lasers.size();
@@ -209,7 +223,26 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
             ofSetColor(0,50,0);
         }
         
-        if(settings.showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
+        if(showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
+        if((showZoneNumbers) && (i<lasers.size())) {
+            ofxLaser::Laser* laser = lasers[i];
+            vector<OutputZone*> outputzones = laser->getActiveZones();
+            //vector<string> outputzonenumbers;
+            int spacing = 3;
+            int textwidth = 0;
+            string zoneoutputstring;
+            for(OutputZone* outputzone : outputzones) {
+                if(outputzone->getIsAlternate()) continue;
+                string label = outputzone->getLabel();
+                zoneoutputstring += label+" ";
+                //outputzonenumbers.push_back(label);
+                textwidth+=(2+(label.size()*4));
+                
+            }
+            ofDrawBitmapString(zoneoutputstring, -textwidth/2 ,10);
+            
+            
+        }
         
         ofPushMatrix();
         ofRotateXDeg(-laser3D.orientation.get().x);
@@ -229,7 +262,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers)
             vector<glm::vec3>& points = laser.previewPathMesh.getVertices();
             vector<ofColor>& colours = laser.previewPathColours;
 
-            float brightnessfactor = MAX(0.01f,5.0f/(float)points.size()) * settings.brightness;
+            float brightnessfactor = MAX(0.01f,5.0f/(float)points.size()) * brightness;
             
             
             ofMesh laserMesh;
@@ -365,8 +398,12 @@ void Visualiser3D :: drawGrid() {
 
 
 void Visualiser3D ::load() {
-    ofJson json = ofLoadJson("ofxLaser/visualiser3D.json");
-    settings.deserialize(json);
+    
+    ofJson json = ofLoadJson("ofxLaser/Visualiser3D.json");
+    ofDeserialize(json, params);
+    
+    ofJson json1 = ofLoadJson("ofxLaser/Visualiser3DSettings.json");
+    settings.deserialize(json1);
     
     
     ofJson json2 = ofLoadJson("ofxLaser/visualiser3DLasers.json");
@@ -384,12 +421,14 @@ void Visualiser3D ::load() {
     
 }
 void Visualiser3D ::save() {
-    ofJson json;
-
-    settings.serialize(json);
     
-
-    ofSavePrettyJson("ofxLaser/Visualiser3D.json",json);
+    ofJson json;
+    ofSerialize(json, params);
+    ofSavePrettyJson("ofxLaser/Visualiser3D.json", json);
+    
+    ofJson json1;
+    settings.serialize(json1);
+    ofSavePrettyJson("ofxLaser/Visualiser3DSettings.json",json1);
     
     ofJson json2;
     lasersettings.serialize(json2);
@@ -409,8 +448,9 @@ void Visualiser3D ::drawUI(){
     
     Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
     
-    UI::addResettableFloatSlider(settings.brightness, currentPreset.brightness); //.set("Camera FOV",
-    UI::addResettableCheckbox(settings.showLaserNumbers, currentPreset.showLaserNumbers); //.set("Camera FOV",
+    UI::addResettableFloatSlider(brightness, 10);
+    UI::addCheckbox(showLaserNumbers);
+    UI::addCheckbox(showZoneNumbers);
     UI::addResettableFloatDrag(settings.cameraDistance, currentPreset.cameraDistance); //.set("Camera FOV", 45,10,120))
     UI::addResettableFloatDrag(settings.cameraFov, currentPreset.cameraFov); //.set("Camera FOV", 45,10,120));
     

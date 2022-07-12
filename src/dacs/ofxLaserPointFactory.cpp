@@ -11,5 +11,6 @@
 using namespace ofxLaser;
 
 // static class members
-
-Poco::ObjectPool<ofxLaser::Point> ofxLaser::PointFactory::pointObjectPool(500000,10000000);
+// allocate Point objects. Theoretically 100k points per second per laser
+// x 100 lasers x 10 seconds
+Poco::ObjectPool<ofxLaser::Point> ofxLaser::PointFactory::pointObjectPool(100000000,100000000);

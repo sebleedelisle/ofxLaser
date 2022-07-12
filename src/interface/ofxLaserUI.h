@@ -31,6 +31,7 @@ class UI {
     static bool initialised;
     
     static bool ghosted;
+    static bool secondaryColourActive; 
     
     static void setupGui();
     static void updateGui();

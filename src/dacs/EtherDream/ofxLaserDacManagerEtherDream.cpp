@@ -166,12 +166,16 @@ DacBase* DacManagerEtherDream :: getAndConnectToDac(const string& id){
         return dac;
     }
     // todo check it exists!
-    EtherDreamData& ed = etherdreamDataByMacAddress.at(id);
-    // MAKE DAC
-    dac = new DacEtherDream();
-    dac->setup(id, ed.ipAddress, ed);
-    dacsById[id] = dac;
-    return dac;
+    if(etherdreamDataByMacAddress.find(id)!=etherdreamDataByMacAddress.end()) {
+        EtherDreamData& ed = etherdreamDataByMacAddress.at(id);
+        // MAKE DAC
+        dac = new DacEtherDream();
+        dac->setup(id, ed.ipAddress, ed);
+        dacsById[id] = dac;
+        return dac;
+    } else {
+        return nullptr;
+    }
 }
 
 bool DacManagerEtherDream :: disconnectAndDeleteDac(const string& id){

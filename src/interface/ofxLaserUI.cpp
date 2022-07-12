@@ -16,7 +16,7 @@ ImFont* ofxLaser::UI::largeFont;
 ImFont* ofxLaser::UI::symbolFont;
 bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
-
+bool ofxLaser::UI:: secondaryColourActive = false;
 void UI::render() {
     ImGui::Render();
     
@@ -796,20 +796,25 @@ bool UI::Button(const char* label, bool large, bool secondaryColour, const ImVec
     return returnvalue;
 }
 void UI::secondaryColourButtonStart() {
-    ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
-    ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
-    
-    ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
+    if(!secondaryColourActive) {
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
 
-    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.4f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
-    ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.8f));
-    
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.4f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.8f));
+        secondaryColourActive = true;
+    }
 }
 
 void UI::secondaryColourButtonEnd() {
-    ImGui::PopStyleColor(7);
+    if(secondaryColourActive) {
+        ImGui::PopStyleColor(7);
+        secondaryColourActive = false;
+    } 
 }
 
 void UI::largeItemStart() {

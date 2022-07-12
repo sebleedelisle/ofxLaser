@@ -40,8 +40,8 @@ class Visualiser3D {
     void load();
     void save();
     
-    void update(); 
-    void draw(const ofRectangle& rect, const vector<Laser*>& lasers);
+    void update();
+    void draw(const ofRectangle& rect, const vector<Laser*>& lasers, bool isdragactive);
     void drawGrid();
     
     void drawUI(); 
@@ -60,12 +60,16 @@ class Visualiser3D {
     PresetManager<Visualiser3DLaserSettings> visualiserLaserPresetManager;
     Visualiser3DLaserSettings lasersettings;
    
-    //ofParameterGroup params;
-     
+    ofParameterGroup params;
+    ofParameter<bool> showLaserNumbers;
+    ofParameter<bool> showZoneNumbers;
+    ofParameter<float> brightness;
+
     
     ofMesh grid; 
     bool dirty = false; 
     bool gridDirty = true;
+    bool dragActive = false;
 };
 }
 
