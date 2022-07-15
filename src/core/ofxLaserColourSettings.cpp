@@ -10,6 +10,9 @@
 using namespace ofxLaser;
 
 ColourSettings :: ColourSettings(){
+    
+    params.add(label.set("label", "Default"));
+    
     params.setName("Colour calibration");
     
     params.add(red100.set("red 100", 1,0,1));
@@ -53,4 +56,26 @@ void ColourSettings::processColour(ofxLaser::Point& p, float brightness) {
     p.r = calculateCalibratedBrightness(p.r, brightness, red100, red75, red50, red25, red0);
     p.g = calculateCalibratedBrightness(p.g, brightness, green100, green75, green50, green25, green0);
     p.b = calculateCalibratedBrightness(p.b, brightness, blue100, blue75, blue50, blue25, blue0);
+}
+
+
+ColourSettings& ColourSettings::operator=( ColourSettings& that) {
+    ofJson json;
+    that.serialize(json);
+    deserialize(json);
+    return *this;
+}
+bool ColourSettings::operator == (ColourSettings& that){
+    ofJson json1;
+    that.serialize(json1);
+    json1["label"] = "";
+    //string jsonstring = json1.dump();
+    ofJson json2;
+    serialize(json2);
+    json2["label"] = "";
+    
+    return json1.dump() == json2.dump();
+}
+bool ColourSettings::operator != (ColourSettings& that){
+    return !(*this==that);
 }

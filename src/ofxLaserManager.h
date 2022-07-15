@@ -10,6 +10,7 @@
 #include "ofxLaserVisualiser3D.h"
 #include "ofxLaserPresetManager.h"
 #include "ofxLaserPresetBase.h"
+#include "ofxLaserColourSettings.h"
 
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
@@ -161,6 +162,7 @@ class Manager : public ManagerBase {
     
     
     PresetManager<ScannerSettings> scannerPresetManager;
+    PresetManager<ColourSettings> colourPresetManager;
     
     
     // copy settings system :

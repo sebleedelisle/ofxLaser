@@ -9,20 +9,34 @@
 #pragma once
 #include "ofxLaserPoint.h"
 #include "ofMain.h"
+#include "ofxLaserPresetBase.h"
 
 namespace ofxLaser {
-class ColourSettings {
+class ColourSettings : public PresetBase {
     
     public :
     
     ColourSettings();
+    
+    
+    static string getFolderPath(){
+        return "ofxLaser/colourpresets";
+    };
+    static string getTypeName() {
+        return "Colour Settings";
+    }
+    ColourSettings& operator=( ColourSettings& that);
+    bool operator == (ColourSettings& that);
+    bool operator != (ColourSettings& that);
+  
+    
     
     float calculateCalibratedBrightness(float value, float intensity, float level100, float level75, float level50, float level25, float level0);
     void processColour(ofxLaser::Point& p, float brightness);
     
     // would probably be sensible to move these settings out into a colour
     // calibration object.
-    ofParameterGroup params;
+    //ofParameterGroup params;
     
     ofParameter<float>red100;
     ofParameter<float>red75;

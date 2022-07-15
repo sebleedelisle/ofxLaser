@@ -1580,6 +1580,43 @@ void Manager :: drawDacAssignerPanel() {
                    
                     ImGui::EndDragDropSource();
                 }
+                ImGui::SameLine();
+                static char newDacAlias[255];
+                string alias = dacAssigner.getAliasForLabel(dacdata.getLabel());
+                label = "Edit "+alias+" alias";
+                if(ImGui::Button(ICON_FK_PENCIL)) {
+                    strcpy(newDacAlias, alias.c_str());
+                    ImGui::OpenPopup(label.c_str());
+                }
+                
+                if (ImGui::BeginPopupModal(label.c_str(), 0)){
+                    
+                    if(ImGui::InputText("##1", newDacAlias, IM_ARRAYSIZE(newDacAlias))){
+                       // don't need to do anything here
+                    }
+                    
+                    ImGui::Separator();
+                    label = "OK## "+dacdata.getLabel();
+                    if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
+                        string newalias = newDacAlias;
+                        // TODO - check existing already
+                        dacAssigner.addAliasForLabel(newalias, dacdata.getLabel(), true);
+                        
+                        ImGui::CloseCurrentPopup();
+                        
+                    }
+                    ImGui::SetItemDefaultFocus();
+                    ImGui::SameLine();
+                    label = "Cancel## "+dacdata.getLabel();
+                    if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
+                        ImGui::CloseCurrentPopup();
+                        
+                    }
+                    ImGui::EndPopup();
+                    
+                    
+                }
+                
                 
                 ImGui::PopID();
             }
@@ -2018,7 +2055,8 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     ImGui::Text("COLOUR");
     
     if(ImGui::TreeNode("Colour calibration")){
-        
+        colourPresetManager.drawComboBox(laser->colourSettings);
+        colourPresetManager.drawSaveButtons(laser->colourSettings);
         UI::addParameterGroup(laser->colourSettings.params);
         
         ImGui::TreePop();

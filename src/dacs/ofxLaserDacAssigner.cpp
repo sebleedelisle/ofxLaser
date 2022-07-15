@@ -28,54 +28,58 @@ DacAssigner :: DacAssigner() {
 		ofLog(OF_LOG_ERROR, "Multiple ofxLaser::DacManager instances created");
         throw;
 	}
-    
-    aliasByLabel = {
-       
-        {"EtherDream 66E647A5986A", "SebLee ED A01"},
-        {"EtherDream 5EE67D9E3666", "SebLee ED A02"},
-        {"EtherDream 4AE1B1A5006A", "SebLee ED A03"},
-        {"EtherDream 66E62D9EFE66", "SebLee ED A04"},
-        {"EtherDream 66E653A5686A", "SebLee ED A05"},
-        {"EtherDream 76E6069EE666", "SebLee ED A06"},
-        {"EtherDream 4EE1A5A5246A", "SebLee ED A07"},
-        {"EtherDream 76E6FA9D2267", "SebLee ED A08"},
-        {"EtherDream 3AE1D9A5386A", "SebLee ED A09"},
-        {"EtherDream 66E641A5BC6A", "SebLee ED A10"},
-        {"EtherDream 4AE1AAA51C6A", "SebLee ED A11"},
-        {"EtherDream 36E1E6A5346A", "SebLee ED A12"},
-        {"EtherDream 124DACB1EF44", "SebLee ED B01"},
-        {"EtherDream 124DACE7DAFB", "SebLee ED B02"},
-        {"EtherDream 124DAC75882B", "SebLee ED B03"},
-        {"EtherDream 124DACCE68EA", "SebLee ED B04"},
-        {"EtherDream 124DAC730C99", "SebLee ED B05"},
-        {"EtherDream 124DACD146EB", "SebLee ED B06"},
-        {"EtherDream 124DACF2D99A", "SebLee ED B07"},
-        {"EtherDream 124DACE6D0CC", "SebLee ED B08"},
-        {"EtherDream 124DAC193A1B", "SebLee ED B09"},
-        {"EtherDream 124DAC1BBFD3", "SebLee ED B10"},
-        {"EtherDream 124DAC62CB62", "SebLee ED B11"},
-        {"EtherDream 124DACC90945", "SebLee ED B12"},
-        {"EtherDream 124DACC90945", "SebLee ED B12"},
-        {"EtherDream 66E63CA5C46A", "SebLee OPT4W #1"},
-        {"EtherDream 4EE175A5D86A", "SebLee OPT4W #2"},
-        {"EtherDream 42E6D69E2266", "SebLee OPT4W #3"},
-        {"EtherDream 62E6459EDA66", "SebLee OPT4W #4"},
-        {"EtherDream 4AE188A5A46A", "SebLee LS11W #1"},
-        {"EtherDream 66E6499EA666", "SebLee LS11W #2"},
-        {"EtherDream 4AE18BA5986A", "SebLee LS11W #4"}
-       
-    };
-    
-    for(int i =0; i<100; i++) {
-        string label = ofToHex(i);
-        std::transform(label.begin(), label.end(), label.begin(), cv::details::char_toupper);
-        while(label.size()<12) label = "0" + label;
-        string num = ofToString(i+1);
-        while(num.size()<3) num = "0" + num;
-        aliasByLabel["EtherDream " + label] = "Virtual ED " +num;
-        
-    }
-
+    dacAliasManager.load(); 
+//    map<string, string> presetaliases = {
+//
+//        {"EtherDream 66E647A5986A", "SebLee ED A01"},
+//        {"EtherDream 5EE67D9E3666", "SebLee ED A02"},
+//        {"EtherDream 4AE1B1A5006A", "SebLee ED A03"},
+//        {"EtherDream 66E62D9EFE66", "SebLee ED A04"},
+//        {"EtherDream 66E653A5686A", "SebLee ED A05"},
+//        {"EtherDream 76E6069EE666", "SebLee ED A06"},
+//        {"EtherDream 4EE1A5A5246A", "SebLee ED A07"},
+//        {"EtherDream 76E6FA9D2267", "SebLee ED A08"},
+//        {"EtherDream 3AE1D9A5386A", "SebLee ED A09"},
+//        {"EtherDream 66E641A5BC6A", "SebLee ED A10"},
+//        {"EtherDream 4AE1AAA51C6A", "SebLee ED A11"},
+//        {"EtherDream 36E1E6A5346A", "SebLee ED A12"},
+//        {"EtherDream 124DACB1EF44", "SebLee ED B01"},
+//        {"EtherDream 124DACE7DAFB", "SebLee ED B02"},
+//        {"EtherDream 124DAC75882B", "SebLee ED B03"},
+//        {"EtherDream 124DACCE68EA", "SebLee ED B04"},
+//        {"EtherDream 124DAC730C99", "SebLee ED B05"},
+//        {"EtherDream 124DACD146EB", "SebLee ED B06"},
+//        {"EtherDream 124DACF2D99A", "SebLee ED B07"},
+//        {"EtherDream 124DACE6D0CC", "SebLee ED B08"},
+//        {"EtherDream 124DAC193A1B", "SebLee ED B09"},
+//        {"EtherDream 124DAC1BBFD3", "SebLee ED B10"},
+//        {"EtherDream 124DAC62CB62", "SebLee ED B11"},
+//        {"EtherDream 124DACC90945", "SebLee ED B12"},
+//        {"EtherDream 66E63CA5C46A", "SebLee OPT4W #1"},
+//        {"EtherDream 4EE175A5D86A", "SebLee OPT4W #2"},
+//        {"EtherDream 42E6D69E2266", "SebLee OPT4W #3"},
+//        {"EtherDream 62E6459EDA66", "SebLee OPT4W #4"},
+//        {"EtherDream 4AE188A5A46A", "SebLee LS11W #1"},
+//        {"EtherDream 66E6499EA666", "SebLee LS11W #2"},
+//        {"EtherDream 4AE18BA5986A", "SebLee LS11W #4"}
+//
+//    };
+//
+//    for(auto it : presetaliases) {
+//        dacAliasManager.addAliasForLabel(it.second, it.first);
+//
+//    }
+//
+//    for(int i =0; i<100; i++) {
+//        string label = ofToHex(i);
+//        std::transform(label.begin(), label.end(), label.begin(), cv::details::char_toupper);
+//        while(label.size()<12) label = "0" + label;
+//        string num = ofToString(i+1);
+//        while(num.size()<3) num = "0" + num;
+//        dacAliasManager.addAliasForLabel( "Virtual ED " +num,"EtherDream " + label);
+//
+//    }
+    //dacAliasManager.save();
     
     dacManagers.push_back(new DacManagerLaserdock());
     dacManagers.push_back(new DacManagerHelios());
@@ -119,11 +123,13 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     
     for(DacData& newdacdata : newdaclist) {
         ofLogNotice(newdacdata.getLabel());
-        if(aliasByLabel.find(newdacdata.getLabel())!=aliasByLabel.end()) {
-            newdacdata.alias = aliasByLabel[newdacdata.getLabel()];
-        } else {
-            newdacdata.alias = "";
-        }
+        newdacdata.alias = dacAliasManager.getAliasForLabel(newdacdata.getLabel());
+//
+//        if(aliasByLabel.find(newdacdata.getLabel())!=aliasByLabel.end()) {
+//            newdacdata.alias = aliasByLabel[newdacdata.getLabel()];
+//        } else {
+//            newdacdata.alias = "";
+//        }
 
     }
     
@@ -194,14 +200,13 @@ const vector<DacData>& DacAssigner ::updateDacList(){
 }
 
 string DacAssigner :: getAliasForLabel(const string& daclabel) {
-    if(aliasByLabel.find(daclabel)!=aliasByLabel.end()) {
-        return aliasByLabel[daclabel];
-    } else {
-        return daclabel;
-    }
+    return dacAliasManager.getAliasForLabel(daclabel);
     
 }
-
+bool DacAssigner :: addAliasForLabel(string alias, const string& daclabel, bool force) {
+    return dacAliasManager.addAliasForLabel(alias, daclabel, force);
+    
+}
 
 bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     
@@ -221,14 +226,9 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         dacDataList.emplace_back(dactype, dacid, "", &laser);
         dacdataptr = &dacDataList.back();
 
-        if(aliasByLabel.find(dacdataptr->getLabel())!=aliasByLabel.end()) {
-            dacdataptr->alias = aliasByLabel[dacdataptr->getLabel()];
-        } else {
-            dacdataptr->alias = "";
-        }
+        dacdataptr->alias = dacAliasManager.getAliasForLabel(dacdataptr->getLabel());
         dacdataptr->available = false;
 
-       
         return false;
         
     }

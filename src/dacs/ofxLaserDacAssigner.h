@@ -34,6 +34,7 @@
 #include "ofxLaserDacManagerLaserdock.h"
 #include "ofxLaserDacManagerEtherDream.h"
 #include "ofxLaserDacManagerHelios.h"
+#include "ofxLaserDacAliasManager.h"
 
 namespace ofxLaser {
 
@@ -53,7 +54,8 @@ class DacAssigner {
     const vector<DacData>& getDacList();
     const vector<DacData>& updateDacList();
     string getAliasForLabel(const string& label);
-    
+    bool addAliasForLabel(string alias, const string& daclabel, bool force); 
+
     
     bool assignToLaser(const string& label, Laser& laser);
     bool disconnectDacFromLaser(Laser& laser);
@@ -66,8 +68,10 @@ class DacAssigner {
     vector<DacData> dacDataList;
     //vector<DacBase*> dacs; 
     DacData emptyDacData;
-    map<string, string> aliasByLabel; 
+   
     private:
+    
+    DacAliasManager dacAliasManager;
     
     
 };
