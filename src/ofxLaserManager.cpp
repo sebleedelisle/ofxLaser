@@ -1444,7 +1444,7 @@ void Manager :: drawDacAssignerPanel() {
         ImGui::Separator();
         
         ImGui::Columns(2);
-        ImGui::SetColumnWidth(0, 290);
+        ImGui::SetColumnWidth(0, 330);
         
         for (int n = 0; n < lasers.size(); n++){
             Laser* laser = lasers[n];
@@ -1461,13 +1461,15 @@ void Manager :: drawDacAssignerPanel() {
             if(laser->hasDac()) col = UI::getColourForState(laser->getDacConnectedState());
             
             draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
+            //draw_list->AddText(p, ImU32(0xffffff), "1");
+           // ImGui::Text("%s", "11.45");
             ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
+            //ImGui::SetCursorPosX(ImGui::GetCursorPosX()+size.x-2);
             ImGui::SameLine();
             
             // ARM BUTTONS
             if(laser->armed) {
                 UI::secondaryColourButtonStart();
-               
             }
             string armlabel = "ARM##"+ofToString(n+1);
             if(ImGui::Button(armlabel.c_str())){
@@ -1477,21 +1479,21 @@ void Manager :: drawDacAssignerPanel() {
             
             ImGui::SameLine();
             
-            ImGui::Text("Laser %d %s", (n+1),ICON_FK_ARROW_RIGHT);
+            ImGui::Text("%02d : ", (n+1));
             ImGui::SameLine();
-
+            
             string label;
             if(!laser->hasDac() ) {
                 label = dacAssigner.getAliasForLabel(laser->dacLabel.get());
                 //if(!laser->hasDac()) label = "";
                 //UI::startGhosted();
-                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_Disabled, ImVec2(160,19) );
+                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_Disabled, ImVec2(130,19) );
                 //UI::stopGhosted();
                 
             } else {
                 
                 label = dacAssigner.getAliasForLabel(laser->getDacLabel());
-                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
+                ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(130,19) );
                 
                 
                 // only draggable if there is a dac here
@@ -1543,7 +1545,11 @@ void Manager :: drawDacAssignerPanel() {
                     }
                 }
             }
-            
+           
+            if(laser->dacLabel.get()!="") {
+                ImGui::SameLine();
+                showDacAliasEditButton(laser->dacLabel.get());
+            }
         }
         
         ImGui::NextColumn();
@@ -1581,44 +1587,12 @@ void Manager :: drawDacAssignerPanel() {
                     ImGui::EndDragDropSource();
                 }
                 ImGui::SameLine();
-                static char newDacAlias[255];
-                string alias = dacAssigner.getAliasForLabel(dacdata.getLabel());
-                label = "Edit "+alias+" alias";
-                if(ImGui::Button(ICON_FK_PENCIL)) {
-                    strcpy(newDacAlias, alias.c_str());
-                    ImGui::OpenPopup(label.c_str());
-                }
-                
-                if (ImGui::BeginPopupModal(label.c_str(), 0)){
-                    
-                    if(ImGui::InputText("##1", newDacAlias, IM_ARRAYSIZE(newDacAlias))){
-                       // don't need to do anything here
-                    }
-                    
-                    ImGui::Separator();
-                    label = "OK## "+dacdata.getLabel();
-                    if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
-                        string newalias = newDacAlias;
-                        // TODO - check existing already
-                        dacAssigner.addAliasForLabel(newalias, dacdata.getLabel(), true);
-                        
-                        ImGui::CloseCurrentPopup();
-                        
-                    }
-                    ImGui::SetItemDefaultFocus();
-                    ImGui::SameLine();
-                    label = "Cancel## "+dacdata.getLabel();
-                    if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
-                        ImGui::CloseCurrentPopup();
-                        
-                    }
-                    ImGui::EndPopup();
-                    
-                    
-                }
-                
-                
                 ImGui::PopID();
+                
+                showDacAliasEditButton(dacdata.getLabel());
+                
+                
+               
             }
             
         }
@@ -1630,7 +1604,47 @@ void Manager :: drawDacAssignerPanel() {
 }
 
 
-
+void Manager :: showDacAliasEditButton(string daclabel) {
+    string id ="dacalias"+daclabel;
+    ImGui::PushID(id.c_str());
+    string label;
+    static char newDacAlias[255];
+    string alias = dacAssigner.getAliasForLabel(daclabel);
+    label = "Edit "+alias+" alias";
+    if(ImGui::Button(ICON_FK_PENCIL)) {
+        strcpy(newDacAlias, alias.c_str());
+        ImGui::OpenPopup(label.c_str());
+    }
+    
+    if (ImGui::BeginPopupModal(label.c_str(), 0)){
+        
+        if(ImGui::InputText("##1", newDacAlias, IM_ARRAYSIZE(newDacAlias))){
+           // don't need to do anything here
+        }
+        
+        ImGui::Separator();
+        label = "OK## "+daclabel;
+        if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
+            string newalias = newDacAlias;
+            // TODO - check existing already
+            dacAssigner.addAliasForLabel(newalias,daclabel, true);
+            
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::SetItemDefaultFocus();
+        ImGui::SameLine();
+        label = "Cancel## "+daclabel;
+        if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
+            ImGui::CloseCurrentPopup();
+            
+        }
+        ImGui::EndPopup();
+        
+        
+    }
+    ImGui::PopID();
+}
 
 
 

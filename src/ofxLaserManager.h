@@ -78,6 +78,7 @@ class Manager : public ManagerBase {
     
     void drawCopySettingsUIWindow();
     void drawDacAnalyticsUIWindow();
+    void showDacAliasEditButton(string daclabel);
    
     bool togglePreview();
     // TODO I think this functionality is broken
