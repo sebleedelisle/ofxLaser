@@ -122,8 +122,9 @@ class ZoneTransform {
 	
     ofParameterGroup transformParams; 
 
-    bool snapToGrid;
-    int gridSize;
+    ofParameterGroup gridParams; 
+    ofParameter<bool> snapToGrid;
+    ofParameter<int> gridSize;
     
     ofParameter<bool>locked; 
 	ofParameter<bool>editSubdivisions;

@@ -75,7 +75,7 @@ int DacBaseThreaded :: calculateBufferSizeByTimeAcked() {
 }
 
 void DacBaseThreaded :: waitUntilReadyToSend(int pointBufferMin){
-    
+
     int bufferFullness = calculateBufferSizeByTimeAcked();
     int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
     int microsToWait = pointsUntilEmpty * (1000000.0f/pps);

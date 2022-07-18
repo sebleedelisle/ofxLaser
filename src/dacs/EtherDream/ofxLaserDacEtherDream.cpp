@@ -92,7 +92,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     // TODO update max point rate from dacdata
     pointBufferCapacity = ed.bufferCapacity;
  
-	Poco::Timespan timeout( 1000000 * 1 / 1); // 1/1 second timeout
+	Poco::Timespan timeout( 1000000 * 2 / 1); // 1/1 second timeout
 	
 	try {
 		// EtherDreams always talk on port 7765
@@ -201,8 +201,7 @@ void DacEtherDream :: threadedFunction(){
             
             if(success) {
                 success = waitForAck('p');
-            }
-            else ofLogNotice("sendPrepare() failed");
+            } else ofLogNotice("sendPrepare() failed");
             
             
             if( success ) {
@@ -236,6 +235,18 @@ void DacEtherDream :: threadedFunction(){
             
         }
         
+        // pointBufferMin is the minimum number of points we want
+        // in the buffer before we send more points.
+        // If it's set to zero we would wait a long time before sending
+        // points, and potentially risk an underrun.
+        //
+        // if it's set to the pointBufferCapacity, we'll keep sending
+        // points as much as possible, as soon as the point count drops
+        // even just one below that level we'll fill up the buffer again
+        //
+        // But we also use the latency value as we don't want to
+        // fill the buffer right up if the time it would take to
+        // process those points would be greater than the latency value
         int pointBufferMin = MIN(pointBufferCapacity, maxLatencyMS * pps /1000);
         if(etherDreamData.softwareRevision>=30) {
             pointBufferMin = MAX(pointBufferMin, 256);
@@ -243,7 +254,7 @@ void DacEtherDream :: threadedFunction(){
         // if state is prepared or playing, and we have points in the buffer, then send the points
         if(connected && (response.status.playback_state!=ETHERDREAM_PLAYBACK_IDLE)) {
             
-            waitUntilReadyToSend(pointBufferMin);
+            //waitUntilReadyToSend(pointBufferMin);
             
             //check buffer and send the next points
            // while(!lock()) {}
@@ -303,7 +314,7 @@ void DacEtherDream :: threadedFunction(){
 
 int DacEtherDream :: calculateBufferSizeByTimeSent() {
     
-    if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
+    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferSize;
     
     return DacBaseThreaded::calculateBufferSizeByTimeSent();
    
@@ -312,7 +323,7 @@ int DacEtherDream :: calculateBufferSizeByTimeSent() {
 
 int DacEtherDream :: calculateBufferSizeByTimeAcked() {
    
-    if(response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) return lastReportedBufferSize;
+    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferSize;
     return DacBaseThreaded::calculateBufferSizeByTimeAcked();
 
     
@@ -357,9 +368,12 @@ inline bool DacEtherDream :: sendPointsToDac(){
     if(etherDreamData.softwareRevision>=30) {
         minBufferSize = MAX(minBufferSize, 256);
     }
-    
+    if(minBufferSize>getMaxPointBufferSize()) {
+        minBufferSize = getMaxPointBufferSize();
+    }
+        
     int minPointsToQueue = MAX(0, minBufferSize - minDacBufferSize - bufferSize);
-    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferSizeByTimeAcked() - 256);
+    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferSizeByTimeAcked());// - 256);
     
     int numpointstosend = 0;
     
@@ -370,7 +384,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
         numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
         
         if(numpointstosend==0) {
-            if(verbose) ofLogNotice("sendData : no points to send");
+           // if(verbose) ofLogNotice("sendData : no points to send");
             return false;
         }
         //cout << dacBufferFullness << " " << currentDacBufferFullnessMin << " " << numpointstosend << endl;
@@ -520,7 +534,7 @@ inline bool DacEtherDream::waitForAck(char command) {
 			
 		}
         
-        if( ofGetElapsedTimeMillis() -starttime >1000) {
+        if( ofGetElapsedTimeMillis() -starttime >5000) {
             //TIMEOUT!
             failed = true;
         }

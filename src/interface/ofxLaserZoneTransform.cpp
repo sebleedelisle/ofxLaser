@@ -58,6 +58,12 @@ ZoneTransform::ZoneTransform() {
     snapToGrid = false;
     gridSize  = 1;
     
+    gridParams.add(snapToGrid);
+    gridParams.add(gridSize);
+    ofAddListener(gridParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
+    
+    
+    
     isAlternate = false;
     
     updateHandleColours();
@@ -473,7 +479,11 @@ void ZoneTransform::updateQuads() {
         
     }
     
-    
+    for(DragHandle& handle : dstHandles) {
+        handle.snapToGrid = snapToGrid;
+        handle.gridSize = gridSize;
+    } 
+        
     
     
 }

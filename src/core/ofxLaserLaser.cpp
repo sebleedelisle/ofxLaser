@@ -178,7 +178,7 @@ void Laser :: setGrid(bool gridstate, int gridsize){
     }
     gridMesh.clear();
     int spacing = gridSize;
-    if(gridSize<5) spacing = 5;
+    while(gridSize<5) spacing *=2;
     for(int x = 0; x<800; x+=spacing) {
         for(int y = 0; y<800; y+=spacing) {
             gridMesh.addVertex(ofPoint(x,y));
