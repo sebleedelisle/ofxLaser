@@ -68,7 +68,7 @@ class DacBaseThreaded : public DacBase, public ofThread {
       }
   #endif
     
-    void waitUntilReadyToSend(int pointBufferMin);
+    void waitUntilReadyToSend(int maxPointsToFillBuffer);
     
     void updateFrameQueue(int minPointsToQueue );
     int getNumPointsInFrames(deque<DacFrame*>& frames);
@@ -94,6 +94,7 @@ class DacBaseThreaded : public DacBase, public ofThread {
     uint64_t lastAckTime = 0;
     // last time a data command was sent
     uint64_t lastDataSentTime = 0;
+    uint64_t lastDataSentBufferSize= 0;
     
 };
 

@@ -139,12 +139,12 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 void DacEtherDream :: threadedFunction(){
     
     auto & thread = getNativeThread();
-    
+   
 #ifndef _MSC_VER
     // only linux and osx
     //http://www.yonch.com/tech/82-linux-thread-priority
     struct sched_param param;
-    param.sched_priority = 99; // (highest) sched_get_priority_max(SCHED_FIFO);//89; // - higher is faster
+    param.sched_priority = 90; // (highest) sched_get_priority_max(SCHED_FIFO);//89; // - higher is faster
     pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
 #else
     // windows implementation
@@ -235,7 +235,7 @@ void DacEtherDream :: threadedFunction(){
             
         }
         
-        // pointBufferMin is the minimum number of points we want
+        // maxPointsToFillBuffer is the minimum number of points we want
         // in the buffer before we send more points.
         // If it's set to zero we would wait a long time before sending
         // points, and potentially risk an underrun.
@@ -247,14 +247,14 @@ void DacEtherDream :: threadedFunction(){
         // But we also use the latency value as we don't want to
         // fill the buffer right up if the time it would take to
         // process those points would be greater than the latency value
-        int pointBufferMin = MIN(pointBufferCapacity, maxLatencyMS * pps /1000);
+        int maxPointsToFillBuffer = MIN(pointBufferCapacity-minPacketDataSize, maxLatencyMS * pps /1000);
         if(etherDreamData.softwareRevision>=30) {
-            pointBufferMin = MAX(pointBufferMin, 256);
+            maxPointsToFillBuffer = MAX(maxPointsToFillBuffer, 256);
         }
         // if state is prepared or playing, and we have points in the buffer, then send the points
         if(connected && (response.status.playback_state!=ETHERDREAM_PLAYBACK_IDLE)) {
             
-            //waitUntilReadyToSend(pointBufferMin);
+            waitUntilReadyToSend(maxPointsToFillBuffer);
             
             //check buffer and send the next points
            // while(!lock()) {}
@@ -268,7 +268,6 @@ void DacEtherDream :: threadedFunction(){
                 // manually here... TODO - should I do it in the waitForAck function?
                 if(!waitForAck('d')) {
                     connected = false;
-                    
                 }
                 
             } else {
@@ -289,8 +288,8 @@ void DacEtherDream :: threadedFunction(){
        
 
         // if state is prepared and we have sent enough points and we haven't already, send begin
-        if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PREPARED) && (lastReportedBufferSize >= pointBufferMin)) {
-            cout << "Send begin, buffer_fullness : " << lastReportedBufferSize << " pointBufferMin : " << pointBufferMin << endl;
+        if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PREPARED) && (lastReportedBufferSize >= maxPointsToFillBuffer)) {
+            cout << "Send begin, buffer_fullness : " << lastReportedBufferSize << " pointBufferMin : " << maxPointsToFillBuffer << endl;
             sendBegin();
             beginSent = waitForAck('b');
             if(beginSent)  {
@@ -357,7 +356,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
     
     
     // get current buffer
-    int minDacBufferSize = calculateBufferSizeByTimeSent();
+    int minDacBufferSize = calculateBufferSizeByTimeAcked();// + calculateBufferSizeByTimeSent()) /2;
     int bufferSize =  bufferedPoints.size();
     
     // get min buffer size
@@ -470,6 +469,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
 	bool success =  sendCommand(dacCommand);
     if(success) {
         lastDataSentTime = ofGetElapsedTimeMicros();
+        lastDataSentBufferSize = minDacBufferSize + dacCommand.numPoints;
     }  else {
         ofLogNotice("sendCommand failed!");
         
@@ -505,6 +505,9 @@ inline bool DacEtherDream::waitForAck(char command) {
     long starttime = ofGetElapsedTimeMillis();
     
     while ((n==0) && (!failed)) {
+        
+        yield();
+        
 		if(!isThreadRunning()) return false;
 		// i think this should block until it gets bytes
 		
@@ -582,17 +585,22 @@ inline bool DacEtherDream::waitForAck(char command) {
         
         
 		
-        if(verbose || (response.response!='a') || (lastReportedBufferSize > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
-            
-           
+        if(verbose || (response.response!='a') || (response.status.playback_flags & 0b010) || (lastReportedBufferSize > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
+            if(response.response!='a') {
+                ofLogNotice("INVALID COMMAND -------------------");
+            }
+            if(response.status.playback_flags & 0b010) {
+                ofLogNotice("BUFFER UNDERFLOW -------------------");
+            }
             
             ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
             if(command == 'd') {
                 ofLogNotice("num points sent : " + ofToString(dacCommand.numPoints));
-                ofLogNotice("previous buffer_fullness : " + ofToString(previousStateBufferFullness));
+                ofLogNotice("previousStateBufferFullness : " + ofToString(previousStateBufferFullness));
                 //ofLogNotice("time between ack and send : " + ofToString(lastDataSentTime  - previousLastAckTime));
-                ofLogNotice("latest buffer_fullness : "+ofToString(lastReportedBufferSize));
-                ofLogNotice("estimated buffer_fullness : "+ofToString(calculateBufferSizeByTimeSent()));
+                ofLogNotice("lastReportedBufferSize : "+ofToString(lastReportedBufferSize));
+                ofLogNotice("calculateBufferSizeByTimeSent() : "+ofToString(calculateBufferSizeByTimeSent()));
+                ofLogNotice("calculateBufferSizeByTimeAcked() : "+ofToString(calculateBufferSizeByTimeAcked()));
 
                // dacCommand.logData();
             }

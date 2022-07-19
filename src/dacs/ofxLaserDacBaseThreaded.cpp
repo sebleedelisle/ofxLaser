@@ -14,10 +14,10 @@ using namespace ofxLaser;
 bool DacBaseThreaded :: sendFrame(const vector<Point>& points){
 
     if(!isThreadRunning()) return false; 
-    stateRecorder.update();
-    frameRecorder.update();
+//    stateRecorder.update();
+//    frameRecorder.update();
 
-    if(lock()) {
+    if((!frameMode) && lock()) {
         frameMode = true;
         //newFrame = true;
         unlock();
@@ -38,7 +38,7 @@ bool DacBaseThreaded :: sendFrame(const vector<Point>& points){
 
 bool DacBaseThreaded:: sendPoints(const vector<Point>& points){
     
-    stateRecorder.update();
+    //stateRecorder.update();
  
     if(bufferedPoints.size()>pps*0.5) {
         return false;
@@ -57,9 +57,10 @@ bool DacBaseThreaded:: sendPoints(const vector<Point>& points){
 
 int DacBaseThreaded :: calculateBufferSizeByTimeSent() {
     
+    
     int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
     // figure out the current buffer
-    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
+    return MAX(0, lastDataSentBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
    
     
 }
@@ -74,12 +75,18 @@ int DacBaseThreaded :: calculateBufferSizeByTimeAcked() {
     
 }
 
-void DacBaseThreaded :: waitUntilReadyToSend(int pointBufferMin){
+void DacBaseThreaded :: waitUntilReadyToSend(int maxPointsToFillBuffer){
 
-    int bufferFullness = calculateBufferSizeByTimeAcked();
-    int pointsUntilEmpty = MAX(0, bufferFullness - pointBufferMin);
+    int bufferFullness = calculateBufferSizeByTimeSent();
+    int pointsUntilEmpty = MAX(0, bufferFullness - maxPointsToFillBuffer);
     int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
+    
+    if(true) {
+      
+    }
     if(microsToWait>0) {
+        ofLogNotice("DacBaseThreaded :: waitUntilReadyToSend -  ") << bufferFullness << " " << calculateBufferSizeByTimeAcked() << " " << maxPointsToFillBuffer << " " << pointsUntilEmpty;
+        ofLogNotice("Sleep : " ) << (float)microsToWait/1000.0f;
         usleep(microsToWait);
     }
     
@@ -131,7 +138,7 @@ void DacBaseThreaded ::  updateFrameQueue(int minPointsToQueue){
         // if we didn't get to the frame in time and it's more than 10ms late then skip it
         if(frame->frameTime + ((maxLatencyMS)*1000) < lastPointTimeMicros) {
             // skip frame!
-            frameRecorder.recordFrameInfoThreadSafe(frame->frameTime, 0, frame->framePoints.size(), 0, true);
+            //frameRecorder.recordFrameInfoThreadSafe(frame->frameTime, 0, frame->framePoints.size(), 0, true);
             delete frame;
             skipcount++;
         } else {
@@ -157,7 +164,7 @@ void DacBaseThreaded ::  updateFrameQueue(int minPointsToQueue){
     
     for(int i = 0; i<queuedFrames.size(); i++ ) {
         DacFrame& frame = *queuedFrames[i];
-        frameRecorder.recordFrameInfoThreadSafe(frame.frameTime, ofGetElapsedTimeMicros() + (( calculateBufferSizeByTimeSent() + bufferedPoints.size()) * 1000000 / pps), frame.framePoints.size(), frame.repeatCount, frame.repeatCount == 0);
+        //frameRecorder.recordFrameInfoThreadSafe(frame.frameTime, ofGetElapsedTimeMicros() + (( calculateBufferSizeByTimeSent() + bufferedPoints.size()) * 1000000 / pps), frame.framePoints.size(), frame.repeatCount, frame.repeatCount == 0);
         
       
         while(frame.repeatCount>0) {

@@ -126,7 +126,7 @@ protected:
 
    // bool newFrame = false;
 
-    bool verbose = false;
+
     int versionNumber;
     string versionString;
      

@@ -46,12 +46,14 @@ namespace ofxLaser {
         virtual bool isReadyForFrame(int maxLatencyMS){
             return true;
         }
+        
+        
         int maxLatencyMS;
         // additional buffer time to allow for calculations
         // only used to know if the frame is ready
         int calculationTimeMS = 10;
         // minimum buffer to send at once
-        int minBufferSize = 256;
+        int minPacketDataSize = 256;
         
         bool colourShiftImplemented = false;
 		
@@ -65,6 +67,8 @@ namespace ofxLaser {
         
         float colourShift = 0;
         
+        bool verbose = false;
+        bool log = true;
 	};
 
 }
