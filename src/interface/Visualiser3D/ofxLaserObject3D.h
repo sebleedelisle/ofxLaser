@@ -27,11 +27,10 @@ class Object3D {
     void serialize(ofJson& json) const {
         ofSerialize(json, params);
     }
+    
     bool deserialize(ofJson& json){
-        
         ofDeserialize(json, params);
         return true;
-        
     }
     
 };

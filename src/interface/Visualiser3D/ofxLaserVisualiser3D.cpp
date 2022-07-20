@@ -257,7 +257,8 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
         ofPopMatrix();
         if(i<lasers.size()) {
             ofxLaser::Laser& laser = *lasers.at(i);
-           
+            bool flipX = laser3D.flipX;
+            bool flipY = laser3D.flipY;
             //vector<ofxLaser::Point>& laserPoints = laser.getLaserPoints();
             vector<glm::vec3>& points = laser.previewPathMesh.getVertices();
             vector<ofColor>& colours = laser.previewPathColours;
@@ -272,6 +273,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
                 
                 const glm::vec3& lp1 = points[i-1];
                 const glm::vec3& lp2 = points[i];
+               
                 
                 
                 ofFloatColor colour1 = ofFloatColor(colours[i-1]); // lp1.getColour();
@@ -287,11 +289,12 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
           
                 p1.z = 1000;
                 p2.z = 1000;
-                p1.rotate(ofMap(lp1.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
-                p2.rotate(ofMap(lp2.y, 0, 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
+                p1.rotate(ofMap(lp1.y, flipY ? 800 : 0, flipY? 0 : 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
+                
+                p2.rotate(ofMap(lp2.y, flipY ? 800 : 0, flipY? 0 : 800, -laser3D.verticalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().x, ofPoint(-1,0,0));
                
-                p1.rotate(ofMap(lp1.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2) + laser3D.orientation.get().y, ofPoint(0,1,0));
-                p2.rotate(ofMap(lp2.x, 0, 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().y, ofPoint(0,1,0));
+                p1.rotate(ofMap(lp1.x, flipX ? 800 : 0, flipX? 0 : 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2) + laser3D.orientation.get().y, ofPoint(0,1,0));
+                p2.rotate(ofMap(lp2.x, flipX ? 800 : 0, flipX? 0 : 800, -laser3D.horizontalRangeDegrees/2, laser3D.horizontalRangeDegrees/2)+ laser3D.orientation.get().y, ofPoint(0,1,0));
                 
                 ofPoint beamNormal = p1.getNormalized();
                 ofPoint cameraNormal = ofPoint(laser3D.position)-camera.getGlobalPosition();
@@ -465,18 +468,28 @@ void Visualiser3D ::drawUI(){
     
     for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
         ImGui::Separator();
-        ImGui::Text("Laser %d", i+1);
-        Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
-    
-        if(currentLaserPreset.laserObjects.size()>i) {
-            Laser3DVisualObject& laser3DCurrentPreset = currentLaserPreset.laserObjects[i];
-            UI::addResettableFloat3Drag(laser3D.position, laser3DCurrentPreset.position, 1, "", "%.0f", "##"+ofToString(i));
-            UI::addResettableFloat3Drag(laser3D.orientation,  laser3DCurrentPreset.orientation, 1, "", "%.0f", "##"+ofToString(i));
+        string label = "Laser " + ofToString(i+1);
+        if( ImGui::TreeNode(label.c_str())) {
+            Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
+        
+            if(currentLaserPreset.laserObjects.size()>i) {
+                Laser3DVisualObject& laser3DCurrentPreset = currentLaserPreset.laserObjects[i];
+                UI::addResettableFloat3Drag(laser3D.position, laser3DCurrentPreset.position, 1, "", "%.0f", "##"+ofToString(i));
+                UI::addResettableFloat3Drag(laser3D.orientation,  laser3DCurrentPreset.orientation, 1, "", "%.0f", "##"+ofToString(i));
+                
+            } else {
+                UI::addFloat3Drag(laser3D.position, 1, "%.0f", "##"+ofToString(i));
+                UI::addFloat3Drag(laser3D.orientation, 1, "%.0f", "##"+ofToString(i));
+            }
             
-        } else {
-            UI::addFloat3Drag(laser3D.position, 1, "%.0f", "##"+ofToString(i));
-            UI::addFloat3Drag(laser3D.orientation, 1, "%.0f", "##"+ofToString(i));
+            UI :: addCheckbox(laser3D.flipX);
+            ImGui::SameLine();
+            UI :: addCheckbox(laser3D.flipY);
+            UI :: addParameter(laser3D.horizontalRangeDegrees);
+            UI :: addParameter(laser3D.verticalRangeDegrees);
+            ImGui::TreePop();
         }
+        
     }
     
     if(numLasers<lasersettings.laserObjects.size()) {

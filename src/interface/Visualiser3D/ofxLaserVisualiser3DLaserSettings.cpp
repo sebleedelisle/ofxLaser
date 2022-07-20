@@ -38,7 +38,7 @@ bool Visualiser3DLaserSettings :: operator != (Visualiser3DLaserSettings& that){
 void Visualiser3DLaserSettings :: serialize(ofJson&json) const{
     ofSerialize(json, params);
     ofJson& jsonGroup = json["lasers"];
-    for(const Object3D& laser : laserObjects ){
+    for(const Laser3DVisualObject& laser : laserObjects ){
         ofJson laserjson;
         laser.serialize(laserjson);
         jsonGroup.push_back(laserjson);
