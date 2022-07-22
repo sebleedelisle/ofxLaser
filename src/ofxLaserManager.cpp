@@ -1539,11 +1539,21 @@ void Manager :: drawDacAssignerPanel() {
                 string label = ofToString(ICON_FK_TIMES) + "##" + ofToString(n);
                 if(UI::Button(label)){
                     if(laser->hasDac()) {
+                        string daclabel = laser->dacLabel;
                         dacAssigner.disconnectDacFromLaser(*laser);
+                        laser->dacLabel.set(daclabel); 
                     } else {
                         laser->dacLabel = "";
                     }
                 }
+                label = ofToString(ICON_FK_UNDO) + "##" + ofToString(n);
+                ImGui::SameLine();
+                if(UI::Button(label)) {
+                    string daclabel = laser->dacLabel;
+                    dacAssigner.assignToLaser(daclabel, *laser);
+                }
+                
+               
             }
            
             if(laser->dacLabel.get()!="") {
