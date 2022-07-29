@@ -29,6 +29,20 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     }
     
     setCanvasSize(800,800);
+    //std::this_thread::
+//    GetCurrentThread(std::this_thread);
+//    //auto & thread = getNativeThread();
+//
+//#ifndef _MSC_VER
+//    // only linux and osx
+//    //http://www.yonch.com/tech/82-linux-thread-priority
+//    struct sched_param param;
+//    param.sched_priority = 89; // (highest) sched_get_priority_max(SCHED_FIFO);//89; // - higher is faster
+//    pthread_setschedparam(thread.native_handle(), SCHED_FIFO, &param );
+//#else
+//    // windows implementation
+//    SetThreadPriority( thread.native_handle(), THREAD_PRIORITY_HIGHEST);
+//#endif
     
     
     params.setName("Laser");
@@ -43,6 +57,8 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     useAltZones.addListener(this, &ofxLaser::ManagerBase::useAltZonesChanged);
     
     testPattern = 0;
+    
+    beepSound.load("Beep1.wav");
     
 }
 
@@ -367,10 +383,24 @@ void ManagerBase:: update(){
         updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
     }
     
+    bool dacDisconnected = false;
     // update all the lasers which clears the points,
     // and updates all the zone settings
-    for(size_t i= 0; i<lasers.size(); i++) {
-        lasers[i]->update(updateZoneRects); // clears the points
+    for(Laser* laser : lasers){
+        laser->update(updateZoneRects); // clears the points
+        if(laser->hasDac()) {
+            int laserstatus = laser->getDac()->getStatus();
+            
+            if(laser->getDac()->hasStatusChanged() && (laserstatus!=OFXLASER_DACSTATUS_GOOD)) {
+                // MAKE BEEP
+                dacDisconnected = true;
+            }
+        }
+    }
+    if(dacDisconnected)  {
+        if(!beepSound.isPlaying()) {
+            beepSound.play();
+        }
     }
     zonesChanged = updateZoneRects;
     
@@ -470,6 +500,8 @@ void ManagerBase::send(){
         Laser& p = *lasers[i];
         
         p.send( globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
+        
+        std::this_thread::yield();
         
     }
 }

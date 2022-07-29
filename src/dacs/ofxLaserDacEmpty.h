@@ -22,7 +22,7 @@ namespace ofxLaser {
         virtual bool setColourShift(float shiftSeconds) override { return true; };
         virtual string getId() override {return "";};
         
-        virtual int getStatus() override {return OFXLASER_DACSTATUS_ERROR;};
+        virtual int getStatus() override {return OFXLASER_DACSTATUS_NO_DAC;};
     
        // virtual ofColor getStatusColour() override {return ofColor::white; };
     

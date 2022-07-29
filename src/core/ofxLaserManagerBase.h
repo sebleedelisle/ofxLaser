@@ -183,7 +183,7 @@ class ManagerBase {
   //  vector<ofColor> tmpColours;
     
    // bool dacsInitialised = false;
-    
+    ofSoundPlayer beepSound; 
    
     private:
 };

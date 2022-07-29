@@ -86,7 +86,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     
     int port = 7765;
     if(ed.hardwareRevision == 0) {
-        //ofLogNotice("VIRTUAL ETHERDREAM FOUND! ") << ed.hardwareRevision << " " << ed.softwareRevision;
+        //logNotice("VIRTUAL ETHERDREAM FOUND! ") << ed.hardwareRevision << " " << ed.softwareRevision;
         port += ed.softwareRevision;
     }
     // TODO update max point rate from dacdata
@@ -97,7 +97,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 	try {
 		// EtherDreams always talk on port 7765
 		Poco::Net::SocketAddress sa(ipAddress, port);
-		//ofLog(OF_LOG_NOTICE, "TIMEOUT" + ofToString(timeout.totalSeconds()));
+		//logNotice"TIMEOUT" + ofToString(timeout.totalSeconds()));
         
 		socket.connect(sa, timeout);
 		socket.setSendTimeout(timeout);
@@ -185,14 +185,14 @@ void DacEtherDream :: threadedFunction(){
                 bufferedPoints.pop_front();
             }
             
-            ofLogNotice ("RESET DAC--------------------------------");
+            logNotice ("RESET DAC--------------------------------");
            
             
         }
         
         if((response.status.playback_state == ETHERDREAM_PLAYBACK_IDLE) && (response.status.light_engine_state == LIGHT_ENGINE_READY)) {
             needToSendPrepare = true;
-            ofLogNotice("PLAYBACK IDLE and LIGHT ENGINE READY");
+            logNotice("PLAYBACK IDLE and LIGHT ENGINE READY");
         }
         
         if(needToSendPrepare) {
@@ -201,17 +201,17 @@ void DacEtherDream :: threadedFunction(){
             
             if(success) {
                 success = waitForAck('p');
-            } else ofLogNotice("sendPrepare() failed");
+            } else logNotice("sendPrepare() failed");
             
             
             if( success ) {
-                ofLogNotice("waitForAck('p') success");
+                logNotice("waitForAck('p') success");
                 needToSendPrepare = false;
                 beginSent = false;
                 
                
             } else {
-                ofLogNotice("waitForAck('p') failed");
+                logNotice("waitForAck('p') failed");
                     
             }
         }
@@ -289,11 +289,11 @@ void DacEtherDream :: threadedFunction(){
 
         // if state is prepared and we have sent enough points and we haven't already, send begin
         if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PREPARED) && (lastReportedBufferSize >= maxPointsToFillBuffer)) {
-            cout << "Send begin, buffer_fullness : " << lastReportedBufferSize << " pointBufferMin : " << maxPointsToFillBuffer << endl;
+            logNotice( "Send begin, buffer_fullness : " +ofToString(lastReportedBufferSize) + " pointBufferMin : " + ofToString(maxPointsToFillBuffer));
             sendBegin();
             beginSent = waitForAck('b');
             if(beginSent)  {
-                ofLogNotice("waitForAck('b') success");
+                logNotice("waitForAck('b') success");
             }
             
         }
@@ -383,7 +383,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
         numpointstosend = MIN(bufferedPoints.size(), maxPointsToSend);
         
         if(numpointstosend==0) {
-           // if(verbose) ofLogNotice("sendData : no points to send");
+           // if(verbose) logNotice("sendData : no points to send");
             return false;
         }
         //cout << dacBufferFullness << " " << currentDacBufferFullnessMin << " " << numpointstosend << endl;
@@ -445,7 +445,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
 		if(queuedPPSChangeMessages>0) {
 			// bit 15 is a flag to tell the DAC about a new point rate
             dacPoint.control = 0b1000000000000000;
-            ofLogNotice("PPS Change queue "+ofToString(queuedPPSChangeMessages));
+            logNotice("PPS Change queue "+ofToString(queuedPPSChangeMessages));
 			queuedPPSChangeMessages--;
         } else {
             dacPoint.control = 0;
@@ -471,7 +471,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
         lastDataSentTime = ofGetElapsedTimeMicros();
         lastDataSentBufferSize = minDacBufferSize + dacCommand.numPoints;
     }  else {
-        ofLogNotice("sendCommand failed!");
+        logNotice("sendCommand failed!");
         
     }
     
@@ -496,7 +496,7 @@ inline bool DacEtherDream::waitForAck(char command) {
     
 	bool waiting = true;
 	bool failed = false;
-    if(verbose) ofLogNotice("waitForAck - " + ofToString(command));
+    if(verbose) logNotice("waitForAck - " + ofToString(command));
 	
     //uint64_t previousLastCommandSendTime = lastCommandSendTime;
     
@@ -587,24 +587,28 @@ inline bool DacEtherDream::waitForAck(char command) {
 		
         if(verbose || (response.response!='a') || (response.status.playback_flags & 0b010) || (lastReportedBufferSize > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
             if(response.response!='a') {
-                ofLogNotice("INVALID COMMAND -------------------");
+                logNotice("INVALID COMMAND -------------------");
             }
             if(response.status.playback_flags & 0b010) {
-                ofLogNotice("BUFFER UNDERFLOW -------------------");
+                logNotice("BUFFER UNDERFLOW -------------------");
+            }
+            if(lastReportedBufferSize > pointBufferCapacity) {
+                
+                logNotice("BUFFER OVERFLOW -------------------");
             }
             
-            ofLog(OF_LOG_NOTICE, "response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
+            logNotice("response : "+ ofToString(response.response) +  " command : " + ofToString(response.command) );
             if(command == 'd') {
-                ofLogNotice("num points sent : " + ofToString(dacCommand.numPoints));
-                ofLogNotice("previousStateBufferFullness : " + ofToString(previousStateBufferFullness));
-                //ofLogNotice("time between ack and send : " + ofToString(lastDataSentTime  - previousLastAckTime));
-                ofLogNotice("lastReportedBufferSize : "+ofToString(lastReportedBufferSize));
-                ofLogNotice("calculateBufferSizeByTimeSent() : "+ofToString(calculateBufferSizeByTimeSent()));
-                ofLogNotice("calculateBufferSizeByTimeAcked() : "+ofToString(calculateBufferSizeByTimeAcked()));
+                logNotice("num points sent : " + ofToString(dacCommand.numPoints));
+                logNotice("previousStateBufferFullness : " + ofToString(previousStateBufferFullness));
+                //logNotice("time between ack and send : " + ofToString(lastDataSentTime  - previousLastAckTime));
+                logNotice("lastReportedBufferSize : "+ofToString(lastReportedBufferSize));
+                logNotice("calculateBufferSizeByTimeSent() : "+ofToString(calculateBufferSizeByTimeSent()));
+                logNotice("calculateBufferSizeByTimeAcked() : "+ofToString(calculateBufferSizeByTimeAcked()));
 
                // dacCommand.logData();
             }
-			cout << response.toString() << endl;
+			logNotice(response.toString());
             
             // EDGE CASE THAT WE NEED TO CATCH :
             
@@ -622,7 +626,7 @@ inline bool DacEtherDream::waitForAck(char command) {
             
             if(response.response=='I') {
 
-                printf("INVALID COMMAND : %c\n", command);
+                logNotice("INVALID COMMAND : " + ofToString(command));
                 //logData();
                 
                 failed = true;
@@ -690,7 +694,7 @@ inline bool DacEtherDream::waitForAck(char command) {
 		
 	}
 	else {
-		ofLog(OF_LOG_NOTICE, "Network failure or data received from EtherDream not 22 bytes :" + ofToString(n));
+		logNotice("Network failure or data received from EtherDream not 22 bytes :" + ofToString(n));
 		// what do we do now?
 		
 	}
@@ -712,22 +716,29 @@ string DacEtherDream :: getId(){
   
 }
 
+// TODO could this be a conflict?
 int DacEtherDream :: getStatus(){
 	if(!connected) return OFXLASER_DACSTATUS_ERROR;
-	if(response.status.playback_state <=1) return OFXLASER_DACSTATUS_WARNING;
-	else if(response.status.playback_state ==2) return OFXLASER_DACSTATUS_GOOD;
+    int status = 0;
+    if(lock()) {
+        status = response.status.playback_state;
+        unlock();
+    }
+    
+	if(status <=1) return OFXLASER_DACSTATUS_WARNING;
+	else if(status ==2) return OFXLASER_DACSTATUS_GOOD;
 	else return OFXLASER_DACSTATUS_ERROR;
 }
 
 inline bool DacEtherDream :: sendBegin(){
-	ofLog(OF_LOG_NOTICE, "sendBegin()");
+	logNotice("sendBegin()");
     dacCommand.setBeginCommand(pps);
 	beginSent = sendCommand(dacCommand);
 	return beginSent;
 }
 
 inline bool DacEtherDream :: sendPrepare(){
-	ofLog(OF_LOG_NOTICE, "sendPrepare()");
+	logNotice("sendPrepare()");
 	prepareSendCount++;
     dacCommand.setCommand('p');
     return sendCommand(dacCommand);
@@ -852,7 +863,7 @@ int DacEtherDream::getMaxPointBufferSize() {
 }
 
 bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
-    //ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
+    //logNotice"setPointsPerSecond " + ofToString(newpps));
     if(!isThreadRunning()){
         pps = newPPS = newpps;
         return true;

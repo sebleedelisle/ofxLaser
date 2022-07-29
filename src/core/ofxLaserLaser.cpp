@@ -416,10 +416,10 @@ string Laser::getDacLabel() {
 //}
 int Laser::getDacConnectedState() {
     
-    if(dac!=nullptr) {
+    if((dac!=nullptr)&&(dac!=&emptyDac)) {
         return dac->getStatus();
     } else {
-        return OFXLASER_DACSTATUS_ERROR;
+        return OFXLASER_DACSTATUS_NO_DAC;
     }
 }
 

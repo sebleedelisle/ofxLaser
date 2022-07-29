@@ -12,6 +12,7 @@
 #define OFXLASER_DACSTATUS_GOOD 0
 #define OFXLASER_DACSTATUS_WARNING 1
 #define OFXLASER_DACSTATUS_ERROR 2
+#define OFXLASER_DACSTATUS_NO_DAC 3
 
 
 namespace ofxLaser {
@@ -36,7 +37,16 @@ namespace ofxLaser {
 //        }
 //
 		//virtual ofColor getStatusColour() = 0;
-        virtual int getStatus() = 0; 
+        virtual int getStatus() = 0;
+        bool hasStatusChanged() {
+            int currentstatus =getStatus();
+            if(lastStatus!=currentstatus) {
+                lastStatus = currentstatus;
+                return true;
+            } else {
+                return false;
+            }
+        }
 	
 		virtual const vector<ofAbstractParameter*>& getDisplayData();
 		//virtual void resetDisplayData(){};
@@ -45,6 +55,12 @@ namespace ofxLaser {
 		virtual void close() = 0;
         virtual bool isReadyForFrame(int maxLatencyMS){
             return true;
+        }
+        
+        void logNotice(const string& msg) {
+            if(logging) {
+                ofLogNotice(msg);
+            }
         }
         
         
@@ -57,6 +73,9 @@ namespace ofxLaser {
         
         bool colourShiftImplemented = false;
 		
+        bool verbose = false;
+        bool logging = false;
+        
 	protected :
 	
 		vector<ofAbstractParameter*> displayData;
@@ -66,9 +85,9 @@ namespace ofxLaser {
         //string alias = "";
         
         float colourShift = 0;
+        int lastStatus = OFXLASER_DACSTATUS_NO_DAC;
         
-        bool verbose = false;
-        bool log = true;
+
 	};
 
 }

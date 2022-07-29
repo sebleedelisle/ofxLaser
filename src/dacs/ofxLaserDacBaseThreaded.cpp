@@ -85,8 +85,8 @@ void DacBaseThreaded :: waitUntilReadyToSend(int maxPointsToFillBuffer){
       
     }
     if(microsToWait>0) {
-        ofLogNotice("DacBaseThreaded :: waitUntilReadyToSend -  ") << bufferFullness << " " << calculateBufferSizeByTimeAcked() << " " << maxPointsToFillBuffer << " " << pointsUntilEmpty;
-        ofLogNotice("Sleep : " ) << (float)microsToWait/1000.0f;
+        //ofLogNotice("DacBaseThreaded :: waitUntilReadyToSend -  ") << bufferFullness << " " << calculateBufferSizeByTimeAcked() << " " << maxPointsToFillBuffer << " " << pointsUntilEmpty;
+        //ofLogNotice("Sleep : " ) << (float)microsToWait/1000.0f;
         usleep(microsToWait);
     }
     

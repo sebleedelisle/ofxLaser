@@ -921,7 +921,7 @@ void UI::addDelayedTooltip(const char* desc) {
 
 
 ImU32 UI::getColourForState(int state) {
-    const ImVec4 stateCols[] = {{0,1,0,1}, {1,1,0,1}, {1,0,0,1}};
+    const ImVec4 stateCols[] = {{0,1,0,1}, {1,0.5,0,1}, {1,0,0,1}, {0.3,0.3,0.3,1}};
     return ImGui::GetColorU32(stateCols[state]);
 }
 
