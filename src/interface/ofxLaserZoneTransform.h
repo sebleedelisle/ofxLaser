@@ -72,8 +72,7 @@ class ZoneTransform {
             snapToGrid = snapstate;
             gridSize = gridsize;
             for(auto handle : dstHandles) {
-                handle.snapToGrid = snapToGrid;
-                handle.gridSize = gridSize;
+                handle.setGrid(snapToGrid, gridSize);
             }
         } else {
             return false;

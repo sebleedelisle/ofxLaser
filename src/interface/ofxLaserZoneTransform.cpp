@@ -480,8 +480,7 @@ void ZoneTransform::updateQuads() {
     }
     
     for(DragHandle& handle : dstHandles) {
-        handle.snapToGrid = snapToGrid;
-        handle.gridSize = gridSize;
+        handle.setGrid(snapToGrid, gridSize);
     } 
         
     

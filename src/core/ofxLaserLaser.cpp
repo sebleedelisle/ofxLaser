@@ -173,8 +173,7 @@ void Laser :: setGrid(bool gridstate, int gridsize){
     snapToGrid = gridstate;
     gridSize = gridsize;
     for(OutputZone* zone : outputZones) {
-        zone->gridSize = gridsize;
-        zone->snapToGrid = gridstate;
+        zone->setGrid(gridstate, gridsize);
     }
     gridMesh.clear();
     int spacing = gridSize;

@@ -61,8 +61,6 @@ namespace ofxLaser {
 	bool isCircular = false;
     bool isFilled = true;
 		
-	bool snapToGrid = false;
-	float gridSize = 1;
 		
 	vector<DragHandle*>connectedHandlesX;
 	vector<DragHandle*>connectedHandlesY;
@@ -71,6 +69,9 @@ namespace ofxLaser {
 	ofColor col = ofColor(255, 100);
 	ofColor overCol = ofColor(255,255);
 	
-	
+    protected :
+    bool snapToGrid = false;
+    float gridSize = 1;
+
 };
 }

@@ -58,7 +58,7 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     
     testPattern = 0;
     
-    beepSound.load("Beep1.wav");
+    //beepSound.load("Beep1.wav");
     
 }
 

@@ -22,8 +22,7 @@ InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
 	
     lockPerpendicular = true;
     for(DragHandle& handle : handles) {
-        handle.gridSize = 1;
-        handle.snapToGrid = true;
+        handle.setGrid(true, 1); 
         
     }
     lineWidth = 2;
