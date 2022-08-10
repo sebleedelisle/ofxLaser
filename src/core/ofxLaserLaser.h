@@ -80,8 +80,10 @@ class Laser {
     bool hasZone(InputZone* zone);
     bool removeZone(InputZone* zone);
     bool muteZone(int zonenum);
-    bool unMuteZone(int zonenum); 
-    
+    bool unMuteZone(int zonenum);
+    bool soloZone(int zonenum);
+    bool unSoloZone(int zonenum);
+  
     // Alternative zones
     void addAltZone(InputZone* zone, float srcwidth, float srcheight);
     bool hasAltZone(InputZone* zone);

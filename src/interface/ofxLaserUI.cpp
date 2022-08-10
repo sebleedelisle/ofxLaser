@@ -177,6 +177,7 @@ bool UI::addResettableFloatSlider(string label, float& target, float resetValue,
     }
     return returnvalue;
 }
+
 bool UI::addFloatAsIntPercentage(string label, float& target, float min, float max) {
     float multiplier = 100.0f;
     int value = target*multiplier;
@@ -187,6 +188,7 @@ bool UI::addFloatAsIntPercentage(string label, float& target, float min, float m
         return false;
     }
 }
+
 bool UI::addResettableFloatAsIntPercentage(string label, float& target, float resetvalue, float min, float max) {
     
     bool changed =addFloatAsIntPercentage(label, target, min, max);

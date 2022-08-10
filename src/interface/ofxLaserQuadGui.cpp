@@ -258,7 +258,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if((hit) &&(!selected)) {
         // make sure events stop bubbling
         selected = true;
-        return true;
+       // return true;
     }
     
         

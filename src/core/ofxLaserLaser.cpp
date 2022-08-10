@@ -347,6 +347,11 @@ vector<OutputZone*> Laser::getActiveZones(){
     bool soloActive = areAnyZonesSoloed();
     vector<OutputZone*> activeZones;
     for(OutputZone* laserZone : outputZones) {
+        
+        if((!useAlternate) && laserZone->getIsAlternate()) continue;
+        if(useAlternate && (!laserZone->getIsAlternate())) continue;
+        
+        if(laserZone->getIsAlternate()) continue;
         if(soloActive && laserZone->soloed) {
             activeZones.push_back(laserZone);
         } else if(!laserZone->muted) {
@@ -367,32 +372,63 @@ bool Laser::areAnyZonesSoloed() {
 }
 
 bool Laser ::muteZone(int zonenum) {
+    bool changed = false;
     for(OutputZone* laserZone : outputZones) {
         if(laserZone->getZoneIndex() == zonenum) {
             if(!laserZone->muted) {
                 laserZone->muted = true;
-                return true;
+                changed = true;
             } else {
-                return false;
+                //return false;
             }
         }
     }
-    return false;
+    return changed;
 }
 bool Laser ::unMuteZone(int zonenum){
+    bool changed = false;
     for(OutputZone* laserZone : outputZones) {
         if(laserZone->getZoneIndex() == zonenum) {
             if(laserZone->muted) {
                 laserZone->muted = false;
-                return true;
+                changed = true;
             } else {
-                return false;
+                //return false;
             } 
         }
     }
-    return false;
+    return changed;
 }
 
+bool Laser ::soloZone(int zonenum) {
+    bool changed = false;
+    for(OutputZone* laserZone : outputZones) {
+        if(laserZone->getZoneIndex() == zonenum) {
+            if(!laserZone->soloed) {
+                laserZone->soloed = true;
+                changed = true;
+                
+            } else {
+                
+            }
+        }
+    }
+    return changed;
+}
+bool Laser ::unSoloZone(int zonenum){
+    bool changed = false; 
+    for(OutputZone* laserZone : outputZones) {
+        if(laserZone->getZoneIndex() == zonenum) {
+            if(laserZone->soloed) {
+                laserZone->soloed = false;
+                changed = true; // return true;
+            } else {
+               // return false;
+            }
+        }
+    }
+    return changed;
+}
 
 string Laser :: getLabel() {
     return "Laser " + ofToString(laserIndex+1);
