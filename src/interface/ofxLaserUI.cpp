@@ -12,11 +12,13 @@ using namespace ofxLaser;
 
 ofxImGui::Gui ofxLaser::UI::imGui;
 ImFont* ofxLaser::UI::font;
+ImFont* ofxLaser::UI::mediumFont;
 ImFont* ofxLaser::UI::largeFont;
 ImFont* ofxLaser::UI::symbolFont;
 bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
 bool ofxLaser::UI:: secondaryColourActive = false;
+bool ofxLaser::UI:: dangerColourActive = false;
 void UI::render() {
     ImGui::Render();
     
@@ -42,8 +44,9 @@ void UI::setupGui() {
    // symbolFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("forkawesome-webfont.ttf").c_str(), 13, &config, icon_ranges);
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
     
+    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
     largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
-    
+   
     //    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
@@ -512,13 +515,13 @@ bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSu
     
 }
 
-bool UI::addNumberedCheckBox(int number, const string& label, bool* v, bool large){
-    return addNumberedCheckBox(number, label.c_str(), v, large);
+bool UI::addNumberedCheckBox(int number, const string& label, bool* v, bool large, bool dangercolour){
+    return addNumberedCheckBox(number, label.c_str(), v, large,  dangercolour);
     
 }
 
 
-bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large){
+bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large, bool dangercolour){
     
     using namespace ImGui;
     
@@ -530,7 +533,8 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large)
         return false;
     
     if (useSecondaryColour) {
-        secondaryColourButtonStart();
+        if(dangercolour) dangerColourStart();
+        else secondaryColourStart();
     }
     
     ImGuiContext& g = *GImGui;
@@ -544,7 +548,7 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large)
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id)) {
         if (useSecondaryColour) {
-            secondaryColourButtonEnd();
+            secondaryColourEnd();
         }
         return false;
     }
@@ -593,7 +597,8 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large)
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.ItemFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
     if (useSecondaryColour) {
-        secondaryColourButtonEnd();
+        if(dangercolour) dangerColourEnd();
+        else secondaryColourEnd();
     }
     return pressed;
 }
@@ -790,33 +795,72 @@ bool UI::Button(const char* label, bool large, bool secondaryColour, const ImVec
     bool returnvalue;
     
     if(large) UI::largeItemStart();
-    if(secondaryColour) UI::secondaryColourButtonStart();
+    if(secondaryColour) UI::secondaryColourStart();
     returnvalue =  ImGui::ButtonEx(label, size_arg, 0);
     
     if(large) UI::largeItemEnd();
-    if(secondaryColour) UI::secondaryColourButtonEnd();
+    if(secondaryColour) UI::secondaryColourEnd();
     return returnvalue;
 }
-void UI::secondaryColourButtonStart() {
-    if(!secondaryColourActive) {
-        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.9f));
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(0.0f, 1.0f, 1.0f));
-        
-        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
 
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.4f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.6f));
-        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(0.0f, 0.6f, 0.8f));
+bool UI::DangerButton(string& label, bool large, const ImVec2& size_arg ){
+    bool returnvalue;
+    
+    if(large) UI::largeItemStart();
+    UI::dangerColourStart();
+    returnvalue =  ImGui::ButtonEx(label.c_str(), size_arg, 0);
+    
+    if(large) UI::largeItemEnd();
+    UI::dangerColourEnd();
+    return returnvalue;
+}
+void UI::secondaryColourStart() {
+    if(!secondaryColourActive) {
+        ImColor dark(174, 84,0);
+        ImColor mid(206,115,0);
+        ImColor light(218,145,65);
+                    
+        float hue = 0.12f;
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)light);
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(hue, 0.0f, 1.0f));
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)light);
         secondaryColourActive = true;
     }
 }
 
-void UI::secondaryColourButtonEnd() {
+void UI::secondaryColourEnd() {
     if(secondaryColourActive) {
         ImGui::PopStyleColor(7);
         secondaryColourActive = false;
-    } 
+    }
+}
+void UI::dangerColourStart() {
+    if(!dangerColourActive) {
+        float hue = 0.98f;
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.6f, 0.9f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 1.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(hue, 0.0f, 1.0f));
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(hue, 0.6f, 0.4f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(hue, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(hue, 0.6f, 0.8f));
+        dangerColourActive = true;
+    }
+}
+
+void UI::dangerColourEnd() {
+    if(dangerColourActive) {
+        ImGui::PopStyleColor(7);
+        dangerColourActive = false;
+    }
 }
 
 void UI::largeItemStart() {

@@ -163,7 +163,7 @@ class Laser {
     //ofParameter<string> dacAlias;
  
     ofParameter<float> colourChangeShift;
-    ofParameter<int> maxLatencyMS; 
+    int maxLatencyMS; 
     
     ofParameter<int> testPattern;
     ofParameter<bool>hideContentDuringTestPattern;

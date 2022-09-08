@@ -109,7 +109,8 @@ void Laser :: init() {
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,12));
     
    
-    laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
+    //laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
+    maxLatencyMS = 150;
     
 	laserparams.add(flipX.set("Flip Horizontal", false));
     laserparams.add(flipY.set("Flip Vertical",false));
@@ -230,7 +231,7 @@ void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool 
         outputzone->setHue(100);
         outputzone->setIsAlternate(true);
     }
-    
+    outputzone->setGrid(snapToGrid, gridSize);
     outputZones.push_back(outputzone);
     
     ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(inputzone->getIndex()) + (isAlternate?"alt.json" : ".json"));

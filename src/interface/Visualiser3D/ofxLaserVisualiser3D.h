@@ -64,6 +64,7 @@ class Visualiser3D {
     ofParameter<bool> showLaserNumbers;
     ofParameter<bool> showZoneNumbers;
     ofParameter<float> brightness;
+    bool showSettingsWindow; 
 
     
     ofMesh grid; 

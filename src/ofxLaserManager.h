@@ -58,8 +58,8 @@ class Manager : public ManagerBase {
 
     void selectNextLaser();
     void selectPreviousLaser();
-    int getSelectedLaser();
-    void setSelectedLaser(int i);
+    int getSelectedLaserIndex();
+    void setSelectedLaserIndex(int i);
    // bool isAnyLaserSelected();
 
     void drawUI();
@@ -69,15 +69,28 @@ class Manager : public ManagerBase {
    
     glm::vec2 screenToLaserInput(glm::vec2& pos);
     
-    void drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
-    void drawDacAssignerPanel();
+
     void drawLaserGui();
     void startLaserUI() ;
     void finishLaserUI() ;
     void renderCustomCursors();
     
-    void drawCopySettingsUIWindow();
-    void drawDacAnalyticsUIWindow();
+    void ShowExampleMenuFile(); 
+   // void drawUIPanelScannerSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
+    void drawUIPanelDacAssigner();
+    
+    void drawUIPanelMainLasers();
+    void drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
+    void drawUIPanelTopBar(int ypos);
+    void drawUIPanelLaserCopySettings();
+    void drawUIPanelDacAnalytics();
+    
+    
+    void drawUIPanelCustomParameters();
+    
+    // pop ups
+    void drawUIPopupDeleteLaser(Laser* laser, int index);
+    
     void showDacAliasEditButton(string daclabel);
    
     bool togglePreview();
@@ -110,20 +123,26 @@ class Manager : public ManagerBase {
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     
-    ofParameter<bool> showLaserSettings;
-  
+    
     ofParameter<bool> lockInputZones;
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
     ofParameter<bool> zoneGridSnap;
-    ofParameter<int> zoneGridSize; 
-    bool dacAssignmentWindowOpen;
+    ofParameter<int> zoneGridSize;
+    
+    //ofParameter<bool> showScannerSettingsWindow;
+    ofParameter<bool> showDacAssignmentWindow;
+    ofParameter<bool> showCustomParametersWindow;
+    ofParameter<bool> showLaserManagementWindow;
+    ofParameter<bool> showLaserOutputSettingsWindow;
     bool copySettingsWindowOpen; 
     
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;
     //ofParameter<int> zoneEditorLaserPathStyle;
+    
+    ofParameter<int> globalLatency; 
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;
@@ -175,6 +194,8 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyAdvancedSettings;
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
+    
+    
    
 
 };

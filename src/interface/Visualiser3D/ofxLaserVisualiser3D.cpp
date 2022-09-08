@@ -23,7 +23,7 @@ Visualiser3D :: Visualiser3D() {
         visualiserLaserPresetManager.addPreset(lasersettings);
     }
     params.setName("Visualiser3D"); 
-    params.add(brightness.set("Brightness adjustment", 1,0.1,30));
+    params.add(brightness.set("Brightness adjustment", 10,0.1,30));
     params.add(showLaserNumbers.set("Show laser numbers", false));
     params.add(showZoneNumbers.set("Show zone numbers", false));
     
@@ -444,7 +444,9 @@ void Visualiser3D ::save() {
 
 void Visualiser3D ::drawUI(){
     
-    UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0));
+    if(!showSettingsWindow) return;
+    
+    UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0), 0, false, &showSettingsWindow);
 
     visualiserPresetManager.drawComboBox(settings);
     visualiserPresetManager.drawSaveButtons(settings);

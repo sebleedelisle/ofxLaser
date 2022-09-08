@@ -104,7 +104,6 @@ void ManagerBase::createAndAddLaser() {
     // TODO should this be here?
     laser->init();
     
-    
 }
 
 bool ManagerBase :: deleteLaser(Laser* laser) {
@@ -403,6 +402,10 @@ void ManagerBase:: update(){
         }
     }
     zonesChanged = updateZoneRects;
+    
+    if(useAltZones && (!hasAnyAltZones())) {
+        useAltZones.set(false);
+    }
     
 }
 

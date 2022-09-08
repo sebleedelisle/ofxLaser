@@ -26,12 +26,14 @@ class UI {
     
     static ofxImGui::Gui imGui;
     static ImFont* font;
+    static ImFont* mediumFont; 
     static ImFont* largeFont;
     static ImFont* symbolFont;
     static bool initialised;
     
     static bool ghosted;
-    static bool secondaryColourActive; 
+    static bool secondaryColourActive;
+    static bool dangerColourActive;
     
     static void setupGui();
     static void updateGui();
@@ -57,8 +59,8 @@ class UI {
     static bool addFloatAsIntPercentage(string label, float& target, float min = 0, float max = 1);
     static bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip="", const char* format="%.2f", float power = 1.0f);
     static bool addResettableFloatAsIntPercentage(string label, float& target, float resetValue, float min = 0, float max = 1);
-    static bool addNumberedCheckBox(int number, const char* label, bool* v, bool large);
-    static bool addNumberedCheckBox(int number, const string& label, bool* v, bool large = true);
+    static bool addNumberedCheckBox(int number, const char* label, bool* v, bool large, bool dangerColour = false);
+    static bool addNumberedCheckBox(int number, const string& label, bool* v, bool large = true, bool dangerColour = false);
 
     
     // ofParameters
@@ -110,10 +112,12 @@ class UI {
     static bool Button(string label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     
     static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
-    static void secondaryColourButtonStart();
-    
-    static void secondaryColourButtonEnd() ;
-    
+    static bool DangerButton(string& label, bool large = false, const ImVec2& size_arg = ImVec2(0,0));
+    static void secondaryColourStart();
+    static void secondaryColourEnd();
+    static void dangerColourStart();
+    static void dangerColourEnd() ;
+ 
     static void largeItemStart();
     static void largeItemEnd() ;
     static void extraLargeItemStart();
