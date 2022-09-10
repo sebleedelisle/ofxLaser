@@ -1460,7 +1460,7 @@ void Manager :: drawUIPanelMainLasers() {
 }
 
 void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x) {
-    
+    // TODO CHECK THIS FOR PUSH POP STYLES
 
     if(!showLaserOutputSettingsWindow) return;
     

@@ -807,6 +807,10 @@ void Laser::update(bool updateZones) {
 
 void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, InputZone* zone, float masterIntensity ){
     
+    laserPoints.clear();
+    previewPathMesh.clear();
+    previewPathColours.clear();
+    
     OutputZone* laserZone = getLaserZoneForZone(zone);
     if(laserZone==nullptr) {
         ofLogError("Laser::sendRawPoints(...), zone "+zone->zoneLabel + " not added to laser ");

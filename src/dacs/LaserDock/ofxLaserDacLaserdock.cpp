@@ -15,11 +15,18 @@ using namespace ofxLaser;
 DacLaserdock:: ~DacLaserdock() {
     // close() stops the thread and deletes the dac device
     close();
+    cleanUpFramesAndPoints();
 }
 void DacLaserdock :: close() {
     if(isThreadRunning()) {
+        
+        if(connected) {
+            // send stop message?
+            
+        }
+        
         // also stops the thread
-        waitForThread(true);
+        waitForThread(true, 1000); // 1 second timeout
     }
     if(dacDevice!=nullptr) {
         delete dacDevice;
@@ -156,8 +163,15 @@ void DacLaserdock :: threadedFunction(){
         }
         
         waitUntilReadyToSend(pointBufferMin);
-        sendPointsToDac(); 
-        
+        // returns false if it doesn't work
+        if(!sendPointsToDac()) {
+            if(!connected) {
+                
+              // try to reconnect? 
+            }
+           // connected = false;
+            //ofLogError("laserdock sendpoints error");
+        }
         
     }
     
@@ -244,6 +258,9 @@ inline bool DacLaserdock::sendPointsToDac() {
         lastAckTime = ofGetElapsedTimeMicros();
         lastReportedBufferSize = dacCommand.numPoints;
         stateRecorder.recordStateThreadSafe(lastDataSentTime, 1, lastReportedBufferSize, lastAckTime-lastDataSentTime, dacCommand.numPoints, pps, dacCommand.size());
+    } else {
+        connected = false; 
+        ofLogError("Laserdock send failed"); 
     }
 
     return success;

@@ -234,3 +234,28 @@ bool DacBaseThreaded::setColourShift(float shift)  {
     }
     
 }
+
+void DacBaseThreaded::cleanUpFramesAndPoints() {
+    
+    // NOTE thread must be stopped by now
+    frameThreadChannel.close();
+    
+    // get rid of frames in the buffer
+    // note that deleting the frame object
+    // also recycles the points
+    DacFrame* frame;
+    while(frameThreadChannel.tryReceive(frame)) {
+        delete frame;
+    }
+   
+    while(bufferedFrames.size()>0) {
+        delete bufferedFrames[0];
+        bufferedFrames.pop_front();
+    }
+   
+    for (size_t i= 0; i < bufferedPoints.size(); ++i) {
+        PointFactory :: releasePoint(bufferedPoints[i]); // Calls ~object
+    }
+    bufferedPoints.clear();
+    
+}

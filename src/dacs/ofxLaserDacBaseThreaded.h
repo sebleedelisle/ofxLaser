@@ -31,6 +31,7 @@ class DacBaseThreaded : public DacBase, public ofThread {
     
     virtual void reset() override = 0;
     virtual void close() override = 0;
+    void cleanUpFramesAndPoints(); 
     
     bool isReadyForFrame(int maxLatencyMS) override;
  
