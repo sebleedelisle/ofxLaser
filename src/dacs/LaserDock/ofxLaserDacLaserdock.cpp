@@ -167,7 +167,7 @@ void DacLaserdock :: threadedFunction(){
         if(!sendPointsToDac()) {
             if(!connected) {
                 
-              // try to reconnect? 
+              // try to reconnect?
             }
            // connected = false;
             //ofLogError("laserdock sendpoints error");

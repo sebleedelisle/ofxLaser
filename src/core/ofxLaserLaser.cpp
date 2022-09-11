@@ -1084,7 +1084,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
                 
             }
             
-            if(alwaysClockwise) {
+          //  if(alwaysClockwise) {
                 
                 // TODO this algorithm doesn't seem to work right now :/
 //
@@ -1118,7 +1118,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
 //                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
 //
 //                }
-            }
+          //  }
             float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedshapes);
             // if the sorted shapes don't save much then don't bother sorting them!
             if(moveDistanceForSortedShapes/moveDistanceForUnSortedShapes > 0.9) {

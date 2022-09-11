@@ -881,7 +881,7 @@ void Manager::ShowExampleMenuFile() {
 
 void Manager::drawLaserGui() {
     
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     
     int menubarheight = 0;
     ImGui::PushFont(UI::mediumFont);
@@ -891,7 +891,7 @@ void Manager::drawLaserGui() {
     {
         if (ImGui::BeginMenu("File"))
         {
-            ShowExampleMenuFile();
+            //ShowExampleMenuFile();
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Edit"))
@@ -1152,7 +1152,7 @@ void Manager::drawLaserGui() {
                     laser->soloZone(laserZone->getZoneIndex());
                 }
             }
-            if(soloed) UI::secondaryColourEnd();
+            UI::secondaryColourEnd();
             UI::addDelayedTooltip("Solo zone");
             
             ImGui::SameLine();
@@ -1680,8 +1680,9 @@ void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser, float las
                 
             }
             UI::toolTip("The actual points sent to the laser - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
-            ImGui::PopItemWidth();
             ImGui::PopStyleVar(1);
+            ImGui::PopItemWidth();
+            
             
             UI::addParameterGroup(laser->advancedParams);
             ImGui::TreePop();

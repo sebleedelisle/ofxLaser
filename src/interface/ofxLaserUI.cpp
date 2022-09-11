@@ -19,6 +19,7 @@ bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
 bool ofxLaser::UI:: secondaryColourActive = false;
 bool ofxLaser::UI:: dangerColourActive = false;
+bool ofxLaser::UI:: largeItemActive = false;
 void UI::render() {
     ImGui::Render();
     
@@ -547,9 +548,8 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
     const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
     ItemSize(total_bb, style.FramePadding.y);
     if (!ItemAdd(total_bb, id)) {
-        if (useSecondaryColour) {
-            secondaryColourEnd();
-        }
+        secondaryColourEnd();
+        dangerColourEnd();
         return false;
     }
   
@@ -596,10 +596,10 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
         RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y), label);
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.ItemFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
-    if (useSecondaryColour) {
-        if(dangercolour) dangerColourEnd();
-        else secondaryColourEnd();
-    }
+    
+    secondaryColourEnd();
+    dangerColourEnd();
+    
     return pressed;
 }
 
@@ -874,14 +874,22 @@ void UI::largeItemEnd() {
     ImGui::PopStyleVar(2);
 }
 void UI::extraLargeItemStart() {
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(78.0f, 80.0f)); // 3 Size of elements (padding around contents);
-    // increase the side of the slider grabber
-    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
-    
+    if(largeItemActive) {
+        ofLogNotice("----- large item already active!");
+    } else {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(78.0f, 80.0f)); // 3 Size of elements (padding around contents);
+        // increase the side of the slider grabber
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+        largeItemActive = true;
+    } 
 }
 void UI::extraLargeItemEnd() {
-    
-    ImGui::PopStyleVar(2);
+    if(!largeItemActive) {
+        ofLogNotice("----- large item not active!");
+    } else {
+        ImGui::PopStyleVar(2);
+        largeItemActive = false;
+    }
 }
 bool UI::updateMouse(ofMouseEventArgs &e) {
     ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
