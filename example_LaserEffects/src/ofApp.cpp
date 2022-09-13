@@ -23,7 +23,7 @@ void ofApp::setup(){
     
     ofParameter<string> description;
     description.setName("description"); 
-    description.set("INSTRUCTIONS : \nTAB to toggle output editor \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
+    description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
     laserManager.addCustomParameter(description);
     
     currentLaserEffect = 0;
@@ -289,7 +289,6 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
 	}
     if(e.key==OF_KEY_TAB) {
         laserManager.selectNextLaser();
-       
     }
    
 }
@@ -299,7 +298,6 @@ void ofApp::mouseDragged(ofMouseEventArgs& e){
 	if(!drawingShape) return;
 	
     glm::vec2 mouse = laserManager.screenToLaserInput(e);
-    
     
 	ofPolyline &poly = polyLines.back();
 	poly.addVertex((ofPoint)mouse);

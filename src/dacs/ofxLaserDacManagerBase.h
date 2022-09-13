@@ -40,7 +40,7 @@ class DacManagerBase {
     protected :
     map<string, DacBase*>dacsById;
     // TODO thread safe??? 
-    bool dacsChanged;
+    bool dacsChanged = false;
     
     private :
     

@@ -24,6 +24,10 @@ Laser::Laser(int _index) {
     previewScale = 1;
     previewOffset = glm::vec2(0,0);
     previewDragging = false;
+    pauseStateRecorded = false;
+    
+    lastSaveTime = 0; 
+    
     
 	
 };
@@ -234,7 +238,12 @@ void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool 
     outputzone->setGrid(snapToGrid, gridSize);
     outputZones.push_back(outputzone);
     
-    ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(inputzone->getIndex()) + (isAlternate?"alt.json" : ".json"));
+    ofJson laserZoneJson;
+    string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(inputzone->getIndex()) + (isAlternate?"alt.json" : ".json");
+                           
+    if(ofFile(filename).exists()) {
+        laserZoneJson = ofLoadJson(filename);
+    }
 
     
     if(!laserZoneJson.empty()) {
@@ -1893,7 +1902,8 @@ bool Laser::loadSettings(vector<InputZone*>& zones){
 
 bool Laser::saveSettings(){
     // update the laser index if necessary
-    params.setName(ofToString(laserIndex));
+    string name =ofToString(laserIndex);
+    if(params.getName()!= name) params.setName(name);
     
     ofJson json;
     ofSerialize(json, params);
@@ -1928,7 +1938,7 @@ bool Laser::saveSettings(){
     
     
     
-    lastSaveTime = ofGetElapsedTimef(); 
+    lastSaveTime = ofGetElapsedTimef();
     return success;
     
 }

@@ -57,7 +57,9 @@ void ofApp::draw() {
     
     laser.drawCircle(275, 400, 80, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
     
-    laser.drawCircle(ofGetMouseX(), ofGetMouseY(), 5, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
+    glm::vec2 mousepos(ofGetMouseX(), ofGetMouseY());
+    mousepos = laser.screenToLaserInput(mousepos);
+    laser.drawCircle(mousepos, 5, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
     
     ofPopMatrix();
     // sends points to the DAC

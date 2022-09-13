@@ -1,10 +1,15 @@
 #include "ofApp.h"
 
+
+// PLEASE NOTE - NOT CURRENTLY WORKING
+// The DAC code has been refactored considerably and is now very powerful
+// but the raw points functionality needs to be reworked. Sorry for the
+// inconvenience.
+
 // This example demonstrates how you can use the rolling shutter in
 // cameras to create cool effects. See my collaboration with Tom Scott
 // for more information https://www.youtube.com/watch?v=8YONOexk0Ek&t=319s
 // (apologies for the lack of comments / documentation)
-
 
 
 
@@ -42,8 +47,6 @@ void ofApp::update(){
 		laserManager.sendRawPoints(points);
 		pointsToSend-=points.size();
 	}
-	
-	
 }
 
 
@@ -51,8 +54,6 @@ void ofApp::draw() {
 	
 	ofBackground(15,15,20);
 	
-	
-    
     showLaserEffect(currentLaserEffect);
 
     // sends points to the DAC
@@ -68,7 +69,7 @@ void ofApp::draw() {
 	
     laserManager.drawUI();
     
-    if(!laserManager.isAnyLaserSelected()) {
+    if(laserManager.viewMode==OFXLASER_VIEW_CANVAS) {
         
         int ypos = 816;
         ofDrawBitmapString("Current Effect : "+ofToString(currentLaserEffect), 400, ypos+=30);
@@ -81,8 +82,8 @@ void ofApp::draw() {
         ofSetLineWidth(2);
         mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
         ofPushMatrix();
-        //ofTranslate(laser.guiSpacing, laser.guiSpacing);
-        //ofScale(laser.previewScale);
+        ofTranslate(laserManager.getPreviewOffset());
+        ofScale(laserManager.getPreviewScale());
         
         mesh.draw();
         ofPopMatrix();

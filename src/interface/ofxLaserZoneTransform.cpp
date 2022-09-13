@@ -58,8 +58,8 @@ ZoneTransform::ZoneTransform() {
     snapToGrid = false;
     gridSize  = 1;
     
-    gridParams.add(snapToGrid);
-    gridParams.add(gridSize);
+    gridParams.add(snapToGrid.set("snap to grid", true));
+    gridParams.add(gridSize.set("grid size", 10));
     ofAddListener(gridParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
     
     

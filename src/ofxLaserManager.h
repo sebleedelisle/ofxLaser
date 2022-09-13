@@ -80,7 +80,7 @@ class Manager : public ManagerBase {
     void drawUIPanelDacAssigner();
     
     void drawUIPanelMainLasers();
-    void drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
+    void drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser);
     void drawUIPanelTopBar(int ypos);
     void drawUIPanelLaserCopySettings();
     void drawUIPanelDacAnalytics();
@@ -119,7 +119,9 @@ class Manager : public ManagerBase {
 
     int guiLaserSettingsPanelWidth;
     int guiSpacing;
-
+    int menuBarHeight = 0;
+    int iconBarHeight = 50; 
+    
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     
@@ -160,7 +162,9 @@ class Manager : public ManagerBase {
     int selectedLaserIndex;
     //bool showOutputInterface; // the zone editing interface
      ofxLaserMouseMode mouseMode;
-   
+    
+
+    
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     

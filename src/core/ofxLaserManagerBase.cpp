@@ -103,6 +103,7 @@ void ManagerBase::createAndAddLaser() {
     
     // TODO should this be here?
     laser->init();
+   
     
 }
 
@@ -598,8 +599,6 @@ bool ManagerBase::loadSettings() {
         
     }
     
-    
-    
     // NOW load the lasers
     
     // numLasers was saved in the json
@@ -651,7 +650,7 @@ bool ManagerBase::saveSettings() {
     
     // update the number of lasers for the laserNum param
     // (it's automatically saved with the params)
-    numLasers = lasers.size();
+    if(numLasers!=lasers.size()) numLasers = lasers.size();
     
     ofJson json;
     ofSerialize(json, params);

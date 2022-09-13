@@ -29,7 +29,11 @@ bool DacAliasManager :: addAliasForLabel(string alias, const string& daclabel, b
 }
 
 bool DacAliasManager :: load() {
-    ofJson json = ofLoadJson("ofxLaser/dacAliases.json");
+    
+    string filename ="ofxLaser/dacAliases.json";
+    if(!ofFile(filename).exists()) return false;
+    
+    ofJson json = ofLoadJson(filename);
     
     for (auto it : json.items()) {
         aliasByLabel[it.key()] = it.value();
@@ -41,6 +45,7 @@ bool DacAliasManager :: load() {
         //jsonobject.
     
     }
+    return true;
     
 }
 
@@ -50,6 +55,6 @@ bool DacAliasManager :: save() {
         json[it.first] =  // label
             it.second; // alias
     }
-    ofSavePrettyJson("ofxLaser/dacAliases.json", json);
+    return ofSavePrettyJson("ofxLaser/dacAliases.json", json);
     
 }

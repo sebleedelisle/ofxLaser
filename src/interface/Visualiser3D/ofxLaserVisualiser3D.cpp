@@ -401,16 +401,25 @@ void Visualiser3D :: drawGrid() {
 
 
 void Visualiser3D ::load() {
+    string filename ="ofxLaser/Visualiser3D.json";
+    if(!ofFile(filename).exists()) return;
     
-    ofJson json = ofLoadJson("ofxLaser/Visualiser3D.json");
+    ofJson json = ofLoadJson(filename);
+
     ofDeserialize(json, params);
     
-    ofJson json1 = ofLoadJson("ofxLaser/Visualiser3DSettings.json");
-    settings.deserialize(json1);
+    filename ="ofxLaser/Visualiser3DSettings.json";
+    if(ofFile(filename).exists()) {
+        ofJson json1 = ofLoadJson(filename);
+        settings.deserialize(json1);
+    }
     
+    filename ="ofxLaser/visualiser3DLasers.json";
+    if(ofFile(filename).exists()) {
+        ofJson json2 = ofLoadJson(filename);
     
-    ofJson json2 = ofLoadJson("ofxLaser/visualiser3DLasers.json");
-    lasersettings.deserialize(json2); 
+        lasersettings.deserialize(json2);
+    }
 //
 //    ofDeserialize(json, settings.params);
 //    ofJson& laser3DsJson = json["laser3Ds"];
