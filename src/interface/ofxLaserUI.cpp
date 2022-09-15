@@ -499,6 +499,8 @@ bool UI::addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetP
             returnvalue = true;
         }
     }
+
+    return returnvalue;
 }
 bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix, bool large) {
     
