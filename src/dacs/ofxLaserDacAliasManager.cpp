@@ -36,7 +36,8 @@ bool DacAliasManager :: load() {
     ofJson json = ofLoadJson(filename);
     
     for (auto it : json.items()) {
-        aliasByLabel[it.key()] = it.value();
+        string value = it.value(); 
+        aliasByLabel[it.key()] = value; //  it.value();
        // it.value();
     //for(int i = 0; i<json.size(); i++) {
     //    auto it = json.items();

@@ -79,7 +79,10 @@ bool PresetManager<T> :: loadPresets() {
         T defaultSettings;
         addPreset("Default", defaultSettings);
         //addPreset("Fast Scanners", defaultSettings);
+        
     }
+    return true; 
+
 }
 
 template <typename T>
