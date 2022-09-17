@@ -907,7 +907,7 @@ void Manager::drawLaserGui() {
 ////            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
 //            ImGui::EndMenu();
 //        }
-        if(ImGui::BeginMenu("Window") ) {
+        if(ImGui::BeginMenu("Panels") ) {
             if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserManagementWindow)) {
                 showLaserManagementWindow = !showLaserManagementWindow;
             }

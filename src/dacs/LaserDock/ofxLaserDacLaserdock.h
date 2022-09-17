@@ -10,7 +10,8 @@
 
 #include "ofMain.h"
 #include "ofxLaserDacBaseThreaded.h"
-#include "ofxLaserDacLaserDockByteStream.h"
+#include "ByteBuffer.h"
+//#include "ofxLaserDacLaserDockByteStream.h"
 #include "LaserdockDevice.h"
 #include "libusb.h"
 
@@ -19,6 +20,20 @@
 #define LASERDOCK_MAX 4095
 
 namespace ofxLaser {
+
+class DacLaserdockByteStream : public ByteBuffer {
+ 
+    public :
+    
+    void clear() override ;
+    void addPoint(LaserdockSample& p);
+     void logData();
+    
+    int numPointsExpected = 0;
+    int numPoints = 0;
+    
+} ;
+
 
 class DacLaserdock : public DacBaseThreaded{
 	public:
