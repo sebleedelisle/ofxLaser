@@ -10,6 +10,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserDacBaseThreaded.h"
+#include "ofxNetwork.h" // if you take this out it no longer compiles on windows and I have no idea why
 #include "ByteBuffer.h"
 //#include "ofxLaserDacLaserDockByteStream.h"
 #include "LaserdockDevice.h"

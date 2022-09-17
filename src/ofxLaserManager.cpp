@@ -1409,12 +1409,15 @@ void Manager :: drawUIPanelMainLasers() {
             
             draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
             ImGui::InvisibleButton("##gradient2", size - ImVec2(0,2));
-            ImGui::SameLine();
-            label = ofToString(ICON_FK_MINUS_CIRCLE)+"##"+ofToString(i);
-            if(UI::DangerButton( label, false)) {
-                // delete laser
-                string label ="Delete Laser?##"+ofToString(i);
-                ImGui::OpenPopup(label.c_str());
+
+            if (lasers.size() > 1) {
+                ImGui::SameLine();
+                label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+                if (UI::DangerButton(label, false)) {
+                    // delete laser
+                    string label = "Delete Laser?##" + ofToString(i);
+                    ImGui::OpenPopup(label.c_str());
+                }
             }
                 
             drawUIPopupDeleteLaser(&laserobject, i);
