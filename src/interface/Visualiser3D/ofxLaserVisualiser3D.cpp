@@ -455,62 +455,65 @@ void Visualiser3D ::drawUI(){
     
     if(!showSettingsWindow) return;
     
-    UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0), 0, false, &showSettingsWindow);
-
-    visualiserPresetManager.drawComboBox(settings);
-    visualiserPresetManager.drawSaveButtons(settings);
-    
-    Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
-    
-    UI::addResettableFloatSlider(brightness, 10);
-    UI::addCheckbox(showLaserNumbers);
-    UI::addCheckbox(showZoneNumbers);
-    UI::addResettableFloatDrag(settings.cameraDistance, currentPreset.cameraDistance); //.set("Camera FOV", 45,10,120))
-    UI::addResettableFloatDrag(settings.cameraFov, currentPreset.cameraFov); //.set("Camera FOV", 45,10,120));
-    
-    UI::addResettableFloat2Drag(settings.cameraOrbit, currentPreset.cameraOrbit, 1, "Orbits around the target point, pitch and yaw");//.set("Camera position", glm::vec3(0,-2000,0)));
-    UI::addResettableFloat3Drag(settings.cameraOrbitTarget, currentPreset.cameraOrbitTarget, 1, "The point the camera is looking at");//.set("Camera orientation", glm::vec3(0,0,0)));
-    
-    ImGui::Separator();
-    
-    visualiserLaserPresetManager.drawComboBox(lasersettings);
-    visualiserLaserPresetManager.drawSaveButtons(lasersettings);
-    Visualiser3DLaserSettings& currentLaserPreset = *visualiserLaserPresetManager.getPreset(lasersettings.getLabel());
-    
-    for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
-        ImGui::Separator();
-        string label = "Laser " + ofToString(i+1);
-        if( ImGui::TreeNode(label.c_str())) {
-            Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
+    if(UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0), 0, false, &showSettingsWindow)) {
         
-            if(currentLaserPreset.laserObjects.size()>i) {
-                Laser3DVisualObject& laser3DCurrentPreset = currentLaserPreset.laserObjects[i];
-                UI::addResettableFloat3Drag(laser3D.position, laser3DCurrentPreset.position, 1, "", "%.0f", "##"+ofToString(i));
-                UI::addResettableFloat3Drag(laser3D.orientation,  laser3DCurrentPreset.orientation, 1, "", "%.0f", "##"+ofToString(i));
+        visualiserPresetManager.drawComboBox(settings);
+        visualiserPresetManager.drawSaveButtons(settings);
+        
+        Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
+        
+        UI::addResettableFloatSlider(brightness, 10);
+        UI::addCheckbox(showLaserNumbers);
+        UI::addCheckbox(showZoneNumbers);
+        UI::addResettableFloatDrag(settings.cameraDistance, currentPreset.cameraDistance); //.set("Camera FOV", 45,10,120))
+        UI::addResettableFloatDrag(settings.cameraFov, currentPreset.cameraFov); //.set("Camera FOV", 45,10,120));
+        
+        UI::addResettableFloat2Drag(settings.cameraOrbit, currentPreset.cameraOrbit, 1, "Orbits around the target point, pitch and yaw");//.set("Camera position", glm::vec3(0,-2000,0)));
+        UI::addResettableFloat3Drag(settings.cameraOrbitTarget, currentPreset.cameraOrbitTarget, 1, "The point the camera is looking at");//.set("Camera orientation", glm::vec3(0,0,0)));
+        
+        ImGui::Separator();
+        
+        visualiserLaserPresetManager.drawComboBox(lasersettings);
+        visualiserLaserPresetManager.drawSaveButtons(lasersettings);
+        Visualiser3DLaserSettings& currentLaserPreset = *visualiserLaserPresetManager.getPreset(lasersettings.getLabel());
+        
+        for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
+            ImGui::Separator();
+            string label = "Laser " + ofToString(i+1);
+            if( ImGui::TreeNode(label.c_str())) {
+                Laser3DVisualObject& laser3D = lasersettings.laserObjects[i];
                 
-            } else {
-                UI::addFloat3Drag(laser3D.position, 1, "%.0f", "##"+ofToString(i));
-                UI::addFloat3Drag(laser3D.orientation, 1, "%.0f", "##"+ofToString(i));
+                if(currentLaserPreset.laserObjects.size()>i) {
+                    Laser3DVisualObject& laser3DCurrentPreset = currentLaserPreset.laserObjects[i];
+                    UI::addResettableFloat3Drag(laser3D.position, laser3DCurrentPreset.position, 1, "", "%.0f", "##"+ofToString(i));
+                    UI::addResettableFloat3Drag(laser3D.orientation,  laser3DCurrentPreset.orientation, 1, "", "%.0f", "##"+ofToString(i));
+                    
+                } else {
+                    UI::addFloat3Drag(laser3D.position, 1, "%.0f", "##"+ofToString(i));
+                    UI::addFloat3Drag(laser3D.orientation, 1, "%.0f", "##"+ofToString(i));
+                }
+                
+                UI :: addCheckbox(laser3D.flipX);
+                ImGui::SameLine();
+                UI :: addCheckbox(laser3D.flipY);
+                UI :: addParameter(laser3D.horizontalRangeDegrees);
+                UI :: addParameter(laser3D.verticalRangeDegrees);
+                ImGui::TreePop();
             }
             
-            UI :: addCheckbox(laser3D.flipX);
-            ImGui::SameLine();
-            UI :: addCheckbox(laser3D.flipY);
-            UI :: addParameter(laser3D.horizontalRangeDegrees);
-            UI :: addParameter(laser3D.verticalRangeDegrees);
-            ImGui::TreePop();
         }
         
-    }
-    
-    if(numLasers<lasersettings.laserObjects.size()) {
-        if(UI::Button("Remove extra 3D laser objects")){
-            lasersettings.laserObjects.resize(numLasers);
+        if(numLasers<lasersettings.laserObjects.size()) {
+            if(UI::Button("Remove extra 3D laser objects")){
+                lasersettings.laserObjects.resize(numLasers);
+                
+            }
             
         }
         
+        
+        
     }
-    
     
     UI::endWindow();
 }

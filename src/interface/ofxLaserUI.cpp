@@ -22,7 +22,6 @@ bool ofxLaser::UI:: dangerColourActive = false;
 bool ofxLaser::UI:: largeItemActive = false;
 void UI::render() {
     ImGui::Render();
-    
 }
 
 

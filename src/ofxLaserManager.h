@@ -75,7 +75,7 @@ class Manager : public ManagerBase {
     void finishLaserUI() ;
     void renderCustomCursors();
     
-    void ShowExampleMenuFile(); 
+   // void ShowExampleMenuFile();
    // void drawUIPanelScannerSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
     void drawUIPanelDacAssigner();
     
