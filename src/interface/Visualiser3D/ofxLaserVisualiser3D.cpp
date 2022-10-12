@@ -124,6 +124,7 @@ void Visualiser3D :: update() {
     
     if(smoothedCameraOrbit != settings.cameraOrbit.get()) {
         smoothedCameraOrbit += ((settings.cameraOrbit.get()-smoothedCameraOrbit)*0.4);
+        gridDirty = true; 
 
     }
     

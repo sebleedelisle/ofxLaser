@@ -92,6 +92,7 @@ Manager :: Manager() {
     initSVGs();
     //visFbo.allocate(1000,600, GL_RGBA, 4);
     
+    
 }
 
 Manager::~Manager() {
@@ -105,6 +106,22 @@ Manager::~Manager() {
     
 }
 
+void Manager :: createAndAddLaser()  {
+    int laserindex = lasers.size();
+    ManagerBase:: createAndAddLaser();
+    setLaserDefaultPreviewOffsetAndScale(laserindex);
+    
+   
+   
+}
+
+void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
+    if(lasernum<lasers.size()) {
+        Laser& laser = *lasers[lasernum];
+        float scale = ((ofGetHeight()/2)-iconBarHeight-menuBarHeight)/800.0f;
+        laser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
+    }
+}
 
 void Manager :: initAndLoadSettings() {
     
@@ -173,6 +190,14 @@ void Manager :: update() {
         zones[i]->setEditable(showInputPreview && (viewMode==OFXLASER_VIEW_CANVAS) && (!lockInputZones) && showInputZones);
     }
     ManagerBase :: update();
+    if(firstUpdate) {
+        
+        setDefaultPreviewOffsetAndScale();
+        for(int i = 0; i<lasers.size(); i++) {
+            setLaserDefaultPreviewOffsetAndScale(i);
+        }
+        firstUpdate = false;
+    }
 }
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
@@ -390,8 +415,8 @@ void Manager :: renderCustomCursors() {
 void Manager :: drawPreviews() {
     
     if(viewMode == OFXLASER_VIEW_3D) {
-        float previewheight = (ofGetHeight()/2)-30;
-        ofRectangle rect3D(10,30,previewheight/9*16, previewheight); // 16/9 ratio
+        float previewheight = (ofGetHeight()/2)-menuBarHeight-iconBarHeight;
+        ofRectangle rect3D(10,menuBarHeight+iconBarHeight,previewheight/9*16, previewheight); // 16/9 ratio
         visualiser3D.draw(rect3D, lasers, mouseMode == OFXLASER_MOUSE_DRAG);
         
         // this is same as other views - should break it out
@@ -939,7 +964,7 @@ void Manager::drawLaserGui() {
     ImGui::PopFont();
     ImGui::PopStyleVar();
     
-    drawUIPanelTopBar(menuBarHeight-1);
+    drawUIPanelIconBar(menuBarHeight-1);
     drawUIPanelMainLasers();
     drawUIPanelLaserOutputSettings(&getLaser(getSelectedLaserIndex()));
     drawUIPanelCustomParameters();
@@ -1138,7 +1163,11 @@ void Manager::drawLaserGui() {
                     }
                     UI::stopGhosted();
                     UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                   
+                    ImGui::SameLine();
+                    if(UI::Button(ICON_FK_SQUARE_O))  {
+                        laserZone->setDst(ofRectangle(200,240,400,200));
+                    }
+                    UI::toolTip("Reset zone to default");
                     
                     UI::addParameterGroup(laserZone->transformParams, false);
                     ImGui::Text("Edge masks");
@@ -1581,7 +1610,7 @@ void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser) {
 }
 
 
-void Manager :: drawUIPanelTopBar(int ypos) {
+void Manager :: drawUIPanelIconBar(int ypos) {
 
     ofxLaser::Manager& laserManager = *this;
     
@@ -1682,8 +1711,7 @@ void Manager :: drawUIPanelTopBar(int ypos) {
             // reset display ;// mouseMode = OFXLASER_MOUSE_ZOOM_OUT;
             if(viewMode == OFXLASER_VIEW_CANVAS) setDefaultPreviewOffsetAndScale();
             else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-                
-                currentLaser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing), 1);
+                setLaserDefaultPreviewOffsetAndScale(getSelectedLaserIndex());
             }
         }
         

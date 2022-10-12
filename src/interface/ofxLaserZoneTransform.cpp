@@ -27,6 +27,11 @@ ZoneTransform::ZoneTransform() {
     srcPoints.resize(4);
     editSubdivisions = false;
     
+    gridParams.add(snapToGrid.set("snap to grid", true));
+    gridParams.add(gridSize.set("grid size", 10));
+    ofAddListener(gridParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
+  
+    
     // Used for serialize / deserialize
     transformParams.setName("ZoneTransformParams");
     
@@ -58,9 +63,6 @@ ZoneTransform::ZoneTransform() {
     snapToGrid = false;
     gridSize  = 1;
     
-    gridParams.add(snapToGrid.set("snap to grid", true));
-    gridParams.add(gridSize.set("grid size", 10));
-    ofAddListener(gridParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
     
     
     
@@ -107,7 +109,8 @@ bool ZoneTransform::update(){
     if(isDirty) {
         //if(locked) selected = false;
         updateQuads();
-        
+        updateHandleColours();
+        updateConvex();
         isDirty = false;
         return true;
     } else {
@@ -125,10 +128,14 @@ void ZoneTransform :: setVisible(bool warpvisible){
 void ZoneTransform::draw(string label) {
     
     if(!visible) return ;
+    
     ofPushMatrix();
     ofTranslate(offset);
     ofScale(scale, scale);
     ofSetColor(selected?uiZoneFillColourSelected : uiZoneFillColour);
+    if((!editSubdivisions) && useHomography && (!getIsConvex())) {
+        ofSetColor(80,0,0);
+    }
     ofFill();
     ofBeginShape();
     for(int i = 0; i<xDivisions; i++) {
@@ -150,6 +157,7 @@ void ZoneTransform::draw(string label) {
     ofNoFill();
     
     ofSetColor(uiZoneStrokeColour);
+   
     ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
     
     for(size_t i= 0; i<dstHandles.size(); i++) {
@@ -233,6 +241,9 @@ bool ZoneTransform :: isSquare() {
 }
 
 ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
+    
+    //if(useHomography && (!isConvex())) return dstHandles[0];
+    
     ofPoint rp = p - srcRect.getTopLeft();
     
     int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
@@ -245,7 +256,7 @@ ofPoint ZoneTransform::getWarpedPoint(const ofPoint& p){
     
     int quadnum = x + (y*xDivisions);
     Warper & quad = quadWarpers[quadnum];
-    return quad.getWarpedPoint(p, useHomography);
+    return quad.getWarpedPoint(p, (!editSubdivisions) && useHomography);
     
 };
 
@@ -268,9 +279,19 @@ ofPoint ZoneTransform::getUnWarpedPoint(const ofPoint& p){
 
 
 ofxLaser::Point ZoneTransform::getWarpedPoint(const ofxLaser::Point& p){
+    
     ofxLaser::Point rp = p;
+    
+    if((!editSubdivisions) && useHomography && (!getIsConvex())) {
+        rp.set(dstHandles[0]);
+        rp.setColour(0,0,0);
+        return rp;
+    }
+        
     rp.x-=srcRect.getTopLeft().x;
     rp.y-=srcRect.getTopLeft().y;
+    
+    
     
     int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
     int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
@@ -282,7 +303,9 @@ ofxLaser::Point ZoneTransform::getWarpedPoint(const ofxLaser::Point& p){
     
     int quadnum = x + (y*xDivisions);
     Warper & quad = quadWarpers[quadnum];
-    return quad.getWarpedPoint(p, useHomography);
+    rp = quad.getWarpedPoint(p, (!editSubdivisions) && useHomography);
+    
+    return rp;
     
 };
 //
@@ -315,7 +338,7 @@ void ZoneTransform::setSrc(const ofRectangle& rect) {
 }
 void ZoneTransform::setDst(const ofRectangle& rect) {
     setDstCorners(rect.getTopLeft(), rect.getTopRight(), rect.getBottomLeft(), rect.getBottomRight());
-    
+    updateQuads(); 
 }
 
 void ZoneTransform :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright) {
@@ -482,7 +505,7 @@ void ZoneTransform::updateQuads() {
     for(DragHandle& handle : dstHandles) {
         handle.setGrid(snapToGrid, gridSize);
     } 
-        
+  
     
     
 }
@@ -510,8 +533,8 @@ void ZoneTransform :: removeListeners() {
 void ZoneTransform :: mouseMoved(ofMouseEventArgs &e){
     
     
-    if((!editable) || (!visible)) return;
-    
+//    if((!editable) || (!visible)) return;
+//
     mousePos = e;
     mousePos-=offset;
     mousePos/=scale;
@@ -551,7 +574,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
         
         for(size_t i= 0; i<dstHandles.size(); i++) {
             
-            if(dstHandles[i].hitTest(mousePos)) {
+            if(dstHandles[i].hitTest(mousePos, scale)) {
                 
                 // ignore subdivisions if we're not editing them
                 if(!editSubdivisions && !isCorner((int)i)) continue;
@@ -838,3 +861,36 @@ void ZoneTransform::updateHandleColours() {
     }
     
 }
+
+
+bool ZoneTransform :: getIsConvex() {
+    return isConvex;
+    
+}
+
+void ZoneTransform :: updateConvex() {
+    bool convex = true;
+    vector<ofPoint> corners = getCorners();
+    vector<ofPoint> points;
+    points.push_back(corners[0]);
+    points.push_back(corners[1]);
+    points.push_back(corners[3]);
+    points.push_back(corners[2]);
+    for(size_t i = 0; i<4; i++) {
+    
+        ofVec2f p1 = points[i%4];
+        ofVec2f p2 = points[(i+1)%4];
+        ofVec2f p3 = points[(i+2)%4];
+        ofVec2f v1 = p2-p1;
+        ofVec2f v2 = p3-p2;
+        v2.rotate(90);
+        if(v2.dot(v1)>0) convex = false;
+        ofLogNotice()  << i << " " << p1 << " " << p2 << " " << p3 << " " << v2.dot(v1) ;
+    }
+    
+    isConvex =  convex;
+    
+}
+
+    
+    

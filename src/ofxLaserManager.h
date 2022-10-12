@@ -40,7 +40,7 @@ class Manager : public ManagerBase {
     
     virtual void initAndLoadSettings();
     virtual void update() override;
-    
+    virtual void createAndAddLaser() override;
     void paramChanged(ofAbstractParameter& e) ;
     
     void initSVGs(); 
@@ -81,7 +81,7 @@ class Manager : public ManagerBase {
     
     void drawUIPanelMainLasers();
     void drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser);
-    void drawUIPanelTopBar(int ypos);
+    void drawUIPanelIconBar(int ypos);
     void drawUIPanelLaserCopySettings();
     void drawUIPanelDacAnalytics();
     
@@ -106,8 +106,9 @@ class Manager : public ManagerBase {
     bool keyPressed(ofKeyEventArgs &e);
     bool keyReleased(ofKeyEventArgs &e);
 
-    void setDefaultPreviewOffsetAndScale(); 
+    void setDefaultPreviewOffsetAndScale();
     void zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier);
+    void setLaserDefaultPreviewOffsetAndScale(int lasernum);
     
     bool draggingPreview;
     glm::vec2 dragStartPoint;
@@ -119,8 +120,8 @@ class Manager : public ManagerBase {
 
     int guiLaserSettingsPanelWidth;
     int guiSpacing;
-    int menuBarHeight = 0;
-    int iconBarHeight = 50; 
+    int menuBarHeight = 20;
+    int iconBarHeight = 44;
     
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
@@ -199,7 +200,7 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
     
-    
+    bool firstUpdate = true; 
    
 
 };

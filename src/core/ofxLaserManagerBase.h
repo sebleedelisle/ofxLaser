@@ -166,7 +166,7 @@ class ManagerBase {
     bool doArmAll = false;
     bool doDisarmAll = false;
     
-    void createAndAddLaser();
+    virtual void createAndAddLaser();
     
     int createDefaultZone();
     

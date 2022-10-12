@@ -58,6 +58,7 @@ ofxLaser::Point Warper::getWarpedPoint(const ofxLaser::Point& p, bool useHomogra
 	ofxLaser::Point lp = p;
 	lp.x = cvp.x;
 	lp.y = cvp.y;
+    
 	return lp;
 
 }

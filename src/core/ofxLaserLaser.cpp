@@ -28,8 +28,6 @@ Laser::Laser(int _index) {
     
     lastSaveTime = 0; 
     
-    
-	
 };
 
 Laser::~Laser() {
@@ -62,8 +60,8 @@ DacBase* Laser::getDac(){
 
 bool Laser::hasDac() {
     return (dac != &emptyDac);
-    
 }
+
 bool Laser::removeDac(){
 	if (dac != &emptyDac) {
 		dac = &emptyDac;
@@ -78,7 +76,8 @@ bool Laser::removeDac(){
 
 int Laser::getPointRate() {
     return pps;
-};
+}
+
 float Laser::getFrameRate() {
     if(numPoints>1) return (float)pps/(float)numPoints;
     else return INFINITY;
@@ -112,7 +111,6 @@ void Laser :: init() {
     
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,12));
     
-   
     //laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
     maxLatencyMS = 150;
     
@@ -183,8 +181,8 @@ void Laser :: setGrid(bool gridstate, int gridsize){
     gridMesh.clear();
     int spacing = gridSize;
     while(gridSize<5) spacing *=2;
-    for(int x = 0; x<800; x+=spacing) {
-        for(int y = 0; y<800; y+=spacing) {
+    for(int x = 0; x<=800; x+=spacing) {
+        for(int y = 0; y<=800; y+=spacing) {
             gridMesh.addVertex(ofPoint(x,y));
         }
     }
@@ -1433,7 +1431,6 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 			}
 			
 		} // end zoneshapes
-		
 		
 		// go through all the points and warp them into output space
 		for(size_t j = 0; j<zonePointsForShapes.size(); j++) {

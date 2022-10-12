@@ -90,6 +90,9 @@ class ZoneTransform {
     float getBottom();
     
 	bool hitTest(ofPoint mousePoint);
+    
+    void updateConvex();
+    bool getIsConvex();
 	
     // returns in order top left, top right, bottom left, bottom right
 	void resetFromCorners();
@@ -165,6 +168,7 @@ class ZoneTransform {
     bool visible;
 	bool isDirty;
     bool isAlternate;
+    bool isConvex;
 	
 	bool initialised = false;
 	int xDivisions;

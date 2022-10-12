@@ -47,7 +47,7 @@ void DragHandle::set(glm::vec2 pos) {
 
 void DragHandle::draw(const glm::vec3& mousepos, float scale) {
 	
-	draw(hitTest(mousepos, scale), scale);
+	draw(hitTest(mousepos,scale), scale);
 	
 };
 
