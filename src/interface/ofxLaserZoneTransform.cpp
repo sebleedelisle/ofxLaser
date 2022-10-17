@@ -885,7 +885,7 @@ void ZoneTransform :: updateConvex() {
         ofVec2f v2 = p3-p2;
         v2.rotate(90);
         if(v2.dot(v1)>0) convex = false;
-        ofLogNotice()  << i << " " << p1 << " " << p2 << " " << p3 << " " << v2.dot(v1) ;
+        //ofLogNotice()  << i << " " << p1 << " " << p2 << " " << p3 << " " << v2.dot(v1) ;
     }
     
     isConvex =  convex;
