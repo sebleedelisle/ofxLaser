@@ -59,7 +59,7 @@ namespace ofxLaser {
         
         void logNotice(const string& msg) {
             if(logging) {
-                ofLogNotice(msg);
+                ofLogNotice() << msg;
             }
         }
         

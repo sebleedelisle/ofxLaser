@@ -21,10 +21,6 @@
 #include "ofxLaserGraphic.h"
 #include "ofxLaserLaser.h"
 
-
-
-
-
 enum ofxLaserZoneMode {
     OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want
     OFXLASER_ZONE_AUTOMATIC, // non-overlapping zones assumed - shapes go in all zones that
@@ -81,6 +77,7 @@ class ManagerBase {
     void armAllLasers();
     void disarmAllLasers();
     void testPatternAllLasers(int& pattern);
+    void canvasSizeChanged(int&size);
     void useAltZonesChanged(bool& state); 
     bool areAllLasersUsingAlternateZones();
 
@@ -132,24 +129,19 @@ class ManagerBase {
     
     DacAssigner& dacAssigner;
     
-    int width, height;
+    ofParameter<int> canvasWidth, canvasHeight;
 
     ofParameter<int> testPattern;
     
-  
     ofParameter<bool> useAltZones;
     ofParameter<bool> useBitmapMask;
     ofParameter<bool> showBitmapMask;
     ofParameter<bool> laserMasks;
     ofParameter<int> numLasers; // << not used except for load / save
     
-
-    
     ofParameter<float>globalBrightness;
 
-    
     BitmapMaskManager laserMask;
-    
     
     bool zonesChanged;
     std::vector<InputZone*> zones;

@@ -1509,7 +1509,19 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
 		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
 		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
+        shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
+        
+        float cornersize = rect.getWidth()*0.2;
+        float spacer = rect.getWidth()*0.05;
+        
+        if(cornersize > rect.getHeight()*0.5) {
+            cornersize = rect.getHeight()*0.5;
+            spacer = cornersize*0.25;
+        } 
+        
+        shapes.push_back(new Line(rect.getTopLeft()+glm::vec3(spacer,spacer, 0), rect.getTopLeft()+glm::vec3(cornersize,spacer,0), ofColor::white, OFXLASER_PROFILE_FAST));
+        shapes.push_back(new Line(rect.getTopLeft()+glm::vec3(spacer,spacer, 0), rect.getTopLeft()+glm::vec3(spacer,cornersize,0), ofColor::white, OFXLASER_PROFILE_FAST));
+      //shapes.push_back(new Circle(rect.getTopLeft()+glm::vec3(cornersize,cornersize, 0), cornersize*0.8, ofColor::white, OFXLASER_PROFILE_FAST));
 
 
 	} else if(testPattern==2) {

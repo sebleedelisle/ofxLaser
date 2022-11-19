@@ -51,6 +51,12 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.add(testPattern.set("Global test pattern", 0,0,9));
     testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
     
+    params.add(canvasWidth.set("Canvas width", 800,0,5000));
+    params.add(canvasHeight.set("Canvas height", 800,0,5000));
+    canvasWidth.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
+    canvasHeight.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
+  
+    
     useBitmapMask = showBitmapMask = laserMasks = false;
     params.add(numLasers.set("numLasers", 0));
     params.add(useAltZones.set("Use alternative zones", false));
@@ -61,7 +67,6 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     //beepSound.load("Beep1.wav");
     
 }
-
 
 ManagerBase :: ~ManagerBase() {
     //ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
@@ -80,17 +85,20 @@ ManagerBase :: ~ManagerBase() {
     //    // anything else?
     
 }
+void ManagerBase::canvasSizeChanged(int &size){
+    laserMask.init(canvasWidth, canvasHeight);
+}
 
 void ManagerBase :: setCanvasSize(int w, int h){
-    width = w;
-    height = h;
-    laserMask.init(w,h);
+    canvasWidth = w;
+    canvasHeight = h;
+    //laserMask.init(w,h);
     // canvasPreviewFbo.allocate(w, h, GL_RGB, 3);
-    ofRectangle canvasRectangle(0,0,w,h);
-    for(InputZone* zone : zones) {
-        zone->setConstrained(canvasRectangle);
-        
-    }
+//    ofRectangle canvasRectangle(0,0,w,h);
+//    for(InputZone* zone : zones) {
+//        zone->setConstrained(canvasRectangle);
+//
+//    }
 }
 
 void ManagerBase::createAndAddLaser() {
@@ -158,8 +166,8 @@ void ManagerBase::addZone(const ofRectangle& rect) {
 }
 
 void ManagerBase :: addZone(float x, float y, float w, float h) {
-    if(w<=0) w = width;
-    if(h<=0) h = height;
+    if(w<=0) w = canvasWidth;
+    if(h<=0) h = canvasHeight;
     zones.push_back(new InputZone( x, y, w, h));
     //zones.back()->loadSettings();
     renumberZones();
@@ -200,13 +208,13 @@ void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
         return;
     }
     
-    lasers[lasernum]->addZone(zones[zonenum], width, height);
+    lasers[lasernum]->addZone(zones[zonenum], canvasWidth, canvasHeight);
 }
 
 int ManagerBase::createDefaultZone() {
     // check there aren't any zones yet?
     // create a zone equal to the width and height of the total output space
-    addZone(0,0,width,height);
+    addZone(0,0,canvasWidth,canvasHeight);
     return (int)zones.size()-1;
     
 }
@@ -411,9 +419,9 @@ void ManagerBase:: update(){
 }
 
 void ManagerBase::beginDraw() {
-    ofViewport((ofGetWidth()-width)/-2, (ofGetHeight()-height)/-2, ofGetWidth(), ofGetHeight()) ;
+    ofViewport((ofGetWidth()-canvasWidth)/-2, (ofGetHeight()-canvasHeight)/-2, ofGetWidth(), ofGetHeight()) ;
     ofPushMatrix();
-    ofTranslate((ofGetWidth()-width)/2, (ofGetHeight()-height)/2);
+    ofTranslate((ofGetWidth()-canvasWidth)/2, (ofGetHeight()-canvasHeight)/2);
     
 }
 void ManagerBase::endDraw() {
@@ -580,6 +588,11 @@ bool ManagerBase::loadSettings() {
     }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
+    if((json.contains("canvasWidth")) && (json.contains("canvasHeight"))){
+        
+        
+    }
+        
     
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
@@ -654,7 +667,8 @@ bool ManagerBase::saveSettings() {
     
     ofJson json;
     ofSerialize(json, params);
-    
+//    json["canvasWidth"] = canvasWidth;
+//    json["canvasHeight"] = canvasHeight;
     
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
     

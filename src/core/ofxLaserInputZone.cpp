@@ -22,11 +22,11 @@ InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
 	
     lockPerpendicular = true;
     for(DragHandle& handle : handles) {
-        handle.setGrid(true, 1); 
+        handle.setGrid(true, 5);
         
     }
     lineWidth = 2;
-    setConstrained(rect);
+   // setConstrained(rect);
 }
 
 void InputZone:: setIndex(int _index)  {

@@ -345,7 +345,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
 }
 
 void Visualiser3D :: drawGrid() {
-    
+    float groundLevel = 100;
     if(true) { // grid.size()==0)) {
     
 //        ofRectangle visibleRectangle(camera.getGlobalPosition(), 0,0);
@@ -375,19 +375,19 @@ void Visualiser3D :: drawGrid() {
                 for(int z = -1000; z<1000; z+=gridspacing) {
                     
                     ofColor col = ofColor(0,50,0);
-                    ofPoint p (x, 40, z);
+                    ofPoint p (x, groundLevel, z);
                     ofPoint v = camera.getGlobalPosition();
                     float dist = v.distance(p);
                     float brightness = ofMap(dist, 500,1000,1,0,true);
                     if(brightness>0) {
                         col*=brightness;
-                        grid.addVertex(glm::vec3(x, 40, z));
-                        grid.addVertex(glm::vec3(x, 40, z+gridspacing));
+                        grid.addVertex(glm::vec3(x, groundLevel, z));
+                        grid.addVertex(glm::vec3(x, groundLevel, z+gridspacing));
                         grid.addColor(col);
                         grid.addColor(col);
                         
-                        grid.addVertex(glm::vec3(x, 40, z));
-                        grid.addVertex(glm::vec3(x+gridspacing,40,z));
+                        grid.addVertex(glm::vec3(x, groundLevel, z));
+                        grid.addVertex(glm::vec3(x+gridspacing,groundLevel,z));
                         grid.addColor(col);
                         grid.addColor(col);
                     }
@@ -397,9 +397,7 @@ void Visualiser3D :: drawGrid() {
         }
     }
     grid.draw();
-    
 }
-
 
 void Visualiser3D ::load() {
     string filename ="ofxLaser/Visualiser3D.json";
@@ -448,9 +446,7 @@ void Visualiser3D ::save() {
     ofSavePrettyJson("ofxLaser/Visualiser3DLasers.json",json2);
     
     //ofLogNotice("Visualiser3D json : " ) << json.dump(3);
-    
 }
-
 
 void Visualiser3D ::drawUI(){
     

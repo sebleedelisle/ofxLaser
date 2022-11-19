@@ -323,7 +323,7 @@ bool UI::addRectDrag(ofParameter<ofRectangle>&param, float speed, const char* fo
     glm::vec2 topleft = tempRect.getTopLeft();
     glm::vec2 area (tempRect.getWidth(), tempRect.getHeight());
     
-    if(addFloat2Drag(label, topleft, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+    if(addFloat2Drag(label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
         
         changed = true;
     }
@@ -345,7 +345,36 @@ bool UI::addRectDrag(ofParameter<ofRectangle>&param, float speed, const char* fo
     return changed;
 }
 
+bool UI::addRectDrag(ofRectangle&rect, float speed, const char* format, string label) {
+    
+    bool changed = false;
+    
+    
+    glm::vec2 topleft = rect.getTopLeft();
+    glm::vec2 area(rect.getWidth(), rect.getHeight());
+    
+    if(addFloat2Drag(label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
+        
+        changed = true;
+    }
+    label += "area";
+    if(addFloat2Drag(label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+        //param.get().(tmpRef);
+        //param.get().width = (area.x);
+        //param->height = (area.y);
+        changed = true;
+    }
+    if(changed) {
+        rect.x = (topleft.x);
+        rect.y = (topleft.y);
+        rect.width = area.x;
+        rect.height = area.y;
+    }
 
+    return changed;
+    
+    
+}
 
 bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip, string labelSuffix){
     

@@ -63,7 +63,7 @@ Manager :: Manager() {
     
     params.add(showGuideImage.set("Show guide image", false));
     params.add(guideImageColour.set("Guide image colour", ofColor::white));
-    
+    params.add(guideImageFilename.set("Guide image filename", ""));
     dacSettingsTimeSlice.set("Magnification", 0.5, 0.1, 20);
     
     // bit of a hack - ideally UI elements should be completely separate from
@@ -76,7 +76,9 @@ Manager :: Manager() {
             try {
                 ofDeserialize(loadJson["Laser"], showGuideImage);
                 ofDeserialize(loadJson["Laser"], guideImageColour);
-
+                ofDeserialize(loadJson["Laser"], guideImageFilename);
+                if(guideImageFilename.get()!="") setGuideImage("guideImages/" + guideImageFilename.get());
+               
 
             } catch(...) {
                 //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
@@ -102,8 +104,6 @@ Manager::~Manager() {
     ofRemoveListener(params.parameterChangedE(), this, &Manager::paramChanged);
     ofRemoveListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
- 
-    
 }
 
 void Manager :: createAndAddLaser()  {
@@ -158,7 +158,6 @@ void Manager :: initAndLoadSettings() {
     params.add(showLaserManagementWindow.set("showLaserManagementWindow", true));
     params.add(showLaserOutputSettingsWindow.set("showLaserOutputSettingsWindow", true));
 
-    
     loadSettings();
     showDacAssignmentWindow = false; 
     // param changed updates zone settings and global latency on all
@@ -178,7 +177,7 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
         laser->setGrid(zoneGridSnap, zoneGridSize);
         laser->maxLatencyMS = globalLatency;
     }
-    ofLogNotice() << "paramChanged " << e.getName();
+    //ofLogNotice() << "paramChanged " << e.getName();
     saveSettings();
 }
 
@@ -253,11 +252,11 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
     previewScale = 1;
     float thirdOfHeight = (ofGetHeight()/3 )- previewOffset.y;
     
-    if(height>(thirdOfHeight*2)) {
-        previewScale = (float)(thirdOfHeight*2) / (float)height;
+    if(canvasHeight>(thirdOfHeight*2)) {
+        previewScale = (float)(thirdOfHeight*2) / (float)canvasHeight;
     }
-    if(width * previewScale> ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth) {
-        previewScale = (float)(ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth)/width;
+    if(canvasWidth * previewScale> ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth) {
+        previewScale = (float)(ofGetWidth()-(guiSpacing*3)-guiLaserSettingsPanelWidth)/canvasWidth;
     }
     
 }
@@ -480,7 +479,7 @@ void Manager :: drawPreviews() {
             ofPushMatrix();
             ofTranslate(previewOffset);
             ofScale(previewScale);
-            ofDrawRectangle(0,0,width, height);
+            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
             ofPopMatrix();
             ofPopStyle();
         
@@ -697,10 +696,10 @@ void Manager :: renderPreview() {
     // draw outline of laser output area
     ofSetColor(0);
     ofFill();
-    ofDrawRectangle(0,0,width,height);
+    ofDrawRectangle(0,0,canvasWidth,canvasHeight);
     ofSetColor(50);
     ofNoFill();
-    ofDrawRectangle(0,0,width,height);
+    ofDrawRectangle(0,0,canvasWidth,canvasHeight);
     
     // Draw laser graphics preview ----------------
     ofMesh mesh;
@@ -713,7 +712,7 @@ void Manager :: renderPreview() {
         shapes[i]->addPreviewToMesh(mesh);
     }
     
-    ofRectangle laserRect(0,0,width, height);
+    ofRectangle laserRect(0,0,canvasWidth, canvasHeight);
     if(useBitmapMask) {
         const vector<glm::vec3>& points = mesh.getVertices();
         std::vector<ofFloatColor>& colours = mesh.getColors();
@@ -756,7 +755,7 @@ void Manager :: renderPreview() {
     
     if(showGuideImage && guideImage.isAllocated()) {
         ofSetColor(guideImageColour);
-        guideImage.draw(0,0,width, height);
+        guideImage.draw(0,0,canvasWidth, guideImage.getHeight() * ((float)canvasWidth/(float)guideImage.getWidth()));
         
         
     }
@@ -984,7 +983,7 @@ void Manager::drawLaserGui() {
         Laser* laser = lasers[selectedLaserIndex];
         vector<OutputZone*> activeZones = laser->getActiveZones();
         
-        glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(width, 0));
+        glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(canvasWidth, 0));
         
         if(UI::startWindow("Laser output zones", ImVec2(800+guiSpacing, guiSpacing+menuBarHeight), ImVec2(380,500))) {
             
@@ -1005,7 +1004,7 @@ void Manager::drawLaserGui() {
 
                     if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
                         if(checked) {
-                            laser->addZone(zone, width, height);
+                            laser->addZone(zone, canvasWidth, canvasHeight);
                         } else {
                             laser->removeZone(zone);
                         }
@@ -1018,7 +1017,7 @@ void Manager::drawLaserGui() {
                     string label = zone->displayLabel + "##alt";
                     if(ImGui::Checkbox(label.c_str(), &checked)) {
                         if(checked) {
-                            laser->addAltZone(zone, width, height);
+                            laser->addAltZone(zone, canvasWidth, canvasHeight);
                         } else {
                             laser->removeAltZone(zone);
                         }
@@ -1203,10 +1202,7 @@ void Manager :: drawUIPanelMainLasers() {
         
         float buttonwidth = (guiLaserSettingsPanelWidth-(guiSpacing*3))/2;
         
-        
         UI::addIntSlider(laserManager.testPattern);
-        
-        
         
         // SHOW LIST OF LASERS
         
@@ -1281,8 +1277,6 @@ void Manager :: drawUIPanelMainLasers() {
             // DAC STATUSES
             ImGui::SameLine();
             
-            
-            
             ImDrawList* draw_list = ImGui::GetWindowDrawList();
             ImVec2 size = ImVec2(15,15); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
             
@@ -1310,7 +1304,7 @@ void Manager :: drawUIPanelMainLasers() {
                 }
             }
                 
-            drawUIPopupDeleteLaser(&laserobject, i);
+            
             
             float framerate = laserobject.getFrameRate();
             if(framerate!=INFINITY) {
@@ -1318,6 +1312,8 @@ void Manager :: drawUIPanelMainLasers() {
                 label = ofToString(round(framerate));
                 ImGui::Text("%s",label.c_str());
             }
+            
+            drawUIPopupDeleteLaser(&laserobject, i);
             
         }
         
@@ -1343,6 +1339,35 @@ void Manager :: drawUIPanelMainLasers() {
         }
         UI::addIntSlider(globalLatency);
         
+        if(UI::addParameter(canvasWidth)) {
+            saveSettings();
+        }
+       
+        if(UI::addParameter(canvasHeight)) {
+            saveSettings();
+        }
+            
+        
+        if(UI::Button("LOAD CANVAS GUIDE IMAGE")) {
+            
+            ofFileDialogResult dialogResult = ofSystemLoadDialog();
+            if(dialogResult.bSuccess) {
+                if(setGuideImage(dialogResult.filePath)){
+                    showGuideImage =true;
+                    guideImage.save("guideimages/"+dialogResult.getName());
+                    guideImageFilename = dialogResult.getName();
+                    saveSettings();
+                }
+            }
+        }
+        if(guideImage.isAllocated()) {
+            UI::addParameter(showGuideImage);
+            UI::addParameter(guideImageColour);
+        }
+            
+        if(UI::addParameter(lockInputZones)) {
+            saveSettings();
+        }
     }
     
     UI::endWindow();
@@ -1686,7 +1711,7 @@ void Manager :: drawUIPanelIconBar(int ypos) {
             mouseMode = OFXLASER_MOUSE_DRAG;
         }ImGui::SameLine();
 
-        glm::vec2 centre = glm::vec2(width/2, height/2);
+        glm::vec2 centre = glm::vec2(canvasWidth/2, canvasHeight/2);
         ofxLaser::Laser& currentLaser = *lasers[getSelectedLaserIndex()];
         
         if(UI::Button(ICON_FK_PLUS, false, false)) {
@@ -2204,6 +2229,7 @@ void Manager :: drawUIPopupDeleteLaser(Laser* laser, int index) {
         
         if (ImGui::Button("DELETE", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
+            
             deleteLaser(laser);
             
         }
@@ -2395,12 +2421,12 @@ float Manager :: getPreviewScale() {
     return previewScale;
 }
 ofRectangle Manager :: getPreviewRect() {
-    return ofRectangle(previewOffset.x, previewOffset.y, width*previewScale, height*previewScale);
+    return ofRectangle(previewOffset.x, previewOffset.y, canvasWidth*previewScale, canvasHeight*previewScale);
     
 }
 void Manager :: fitPreviewInRect(ofRectangle fitrect ) {
-    previewScale = fitrect.width/width;
-    if(height*previewScale>fitrect.height) previewScale = fitrect.height/height;
+    previewScale = fitrect.width/canvasWidth;
+    if(canvasHeight*previewScale>fitrect.height) previewScale = fitrect.height/canvasHeight;
     previewOffset = fitrect.getTopLeft();
     
 }

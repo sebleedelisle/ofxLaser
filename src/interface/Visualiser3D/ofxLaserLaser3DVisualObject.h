@@ -16,17 +16,19 @@ class Laser3DVisualObject : public Object3D{
     
     Laser3DVisualObject() {
         //params.setName("3D Visualisation");
-        //params.add(position);
-        //params.add(orientation);
-        params.add(horizontalRangeDegrees.set("Output Range horizontal", 60,0,180));
-        params.add(verticalRangeDegrees.set("Output Range vertical", 60,0,180));
-        params.add(flipX.set("Flip X", false));
-        params.add(flipY.set("Flip Y", false));
+        //visual3DParams.add(position);
+        //visual3DParams.add(orientation);
+        visual3DParams.add(horizontalRangeDegrees.set("Output Range horizontal", 60,0,180));
+        visual3DParams.add(verticalRangeDegrees.set("Output Range vertical", 60,0,180));
+        visual3DParams.add(flipX.set("Flip X", false));
+        visual3DParams.add(flipY.set("Flip Y", false));
         
         ofAddListener(visual3DParams.parameterChangedE(), this, &Laser3DVisualObject::paramsChanged);
+        ofAddListener(params.parameterChangedE(), this, &Laser3DVisualObject::paramsChanged);
     }
     ~Laser3DVisualObject() {
         ofRemoveListener(visual3DParams.parameterChangedE(), this, &Laser3DVisualObject::paramsChanged);
+        ofRemoveListener(params.parameterChangedE(), this, &Laser3DVisualObject::paramsChanged);
     }
     
     void paramsChanged(ofAbstractParameter& e){

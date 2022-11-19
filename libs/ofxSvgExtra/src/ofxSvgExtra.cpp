@@ -267,6 +267,7 @@ void ofxSVGExtra::setupDiagram(struct svgtiny_diagram * diagram){
 	}
     width = bounds.getWidth();
     height = bounds.getHeight();
+    boundingBox = bounds; 
 }
 
     

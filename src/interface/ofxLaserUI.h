@@ -80,8 +80,9 @@ class UI {
     static bool addFloat3Drag(ofParameter<glm::vec3>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
     
     static bool addRectDrag(ofParameter<ofRectangle>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
+    static bool addRectDrag(ofRectangle&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
 
-    static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string labelSuffix = "");
+    static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string label = "");
     static bool addFloatAsIntPercentage(ofParameter<float>& param, string labelSuffix = "");
     
     static bool addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetParam, string labelSuffix = "");

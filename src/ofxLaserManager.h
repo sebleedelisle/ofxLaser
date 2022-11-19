@@ -149,6 +149,7 @@ class Manager : public ManagerBase {
     
     ofParameter<bool> showGuideImage;
     ofParameter<ofColor> guideImageColour;
+    ofParameter<string> guideImageFilename; 
 
     bool showDacAnalytics;
     ofParameter<float> dacSettingsTimeSlice;

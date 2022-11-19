@@ -58,6 +58,7 @@ class ofxSVGExtra {
 		bool increaseCompatibility = true;
 	
 		float width, height;
+        ofRectangle boundingBox;
 
 		std::vector <ofPath> paths;
 
