@@ -715,6 +715,7 @@ void Laser :: disableTransformGui() {
     for(OutputZone* laserZone : outputZones) {
         laserZone->setEnabled(false);
     }
+    maskManager.disableUI();
 	
 	
 }
@@ -722,7 +723,7 @@ void Laser :: enableTransformGui() {
     for(OutputZone* laserZone : outputZones) {
         if(laserZone->getVisible()) laserZone->setEnabled(true);
     }
-	
+    maskManager.enableUI(); 
 }
 
 

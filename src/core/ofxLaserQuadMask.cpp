@@ -39,27 +39,27 @@ bool QuadMask::deserialize(ofJson& jsonGroup) {
 
 void QuadMask:: draw() {
     
-    ofPushStyle();
-    
-    ofPushMatrix();
-    ofTranslate(offset);
-    ofScale(scale, scale);
-    
-    ofFill();
-    
-    //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
-    //ofDisableBlendMode();
-    ofSetColor(0,0,0,ofMap(maskLevel,0,100,0,255));
-
-    ofBeginShape();
-    ofVertex(handles[0]);
-    ofVertex(handles[1]);
-    ofVertex(handles[3]);
-    ofVertex(handles[2]);
-    ofEndShape();
-    
-    ofPopMatrix();
-    ofPopStyle();
+//    ofPushStyle();
+//    
+//    ofPushMatrix();
+//    ofTranslate(offset);
+//    ofScale(scale, scale);
+//    
+//    ofFill();
+//    
+//    //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
+//    //ofDisableBlendMode();
+//    ofSetColor(0,0,0,ofMap(maskLevel,0,100,0,255));
+//
+//    ofBeginShape();
+//    ofVertex(handles[0]);
+//    ofVertex(handles[1]);
+//    ofVertex(handles[3]);
+//    ofVertex(handles[2]);
+//    ofEndShape();
+//    
+//    ofPopMatrix();
+//    ofPopStyle();
     
     QuadGui::draw();
     

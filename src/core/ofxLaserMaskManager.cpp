@@ -103,7 +103,19 @@ void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     
 }
 
-vector<ofPolyline*>  MaskManager  ::getLaserMaskShapes(){
+void MaskManager  ::enableUI(){
+    for(QuadMask* quad : quads) {
+        quad->setEditable(true);
+    }
+}
+void MaskManager  ::disableUI(){
+    for(QuadMask* quad : quads) {
+        quad->setEditable(false);
+    }
+}
+
+
+vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){
     
     vector<ofPolyline*> polylines;
     for(int i = 0 ;i<quads.size(); i++) {

@@ -25,6 +25,9 @@ public:
     virtual bool update();
     virtual bool draw();
     
+    void enableUI();
+    void disableUI();
+    
     virtual bool deleteQuadMask(QuadMask* mask); 
     
     virtual void serialize(ofJson&json);
