@@ -27,7 +27,7 @@ class PresetManager {
     const vector<string>& getPresetNames();
     
     // UI stuff
-    void drawComboBox(T& currentPreset);
+    void drawComboBox(T& currentPreset, int idnum = 0);
     void drawSaveButtons(T& currentPreset);
     
     map<string, T> presetMap;
@@ -148,7 +148,7 @@ const vector<string>& PresetManager<T> ::getPresetNames() {
 }
 
 template <typename T>
-void PresetManager<T> :: drawComboBox(T& settings) {
+void PresetManager<T> :: drawComboBox(T& settings, int idnum) {
     
     const vector<string>& presets = getPresetNames();
     string label =settings.getLabel();
@@ -159,12 +159,12 @@ void PresetManager<T> :: drawComboBox(T& settings) {
         label+="(edited)";
     }
   
-    string comboname = T::getTypeName() + " presets";
+    string comboname = T::getTypeName() + " presets##"+ofToString(idnum);
     if (ImGui::BeginCombo(comboname.c_str(), label.c_str())) { // The second parameter is the label previewed before opening the combo.
         
         for(const string presetName : presets) {
-            
-            if (ImGui::Selectable(presetName.c_str(), presetName == settings.getLabel())) {
+            string presetlabel =presetName+"##"+ofToString(idnum);
+            if (ImGui::Selectable(presetlabel.c_str(), presetName == settings.getLabel())) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
                 settings = *getPreset(presetName);

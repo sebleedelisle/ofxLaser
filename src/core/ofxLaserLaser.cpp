@@ -636,7 +636,7 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
 	ofTranslate(rect.getTopLeft());
 	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
     float scale = rect.getWidth()/800.0f; 
-	ofTranslate(outputOffset);
+	//ofTranslate(outputOffset);
 
 	ofPoint p;
 
@@ -1715,7 +1715,7 @@ void Laser :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
 
 void Laser :: addPoint(ofxLaser::Point p) {
 	
-	p+=(ofPoint)outputOffset;
+	
 	
 	laserPoints.push_back(p);
 	
@@ -1780,21 +1780,25 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 		
 		ofxLaser::Point &p = laserPoints[i];
     
-		
+        // fine adjustments
+        p+=(ofPoint)outputOffset;
+        
+        if(rotation!=0) {
+            p.x-=400;
+            p.y-=400;
+
+            glm::vec3 vec = glm::vec3(p.x,p.y,0);
+            float angle = ofDegToRad(rotation);
+            
+            glm::vec2 rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            p.x=rotatedVec.x+400;
+            p.y=rotatedVec.y+400;
+
+        }
+        
 		if(flipY) p.y= 800-p.y;
 		if(flipX) p.x= 800-p.x;
-		if(rotation!=0) {
-			p.x-=400;
-			p.y-=400;
-
-			glm::vec3 vec = glm::vec3(p.x,p.y,0);
-			float angle = ofDegToRad(rotation);
-			
-			glm::vec2 rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			p.x=rotatedVec.x+400;
-			p.y=rotatedVec.y+400;
-
-		}
+		
         if(mountOrientation == 1) {
             float y = 800-p.x;
             p.x = p.y;
@@ -1955,4 +1959,18 @@ bool Laser::saveSettings(){
 
 bool Laser :: getSaveStatus(){
     return (ofGetElapsedTimef()-lastSaveTime<1);
+}
+
+
+vector<OutputZone*> Laser ::getSortedOutputZones() {
+    vector<OutputZone*> sortedzones;
+    for(OutputZone* zone : outputZones) {
+        if(!zone->getIsAlternate()) sortedzones.push_back(zone);
+    }
+    sort(sortedzones.begin(), sortedzones.end(),
+        [](const OutputZone* a, const OutputZone* b) -> bool {
+        return a->getZoneIndex() < b->getZoneIndex();
+    });
+    return sortedzones;
+    
 }

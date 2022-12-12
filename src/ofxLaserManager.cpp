@@ -169,7 +169,7 @@ void Manager :: initAndLoadSettings() {
     copyParams.add(copyScannerSettings.set("Copy scanner / speed settings", false));
     copyParams.add(copyAdvancedSettings.set("Copy advanced settings", false));
     copyParams.add(copyColourSettings.set("Copy colour settings", false));
-    //copyParams.add(copyZonePositions.set("Copy output zone positions", false));
+    copyParams.add(copyZonePositions.set("Copy output zone positions", false));
 
 }
 void Manager :: paramChanged(ofAbstractParameter& e) {
@@ -1326,7 +1326,7 @@ void Manager :: drawUIPanelMainLasers() {
     
         ImGui::SameLine();
         if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
-            addZone();
+            addZone(0,0,280,110);
             lockInputZones = false;
             saveSettings();
         }
@@ -1443,7 +1443,7 @@ void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser) {
         UI::toolTip("These affect all output zones for this laser and can be used to re-align the output if moved slightly since setting them up");
         if (treevisible){
             ofParameter<float>& param = laser->rotation;
-            if(ImGui::DragFloat("Rotation", (float*)&param.get(), 0.01f,-10,10)) { //  param.getMin(), param.getMax())) {
+            if(ImGui::DragFloat("Rotation", (float*)&param.get(), 0.01f,-30,30)) { //  param.getMin(), param.getMax())) {
                 param.set(param.get());
                 
             }
@@ -1473,10 +1473,10 @@ void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser) {
         UI::addCheckbox(laser->flipY);
         //
         // TODO put this in a menu item
-        //        if(ImGui::Button("COPY LASER SETTINGS")) {
-        //            copySettingsWindowOpen = !copySettingsWindowOpen;
-        //        }
-        //
+        if(ImGui::Button("COPY LASER SETTINGS")) {
+            copySettingsWindowOpen = !copySettingsWindowOpen;
+        }
+
         
         // SCANNER SETTINGS ----------------------------------------------------------
         ImGui::Separator();
@@ -2297,6 +2297,7 @@ void Manager :: drawUIPanelLaserCopySettings() {
             for(bool& copyvalue : lasersToCopyTo) copyvalue = false;
         }
         UI::addParameter(copyParams);
+        //ImGui::Text("(Shouldn't copy orientation or colour shift)");
         
         UI::dangerColourStart();
         if(UI::Button("COPY SETTINGS")) {
@@ -2319,12 +2320,29 @@ void Manager :: drawUIPanelLaserCopySettings() {
                     ofJson advancedjson;
                     ofSerialize(advancedjson, sourceLaser.advancedParams);
                     ofDeserialize(advancedjson, targetLaser.advancedParams);
+                    targetLaser.pps = sourceLaser.pps;
                 }
                 
                 if(copyColourSettings) {
                     ofJson colourjson;
                     ofSerialize(colourjson, sourceLaser.colourSettings.params);
                     ofDeserialize(colourjson, targetLaser.colourSettings.params);
+                }
+                
+                if(copyZonePositions) {
+                    
+                    vector<OutputZone*> sourcezones = sourceLaser.getSortedOutputZones();
+                    vector<OutputZone*> targetzones = targetLaser.getSortedOutputZones();
+                    for(int i=0; (i<sourcezones.size()) && (i<targetzones.size()); i++ ){
+                        OutputZone* sourcezone = sourcezones[i];
+                        OutputZone* targetzone = targetzones[i];
+                        ofJson zonejson;
+                        sourcezone->serialize(zonejson);
+                        targetzone->deserialize(zonejson);
+                        
+                    }
+                    
+                    
                 }
                 
     //            if(copyZonePositions) {

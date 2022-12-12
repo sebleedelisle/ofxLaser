@@ -50,12 +50,10 @@ bool Visualiser3DLaserSettings :: deserialize(ofJson&json){
     //ofLogNotice("Visualiser laser json : ") << json.dump(3);
     ofDeserialize(json, params);
     
-    
     ofJson& jsonLaserObjects = json["lasers"];
     laserObjects.resize(jsonLaserObjects.size());
     for(size_t i = 0; i<jsonLaserObjects.size(); i++)  {
         laserObjects[i].deserialize(jsonLaserObjects[i]);
-        
     }
     
     return true;

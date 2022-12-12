@@ -81,6 +81,12 @@ void DragHandle::draw(bool isOver , float scale ) {
 
 
 void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, bool dontMoveWhenAltPressed ) {
+    
+    if(snapToGrid) {
+        x = round(x*(1/gridSize))*gridSize;
+        y = round(y*(1/gridSize))*gridSize;
+    }
+    
 	clickOffset = clickPos - *this;
 	isDragging = true;
 	xAxis = dragXAxis;
@@ -95,10 +101,10 @@ bool DragHandle::updateDrag(glm::vec3 pos) {
 	
 	if(isDragging) {
 		
-		if(xAxis && !xLocked){
+		if(xAxis){
 			x = startPos.x + (((pos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
 		}
-		if(yAxis && !yLocked) {
+		if(yAxis) {
 			y = startPos.y + (((pos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
 		}
 		

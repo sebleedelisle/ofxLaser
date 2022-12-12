@@ -587,6 +587,15 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
                     
                     DragHandle& currentHandle = dstHandles[i];
                     
+                    // OK MAJOR REWORK AHEAD >>>> >
+                    // 1. we are dragging one of the points.
+                    // 2. let's find the opposite one - that is the anchor
+                    // 3. drag all the points relative to the anchor and the
+                    //    current point being dragged
+                    //    So, something like,
+                    //    point.startDrag(clickpos, anchorpoint, relativetopoint, altpressed)
+                    
+                    
                     vector<DragHandle*> corners;
                     DragHandle& topLeft = dstHandles[0];
                     DragHandle& topRight = dstHandles[xDivisions+1-1];
@@ -615,7 +624,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
                     
                     corners[xhandleindex]->startDrag(mousePos, false,true, true);
                     corners[yhandleindex]->startDrag(mousePos, true,false, true);
-                    
+
                     //				bottomLeft.startDrag(mousePoint, false,true, true);
                     //				topRight.startDrag(mousePoint, true,false, true);
                     
@@ -624,7 +633,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
             
         }
         
-        // drag all the handles!
+        // if the middle is clicked then drag all the handles!
         if(!handleHit && hit) {
             
             //centreHandle.startDrag(mousePoint);
@@ -859,6 +868,10 @@ void ZoneTransform::updateHandleColours() {
        
         dstHandles[i].setColour(uiZoneHandleColour, uiZoneHandleColourOver);
     }
+    // topleft?
+    dstHandles[0].setColour(ofColor(180),ofColor(255));
+    
+    
     
 }
 

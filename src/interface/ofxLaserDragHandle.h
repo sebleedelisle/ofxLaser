@@ -54,9 +54,9 @@ namespace ofxLaser {
 	bool xAxis;
 	bool yAxis;
 	
-	bool xLocked = false;
-	bool yLocked = false;
-	
+//	bool xLocked = false;
+//	bool yLocked = false;
+//	
 	bool altKeyDisable;
 	bool isCircular = false;
     bool isFilled = true;
