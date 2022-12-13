@@ -79,44 +79,100 @@ void DragHandle::draw(bool isOver , float scale ) {
 }
 
 
+void DragHandle::startDrag(glm::vec3 clickPos){
+    dragProportional = false;
+    clickOffset = clickPos - *this;
+    altKeyDisable = false;
+    startPos = *this;
+    isDragging = true;
 
-void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, bool dontMoveWhenAltPressed ) {
+}
+void DragHandle::startDragProportional(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
     
-    if(snapToGrid) {
-        x = round(x*(1/gridSize))*gridSize;
-        y = round(y*(1/gridSize))*gridSize;
-    }
-    
-	clickOffset = clickPos - *this;
-	isDragging = true;
-	xAxis = dragXAxis;
-	yAxis = dragYAxis;
-	altKeyDisable = dontMoveWhenAltPressed;
-	startPos = *this;
- 	
-};
+//    if(refPos == *this) {
+//        startDrag(clickPos);
+//    } else {
+        
+        dragProportional = true;
+        anchorPos = _anchorPos;
+        referencePos = refPos;
+        clickOffset = clickPos - refPos;
+        altKeyDisable = dontMoveWhenAltPressed;
+        startPos = *this;
+        isDragging = true;
+  //  }
+}
+//void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, bool dontMoveWhenAltPressed ) {
+//
+//    if(snapToGrid) {
+//        x = round(x*(1/gridSize))*gridSize;
+//        y = round(y*(1/gridSize))*gridSize;
+//    }
+//
+//	clickOffset = clickPos - *this;
+//	isDragging = true;
+//	xAxis = dragXAxis;
+//	yAxis = dragYAxis;
+//	altKeyDisable = dontMoveWhenAltPressed;
+//	startPos = *this;
+//
+//};
 
-bool DragHandle::updateDrag(glm::vec3 pos) {
+bool DragHandle::updateDrag(glm::vec3 mousePos) {
 	
 	
 	if(isDragging) {
-		
-		if(xAxis){
-			x = startPos.x + (((pos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
-		}
-		if(yAxis) {
-			y = startPos.y + (((pos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
-		}
-		
-		if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
-			x = startPos.x;
-			y = startPos.y;
-		}
-		if(snapToGrid) {
-			x = round(x*(1/gridSize))*gridSize;
-			y = round(y*(1/gridSize))*gridSize;
-		}
-		
+        
+        if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
+            x = startPos.x;
+            y = startPos.y;
+        } else if(!dragProportional) {
+			x = startPos.x + (((mousePos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+			y = startPos.y + (((mousePos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+
+            if(snapToGrid) {
+                x = round(x*(1/gridSize))*gridSize;
+                y = round(y*(1/gridSize))*gridSize;
+            }
+
+        } else {
+            // DRAGGING PROPORTIONALLY
+            glm::vec3 currentReferencePos = mousePos - clickOffset;
+            if(snapToGrid) {
+                currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
+                currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;
+            }
+            
+//            if(anchorPos.y==referencePos.y) {
+//                x = currentReferencePos.x;
+//            } else
+//
+            // conditional avoids division by zero
+            if(startPos.x != anchorPos.x) {
+                x = ofMap(startPos.x, anchorPos.x, referencePos.x, anchorPos.x, currentReferencePos.x);
+            } else {
+                    
+            }
+            
+//            if(anchorPos.x==referencePos.x) {
+//                y = currentReferencePos.y;
+//            } else
+            
+            
+            // conditional avoids division by zero
+            if(startPos.y != anchorPos.y) {
+                y = ofMap(startPos.y, anchorPos.y, referencePos.y, anchorPos.y, currentReferencePos.y);
+            }
+//            if(anchorPos.y==referencePos.y) {
+//                y = currentReferencePos.y;
+//            }
+            
+            if((x==0) && (y ==0)) {
+                ofLogError("drag point corrupted ;(");
+            }
+            
+            
+        }
 		return true;
 	} else {
 		return false;

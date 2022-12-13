@@ -96,7 +96,10 @@ class ZoneTransform {
 	
     // returns in order top left, top right, bottom left, bottom right
 	void resetFromCorners();
-	vector<ofPoint> getCorners();
+    vector<ofPoint> getCorners();
+   
+	vector<DragHandle*> getCornerHandles();
+    vector<DragHandle*> getCornerHandlesClockwise();
 	bool isCorner(int index);
 	
 	virtual bool serialize(ofJson&json);

@@ -40,7 +40,7 @@ ZoneTransform::ZoneTransform() {
     transformParams.add(editSubdivisions.set("edit subdivisions", false));
     transformParams.add(xDivisionsNew.set("x divisions", 1,1,6));
     transformParams.add(yDivisionsNew.set("y divisions", 1,1,6));
-    transformParams.add(useHomography.set("perspective", true));
+    transformParams.add(useHomography.set("perspective", false));
     
     xDivisions = 1;
     yDivisions = 1;
@@ -220,11 +220,11 @@ ofPoint ZoneTransform::getCentre() {
 }
 
 void ZoneTransform :: resetToSquare() {
-    vector<ofPoint> corners = getCorners();
-    //    corners[0].x = corners[2].x = ofLerp(corners[0].x,corners[2].x, 0.5);
-    //    corners[0].y = corners[1].y = ofLerp(corners[0].y,corners[1].y, 0.5);
-    //    corners[1].x = corners[3].x = ofLerp(corners[1].x,corners[3].x,0.5);
-    //    corners[3].y = corners[2].y = ofLerp(corners[3].y,corners[2].y,0.5);
+    vector<DragHandle*> cornerhandles = getCornerHandles();
+    vector<ofPoint> corners;
+    // convert to ofPoints
+    for(DragHandle* handle : cornerhandles) corners.push_back(*handle);
+    
     corners[0].x = corners[2].x = getLeft();
     corners[0].y = corners[1].y = getTop(); //ofLerp(corners[0].y,corners[1].y, 0.5);
     corners[1].x = corners[3].x = getRight(); // ofLerp(corners[1].x,corners[3].x,0.5);
@@ -235,8 +235,8 @@ void ZoneTransform :: resetToSquare() {
 
 bool ZoneTransform :: isSquare() {
     
-    vector<ofPoint> corners = getCorners();
-    return (corners[0].x == corners[2].x) && (corners[0].y == corners[1].y) && (corners[1].x == corners[3].x) && (corners[2].y == corners[3].y);
+    vector<DragHandle*> corners = getCornerHandles();
+    return (corners[0]->x == corners[2]->x) && (corners[0]->y == corners[1]->y) && (corners[1]->x == corners[3]->x) && (corners[2]->y == corners[3]->y);
     
 }
 
@@ -389,12 +389,32 @@ void ZoneTransform::resetFromCorners() {
     
 }
 
+vector<DragHandle*> ZoneTransform::getCornerHandles(){
+    vector<DragHandle*> corners;
+    corners.push_back(&dstHandles[0]);
+    corners.push_back(&dstHandles[xDivisions]);
+    corners.push_back(&dstHandles[yDivisions*(xDivisions+1)]);
+    corners.push_back(&dstHandles[((xDivisions+1)*(yDivisions+1))-1]);
+    return corners;
+}
+
 vector<ofPoint> ZoneTransform::getCorners(){
+    
     vector<ofPoint> corners;
     corners.push_back(dstHandles[0]);
     corners.push_back(dstHandles[xDivisions]);
     corners.push_back(dstHandles[yDivisions*(xDivisions+1)]);
     corners.push_back(dstHandles[((xDivisions+1)*(yDivisions+1))-1]);
+    return corners;
+    
+}
+
+vector<DragHandle*> ZoneTransform::getCornerHandlesClockwise(){
+    vector<DragHandle*> corners;
+    corners.push_back(&dstHandles[0]);
+    corners.push_back(&dstHandles[xDivisions]);
+    corners.push_back(&dstHandles[((xDivisions+1)*(yDivisions+1))-1]);
+    corners.push_back(&dstHandles[yDivisions*(xDivisions+1)]);
     return corners;
 }
 
@@ -572,7 +592,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
     if(!locked) {
         // this section of code if we click drag anywhere in the zone
         
-        for(size_t i= 0; i<dstHandles.size(); i++) {
+        for(int i= dstHandles.size()-1; i>=0 && !handleHit; i--) {
             
             if(dstHandles[i].hitTest(mousePos, scale)) {
                 
@@ -583,7 +603,7 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
                 handleHit = true;
                 
                 
-                if(!editSubdivisions) {
+                if(!editSubdivisions && (isSquare())) {
                     
                     DragHandle& currentHandle = dstHandles[i];
                     
@@ -596,34 +616,51 @@ bool ZoneTransform :: mousePressed(ofMouseEventArgs &e){
                     //    point.startDrag(clickpos, anchorpoint, relativetopoint, altpressed)
                     
                     
-                    vector<DragHandle*> corners;
-                    DragHandle& topLeft = dstHandles[0];
-                    DragHandle& topRight = dstHandles[xDivisions+1-1];
-                    DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
-                    DragHandle& bottomRight = dstHandles.back();
                     
-                    corners.push_back(&topLeft);
-                    corners.push_back(&topRight);
-                    corners.push_back(&bottomLeft);
-                    corners.push_back(&bottomRight);
+                    vector<DragHandle*> corners = getCornerHandlesClockwise();
                     
-                    int handleIndex = 0;
-                    if(currentHandle == topLeft) handleIndex = 0;
-                    else if(currentHandle == topRight) handleIndex = 1;
-                    else if(currentHandle == bottomLeft) handleIndex = 2;
-                    else if(currentHandle == bottomRight) handleIndex =3;
+                    int currenthandleindex = 0;
+                    while(corners[currenthandleindex]!=&currentHandle) currenthandleindex++;
                     
-                    int x = ((handleIndex%2)+1)%2;
-                    int y = handleIndex/2;
+                    ofLogNotice("Start drag index : " ) << currenthandleindex;
                     
-                    int xhandleindex = x+(y*2);
+                    DragHandle& anchorHandle = *corners[(currenthandleindex+2)%4];
+                    DragHandle& dragHandle1 = *corners[(currenthandleindex+1)%4];
+                    DragHandle& dragHandle2 = *corners[(currenthandleindex+3)%4];
                     
-                    x = handleIndex%2;
-                    y = ((handleIndex/2)+1)%2;
-                    int yhandleindex = x+(y*2);
+                    dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+                    dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+
                     
-                    corners[xhandleindex]->startDrag(mousePos, false,true, true);
-                    corners[yhandleindex]->startDrag(mousePos, true,false, true);
+                    
+//                    vector<DragHandle*> corners;
+//                    DragHandle& topLeft = dstHandles[0];
+//                    DragHandle& topRight = dstHandles[xDivisions+1-1];
+//                    DragHandle& bottomLeft = dstHandles[(yDivisions+1-1)*(xDivisions+1)];
+//                    DragHandle& bottomRight = dstHandles.back();
+//
+//                    corners.push_back(&topLeft);
+//                    corners.push_back(&topRight);
+//                    corners.push_back(&bottomLeft);
+//                    corners.push_back(&bottomRight);
+//
+//                    int handleIndex = 0;
+//                    if(currentHandle == topLeft) handleIndex = 0;
+//                    else if(currentHandle == topRight) handleIndex = 1;
+//                    else if(currentHandle == bottomLeft) handleIndex = 2;
+//                    else if(currentHandle == bottomRight) handleIndex =3;
+//
+//                    int x = ((handleIndex%2)+1)%2;
+//                    int y = handleIndex/2;
+//
+//                    int xhandleindex = x+(y*2);
+//
+//                    x = handleIndex%2;
+//                    y = ((handleIndex/2)+1)%2;
+//                    int yhandleindex = x+(y*2);
+//
+//                    corners[xhandleindex]->startDrag(mousePos, false,true, true);
+//                    corners[yhandleindex]->startDrag(mousePos, true,false, true);
 
                     //				bottomLeft.startDrag(mousePoint, false,true, true);
                     //				topRight.startDrag(mousePoint, true,false, true);
@@ -682,7 +719,7 @@ void ZoneTransform :: mouseDragged(ofMouseEventArgs &e){
     //	}
     
     isDirty |= (dragCount>0);
-    if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
+    //if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
     
     //return dragCount>0;
     
@@ -731,7 +768,17 @@ bool ZoneTransform::hitTest(ofPoint mousePoint) {
         //ofLog(OF_LOG_NOTICE, ofToString((i*(xDivisions+1))));
     }
     
-    return poly.inside(mousePoint);
+    if(poly.inside(mousePoint)) {
+        return true;
+    } else {
+        ofPoint closest = poly.getClosestPoint(mousePoint);
+        if(closest.distance(mousePoint)<(2.0f/scale)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    //return poly.inside(mousePoint);
     
 }
 //
@@ -900,6 +947,17 @@ void ZoneTransform :: updateConvex() {
         if(v2.dot(v1)>0) convex = false;
         //ofLogNotice()  << i << " " << p1 << " " << p2 << " " << p3 << " " << v2.dot(v1) ;
     }
+    
+    if(convex) {
+        for(int i =0; i<3; i++) {
+            for(int j = i+1; j<4; j++) {
+                if(points[i] == points[j]) {
+                    convex = false;
+                }
+            }
+        }
+    }
+        
     
     isConvex =  convex;
     

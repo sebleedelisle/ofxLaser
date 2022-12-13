@@ -217,19 +217,42 @@ bool QuadGui::checkDirty() {
 
 void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
 	
-	handles[handleIndex].startDrag(clickPos);
+    int i = handleIndex;
+    DragHandle& currentHandle = handles[i];
     
-    int x = ((handleIndex%2)+1)%2;
-    int y = handleIndex/2;
+    // OK MAJOR REWORK AHEAD >>>> >
+    // 1. we are dragging one of the points.
+    // 2. let's find the opposite one - that is the anchor
+    // 3. drag all the points relative to the anchor and the
+    //    current point being dragged
+    //    So, something like,
+    //    point.startDrag(clickpos, anchorpoint, relativetopoint, altpressed)
     
-    int xhandleindex = x+(y*2);
     
-    x = handleIndex%2;
-    y = ((handleIndex/2)+1)%2;
-    int yhandleindex = x+(y*2);
+    DragHandle& anchorHandle = handles[(i+2)%4];
+    DragHandle& dragHandle1 = handles[(i+1)%4];
+    DragHandle& dragHandle2 = handles[(i+3)%4];
     
-    handles[xhandleindex].startDrag(clickPos, false, true, !lockPerpendicular);
-    handles[yhandleindex].startDrag(clickPos, true, false, !lockPerpendicular);
+    dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+    dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+
+    
+//	handles[handleIndex].startDrag(clickPos);
+//
+//    int x = ((handleIndex%2)+1)%2;
+//    int y = handleIndex/2;
+//
+//    int xhandleindex = x+(y*2);
+//
+//    x = handleIndex%2;
+//    y = ((handleIndex/2)+1)%2;
+//    int yhandleindex = x+(y*2);
+//
+//    handles[xhandleindex].startDrag(clickPos, false, true, !lockPerpendicular);
+//    handles[yhandleindex].startDrag(clickPos, true, false, !lockPerpendicular);
+//
+//
+//
     
 	
 }
