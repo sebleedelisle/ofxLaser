@@ -9,84 +9,78 @@
 using namespace ofxLaser;
 
 OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
+    
     // init params?
     soloed = false;
-    ZoneTransform :: init(zone.rect);
+    ofLogNotice("OutputZone() rect : ") << zone.getRect();
+    ofRectangle rect = zone.getRect();
+    zoneTransformQuad.init(rect);
+    zoneTransformLine.init(rect);
     
-    // TODO make params object for serialisation / deserialisation?
     zoneParams.setName("laserZone"+ofToString(zone.getIndex()));
     zoneParams.add(muted.set("mute", false));
     zoneParams.add(soloed.set("solo", false));
-    
-    zoneMaskGroup.setName(getLabel());
-    zoneMaskGroup.add(bottomEdge.set("Bottom", 0,0,1));
-    zoneMaskGroup.add(topEdge.set("Top", 0,0,1));
-    zoneMaskGroup.add(leftEdge.set("Left", 0,0,1));
-    zoneMaskGroup.add(rightEdge.set("Right", 0,0,1));
-    ofAddListener(zoneMaskGroup.parameterChangedE(), this, &OutputZone::zoneMaskChanged);
-    zoneParams.add(zoneMaskGroup);
+    zoneParams.add(transformType.set("Transform type", 0,0,1));
+
     isDirty = true;
     enabled = true;
     visible = true;
     ofAddListener(zoneParams.parameterChangedE(), this, &OutputZone::paramChanged);
-   
+    isAlternate = false;
+    
 }
 OutputZone :: ~OutputZone() {
     // Transform object should be automatically deleted i think
     // make sure destructor cleans up ok
-    ofRemoveListener(zoneMaskGroup.parameterChangedE(), this, &OutputZone::zoneMaskChanged);
 }
 
 bool OutputZone :: update() {
     
     bool wasDirty = isDirty;
-    wasDirty = ZoneTransform :: update() | wasDirty;
+    wasDirty = getZoneTransform().update() | wasDirty;
+   // if(isDirty) {
+        // bit hacky, need to ensure all transforms are selected / deselected together
+        zoneTransformQuad.setSelected(getZoneTransform().getSelected());
+        zoneTransformLine.setSelected(getZoneTransform().getSelected());
+   // }
+    
+    zoneTransformQuad.setSrc(zone.getRect());
+    zoneTransformLine.setSrc(zone.getRect());
+    
+    zoneTransformQuad.setVisible(transformType==0);
+    zoneTransformLine.setVisible(transformType==1);
+
     isDirty = false;
     
     return wasDirty;
+}
+
+bool OutputZone :: setGrid(bool snapstate, int gridsize) {
+    if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
+        snapToGrid = snapstate;
+        gridSize = gridsize;
+        
+        zoneTransformLine.setGrid(snapToGrid, gridSize);
+        zoneTransformQuad.setGrid(snapToGrid, gridSize);
+        return true; 
+    } else {
+        return false;
+    }
 }
 
 void OutputZone :: draw() {
      
     if(!visible) return ;
     ofPushStyle();
-    //ofEnableAlphaBlending();
+    ofEnableAlphaBlending();
     string label =ofToString(zone.getIndex()+1);
-    if(isAlternate) label += "ALT";
-    ZoneTransform::draw(label);
+    if(getIsAlternate()) label += "ALT";
+    getZoneTransform().draw(label);
 
-   
-    ofPushMatrix();
-    
-    ofTranslate(offset);
-    ofScale(scale, scale);
-     
-    // go through and draw blue rectangles around the warper
-    ofPoint p;
-   
-   
-    ofRectangle& mask = zoneMask;
-    
-    
-//
-//    ofFill();
-//    ofSetColor(0,0,255,30);
-//
-//    ofBeginShape();
-//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopLeft());
-//    ofVertex(p);
-//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getTopRight());
-//    ofVertex(p);
-//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomRight());
-//    ofVertex(p);
-//    p = zoneTransform.getWarpedPoint((ofPoint)mask.getBottomLeft());
-//    ofVertex(p);
-//    ofEndShape(true);
-    
-    //ofDisableAlphaBlending();
+    ofDisableAlphaBlending();
     
     ofPopStyle();
-    ofPopMatrix();
+
 
 }
 
@@ -95,53 +89,172 @@ string OutputZone :: getLabel() {
 }
 void OutputZone :: setScale(float _scale) {
     scale = _scale;
-    //zoneTransform.scale = scale;
+    
+    getZoneTransform().setScale(scale);
+    //getZoneTransform().scale = scale;
 }
 void OutputZone :: setOffset(ofPoint _offset) {
     offset = _offset;
-    //zoneTransform.offset = offset;
+    getZoneTransform().setOffset(offset);
 }
-void OutputZone :: zoneMaskChanged(ofAbstractParameter& e) {
-    updateZoneMask();
-}
-void OutputZone :: updateZoneMask() {
-    //zoneTransform.updateZoneMask();
-    zoneMask.setX(zone.rect.getLeft()+(leftEdge*zone.rect.getWidth()));
-    zoneMask.setY(zone.rect.getTop()+(topEdge*zone.rect.getHeight()));
-    zoneMask.setWidth(zone.rect.getWidth()*(1-leftEdge-rightEdge));
-    zoneMask.setHeight(zone.rect.getHeight()*(1-topEdge-bottomEdge));
-    isDirty = true; 
-}
+
 
 void OutputZone :: paramChanged(ofAbstractParameter& e) {
     isDirty=true; 
 }
+
+
+bool OutputZone::getEnabled() {
+    return enabled;
+}
+void OutputZone::setEnabled(bool value) {
+    enabled = value;
+    getZoneTransform().setEditable(enabled);
+}
+void OutputZone::setVisible(bool value) {
+    visible = value;
+    getZoneTransform().setVisible(visible);
+}
+bool OutputZone::getVisible() {
+    return visible;
+}
+
+const int OutputZone::getZoneIndex() const {
+    return zone.getIndex();
+};
+
+
+bool OutputZone::getSelected() {
+    return getZoneTransform().getSelected();
+    
+};
+
+void OutputZone::setSelected(bool v) {
+
+   getZoneTransform().setSelected(v);
+    
+};
+
+
+ofxLaser::Point OutputZone::getWarpedPoint(const ofxLaser::Point& p){
+    return getZoneTransform().getWarpedPoint(p);
+    
+}
+//ofxLaser::Point OutputZone::getUnWarpedPoint(const ofxLaser::Point& p){
+//    return getZoneTransform().getUnWarpedPoint(p);
+//
+//}
+ofPoint OutputZone::getWarpedPoint(const ofPoint& p){
+    return getZoneTransform().getWarpedPoint(p);
+    
+}
+ofPoint OutputZone::getUnWarpedPoint(const ofPoint& p){
+    return getZoneTransform().getUnWarpedPoint(p);
+    
+}
+
+bool OutputZone::getIsAlternate() {
+    return isAlternate;
+}
+void OutputZone::setIsAlternate(bool v){
+    isAlternate = v;
+    if(isAlternate) {
+        zoneTransformLine.setHue(100);
+        zoneTransformQuad.setHue(100);
+    }
+}
+
+void OutputZone ::setSourceRect(ofRectangle & rect) {
+    
+    zoneTransformQuad.setSrc(rect);
+    zoneTransformLine.setSrc(rect);
+
+}
+
+
+void OutputZone :: init(ofRectangle sourceRectangle) {
+    zoneTransformQuad.init(sourceRectangle);
+    zoneTransformLine.init(sourceRectangle);
+}
+
+ofRectangle OutputZone :: getBounds() {
+    
+    vector<glm::vec3> perimeterpoints;
+    ofRectangle bounds;
+    getZoneTransform().getPerimeterPoints(perimeterpoints);
+    bounds.setPosition(*perimeterpoints.begin());
+    
+    for(glm::vec3& p:perimeterpoints) {
+        bounds.growToInclude(p);
+    }
+    
+    return bounds;
+    
+}
+
+void OutputZone :: drawPerimeterAsShape() {
+    
+    vector<glm::vec3> perimeterpoints;
+    getZoneTransform().getPerimeterPoints(perimeterpoints);
+    
+    ofBeginShape();
+    for(glm::vec3& p:perimeterpoints) {
+        ofVertex(p);
+    }
+    ofEndShape();
+
+}
+
+
+
+
 bool OutputZone :: serialize(ofJson& json){
    
-   // ofJson jsonGroup;
-    
-    // params contain muted, soloed and the mask edge group
+    // params contain muted, soloed
     ofJson paramsJson;
     ofSerialize(paramsJson, zoneParams);
     json["zoneparams"] = paramsJson;
-    ofJson zoneTransformJson;
-    ZoneTransform :: serialize(zoneTransformJson);
-    json["zonetransform"] = zoneTransformJson;
-    // zoneTransform
-    //json["laserzone"+ofToString(zone.index))] = jsonGroup);
+    ofJson zoneTransformQuadJson;
+    zoneTransformQuad.serialize(zoneTransformQuadJson);
+    json["zonetransformquad"] = zoneTransformQuadJson;
+
+    ofJson zoneTransformLineJson;
+    zoneTransformLine.serialize(zoneTransformLineJson);
+    json["zonetransformline"] = zoneTransformLineJson;
+
     return true;
 }
 
 
 bool OutputZone :: deserialize(ofJson& json){
  
-    // TODO Error check! Try / catch
-    ofJson paramsJson = json["zoneparams"];
-    ofDeserialize(paramsJson, zoneParams);
-    ofJson zoneTransformJson = json["zonetransform"];
-    ZoneTransform :: deserialize(zoneTransformJson);
-    updateZoneMask();
+    if(json.contains("zoneparams")) {
+        ofJson paramsJson = json["zoneparams"];
+        ofDeserialize(paramsJson, zoneParams);
+    }
+    if(json.contains("zonetransformquad")) {
+        ofJson zoneTransformQuadJson = json["zonetransformquad"];
+        zoneTransformQuad.deserialize(zoneTransformQuadJson);
+    }
+    if(json.contains("zonetransformline")) {
+        ofJson zoneTransformLineJson = json["zonetransformline"];
+        zoneTransformLine.deserialize(zoneTransformLineJson);
+    }
     
+    // deprecated, can delete eventually
+    if(json.contains("zonetransform")) {
+        ofJson zoneTransformJson = json["zonetransform"];
+        zoneTransformQuad.deserialize(zoneTransformJson);
+    }
+          
     return true; 
     
+}
+
+ZoneTransformBase& OutputZone :: getZoneTransform(){
+    if(transformType==1) {
+        return zoneTransformLine;
+    } else {
+        return zoneTransformQuad;
+    }
 }

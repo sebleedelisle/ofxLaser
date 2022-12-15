@@ -214,7 +214,7 @@ void Laser:: colourShiftChanged(float& e){
 }
 
 
-void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool isAlternate) {
+void Laser::addZone(InputZone* inputzone, bool isAlternate) {
 
 	if(hasZone(inputzone) && !isAlternate) {
 		ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
@@ -229,10 +229,7 @@ void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool 
     }
     
     OutputZone* outputzone = new OutputZone(*inputzone);
-    if(isAlternate) {
-        outputzone->setHue(100);
-        outputzone->setIsAlternate(true);
-    }
+
     outputzone->setGrid(snapToGrid, gridSize);
     outputZones.push_back(outputzone);
     
@@ -248,10 +245,10 @@ void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool 
         outputzone->deserialize(laserZoneJson);
     } else {
         // initialise zoneTransform
-        outputzone->init(inputzone->rect);
-
-        outputzone->zoneMask = inputzone->rect;
+        outputzone->init(inputzone->getRect());
+        //outputzone->zoneMask = inputzone->rect;
     }
+    outputzone->setIsAlternate(isAlternate);
     // sort the zones... oh a fancy lambda check me out
     std::sort(outputZones.begin(), outputZones.end(), [](const OutputZone* a, const OutputZone* b) -> bool {
         return (a->getZoneIndex()<b->getZoneIndex());
@@ -261,8 +258,8 @@ void Laser::addZone(InputZone* inputzone, float srcwidth, float srcheight, bool 
 }
 
 
-void Laser::addAltZone(InputZone* zone, float srcwidth, float srcheight) {
-    addZone(zone, srcwidth, srcheight, true);
+void Laser::addAltZone(InputZone* zone) {
+    addZone(zone, true);
      
 }
 
@@ -271,7 +268,7 @@ void Laser::addAltZone(InputZone* zone, float srcwidth, float srcheight) {
 bool Laser :: hasZone(InputZone* zone){
     
     for(OutputZone* laserZone : outputZones) {
-        if(zone == &laserZone->zone) return true;
+        if((!laserZone->getIsAlternate()) && (zone == &laserZone->zone)) return true;
     }
     return false;
 }
@@ -280,6 +277,13 @@ bool Laser :: hasAltZone(InputZone* zone){
     
     for(OutputZone* laserZone : outputZones) {
         if((laserZone->getIsAlternate()) && (zone == &laserZone->zone)) return true;
+    }
+    return false;
+}
+bool Laser :: hasAltZone(int zoneIndex){
+    
+    for(OutputZone* laserZone : outputZones) {
+        if((laserZone->getIsAlternate()) && (zoneIndex == laserZone->getZoneIndex())) return true;
     }
     return false;
 }
@@ -342,14 +346,19 @@ OutputZone* Laser::getLaserAltZoneForZone(InputZone* zone) {
     }
     return nullptr;
 }
-
-void Laser::updateZoneMasks() {
-	
+OutputZone* Laser::getLaserAltZoneForZone(int zoneIndex){
     for(OutputZone* laserZone : outputZones) {
-        laserZone->updateZoneMask();
+        if((laserZone->getIsAlternate()) && (laserZone->getZoneIndex() == zoneIndex)) return laserZone;
     }
-   
+    return nullptr;
 }
+//void Laser::updateZoneMasks() {
+//
+//    for(OutputZone* laserZone : outputZones) {
+//        laserZone->updateZoneMask();
+//    }
+//
+//}
 
 vector<OutputZone*> Laser::getActiveZones(){
     bool soloActive = areAnyZonesSoloed();
@@ -524,24 +533,16 @@ void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
 }
 
 void Laser::drawTransformAndPath(ofRectangle rect) {
-    ofRectangle bounds;
+    ofRectangle bounds; // used for the scale widget
     
     vector<OutputZone*> activeZones = getActiveZones();
     
     
-    vector<glm::vec3> perimeterpoints;
-    bool firsttime = true;
+    
     for(OutputZone* zone : activeZones) {
-        //ZoneTransform& zonetransform = zone->zoneTransform;
-       
-        zone->getPerimeterPoints(perimeterpoints);
-        if(firsttime) {
-            bounds.setPosition(*perimeterpoints.begin());
-            firsttime = false;
-        }
-        for(glm::vec3& p:perimeterpoints) {
-            bounds.growToInclude(p);
-        }
+        
+        bounds.growToInclude(zone->getBounds());
+        
         
         
     }
@@ -570,16 +571,9 @@ void Laser::drawTransformAndPath(ofRectangle rect) {
    
     
     for(OutputZone* zone : activeZones) {
-        
-        zone->getPerimeterPoints(perimeterpoints);
-        
-        ofBeginShape();
-        for(glm::vec3& p:perimeterpoints) {
-            ofVertex(p);
-        }
-        ofEndShape();
-        
+        zone->drawPerimeterAsShape();
     }
+    
     ofPopStyle();
     
     ofPopMatrix();
@@ -763,12 +757,12 @@ void Laser::update(bool updateZones) {
        
         for(OutputZone* laserZone : outputZones) {
             //ZoneTransform& warp = laserZone->zoneTransform;
-            laserZone->setSrc(laserZone->zone.rect);
-            laserZone->updateHomography();
+            //laserZone->init(laserZone->zone.rect);
+            //laserZone->updateHomography();
             
         }
         
-        updateZoneMasks();
+        //updateZoneMasks();
     }
     
     // hack to ensure that only one zone is selected
@@ -825,7 +819,7 @@ void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, InputZone* zone
         return;
         
     }
-    ofRectangle& maskRectangle = laserZone->zoneMask;
+    ofRectangle maskRectangle = laserZone->zone.getRect();
     //ZoneTransform& warp = laserZone->zoneTransform;
     bool offScreen = true;
     
@@ -1296,7 +1290,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
         
 		InputZone& zone = laserZone->zone;
         //ZoneTransform& warp = laserZone->zoneTransform;
-		ofRectangle& maskRectangle = laserZone->zoneMask;
+		ofRectangle maskRectangle = laserZone->zone.getRect();
         
         
         // doesn't make a copy, just a pointer to the original shapes in the zone
@@ -1498,7 +1492,7 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
    
 	InputZone& zone = laserZone.zone;
 
-	ofRectangle& maskRectangle = laserZone.zoneMask;
+	ofRectangle maskRectangle = laserZone.zone.getRect();
 
 	if(testPattern==1) {
 
@@ -1527,7 +1521,7 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 
 	} else if(testPattern==2) {
 
-		ofRectangle& rect = zone.rect;
+		ofRectangle rect = zone.getRect();
 
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 		for(float y = 0; y<=1.1; y+=0.333333333) {
@@ -1544,7 +1538,7 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 
 	}else if(testPattern==3) {
 
-		ofRectangle& rect = zone.rect;
+		ofRectangle rect = zone.getRect();
 
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 
@@ -1561,7 +1555,7 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 
 	} else if(testPattern==4) {
 
-		ofRectangle& rect = zone.rect;
+		ofRectangle rect = zone.getRect();
 
 		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
 
@@ -1893,7 +1887,7 @@ bool Laser::loadSettings(vector<InputZone*>& zones){
         if(zones.size()>zoneNum) {
             OutputZone* laserZone = new OutputZone(*zones[zoneNum]);
             laserZone->setIsAlternate(true);
-            laserZone->setHue(100);
+            
             outputZones.push_back(laserZone);
             ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json");
 
@@ -1966,6 +1960,19 @@ vector<OutputZone*> Laser ::getSortedOutputZones() {
     vector<OutputZone*> sortedzones;
     for(OutputZone* zone : outputZones) {
         if(!zone->getIsAlternate()) sortedzones.push_back(zone);
+    }
+    sort(sortedzones.begin(), sortedzones.end(),
+        [](const OutputZone* a, const OutputZone* b) -> bool {
+        return a->getZoneIndex() < b->getZoneIndex();
+    });
+    return sortedzones;
+    
+}
+
+vector<OutputZone*> Laser ::getSortedOutputAltZones() {
+    vector<OutputZone*> sortedzones;
+    for(OutputZone* zone : outputZones) {
+        if(zone->getIsAlternate()) sortedzones.push_back(zone);
     }
     sort(sortedzones.begin(), sortedzones.end(),
         [](const OutputZone* a, const OutputZone* b) -> bool {

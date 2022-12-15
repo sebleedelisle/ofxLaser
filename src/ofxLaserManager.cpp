@@ -38,7 +38,7 @@ Manager :: Manager() {
 
         if(zones.size()==0) createDefaultZone();
         for(Laser* laser : lasers) {
-            laser->addZone(zones[0],800,800);
+            laser->addZone(zones[0]);
             laser->setGrid(zoneGridSnap, zoneGridSize);
         }
         //showScannerSettingsWindow = true;
@@ -1004,7 +1004,7 @@ void Manager::drawLaserGui() {
 
                     if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
                         if(checked) {
-                            laser->addZone(zone, canvasWidth, canvasHeight);
+                            laser->addZone(zone);
                         } else {
                             laser->removeZone(zone);
                         }
@@ -1017,7 +1017,7 @@ void Manager::drawLaserGui() {
                     string label = zone->displayLabel + "##alt";
                     if(ImGui::Checkbox(label.c_str(), &checked)) {
                         if(checked) {
-                            laser->addAltZone(zone, canvasWidth, canvasHeight);
+                            laser->addAltZone(zone);
                         } else {
                             laser->removeAltZone(zone);
                         }
@@ -1140,42 +1140,87 @@ void Manager::drawLaserGui() {
             // Laser Output Masks
             
             for(OutputZone* laserZone : laser->outputZones) {
-                
+               
                 if(laserZone->getSelected()) {
-                    
-                    
-                    //ImVec2 pos(laserZone->zoneTransform.getRight(),laserZone->zoneTransform.getCentre().y);
-                    //ImVec2 size(200,0);
-                    //UI::startWindow(laserZone->getLabel()+"##"+laser->getLabel(),pos, size, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-                    
+
                     ImGui::Separator();
                     ImGui::PushFont(UI::largeFont);
                     ImGui::Text("Zone %d", laserZone->getZoneIndex()+1);
                     ImGui::PopFont();
                     
-                    if(laserZone->isSquare()) {
-                        UI::startGhosted();
+                    bool lineZone = laserZone->transformType == 1;
+                    if(ImGui::Checkbox("Use line zone", &lineZone) )  {
+                        laserZone->transformType = lineZone?1 : 0;
                     }
-                    if(UI::Button("Reset to square")) {
-                        laserZone->resetToSquare();
-                        laserZone->isDirty = true;
+
+                    ZoneTransformQuad* ztq = dynamic_cast<ZoneTransformQuad*>(&laserZone->getZoneTransform());
+                    if(ztq!=nullptr) {
+                        if(ztq->isSquare()) {
+                            UI::startGhosted();
+                        }
+                        if(UI::Button("Reset to square")) {
+                            ztq->resetToSquare();
+                           
+                        }
+                        UI::stopGhosted();
+                        UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+                        ImGui::SameLine();
+                        if(UI::Button(ICON_FK_SQUARE_O))  {
+                            ztq->setDst(ofRectangle(200,240,400,200));
+                        }
+                        UI::toolTip("Reset zone to default");
+                        
+                        UI::addParameterGroup(ztq->transformParams, false);
                     }
-                    UI::stopGhosted();
-                    UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                    ImGui::SameLine();
-                    if(UI::Button(ICON_FK_SQUARE_O))  {
-                        laserZone->setDst(ofRectangle(200,240,400,200));
-                    }
-                    UI::toolTip("Reset zone to default");
                     
-                    UI::addParameterGroup(laserZone->transformParams, false);
-                    ImGui::Text("Edge masks");
-                    UI::addFloatSlider(laserZone->bottomEdge);
-                    UI::addFloatSlider(laserZone->topEdge);
-                    UI::addFloatSlider(laserZone->leftEdge);
-                    UI::addFloatSlider(laserZone->rightEdge);
+                    ZoneTransformLine* ztl = dynamic_cast<ZoneTransformLine*>(&laserZone->getZoneTransform());
+                    if(ztl!=nullptr) {
+                        //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                        
+                        UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+                        
+                        vector<BezierNode>& nodes = ztl->getNodes();
+                        for(int i = 0; i<nodes.size(); i++) {
+                            ImGui::PushID(i);
+                            BezierNode& node = nodes[i];
+                            int mode = node.mode;
+                            ImGui::Text("%d", i+1);
+                            ImGui::SameLine();
+                            //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
+                            ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
+                            ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
+                            ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
+                            
+                            if(mode!=node.mode) {
+                                node.mode = mode;
+                                ztl->setDirty(true);
+                            }
+                            if(nodes.size()>2) {
+                                ImGui::SameLine();
+                                
+                                string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+                                if (UI::DangerButton(label, false)) {
+                                    ztl->deleteNode(i);
+                                    
+                                }
+                            }
+                            
+                            ImGui::PopID();
+                            
+                            
+                        }
+                        label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
+                        if (UI::Button(label, false)) {
+                            ztl->addNode();
+                            
+                        }
+                        
+                        
+                    }
+
                    
                 }
+                 
             }
             
         }
@@ -2334,14 +2379,49 @@ void Manager :: drawUIPanelLaserCopySettings() {
                     vector<OutputZone*> sourcezones = sourceLaser.getSortedOutputZones();
                     vector<OutputZone*> targetzones = targetLaser.getSortedOutputZones();
                     for(int i=0; (i<sourcezones.size()) && (i<targetzones.size()); i++ ){
+                        
                         OutputZone* sourcezone = sourcezones[i];
                         OutputZone* targetzone = targetzones[i];
+                        int sourcezoneindex = sourcezone->getZoneIndex();
+                        int targetzoneindex = targetzone->getZoneIndex();
+                        
                         ofJson zonejson;
                         sourcezone->serialize(zonejson);
                         targetzone->deserialize(zonejson);
                         
+                        
+                        if(sourceLaser.hasAltZone(sourcezoneindex)) {
+                            
+                            
+                            if(!targetLaser.hasAltZone(targetzoneindex)) {
+                                targetLaser.addAltZone(getZone(targetzoneindex));
+                            }
+                            OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZone(sourcezone->getZoneIndex());
+                            OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZone(targetzone->getZoneIndex());
+                            ofJson zonejson;
+                            sourceAltZone->serialize(zonejson);
+                            targetAltZone->deserialize(zonejson);
+                            
+                            
+                        } else {
+                            // remove alt zone from target
+                            targetLaser.removeAltZone(getZone(targetzoneindex));
+                        }
+                        
+                        
+                        
                     }
-                    
+//
+//                    sourcezones = sourceLaser.getSortedOutputAltZones();
+//                    targetzones = targetLaser.getSortedOutputAltZones();
+//                    for(int i=0; (i<sourcezones.size()) && (i<targetzones.size()); i++ ){
+//                        OutputZone* sourcezone = sourcezones[i];
+//                        OutputZone* targetzone = targetzones[i];
+//                        ofJson zonejson;
+//                        sourcezone->serialize(zonejson);
+//                        targetzone->deserialize(zonejson);
+//
+//                    }
                     
                 }
                 

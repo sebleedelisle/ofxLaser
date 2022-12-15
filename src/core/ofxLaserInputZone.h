@@ -32,9 +32,14 @@ namespace ofxLaser {
         // the zone object stores shapes that intersect with it
 		bool addShape(Shape* s);
 		
+        
+        virtual bool deserialize(ofJson&jsonGroup) override;
+        
 		ofPoint& addSortedShapesToVector(vector<Shape*>& shapes, ofPoint& currentPosition);
-	
-		ofRectangle rect;
+        ofRectangle getRect() {
+            return rect;
+        } 
+		
         string zoneLabel;
 		deque<Shape*> shapes;
 
@@ -42,7 +47,7 @@ namespace ofxLaser {
 	
         protected : 
 		int index = 0;
-		
+        ofRectangle rect;
 		
 	};
 }

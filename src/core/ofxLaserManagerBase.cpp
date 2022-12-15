@@ -208,7 +208,7 @@ void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
         return;
     }
     
-    lasers[lasernum]->addZone(zones[zonenum], canvasWidth, canvasHeight);
+    lasers[lasernum]->addZone(zones[zonenum]);
 }
 
 int ManagerBase::createDefaultZone() {

@@ -79,45 +79,50 @@ void DragHandle::draw(bool isOver , float scale ) {
 }
 
 
-void DragHandle::startDrag(glm::vec3 clickPos){
+void DragHandle::startDrag(glm::vec3 clickPos, DragHandle* relativeToHandle){
     dragProportional = false;
+    dragSymmetrical = false;
+    
+    if((relativeToHandle!=nullptr) && (relativeToHandle!=this)) {
+        dragRelativeToHandle = relativeToHandle;
+        dragRelativeOffset = *this-*relativeToHandle;
+    } else {
+        dragRelativeToHandle = nullptr;
+    }
     clickOffset = clickPos - *this;
     altKeyDisable = false;
     startPos = *this;
     isDragging = true;
 
 }
-void DragHandle::startDragProportional(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
-    
-//    if(refPos == *this) {
-//        startDrag(clickPos);
-//    } else {
-        
-        dragProportional = true;
-        anchorPos = _anchorPos;
-        referencePos = refPos;
-        clickOffset = clickPos - refPos;
-        altKeyDisable = dontMoveWhenAltPressed;
-        startPos = *this;
-        isDragging = true;
-  //  }
-}
-//void DragHandle::startDrag(glm::vec3 clickPos, bool dragXAxis, bool dragYAxis, bool dontMoveWhenAltPressed ) {
-//
-//    if(snapToGrid) {
-//        x = round(x*(1/gridSize))*gridSize;
-//        y = round(y*(1/gridSize))*gridSize;
-//    }
-//
-//	clickOffset = clickPos - *this;
-//	isDragging = true;
-//	xAxis = dragXAxis;
-//	yAxis = dragYAxis;
-//	altKeyDisable = dontMoveWhenAltPressed;
-//	startPos = *this;
-//
-//};
 
+void DragHandle::startDragProportional(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
+
+        
+    dragProportional = true;
+    dragSymmetrical = false;
+    anchorPos = _anchorPos;
+    referencePos = refPos;
+    clickOffset = clickPos - refPos;
+    altKeyDisable = dontMoveWhenAltPressed;
+    startPos = *this;
+    isDragging = true;
+
+}
+
+void DragHandle::startDragSymmetrical(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
+
+        
+    dragSymmetrical = true;
+    dragProportional = false;
+    anchorPos = _anchorPos;
+    referencePos = refPos;
+    clickOffset = clickPos - refPos;
+    altKeyDisable = dontMoveWhenAltPressed;
+    startPos = *this;
+    isDragging = true;
+
+}
 bool DragHandle::updateDrag(glm::vec3 mousePos) {
 	
 	
@@ -126,51 +131,56 @@ bool DragHandle::updateDrag(glm::vec3 mousePos) {
         if(altKeyDisable && ofGetKeyPressed(OF_KEY_ALT)) {
             x = startPos.x;
             y = startPos.y;
-        } else if(!dragProportional) {
-			x = startPos.x + (((mousePos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
-			y = startPos.y + (((mousePos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
-
-            if(snapToGrid) {
-                x = round(x*(1/gridSize))*gridSize;
-                y = round(y*(1/gridSize))*gridSize;
-            }
-
-        } else {
+        } else if(dragProportional) {
+			
+            
             // DRAGGING PROPORTIONALLY
             glm::vec3 currentReferencePos = mousePos - clickOffset;
             if(snapToGrid) {
                 currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
                 currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;
             }
-            
-//            if(anchorPos.y==referencePos.y) {
-//                x = currentReferencePos.x;
-//            } else
-//
+
             // conditional avoids division by zero
             if(startPos.x != anchorPos.x) {
                 x = ofMap(startPos.x, anchorPos.x, referencePos.x, anchorPos.x, currentReferencePos.x);
-            } else {
-                    
             }
-            
-//            if(anchorPos.x==referencePos.x) {
-//                y = currentReferencePos.y;
-//            } else
-            
-            
             // conditional avoids division by zero
             if(startPos.y != anchorPos.y) {
                 y = ofMap(startPos.y, anchorPos.y, referencePos.y, anchorPos.y, currentReferencePos.y);
             }
-//            if(anchorPos.y==referencePos.y) {
-//                y = currentReferencePos.y;
-//            }
+
             
             if((x==0) && (y ==0)) {
                 ofLogError("drag point corrupted ;(");
             }
+        } else if(dragSymmetrical) {
             
+            // DRAGGING SYMETRICALLY
+            glm::vec3 currentReferencePos = mousePos - clickOffset;
+            if(snapToGrid) {
+                currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
+                currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;
+            }
+
+            glm::vec3 v = currentReferencePos - anchorPos;
+            this->set(anchorPos-v);
+            
+        } else {
+            if(dragRelativeToHandle!=nullptr) {
+                ofPoint pos = *dragRelativeToHandle+dragRelativeOffset;
+                x = pos.x;
+                y = pos.y;
+                
+            } else {
+                x = startPos.x + (((mousePos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+                y = startPos.y + (((mousePos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+
+                if(snapToGrid) {
+                    x = round(x*(1/gridSize))*gridSize;
+                    y = round(y*(1/gridSize))*gridSize;
+                }
+            }
             
         }
 		return true;

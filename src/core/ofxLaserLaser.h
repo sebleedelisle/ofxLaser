@@ -76,7 +76,7 @@ class Laser {
     
     // Zones
     
-    void addZone(InputZone* zone, float srcwidth, float srcheight, bool isAlternate = false);
+    void addZone(InputZone* zone,  bool isAlternate = false);
     bool hasZone(InputZone* zone);
     bool removeZone(InputZone* zone);
     bool muteZone(int zonenum);
@@ -86,15 +86,19 @@ class Laser {
     
     // gets output zones (but not alt zones) in order
     vector<OutputZone*> getSortedOutputZones();
-  
+    vector<OutputZone*> getSortedOutputAltZones();
+   
     // Alternative zones
-    void addAltZone(InputZone* zone, float srcwidth, float srcheight);
+    void addAltZone(InputZone* zone);
     bool hasAltZone(InputZone* zone);
+    bool hasAltZone(int zoneIndex);
+
     bool removeAltZone(InputZone* zone);
     bool hasAnyAltZones();
     
     OutputZone* getLaserZoneForZone(InputZone* zone);
     OutputZone* getLaserAltZoneForZone(InputZone* zone);
+    OutputZone* getLaserAltZoneForZone(int zoneIndex);
 
     vector<OutputZone*>getActiveZones();
     bool areAnyZonesSoloed();
@@ -128,7 +132,7 @@ class Laser {
     
     RenderProfile& getRenderProfile(string profilelabel);
     
-    void updateZoneMasks();
+    //void updateZoneMasks();
     
     void ppsChanged(int& e);
     void colourShiftChanged(float& e);

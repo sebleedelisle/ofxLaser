@@ -39,8 +39,9 @@ namespace ofxLaser {
             gridSize = gridsize;
         }
         
-        void startDrag(glm::vec3 clickPos);
+        void startDrag(glm::vec3 clickPos, DragHandle* relativeToHandle = nullptr);
         void startDragProportional(glm::vec3 clickPos, glm::vec3 anchorPos, glm::vec3 dragPoint,  bool dontMoveWhenAltPressed);
+        void startDragSymmetrical(glm::vec3 clickPos, glm::vec3 anchorPos, glm::vec3 dragPoint,  bool dontMoveWhenAltPressed);
     //    void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 
         bool updateDrag(glm::vec3 pos);
@@ -75,6 +76,9 @@ namespace ofxLaser {
         bool snapToGrid = false;
         float gridSize = 1;
         bool dragProportional = false;
+        bool dragSymmetrical = false;
+        DragHandle* dragRelativeToHandle = nullptr;
+        ofPoint dragRelativeOffset; 
         glm::vec3 anchorPos, referencePos; 
 
     };

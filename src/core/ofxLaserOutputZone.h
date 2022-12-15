@@ -6,73 +6,85 @@
 //
 #pragma once
 #include "ofMain.h"
-#include "ofxLaserZoneTransform.h"
+#include "ofxLaserZoneTransformQuad.h"
 #include "ofxLaserInputZone.h"
+#include "ofxLaserZoneTransformLine.h"
 
 namespace ofxLaser {
 
-class OutputZone : public ZoneTransform {
+class OutputZone {
     
     public :
     
     OutputZone(InputZone& _zone) ;
     ~OutputZone();
+    void init(ofRectangle sourceRectangle); 
     
-    virtual bool update() override ;
+    virtual bool update();
     
-    bool getEnabled() {
-        return enabled;
-    }
-    void setEnabled(bool value) {
-        enabled = value;
-        setEditable(enabled);
-    }
-    void setVisible(bool value) {
-        visible = value;
-        ZoneTransform :: setVisible(visible);
-    }
-    bool getVisible() {
-        return visible;
-    }
+    void setSourceRect(ofRectangle & rect); 
+    
+    bool getEnabled();
+    void setEnabled(bool value);
+    void setVisible(bool value) ;
+    bool getVisible() ;
     
     void draw();
     
     string getLabel();
-    const int getZoneIndex() const {
-        return zone.getIndex();
-    };
+    const int getZoneIndex() const;
+
+    bool getSelected();
+    void setSelected(bool v);
+    
+    bool getIsAlternate();
+    void setIsAlternate(bool v);
+    
+    ofxLaser::Point getWarpedPoint(const ofxLaser::Point& p);
+    ofxLaser::Point getUnWarpedPoint(const ofxLaser::Point& p);
+    ofPoint getWarpedPoint(const ofPoint& p);
+    ofPoint getUnWarpedPoint(const ofPoint& p);
+    
 
     // scale and offset are only for the visual interface
     void setScale(float _scale) ;
     void setOffset(ofPoint _offset);
-    void zoneMaskChanged(ofAbstractParameter& e) ;
+    //void zoneMaskChanged(ofAbstractParameter& e) ;
     void paramChanged(ofAbstractParameter& e) ;
-    void updateZoneMask() ;
+    //void updateZoneMask() ;
+    bool setGrid(bool snapstate, int gridsize);
     
-    virtual bool serialize(ofJson& json) override;
-    virtual bool deserialize(ofJson& json) override;
+    ofRectangle getBounds();
+    void drawPerimeterAsShape(); 
+    
+    virtual bool serialize(ofJson& json);
+    virtual bool deserialize(ofJson& json);
     
     InputZone& zone;
-    //ZoneTransform zoneTransform;
-    ofRectangle zoneMask;
-    ofParameter<float>leftEdge;
-    ofParameter<float>rightEdge;
-    ofParameter<float>bottomEdge;
-    ofParameter<float>topEdge;
+    ZoneTransformBase& getZoneTransform();
+    ZoneTransformQuad zoneTransformQuad;
+    ZoneTransformLine zoneTransformLine;
+
+    ofParameterGroup zoneParams;
+    
     ofParameter<bool>muted;
     ofParameter<bool>soloed;
+    ofParameter<int>transformType; 
     
-    //ofParameterGroup params;
-    ofParameterGroup zoneMaskGroup;
-    ofParameterGroup zoneParams;
     bool isDirty; 
-    
-    //float scale;
-    //ofPoint offset;
+
+    // not sure if i need to store these or not, depends if i make and destroy
+    // zoneTransform objects
+    float scale;
+    ofPoint offset;
     
     protected :
     bool enabled;
     bool visible;
+    bool isAlternate;
+    
+    bool snapToGrid = false;
+    int gridSize = 20; 
     
 };
 

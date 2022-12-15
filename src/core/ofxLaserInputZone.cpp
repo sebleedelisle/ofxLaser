@@ -26,6 +26,7 @@ InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
         
     }
     lineWidth = 2;
+    
    // setConstrained(rect);
 }
 
@@ -229,4 +230,17 @@ void InputZone::setHandleSize(float size) {
 	//	handle.setSize(size);
 	//}
 	
+}
+
+
+bool InputZone::deserialize(ofJson&jsonGroup) {
+    bool success = QuadGui :: deserialize(jsonGroup);
+    if(success) {
+        rect.set(handles[0], handles[3]);
+        return true;
+    } else {
+        return false;
+    } 
+    
+    
 }
