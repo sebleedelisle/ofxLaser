@@ -74,7 +74,7 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     // TODO update max point rate from dacdata
     pointBufferCapacity = ed.bufferCapacity;
  
-	Poco::Timespan timeout( 1000000 * 2 / 1); // 1/1 second timeout
+	Poco::Timespan timeout( 1 * 1000000); // 1 second timeout
 	
 	try {
 		// EtherDreams always talk on port 7765

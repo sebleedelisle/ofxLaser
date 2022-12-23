@@ -51,7 +51,7 @@ ZoneTransformBase:: ~ZoneTransformBase(){
 void ZoneTransformBase:: setSrc(const ofRectangle& rect) {
     
     if(srcRect != rect) {
-        ofLogNotice("ZoneTransformBase:: setSrc ") << rect;
+        //ofLogNotice("ZoneTransformBase:: setSrc ") << rect;
         srcRect = rect;
         isDirty = true;
     }

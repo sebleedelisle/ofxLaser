@@ -227,11 +227,19 @@ void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
     //    current point being dragged
     //    So, something like,
     //    point.startDrag(clickpos, anchorpoint, relativetopoint, altpressed)
-    
-    
-    DragHandle& anchorHandle = handles[(i+2)%4];
-    DragHandle& dragHandle1 = handles[(i+1)%4];
-    DragHandle& dragHandle2 = handles[(i+3)%4];
+    vector<DragHandle*> corners;
+    corners.push_back(&handles[0]);
+    corners.push_back(&handles[1]);
+    corners.push_back(&handles[3]);
+    corners.push_back(&handles[2]);
+    int index = i;
+    if(index==2) index = 3;
+    else if(index ==3) index = 2;
+
+    currentHandle.startDrag(mousePos);
+    DragHandle& anchorHandle = *corners[(index+2)%4];
+    DragHandle& dragHandle1 = *corners[(index+1)%4];
+    DragHandle& dragHandle2 = *corners[(index+3)%4];
     
     dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
     dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
@@ -347,11 +355,11 @@ void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 	for(int i = 0; i<numHandles; i++) {
         DragHandle& handle = handles[i];
         if(handle.updateDrag(mousePos)){
-            dragging = true;
-            if(constrained && (!constrainRect.inside(handle))) {
-                handle.x = ofClamp(handle.x, constrainRect.getLeft(), constrainRect.getRight());
-                handle.y = ofClamp(handle.y, constrainRect.getTop(), constrainRect.getBottom());
-            }
+           dragging = true;
+//            if(constrained && (!constrainRect.inside(handle))) {
+//                handle.x = ofClamp(handle.x, constrainRect.getLeft(), constrainRect.getRight());
+//                handle.y = ofClamp(handle.y, constrainRect.getTop(), constrainRect.getBottom());
+//            }
 
             bounds.growToInclude(handle);
         }

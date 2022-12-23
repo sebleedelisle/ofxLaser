@@ -12,7 +12,7 @@ OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
     
     // init params?
     soloed = false;
-    ofLogNotice("OutputZone() rect : ") << zone.getRect();
+    //ofLogNotice("OutputZone() rect : ") << zone.getRect();
     ofRectangle rect = zone.getRect();
     zoneTransformQuad.init(rect);
     zoneTransformLine.init(rect);

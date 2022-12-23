@@ -27,7 +27,7 @@ class PresetManager {
     const vector<string>& getPresetNames();
     
     // UI stuff
-    void drawComboBox(T& currentPreset, int idnum = 0);
+    bool drawComboBox(T& currentPreset, int idnum = 0);
     void drawSaveButtons(T& currentPreset);
     
     map<string, T> presetMap;
@@ -148,8 +148,9 @@ const vector<string>& PresetManager<T> ::getPresetNames() {
 }
 
 template <typename T>
-void PresetManager<T> :: drawComboBox(T& settings, int idnum) {
+bool PresetManager<T> :: drawComboBox(T& settings, int idnum) {
     
+    bool changed = false;
     const vector<string>& presets = getPresetNames();
     string label =settings.getLabel();
     T& currentPreset = *getPreset(label);
@@ -168,11 +169,13 @@ void PresetManager<T> :: drawComboBox(T& settings, int idnum) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
                 settings = *getPreset(presetName);
+                changed = true;
             }
         }
         
         ImGui::EndCombo();
     }
+    return changed;
     
 }
 

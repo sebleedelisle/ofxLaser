@@ -709,7 +709,7 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
 }
 
-void UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
+bool UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
     
     if(showTitle) {
         ImGui::Separator();
@@ -719,7 +719,7 @@ void UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
          
     }
     
-    addParameter(parameterGroup);
+    return addParameter(parameterGroup);
 //    for(auto& param : parameterGroup) {
 //        addParameter(param);
 //

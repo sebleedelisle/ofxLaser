@@ -69,7 +69,7 @@ class UI {
     static bool addParameter(ofAbstractParameter& param);
     static bool addParameter(shared_ptr<ofAbstractParameter>& param);
     
-    static void addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle = true);
+    static bool addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle = true);
     
     static bool addIntSlider(ofParameter<int>& param, string labelSuffix = "");
     static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", float power = 1.0f, string labelSuffix = "") ;

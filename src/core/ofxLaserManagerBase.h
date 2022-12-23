@@ -142,7 +142,7 @@ class ManagerBase {
     ofParameter<float>globalBrightness;
 
     BitmapMaskManager laserMask;
-    
+                
     bool zonesChanged;
     std::vector<InputZone*> zones;
     

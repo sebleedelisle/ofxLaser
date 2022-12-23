@@ -77,7 +77,7 @@ void ZoneTransformQuad::init(ofRectangle& srcRect) {
     //destRect.x*=srcwidth/800;
     //destRect.y*=srcheight/800;
     setDst(destRect);
-    ofLogNotice("ZoneTransform::init - setDst");
+    //ofLogNotice("ZoneTransform::init - setDst");
     updateDivisions();
     updateQuads();
     
@@ -287,7 +287,7 @@ void ZoneTransformQuad::setSrc(const ofRectangle& rect) {
     
     
     if((srcRect!=rect) || (srcPoints.size()!=((xDivisions+1)*(yDivisions+1)))) {
-        ofLogNotice("ZoneTransform:: setSrc ") << rect;
+        //ofLogNotice("ZoneTransform:: setSrc ") << rect;
         srcRect = rect;
         // update source points?
         int xpoints = xDivisions+1;
@@ -808,20 +808,20 @@ bool ZoneTransformQuad::deserialize(ofJson& jsonGroup) {
     dstHandles.resize(numhandles);
     
     ofJson& handlejson = jsonGroup["handles"];
-    cout << handlejson.dump(3) << endl;
+    //cout << handlejson.dump(3) << endl;
     if((int)handlejson.size()>=numhandles) {
         for(int i = 0; i<numhandles; i++) {
             ofJson& point = handlejson[i];
             dstHandles[i].x = point[0];
             dstHandles[i].y = point[1];
             dstHandles[i].z = 0;
-            cout << "setting handle " << i << " : " << dstHandles[i] << endl;
+           // cout << "setting handle " << i << " : " << dstHandles[i] << endl;
             
         }
     }
     //updateDivisions(); //< SHOULD BE called automatically I think
     
-    ofLogNotice("ZoneTransform::deserialize");
+   // ofLogNotice("ZoneTransform::deserialize");
     return true;
 }
 
