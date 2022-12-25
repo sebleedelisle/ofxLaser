@@ -134,6 +134,8 @@ class UI {
     static void toolTip(string& str);
   
     static void toolTip(const char* desc);
+    static void addHover(string& str);
+    static void addHover(const char* desc);
     static void addDelayedTooltip(const char* desc);
     
     static ofMesh dashedLineMesh;

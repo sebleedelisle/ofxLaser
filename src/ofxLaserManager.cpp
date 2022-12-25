@@ -1285,7 +1285,7 @@ void Manager :: drawUIPanelMainLasers() {
             ImGui::SameLine();
             
             // LASER SETTINGS BUTTONS
-            label = ofToString(ICON_FK_BARS)+"##"+ofToString(i);
+            label = ofToString(ICON_FK_SLIDERS)+"##"+ofToString(i);
             if(ImGui::Button(label.c_str())) {
                 showLaserOutputSettingsWindow = true;
                 selectedLaserIndex = i;

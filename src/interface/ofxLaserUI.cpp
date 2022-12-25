@@ -41,11 +41,12 @@ void UI::setupGui() {
     config.MergeMode = true;
     config.GlyphMinAdvanceX = 13;
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
-   // symbolFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("forkawesome-webfont.ttf").c_str(), 13, &config, icon_ranges);
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
     
     mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,16, &config, icon_ranges);
     largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,18, &config, icon_ranges);
    
     //    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
 //    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
@@ -977,6 +978,9 @@ bool UI::keyReleased(ofKeyEventArgs &e) {
 void UI::toolTip(string& str) {
     toolTip(str.c_str());
 }
+void UI::addHover(string& str) {
+    addHover(str.c_str());
+}
 
 void UI::toolTip(const char* desc)
 {
@@ -984,20 +988,36 @@ void UI::toolTip(const char* desc)
     ImGui::TextDisabled(ICON_FK_QUESTION_CIRCLE);
     if (ImGui::IsItemHovered() )
     {
+        ImGui::PushFont(font);
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
         ImGui::TextUnformatted(desc);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+}
+void UI::addHover(const char* desc) {
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
     }
 }
 void UI::addDelayedTooltip(const char* desc) {
     if (ImGui::IsItemHovered() && (GImGui->HoveredIdTimer >1)) {
+        ImGui::PushFont(font);
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
         ImGui::TextUnformatted(desc);
         ImGui::PopTextWrapPos();
         ImGui::EndTooltip();
+        ImGui::PopFont();
     }
     
 }
