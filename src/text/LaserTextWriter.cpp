@@ -33,34 +33,18 @@ vector<ofPolyline*> LaserTextWriter::getGlyphPolylines(Letter &letter, ofRectang
         }
         poly->addVertex(box.x + (v2.x/glyphWidth*box.width), box.y + (v2.y/glyphHeight*box.height));
         lastpoint = v2;
-        
-        //
-        //            v.x = box.x + ofMap(letter.points[i].x, 0, glyphWidth, 0, box.width);
-        //            v.y = box.y + ofMap(letter.points[i].y, 0, glyphHeight, 0, box.height);
-        //
-        
-        //
-        //        mesh.addVertex(v);
-        //
-        //        ofColor vcolor(colour);
-        //        vcolor.setBrightness(vcolor.getBrightness() * ofRandom(colourFlickerMin, 1));
-        //        mesh.addColor(vcolor);
-        //
+
     }
     return polylines;
     
 }
 
-//
-//                            
 vector<vector<ofPolyline*>> LaserTextWriter :: getPolylines(string line, ofVec3f pos, float size, bool centred) {
     vector<string> lines;
     lines.push_back(line);
     return getPolylines(lines, pos, size, centred);
-    
 }
 
-                            
 vector<vector<ofPolyline*>> LaserTextWriter::getPolylines(vector<string>& lines, ofVec3f pos, float size, bool centred) {
     
 

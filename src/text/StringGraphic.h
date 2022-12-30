@@ -17,7 +17,6 @@ class StringGraphic : public ofxLaser::Graphic{
 	
 	public:
 	
-	
 	enum Alignment{
 		ALIGN_LEFT,
 		ALIGN_RIGHT,
@@ -39,7 +38,6 @@ class StringGraphic : public ofxLaser::Graphic{
     vector<vector<ofPolyline*>> polylineCharacters; 
 
 	Alignment alignment = ALIGN_LEFT;
-	
 	
 	ofxHersheyFont hersheyFont;
     LaserTextWriter textWriter; 

@@ -138,6 +138,7 @@ void DacEtherDream :: threadedFunction(){
     
     bool needToSendPrepare = true;
     
+    
     // in older ether dreams this doesn't seem to reset even if you disconnect and reconnect
     if(response.status.playback_state == ETHERDREAM_PLAYBACK_PREPARED) resetFlag = true;
       
@@ -189,6 +190,7 @@ void DacEtherDream :: threadedFunction(){
             if( success ) {
                 logNotice("waitForAck('p') success");
                 needToSendPrepare = false;
+                blankPointsToSend = numBlankPointsToSendAfterReset;
                 beginSent = false;
                 
                
@@ -201,7 +203,6 @@ void DacEtherDream :: threadedFunction(){
         // if we're playing and we have a new point rate, send it!
         if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PLAYING) && (newPPS!=pps)) {
             
-            
             if(sendPointRate(newPPS)){
                 pps = newPPS;
                 waitForAck('q');
@@ -213,8 +214,6 @@ void DacEtherDream :: threadedFunction(){
                 // to send a control change flag for each one.
                 queuedPPSChangeMessages++;
             }
-            
-            
         }
         
         // maxPointsToFillBuffer is the minimum number of points we want
@@ -392,9 +391,17 @@ inline bool DacEtherDream :: sendPointsToDac(){
             
             dacPoint.x = ofMap(armed ? laserPoint.x : 400, 0, 800, ETHERDREAM_MIN, ETHERDREAM_MAX);
             dacPoint.y = ofMap(armed ? laserPoint.y : 400, 800, 0, ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
-            dacPoint.r = armed ? colourPoint.r/255.0f*65535 : 0;
-            dacPoint.g = armed ? colourPoint.g/255.0f*65535 : 0;
-            dacPoint.b = armed ? colourPoint.b/255.0f*65535 : 0;
+          
+            
+            if(! armed || blankPointsToSend>0) {
+                dacPoint.r =  dacPoint.g = dacPoint.b = 0;
+                if(blankPointsToSend>0) blankPointsToSend--;
+                
+            } else {
+                dacPoint.r = colourPoint.r/255.0f*65535;
+                dacPoint.g = colourPoint.g/255.0f*65535;
+                dacPoint.b = colourPoint.b/255.0f*65535;
+            }
             dacPoint.i = 0;
             dacPoint.u1 = 0;
             dacPoint.u2 = 0;

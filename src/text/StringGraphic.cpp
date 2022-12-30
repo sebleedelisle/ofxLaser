@@ -18,8 +18,7 @@ bool StringGraphic :: setString (string newString, const ofColor& newColour) {
 		updateGraphic(); 
 		return true; 
 	}
-	return false; 
-	
+	return false;
 	
 }
 void StringGraphic :: setAlignment(Alignment newalignment) {
@@ -37,8 +36,6 @@ void StringGraphic :: updateGraphic() {
     // should also release the polylines
     clear();
     
-    
-    
     polylineCharacters = textWriter.getPolylines(textString, glm::vec3(0,0,0), 4, true);
     
     for(vector<ofPolyline*>& polys : polylineCharacters) {
@@ -46,8 +43,6 @@ void StringGraphic :: updateGraphic() {
             //poly->draw();
             addPolyline(poly, colour);
         }
-        
-        
     }
     
     for(vector<ofPolyline*>& polys : polylineCharacters) {

@@ -113,6 +113,8 @@ protected:
 
    
     bool beginSent = false;
+    int blankPointsToSend = 0; // System for making sure points are blank after reset
+    int numBlankPointsToSendAfterReset = 10; 
     
     string ipAddress;
     string id;

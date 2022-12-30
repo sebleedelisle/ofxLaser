@@ -17,7 +17,7 @@ OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
     zoneTransformQuad.init(rect);
     zoneTransformLine.init(rect);
     
-    zoneParams.setName("laserZone"+ofToString(zone.getIndex()));
+    zoneParams.setName("OutputZone");
     zoneParams.add(muted.set("mute", false));
     zoneParams.add(soloed.set("solo", false));
     zoneParams.add(transformType.set("Transform type", 0,0,1));
@@ -168,9 +168,7 @@ void OutputZone ::setSourceRect(ofRectangle & rect) {
     
     zoneTransformQuad.setSrc(rect);
     zoneTransformLine.setSrc(rect);
-
 }
-
 
 void OutputZone :: init(ofRectangle sourceRectangle) {
     zoneTransformQuad.init(sourceRectangle);
@@ -230,7 +228,13 @@ bool OutputZone :: deserialize(ofJson& json){
  
     if(json.contains("zoneparams")) {
         ofJson paramsJson = json["zoneparams"];
-        ofDeserialize(paramsJson, zoneParams);
+       // because there is a random name in here
+        ofJson fixedJson;
+        fixedJson[zoneParams.getName()] = *paramsJson.begin();
+       // ofLogNotice() << paramsJson.dump(3);
+        //ofJson& paramsObjectJson = *paramsJson.begin();
+        
+        ofDeserialize(fixedJson, zoneParams);
     }
     if(json.contains("zonetransformquad")) {
         ofJson zoneTransformQuadJson = json["zonetransformquad"];

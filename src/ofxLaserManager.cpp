@@ -179,7 +179,7 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
         laser->setGrid(zoneGridSnap, zoneGridSize);
         laser->maxLatencyMS = globalLatency;
     }
-    //ofLogNotice() << "paramChanged " << e.getName();
+    ofLogNotice() << "paramChanged " << e.getName();
     saveSettings();
 }
 
@@ -1251,6 +1251,20 @@ void Manager :: drawUIPanelMainLasers() {
         
         UI::addIntSlider(laserManager.testPattern);
         
+        if(dontCalculateDisconnected) UI::secondaryColourStart();
+        string label = "OPTIMSED MODE : ";
+        if(dontCalculateDisconnected) {
+            label+="ON";
+        } else {
+            label+="OFF";
+        }
+        if(UI::Button(label) ){
+            dontCalculateDisconnected = !dontCalculateDisconnected.get();
+            
+        }
+        UI::secondaryColourEnd();
+           
+        
         // SHOW LIST OF LASERS
         
         for(int i = 0; i<getNumLasers(); i++) {
@@ -1364,7 +1378,7 @@ void Manager :: drawUIPanelMainLasers() {
             
         }
         
-        string label = "ADD LASER";
+        label = "ADD LASER";
         if(UI::Button( label, false, false)) {
             // add laser
             laserManager.createAndAddLaser();
@@ -2413,36 +2427,10 @@ void Manager :: drawUIPanelLaserCopySettings() {
                         
                         
                     }
-//
-//                    sourcezones = sourceLaser.getSortedOutputAltZones();
-//                    targetzones = targetLaser.getSortedOutputAltZones();
-//                    for(int i=0; (i<sourcezones.size()) && (i<targetzones.size()); i++ ){
-//                        OutputZone* sourcezone = sourcezones[i];
-//                        OutputZone* targetzone = targetzones[i];
-//                        ofJson zonejson;
-//                        sourcezone->serialize(zonejson);
-//                        targetzone->deserialize(zonejson);
-//
-//                    }
+
                     
                 }
                 
-    //            if(copyZonePositions) {
-    //                 //????????
-    //
-    //                for(int j=0; j<sourceLaser.outputZones.size() ; j++) {
-    //                    if(targetLaser.outputZones.size()>j) {
-    //                        OutputZone* sourceZone = sourceLaser.outputZones[j];
-    //                        OutputZone* targetZone = targetLaser.outputZones[j];
-    //
-    //                        //targetZone->zone.
-    //
-    //                    }
-    //
-    //
-    //                }
-    //
-    //            }
                 
                 
             }

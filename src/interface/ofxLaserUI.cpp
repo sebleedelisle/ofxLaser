@@ -834,7 +834,7 @@ bool UI::Button(const char* label, bool large, bool secondaryColour, const ImVec
     return returnvalue;
 }
 
-bool UI::DangerButton(string& label, bool large, const ImVec2& size_arg ){
+bool UI::DangerButton(string label, bool large, const ImVec2& size_arg ){
     bool returnvalue;
     
     if(large) UI::largeItemStart();

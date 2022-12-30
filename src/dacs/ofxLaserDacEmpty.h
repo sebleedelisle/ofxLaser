@@ -23,12 +23,25 @@ namespace ofxLaser {
         virtual string getId() override {return "";};
         
         virtual int getStatus() override {return OFXLASER_DACSTATUS_NO_DAC;};
-    
+        virtual bool isReadyForFrame(int maxLatencyMS) override{
+            if(dontCalculate) return false;
+            else {
+                bool update = false;
+                if(ofGetElapsedTimef() - lastUpdate > (1.0f / (float)framerate)) {
+                    update = true;
+                    lastUpdate = ofGetElapsedTimef();
+                }
+                return update;
+            }
+        };
        // virtual ofColor getStatusColour() override {return ofColor::white; };
     
         virtual void reset()  override  {};
         virtual void close() override {};
 
+        int framerate = 30;
+        float lastUpdate = 0;
+        bool dontCalculate = false;
     protected :
     
         vector<ofAbstractParameter*> displayData;

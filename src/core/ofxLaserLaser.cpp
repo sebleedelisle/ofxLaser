@@ -378,6 +378,15 @@ vector<OutputZone*> Laser::getActiveZones(){
     return activeZones;
 }
 
+
+void Laser::clearOutputZones() {
+    
+    for(OutputZone* zone : outputZones) {
+        delete zone;
+    }
+    outputZones.clear();
+}
+
 bool Laser::areAnyZonesSoloed() {
     for(OutputZone* laserZone : outputZones) {
         if(laserZone->soloed) {
@@ -1859,6 +1868,8 @@ bool Laser::loadSettings(vector<InputZone*>& zones){
     //ofDeserialize(json, visual3DParams);
     bool success = maskManager.deserialize(json);
     
+    clearOutputZones(); 
+    
     ofJson zoneNumJson = json["laserzones"];
     
     // if the json node isn't found then this should do nothing
@@ -1870,9 +1881,14 @@ bool Laser::loadSettings(vector<InputZone*>& zones){
         if(zones.size()>zoneNum) {
             OutputZone* laserZone = new OutputZone(*zones[zoneNum]);
             outputZones.push_back(laserZone);
-            ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
-
-            success &= laserZone->deserialize(laserZoneJson);
+            
+            string filename ="laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json";
+            ofJson laserZoneJson = ofLoadJson(savePath + filename);
+            if(laserZone->deserialize(laserZoneJson)) {
+                success&=true;
+                laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+                
+            }
         }
     }
     
@@ -1887,11 +1903,16 @@ bool Laser::loadSettings(vector<InputZone*>& zones){
         if(zones.size()>zoneNum) {
             OutputZone* laserZone = new OutputZone(*zones[zoneNum]);
             laserZone->setIsAlternate(true);
-            
+            string filename = "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json";
             outputZones.push_back(laserZone);
-            ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json");
+            ofJson laserZoneJson = ofLoadJson(savePath + filename);
 
-            success &= laserZone->deserialize(laserZoneJson);
+            //success &= laserZone->deserialize(laserZoneJson);
+            if(laserZone->deserialize(laserZoneJson)) {
+                success&=true;
+                laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+                
+            }
         }
     }
     
@@ -1931,16 +1952,26 @@ bool Laser::saveSettings(){
     
 
     maskManager.serialize(json);
-    //cout << json.dump(3) << endl;
+    // Save the laser settings
     bool success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
-    
-    
 
     for(OutputZone* laserZone : outputZones) {
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
-        //cout << "Laser::saveSettings() " << laserZone->getZoneIndex();
-        success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + (laserZone->getIsAlternate()?"alt.json" : ".json"), laserzonejson);
+        
+        string filename = "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + (laserZone->getIsAlternate()?"alt.json" : ".json");
+        
+        bool needssave = true;
+        if(laserZonesLastSavedMap.find(filename)!=laserZonesLastSavedMap.end()) {
+            if(laserZonesLastSavedMap[filename]==laserzonejson.dump()) {
+                needssave = false;
+            }
+            
+        }
+        if(needssave && ofSavePrettyJson(savePath + filename, laserzonejson)) {
+            success &=true;
+            laserZonesLastSavedMap[filename]=laserzonejson.dump();
+        }
         
     }
     

@@ -139,6 +139,9 @@ class ManagerBase {
     ofParameter<bool> laserMasks;
     ofParameter<int> numLasers; // << not used except for load / save
     
+    ofParameter<bool> dontCalculateDisconnected;
+    
+    
     ofParameter<float>globalBrightness;
 
     BitmapMaskManager laserMask;

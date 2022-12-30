@@ -102,6 +102,7 @@ class Laser {
 
     vector<OutputZone*>getActiveZones();
     bool areAnyZonesSoloed();
+    void clearOutputZones();
     
     void drawLaserPath(ofRectangle rect, bool drawDots = true, bool showMovement = true, float radius = 4);
     //void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
@@ -225,15 +226,17 @@ class Laser {
     vector<ofColor> previewPathColours;
    
     
-    
+    DacEmpty emptyDac;
+ 
     //-----------------------------------
     protected :
+    
+    map<string, string> laserZonesLastSavedMap;
   
     
     void setDacArmed(bool& armed);
     
-    DacEmpty emptyDac;
- 
+    
 
     DacBase* dac;
     

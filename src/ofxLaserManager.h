@@ -201,6 +201,7 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
     
+    
     bool firstUpdate = true; 
    
 
