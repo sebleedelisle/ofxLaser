@@ -6,9 +6,9 @@
 //
 #pragma once
 #include "ofMain.h"
-#include "ofxLaserZoneTransformQuad.h"
+#include "ofxLaserZoneTransformQuadData.h"
+#include "ofxLaserZoneTransformLineData.h"
 #include "ofxLaserInputZone.h"
-#include "ofxLaserZoneTransformLine.h"
 
 namespace ofxLaser {
 
@@ -62,8 +62,8 @@ class OutputZone {
     
     InputZone& zone;
     ZoneTransformBase& getZoneTransform();
-    ZoneTransformQuad zoneTransformQuad;
-    ZoneTransformLine zoneTransformLine;
+    ZoneTransformQuadData zoneTransformQuad;
+    ZoneTransformLineData zoneTransformLine;
 
     ofParameterGroup zoneParams;
     

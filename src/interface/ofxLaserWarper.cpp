@@ -29,7 +29,6 @@ void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, gl
 	dstCVPoints[2] = toCv(dst3);
 	dstCVPoints[3] = toCv(dst4);
 
-
 	try{
 		// NB 8 is CV_RANSAC which isn't defined in all platforms for some reason.
 		homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),8, 100);

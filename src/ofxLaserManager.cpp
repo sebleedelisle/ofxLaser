@@ -1099,7 +1099,7 @@ void Manager::drawLaserGui() {
                     UI::secondaryColourEnd();
 
                     if(!lineZone) {
-                        ZoneTransformQuad* ztq = dynamic_cast<ZoneTransformQuad*>(&laserZone->getZoneTransform());
+                        ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
                         if(ztq!=nullptr) {
                             if(ztq->isSquare()) {
                                 UI::startGhosted();
@@ -1120,7 +1120,7 @@ void Manager::drawLaserGui() {
                         }
                     } else {
                             
-                        ZoneTransformLine* ztl = dynamic_cast<ZoneTransformLine*>(&laserZone->getZoneTransform());
+                        ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
                         if(ztl!=nullptr) {
                             //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
                             
