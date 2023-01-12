@@ -159,3 +159,4 @@ example_HelloLaser/bin/data/*..json
 *.json
 *.ofxlg
 *.obj
+bin
