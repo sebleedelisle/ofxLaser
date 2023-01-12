@@ -75,30 +75,32 @@ class Manager : public ManagerBase {
     void finishLaserUI() ;
     void renderCustomCursors();
     
-   // void ShowExampleMenuFile();
-   // void drawUIPanelScannerSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x);
-    void drawUIPanelDacAssigner();
-    
-    void drawUIPanelMainLasers();
-    void drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser);
-    void drawUIPanelIconBar(int ypos);
-    void drawUIPanelLaserCopySettings();
-    void drawUIPanelDacAnalytics();
-    
-    
-    void drawUIPanelCustomParameters();
+    void guiMenuBar();
+    void guiTopBar(int ypos);
+    void guiDacAssignment();
+    void guiLaserOverview();
+    void guiLaserSettings(ofxLaser::Laser* laser);
+
+    void guiCopyLaserSettings();
+    void guiDacAnalytics();
+    void guiCustomParameters();
+    void guiShowLaserZoneContextMenu(); 
     
     // pop ups
-    void drawUIPopupDeleteLaser(Laser* laser, int index);
+    void guiDeleteLaserButtonAndPopup(Laser* laser, int index);
+    void guiEditDacAliasButtonAndPopup(string daclabel);
+
+    ofParameter<bool> showCustomParametersWindow;
+    ofParameter<bool> showLaserManagementWindow;
+    ofParameter<bool> showLaserOutputSettingsWindow;
+    bool copySettingsWindowOpen;
+    bool showDacAssignmentWindow;
     
-    void showDacAliasEditButton(string daclabel);
-   
     bool togglePreview();
     // TODO I think this functionality is broken
     bool toggleGui();
     void setGuiVisible(bool visible);
     bool isGuiVisible();
-    
     
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
@@ -135,11 +137,7 @@ class Manager : public ManagerBase {
     ofParameter<int> zoneGridSize;
     
     //ofParameter<bool> showScannerSettingsWindow;
-    ofParameter<bool> showDacAssignmentWindow;
-    ofParameter<bool> showCustomParametersWindow;
-    ofParameter<bool> showLaserManagementWindow;
-    ofParameter<bool> showLaserOutputSettingsWindow;
-    bool copySettingsWindowOpen; 
+ 
     
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;

@@ -16,7 +16,7 @@ Laser::Laser(int _index) {
     
 	laserHomePosition = ofPoint(400,400);
 	
-	numTestPatterns = 9;
+	numTestPatterns = 10;
  	
 	guiInitialised = false;
     maskManager.init(800,800);
@@ -644,38 +644,31 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
 	ofPoint p;
 
   	ofNoFill();
-	ofSetColor(255);
-    //ofSetColor(MIN(255 * w / 800.0f, 255));// what's this for?
 	
-    ofSetLineWidth(0.5/scale);
-	
-	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-	if(drawDots) previewPathMesh.draw();
-	
-    // draw the coloured line in the background
-	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
-		//previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,128));
-        ofColor col = previewPathColours[i];
-        previewPathMesh.addColor(col);
-	}
-    
-    // draw as points just to make sure the dots appear
-    //ofSetLineWidth(4 * scale);
-    previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-    previewPathMesh.draw();
-    
-	
-    for(ofFloatColor& colour : previewPathMesh.getColors()) {
-        if(colour.getBrightness()<0.1) colour.setBrightness(0.1);
+    if(drawDots) {
+        ofSetColor(100);
+        ofSetLineWidth(0.5f);
+        previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
+        previewPathMesh.draw();
     }
-    
-    ofSetLineWidth(2 * scale);
+    ofSetColor(25);
+    ofSetLineWidth(0.5f);
     previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
     previewPathMesh.draw();
+        
+    ofSetColor(255);
+    
+    // draw as points just to make sure the dots appear
+    previewPathColoured.setMode(OF_PRIMITIVE_POINTS);
+    previewPathColoured.draw();
+        
+    ofSetLineWidth(2.0f);
+    previewPathColoured.setMode(OF_PRIMITIVE_LINE_STRIP);
+    previewPathColoured.draw();
     
     
     
-    
+    ofPushStyle();
 	// draws the animated laser path
 	if(showMovement && (previewPathMesh.getNumVertices()>0)) {
 		
@@ -703,7 +696,7 @@ void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, 
             ofDrawCircle(p, radius*1.5);
         }
 	}
-	
+    ofPopStyle();
 
 	ofDisableBlendMode();
 	ofPopStyle();
@@ -818,9 +811,7 @@ void Laser::update(bool updateZones) {
 
 void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, InputZone* zone, float masterIntensity ){
     
-    laserPoints.clear();
-    previewPathMesh.clear();
-    previewPathColours.clear();
+    clearPoints();
     
     OutputZone* laserZone = getLaserZoneForZone(zone);
     if(laserZone==nullptr) {
@@ -902,7 +893,13 @@ void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, InputZone* zone
 }
 
 
-                        
+void Laser :: clearPoints() {
+    laserPoints.clear();
+    previewPathMesh.clear();
+    previewPathColoured.clear();
+    
+    
+}
 
 void Laser::send(float masterIntensity, ofPixels* pixelmask) {
 
@@ -945,9 +942,7 @@ void Laser::send(float masterIntensity, ofPixels* pixelmask) {
         
     }
     
-    laserPoints.clear();
-    previewPathMesh.clear();
-    previewPathColours.clear();
+    clearPoints();
     
 	vector<PointsForShape> allzoneshapepoints;
 
@@ -1463,7 +1458,6 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 			}
 		}
 		
-		
 		// add all the segments for the zone into the big container for all the segs
 		allzoneshapepoints.insert(allzoneshapepoints.end(), zonePointsForShapes.begin(), zonePointsForShapes.end());
 		
@@ -1476,12 +1470,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 		
 	} // end zones
 	
-	
-	
-	
 }
-
-
 
 RenderProfile& Laser::getRenderProfile(string profilelabel) {
 	
@@ -1672,7 +1661,36 @@ deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
 		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
 		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
 
-	}
+	} else if(testPattern ==10) {
+        ofRectangle rect = maskRectangle;
+
+        float progress = (float)(ofGetElapsedTimeMillis()%2000) /1000.0f;
+        
+        float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
+        
+        shapes.push_back(new Line( ofPoint(x,rect.getTop()), ofPoint(x, rect.getBottom()), ofColor::white, OFXLASER_PROFILE_DEFAULT));
+        
+//
+//        float x, y;
+//        x = ofMap(progress, 0, 1, rect.getLeft(), rect.getRight());
+//        y = rect.getTop();
+//        shapes.push_back(new Dot(ofPoint(x,y), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+//
+//        x = ofMap(progress, 1, 0, rect.getLeft(), rect.getRight());
+//        y = rect.getBottom();
+//        shapes.push_back(new Dot(ofPoint(x,y), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+//
+//        x = rect.getLeft();
+//        y = ofMap(progress,0, 1, rect.getBottom(), rect.getTop());
+//
+//        shapes.push_back(new Dot(ofPoint(x,y), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+//        x = rect.getRight();
+//        y = ofMap(progress,1, 0, rect.getBottom(), rect.getTop());
+//
+//        shapes.push_back(new Dot(ofPoint(x,y), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+//
+
+    }
 	return shapes; 
 	
 }
@@ -1717,13 +1735,13 @@ void Laser :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
 }
 
 void Laser :: addPoint(ofxLaser::Point p) {
-	
-	
-	
+    
 	laserPoints.push_back(p);
 	
 	previewPathMesh.addVertex(ofPoint(p.x, p.y));
-    previewPathColours.push_back(p.getColour());
+    previewPathColoured.addVertex(ofPoint(p.x, p.y));
+    previewPathColoured.addColor(p.getColour());
+    
 }
 
 

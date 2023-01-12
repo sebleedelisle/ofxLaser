@@ -79,7 +79,6 @@ Manager :: Manager() {
                 ofDeserialize(loadJson["Laser"], guideImageFilename);
                 if(guideImageFilename.get()!="") setGuideImage("guideImages/" + guideImageFilename.get());
                
-
             } catch(...) {
                 //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
             }
@@ -155,7 +154,7 @@ void Manager :: initAndLoadSettings() {
     params.add(globalLatency.set("Latency (ms)", 150,0,400));
    
     
-    params.add(showDacAssignmentWindow.set("showDacAssignmentWindow", false));
+   // params.add(showDacAssignmentWindow.set("showDacAssignmentWindow", false));
     params.add(showCustomParametersWindow.set("showCustomParametersWindow", true));
     params.add(showLaserManagementWindow.set("showLaserManagementWindow", true));
     params.add(showLaserOutputSettingsWindow.set("showLaserOutputSettingsWindow", true));
@@ -559,24 +558,15 @@ void Manager :: drawPreviews() {
                 // disables the warp interfaces
                 lasers[i]->disableTransformGui();
             }
-            
-           
-            
         }
-        
-       
-        
     }
     
     if(viewMode == OFXLASER_VIEW_OUTPUT){
         
         // hide the input zones
         for(size_t i= 0; i<zones.size(); i++) {
-                
             zones[i]->setVisible(false);
-               
         }
-        
         
         ofxLaser::Laser* selectedlaser = nullptr;
         // draw laser zone adjustment screen
@@ -912,75 +902,19 @@ void Manager::drawLaserGui() {
     
     ImGui::ShowDemoWindow();
     
-    
-    ImGui::PushFont(UI::mediumFont);
-    ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8, 12 ) );
-    
-    if (ImGui::BeginMainMenuBar())
-    {
-//        if (ImGui::BeginMenu("File"))
-//        {
-//            //ShowExampleMenuFile();
-//            ImGui::EndMenu();
-//        }
-//        if (ImGui::BeginMenu("Edit"))
-//        {
-////            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
-////            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
-////            ImGui::Separator();
-////            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
-////            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
-////            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
-//            ImGui::EndMenu();
-//        }
-        if(ImGui::BeginMenu("Panels") ) {
-            if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserManagementWindow)) {
-                showLaserManagementWindow = !showLaserManagementWindow;
-            }
-            if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
-                showLaserOutputSettingsWindow = !showLaserOutputSettingsWindow;
-            }
-//            if (ImGui::MenuItem("Scanner settings", "CMD+L", showScannerSettingsWindow)) {
-//                showScannerSettingsWindow = !showScannerSettingsWindow;
-//                //ImGui::SetWindowFocus("Laser Settings");
-//            }
-            if (ImGui::MenuItem("Controller assignment", "CMD+D",showDacAssignmentWindow )) {
-                showDacAssignmentWindow= !showDacAssignmentWindow;
-               //ImGui::SetWindowFocus("Controller Assignment");
-            }
-            if (ImGui::MenuItem("3D Visualiser settings", "CMD+D", visualiser3D.showSettingsWindow)) {
-                visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
-            }
-            if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
-                showCustomParametersWindow = !showCustomParametersWindow;
-            }
-            
-//            if (ImGui::MenuItem("Controller assingment", "CMD+D")) {}
+    guiMenuBar();
+    guiTopBar(menuBarHeight-1);
+    guiLaserOverview();
+    guiLaserSettings(&getLaser(getSelectedLaserIndex()));
+    guiCustomParameters();
 
-            ImGui::EndMenu();
-        }
-        menuBarHeight = ImGui::GetWindowHeight();
-        ImGui::EndMainMenuBar();
-    }
-    ImGui::PopFont();
-    ImGui::PopStyleVar();
-    
-    drawUIPanelIconBar(menuBarHeight-1);
-    drawUIPanelMainLasers();
-    drawUIPanelLaserOutputSettings(&getLaser(getSelectedLaserIndex()));
-    drawUIPanelCustomParameters();
-//
-    
-    
     // show laser settings :
    
     ofxLaser::Manager& laserManager = *this;
-   
     
     // Show laser zone settings mute / solo / etc
     if(viewMode == OFXLASER_VIEW_OUTPUT)  {
-        
-        
+
         // LASER ZONE SETTINGS
         Laser* laser = lasers[selectedLaserIndex];
         vector<OutputZone*> activeZones = laser->getActiveZones();
@@ -1151,72 +1085,83 @@ void Manager::drawLaserGui() {
                     ImGui::PopFont();
                     
                     bool lineZone = laserZone->transformType == 1;
-                    if(ImGui::Checkbox("Use line zone", &lineZone) )  {
-                        laserZone->transformType = lineZone?1 : 0;
-                    }
-
-                    ZoneTransformQuad* ztq = dynamic_cast<ZoneTransformQuad*>(&laserZone->getZoneTransform());
-                    if(ztq!=nullptr) {
-                        if(ztq->isSquare()) {
-                            UI::startGhosted();
-                        }
-                        if(UI::Button("Reset to square")) {
-                            ztq->resetToSquare();
-                           
-                        }
-                        UI::stopGhosted();
-                        UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                        ImGui::SameLine();
-                        if(UI::Button(ICON_FK_SQUARE_O))  {
-                            ztq->setDst(ofRectangle(200,240,400,200));
-                        }
-                        UI::toolTip("Reset zone to default");
-                        
-                        UI::addParameterGroup(ztq->transformParams, false);
-                    }
                     
-                    ZoneTransformLine* ztl = dynamic_cast<ZoneTransformLine*>(&laserZone->getZoneTransform());
-                    if(ztl!=nullptr) {
-                        //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
-                        
-                        UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
-                        
-                        vector<BezierNode>& nodes = ztl->getNodes();
-                        for(int i = 0; i<nodes.size(); i++) {
-                            ImGui::PushID(i);
-                            BezierNode& node = nodes[i];
-                            int mode = node.mode;
-                            ImGui::Text("%d", i+1);
+                    if(!lineZone) UI::secondaryColourStart();
+                    if(ImGui::Button("QUAD")) {
+                        laserZone->transformType = 0;
+                    }
+                    UI::secondaryColourEnd();
+                    ImGui::SameLine();
+                    if(lineZone)  UI::secondaryColourStart();
+                    if(ImGui::Button("LINE")) {
+                        laserZone->transformType = 1;
+                    }
+                    UI::secondaryColourEnd();
+
+                    if(!lineZone) {
+                        ZoneTransformQuad* ztq = dynamic_cast<ZoneTransformQuad*>(&laserZone->getZoneTransform());
+                        if(ztq!=nullptr) {
+                            if(ztq->isSquare()) {
+                                UI::startGhosted();
+                            }
+                            if(UI::Button("Reset to square")) {
+                                ztq->resetToSquare();
+                               
+                            }
+                            UI::stopGhosted();
+                            UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
                             ImGui::SameLine();
-                            //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
-                            ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
-                            ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
-                            ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
-                            
-                            if(mode!=node.mode) {
-                                node.mode = mode;
-                                ztl->setDirty(true);
+                            if(UI::Button(ICON_FK_SQUARE_O))  {
+                                ztq->setDst(ofRectangle(200,240,400,200));
                             }
-                            if(nodes.size()>2) {
+                            UI::toolTip("Reset zone to default");
+                            
+                            UI::addParameterGroup(ztq->transformParams, false);
+                        }
+                    } else {
+                            
+                        ZoneTransformLine* ztl = dynamic_cast<ZoneTransformLine*>(&laserZone->getZoneTransform());
+                        if(ztl!=nullptr) {
+                            //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                            
+                            UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+                            
+                            vector<BezierNode>& nodes = ztl->getNodes();
+                            for(int i = 0; i<nodes.size(); i++) {
+                                ImGui::PushID(i);
+                                BezierNode& node = nodes[i];
+                                int mode = node.mode;
+                                ImGui::Text("%d", i+1);
                                 ImGui::SameLine();
+                                //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
+                                ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
+                                ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
+                                ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
                                 
-                                string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
-                                if (UI::DangerButton(label, false)) {
-                                    ztl->deleteNode(i);
-                                    
+                                if(mode!=node.mode) {
+                                    node.mode = mode;
+                                    ztl->setDirty(true);
                                 }
+                                if(nodes.size()>2) {
+                                    ImGui::SameLine();
+                                    
+                                    string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+                                    if (UI::DangerButton(label, false)) {
+                                        ztl->deleteNode(i);
+                                        
+                                    }
+                                }
+                                
+                                ImGui::PopID();
+                                
+                                
                             }
-                            
-                            ImGui::PopID();
-                            
-                            
+                            label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
+                            if (UI::Button(label, false)) {
+                                ztl->addNode();
+                                
+                            }
                         }
-                        label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
-                        if (UI::Button(label, false)) {
-                            ztl->addNode();
-                            
-                        }
-                        
                         
                     }
 
@@ -1228,16 +1173,71 @@ void Manager::drawLaserGui() {
         }
         UI::endWindow();
     }
-    drawUIPanelDacAssigner();
+    guiDacAssignment();
     
     visualiser3D.drawUI();
 
-    drawUIPanelLaserCopySettings();
+    guiCopyLaserSettings();
+    
+}
+void Manager::guiMenuBar() {
+    
+    ImGui::PushFont(UI::mediumFont);
+    ImGui::PushStyleVar( ImGuiStyleVar_ItemSpacing, ImVec2( 8, 12 ) );
+    
+    if (ImGui::BeginMainMenuBar())
+    {
+//        if (ImGui::BeginMenu("File"))
+//        {
+//            //ShowExampleMenuFile();
+//            ImGui::EndMenu();
+//        }
+//        if (ImGui::BeginMenu("Edit"))
+//        {
+////            if (ImGui::MenuItem("Undo", "CTRL+Z")) {}
+////            if (ImGui::MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
+////            ImGui::Separator();
+////            if (ImGui::MenuItem("Cut", "CTRL+X")) {}
+////            if (ImGui::MenuItem("Copy", "CTRL+C")) {}
+////            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
+//            ImGui::EndMenu();
+//        }
+        if(ImGui::BeginMenu("View") ) {
+            if(ImGui::BeginMenu("Set up") ) {
+                if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserManagementWindow)) {
+                    showLaserManagementWindow = !showLaserManagementWindow;
+                }
+                if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
+                    showLaserOutputSettingsWindow = !showLaserOutputSettingsWindow;
+                }
+    //            if (ImGui::MenuItem("Scanner settings", "CMD+L", showScannerSettingsWindow)) {
+    //                showScannerSettingsWindow = !showScannerSettingsWindow;
+    //                //ImGui::SetWindowFocus("Laser Settings");
+    //            }
+                if (ImGui::MenuItem("Controller assignment", "CMD+D",showDacAssignmentWindow )) {
+                    showDacAssignmentWindow= !showDacAssignmentWindow;
+                   //ImGui::SetWindowFocus("Controller Assignment");
+                }
+                if (ImGui::MenuItem("3D Visualiser settings", "CMD+D", visualiser3D.showSettingsWindow)) {
+                    visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
+                }
+                if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
+                    showCustomParametersWindow = !showCustomParametersWindow;
+                }
+            }
+
+            ImGui::EndMenu();
+        }
+        menuBarHeight = ImGui::GetWindowHeight();
+        ImGui::EndMainMenuBar();
+    }
+    ImGui::PopFont();
+    ImGui::PopStyleVar();
+    
     
 }
 
-
-void Manager :: drawUIPanelMainLasers() {
+void Manager :: guiLaserOverview() {
     
     if(!showLaserManagementWindow) return;
     ofxLaser::Manager& laserManager = *this;
@@ -1357,14 +1357,10 @@ void Manager :: drawUIPanelMainLasers() {
 
             if (lasers.size() > 1) {
                 ImGui::SameLine();
-                label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
-                if (UI::DangerButton(label, false)) {
-                    // delete laser
-                    string label = "Delete Laser?##" + ofToString(i);
-                    ImGui::OpenPopup(label.c_str());
-                }
-            }
                 
+                guiDeleteLaserButtonAndPopup(&laserobject, i);
+            }
+           
             
             
             float framerate = laserobject.getFrameRate();
@@ -1374,7 +1370,7 @@ void Manager :: drawUIPanelMainLasers() {
                 ImGui::Text("%s",label.c_str());
             }
             
-            drawUIPopupDeleteLaser(&laserobject, i);
+        
             
         }
         
@@ -1435,7 +1431,7 @@ void Manager :: drawUIPanelMainLasers() {
    
 }
 
-void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser) {
+void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
     // TODO CHECK THIS FOR PUSH POP STYLES
 
     if(!showLaserOutputSettingsWindow) return;
@@ -1696,7 +1692,7 @@ void Manager :: drawUIPanelLaserOutputSettings(ofxLaser::Laser* laser) {
 }
 
 
-void Manager :: drawUIPanelIconBar(int ypos) {
+void Manager :: guiTopBar(int ypos) {
 
     ofxLaser::Manager& laserManager = *this;
     
@@ -1812,7 +1808,7 @@ void Manager :: drawUIPanelIconBar(int ypos) {
     
 }
 
-void Manager :: drawUIPanelCustomParameters() {
+void Manager :: guiCustomParameters() {
     if(showCustomParametersWindow && (customParams.size()>0)) {
         if(UI::startWindow("Custom Paramenters", ImVec2(ofGetWidth()-guiSpacing -guiLaserSettingsPanelWidth,620), ImVec2(guiLaserSettingsPanelWidth,0),0,false,(bool*)&showCustomParametersWindow.get())) {
             
@@ -1826,10 +1822,10 @@ void Manager :: drawUIPanelCustomParameters() {
     
 }
 
-void Manager :: drawUIPanelDacAssigner() {
+void Manager :: guiDacAssignment() {
     
     if(showDacAssignmentWindow) {
-        if(UI::startWindow("Controller Assignment", ImVec2(100, 100), ImVec2(550,0), ImGuiWindowFlags_None, false, (bool*)&showDacAssignmentWindow.get())) {
+        if(UI::startWindow("Controller Assignment", ImVec2(100, 100), ImVec2(550,0), ImGuiWindowFlags_None, false, &showDacAssignmentWindow)) {
             
             
             // get the dacs from the dacAssigner
@@ -2003,7 +1999,7 @@ void Manager :: drawUIPanelDacAssigner() {
                 
                 if(laser->dacLabel.get()!="") {
                     ImGui::SameLine();
-                    showDacAliasEditButton(laser->dacLabel.get());
+                    guiEditDacAliasButtonAndPopup(laser->dacLabel.get());
                 }
             }
             
@@ -2054,7 +2050,7 @@ void Manager :: drawUIPanelDacAssigner() {
                     ImGui::SameLine();
                     ImGui::PopID();
                     
-                    showDacAliasEditButton(dacdata.getLabel());
+                    guiEditDacAliasButtonAndPopup(dacdata.getLabel());
                     
                     
                     
@@ -2070,7 +2066,8 @@ void Manager :: drawUIPanelDacAssigner() {
     }
 }
 
-void Manager :: showDacAliasEditButton(string daclabel) {
+void Manager :: guiEditDacAliasButtonAndPopup(string daclabel) {
+    
     string id ="dacalias"+daclabel;
     ImGui::PushID(id.c_str());
     string label;
@@ -2094,193 +2091,30 @@ void Manager :: showDacAliasEditButton(string daclabel) {
             string newalias = newDacAlias;
             // TODO - check existing already
             dacAssigner.addAliasForLabel(newalias,daclabel, true);
-            
             ImGui::CloseCurrentPopup();
-            
         }
+        
         ImGui::SetItemDefaultFocus();
         ImGui::SameLine();
         label = "Cancel## "+daclabel;
         if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
-            
         }
         ImGui::EndPopup();
-        
-        
     }
     ImGui::PopID();
 }
-//
-//void Manager :: drawUIPanelScannerSettings(ofxLaser::Laser* laser, float laserpanelwidth, float spacing, float x) {
-//   //ImGui::ShowDemoWindow();
-//    UI::startWindow("Scanner settings", ImVec2(x, spacing), ImVec2(laserpanelwidth,0), ImGuiWindowFlags_AlwaysAutoResize, false, (bool*)&showScannerSettingsWindow.get());
-//
-//
-//    if(ImGui::Button("COPY LASER SETTINGS")) {
-//        copySettingsWindowOpen = !copySettingsWindowOpen;
-//    }
-//
-//
-//    UI::largeItemStart();
-//    ImGui::PushItemWidth(190);
-//    UI::addFloatAsIntPercentage(laser->speedMultiplier);
-//    UI::toolTip("Scanner speed adjustment (NB this works mathematically, it doesn't change the point rate)");
-//    ImGui::PopItemWidth();
-//    ImGui::PushItemWidth(170);
-//    UI::addFloatSlider(laser->colourChangeShift);
-//    UI::toolTip("Shifts the laser colours to match the scanner position (AKA blank shift)");
-//    ImGui::PopItemWidth();
-//    UI::largeItemEnd();
-//
-//
-//
-//   // PresetManager& presetManager = *PresetManager::instance();
-//    // TODO :
-//    // check if the settings are different from the preset, if they are
-//    // show a "save" button, also save as?
-//    //
-//    // when an option is selected, update all the params
-//
-//    ScannerSettings& currentPreset = *scannerPresetManager.getPreset(laser->scannerSettings.getLabel());
-//    scannerPresetManager.drawComboBox(laser->scannerSettings);
-//
-//    ImGui::SameLine();
-//
-//    if(ImGui::Button("EDIT")) {
-//        //ImGui::OpenPopup("Edit Scanner Preset");
-//        showEditScannerPreset = true;
-//    }
-//
-//    //    ImGui::SetNextWindowPos,
-//    ImGui::SetNextWindowSize({760,0});
-//    // centre popup
-//
-//    ImGui::SetNextWindowPos({(float)ofGetWidth()/2, (float)ofGetHeight()/2}, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-//
-//    // SCANNER PRESET POPUP
-//
-//    if (showEditScannerPreset && ImGui::Begin("Edit Scanner Preset", &showEditScannerPreset, ImGuiWindowFlags_NoNavInputs | ImGuiWindowFlags_NoDocking))
-//    {
-//        ImGui::Text("SCANNER SETTINGS - %s",laser->getLabel().c_str());
-//        ImGui::Separator();
-//        scannerPresetManager.drawComboBox(laser->scannerSettings);
-//
-//
-//        ImGui::SameLine();
-//        scannerPresetManager.drawSaveButtons(laser->scannerSettings);
-//
-//        UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
-//
-//        ImGui::Columns(2);
-//        UI::addResettableIntSlider(laser->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
-//
-//        UI::addResettableIntSlider(laser->scannerSettings.shapePreOn, currentPreset.shapePreOn, "The length of time that the laser is switched on and held at the beginning of a shape");
-//        ImGui::NextColumn();
-//
-//        UI::addResettableIntSlider(laser->scannerSettings.shapePostBlank, currentPreset.shapePostBlank,"The length of time that the laser is switched off and held at the end of a shape" );
-//        UI::addResettableIntSlider(laser->scannerSettings.shapePostOn, currentPreset.shapePostOn,"The length of time that the laser is switched on and held at the end of a shape" );
-//
-//        ImGui::Columns(1);
-//
-//        ImGui::Text("Render profiles");
-//        UI::toolTip("Every scanner setting has three profiles for rendering different qualities of laser effects. Unless otherwise specified, the default profile is used. The fast setting is good for long curvy lines, the high detail setting is good for complex pointy shapes.");
-//
-//        ImGui::Separator();
-//        //bool firsttreeopen = true;
-//        ImGui::Columns(3);
-//        ImGui::SetColumnWidth(0, 250);
-//        ImGui::SetColumnWidth(1, 250);
-//        ImGui::SetColumnWidth(1, 250);
-//
-//
-//        for (auto & renderProfilePair : laser->scannerSettings.renderProfiles) {
-//            ImGui::PushItemWidth(120);
-//            string name =renderProfilePair.first;
-//            RenderProfile& profile = renderProfilePair.second;
-//
-//            RenderProfile& resetProfile = currentPreset.renderProfiles.at(name);
-//
-//            ImGui::Text("%s", name.c_str());
-//            UI::addResettableFloatSlider(profile.speed,resetProfile.speed, "",  "%.1f", 3.0f);
-//            UI::addResettableFloatSlider(profile.acceleration,resetProfile.acceleration, "",  "%.2f", 3.0f);
-//            UI::addResettableIntSlider(profile.dotMaxPoints, resetProfile.dotMaxPoints);
-//            UI::addResettableFloatSlider(profile.cornerThreshold, resetProfile.cornerThreshold);
-//
-//            ImGui::PopItemWidth();
-//            ImGui::NextColumn();
-//        }
-//
-//
-//        ImGui::End();
-//    }
-//
-//
-//
-//    // COLOUR SETTINGS
-//    ImGui::Separator();
-//    ImGui::Text("COLOUR");
-//
-//    if(ImGui::TreeNode("Colour calibration")){
-//        colourPresetManager.drawComboBox(laser->colourSettings);
-//        colourPresetManager.drawSaveButtons(laser->colourSettings);
-//        UI::addParameterGroup(laser->colourSettings.params);
-//
-//        ImGui::TreePop();
-//    }
-//
-//
-//
-//    ImGui::Separator();
-//    ImGui::Text("ADVANCED SETTINGS");
-//
-//    // ADVANCED
-//
-//
-//    if(ImGui::TreeNode("Advanced")){
-//        // POINT RATE
-//        ImGui::PushItemWidth(laserpanelwidth-60);
-//        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f);
-//        int ppsslider = laser->pps;
-//        string ppsstring = "Point rate : " + ofToString(ppsslider);
-//        if(ImGui::SliderInt("##Point rate", &ppsslider, laser->pps.getMin(), laser->pps.getMax(), ppsstring.c_str())){
-//            laser->pps.set(ppsslider/100*100);
-//
-//        }
-//        UI::toolTip("The actual points sent to the laser - YOU DON'T NEED TO ADJUST THIS unless you want to actually change the data rate, or you need better resolution for very fast scanners. The speed of the scanners can be fully adjusted without changing the point rate. ");
-//        ImGui::PopItemWidth();
-//        ImGui::PopStyleVar(1);
-//
-//        UI::addParameterGroup(laser->advancedParams);
-//        ImGui::TreePop();
-//    }
-//
-//
-//
-//    // draw a flashing dot during saving
-//    if(laser->getSaveStatus() && (ofGetElapsedTimeMillis()%300)<150) {
-//        ImDrawList*   draw_list = ImGui::GetWindowDrawList();
-//        ImVec2 p = ImGui::GetWindowPos();
-//        p.x+=ImGui::GetContentRegionAvailWidth();
-//        p.y+=30;// + ImGui::GetScrollY();
-//        // if(ImGui::GetScrollY()>0) p.x-=14;
-//        //ImGui::GetContentRegionAvailWidth()
-//        draw_list->AddCircleFilled(p, 4, ImGui::GetColorU32(ImGuiCol_Border));
-//    }
-//
-//
-//    //ImGui::End();
-//    UI::endWindow();
-//
-//    drawUIPanelDacAnalytics();
-//
-//
-//
-//}
 
-void Manager :: drawUIPopupDeleteLaser(Laser* laser, int index) {
+void Manager :: guiDeleteLaserButtonAndPopup(Laser* laser, int index) {
     
-    string label ="Delete Laser?##"+ofToString(index);
+    string label ="Delete Laser "+ofToString(index+1)+"?";
+    
+    string buttonlabel = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(index);
+    if (UI::DangerButton(buttonlabel, false)) {
+        // delete laser
+        ImGui::OpenPopup(label.c_str());
+    }
+    
     if (ImGui::BeginPopupModal(label.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
         ImGui::Text("Are you sure you want to delete this laser? All the zone settings will be deleted.\n\n");
@@ -2290,10 +2124,9 @@ void Manager :: drawUIPopupDeleteLaser(Laser* laser, int index) {
         
         if (ImGui::Button("DELETE", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
-            
             deleteLaser(laser);
-            
         }
+        
         UI::dangerColourEnd();
         
         ImGui::SetItemDefaultFocus();
@@ -2306,7 +2139,7 @@ void Manager :: drawUIPopupDeleteLaser(Laser* laser, int index) {
     }
 }
 
-void Manager :: drawUIPanelLaserCopySettings() {
+void Manager :: guiCopyLaserSettings() {
 
     if(!copySettingsWindowOpen) return ;
     
@@ -2442,7 +2275,7 @@ void Manager :: drawUIPanelLaserCopySettings() {
     }
 }
 
-void Manager::drawUIPanelDacAnalytics() {
+void Manager::guiDacAnalytics() {
     
     if(!showDacAnalytics) return;
     

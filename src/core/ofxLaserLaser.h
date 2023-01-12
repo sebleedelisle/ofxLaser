@@ -63,19 +63,17 @@ class Laser {
     // adds all the shape points to the vector passed in
     void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
-    
     void sendRawPoints(const vector<Point>& points, InputZone* zone, float masterIntensity =1);
     int getPointRate();
     float getFrameRate();
     
-    // DAC
+    void clearPoints();
     
+    // DAC
     string getDacLabel() ;
-    //string getDacAlias() ;
     int getDacConnectedState();
     
     // Zones
-    
     void addZone(InputZone* zone,  bool isAlternate = false);
     bool hasZone(InputZone* zone);
     bool removeZone(InputZone* zone);
@@ -223,9 +221,9 @@ class Laser {
     ofMesh gridMesh; 
   
     ofMesh previewPathMesh;
-    vector<ofColor> previewPathColours;
-   
-    
+    ofMesh previewPathColoured; 
+//    vector<ofColor> previewPathColours;
+//
     DacEmpty emptyDac;
  
     //-----------------------------------
@@ -235,13 +233,8 @@ class Laser {
   
     
     void setDacArmed(bool& armed);
-    
-    
 
     DacBase* dac;
-    
-    //const int min = -32768;
-    //const int max = 32767;
     
     ofPoint laserHomePosition;
     

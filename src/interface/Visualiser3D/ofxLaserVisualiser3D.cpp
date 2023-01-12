@@ -262,7 +262,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
             bool flipY = laser3D.flipY;
             //vector<ofxLaser::Point>& laserPoints = laser.getLaserPoints();
             vector<glm::vec3>& points = laser.previewPathMesh.getVertices();
-            vector<ofColor>& colours = laser.previewPathColours;
+            vector<ofFloatColor>& colours = laser.previewPathColoured.getColors();
 
             float brightnessfactor = MAX(0.01f,5.0f/(float)points.size()) * brightness;
             

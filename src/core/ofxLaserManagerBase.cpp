@@ -48,7 +48,7 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.setName("Laser");
     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
     //params.add(showLaserSettings.set("Edit laser", false));
-    params.add(testPattern.set("Global test pattern", 0,0,9));
+    params.add(testPattern.set("Global test pattern", 0,0,10));
     testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
     
     params.add(canvasWidth.set("Canvas width", 800,0,5000));
