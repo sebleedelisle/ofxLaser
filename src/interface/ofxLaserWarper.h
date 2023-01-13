@@ -21,12 +21,7 @@ namespace ofxLaser {
 class Warper {
 	
 	public:
-	
-//	void setSrc(const ofRectangle& rect);
-//	void setSrc(float x, float y, float w, float h) ;
-//	void setDst(const ofRectangle& rect);
-//	void setDst(float x, float y, float w, float h) ;
-//	
+
 	void updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, glm::vec3 src4, glm::vec3 dst1, glm::vec3 dst2, glm::vec3 dst3, glm::vec3 dst4);
 
 	glm::vec3 getWarpedPoint(const glm::vec3& p, bool useHomography = true);

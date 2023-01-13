@@ -15,15 +15,8 @@ using namespace ofxLaser;
 
 ZoneTransformLineData :: ZoneTransformLineData() {
     
-    scale = 1;
-    offset.set(0,0);
     
-    editable = true;
     isDirty = true;
-    selected = false;
-    snapToGrid = false;
-    gridSize  = 1;
-    
     
     resetNodes();
     
@@ -31,7 +24,7 @@ ZoneTransformLineData :: ZoneTransformLineData() {
     transformParams.setName("ZoneTransformLineDataParams");
     transformParams.add(zoneWidth.set("Width", 10,0,400));
    
-    setSrc(ofRectangle(0,0,100,100));
+    updateSrc(ofRectangle(0,0,100,100));
 
     ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformLineData::paramChanged);
     
@@ -49,7 +42,7 @@ ZoneTransformLineData::~ZoneTransformLineData() {
 
 void ZoneTransformLineData::init(ofRectangle& srcRect) {
 
-    setSrc(srcRect);
+    updateSrc(srcRect);
     resetNodes();
 
     
@@ -62,10 +55,6 @@ void ZoneTransformLineData::resetNodes() {
     nodes[1].reset(400,400);
     nodes[2].reset(500,400);
     nodes[2].end = true;
-    
-    for(BezierNode& node : nodes) {
-        node.setGrid(snapToGrid, gridSize);
-    }
     
 }
 
@@ -243,7 +232,6 @@ void ZoneTransformLineData :: addNode() {
     BezierNode& node = nodes.back();
     node.reset(endpos.x, endpos.y);
     node.mode = mode;
-    node.setGrid(snapToGrid, gridSize);
     
     isDirty = true;
     
@@ -308,7 +296,6 @@ bool ZoneTransformLineData::deserialize(ofJson& jsonGroup) {
         for(int i = 0; i<numnodes; i++) {
             ofJson& nodejson = nodesjson[i];
             nodes[i].deserialize(nodejson);
-            nodes[i].setGrid(snapToGrid, gridSize);
             
         }
     }
@@ -333,22 +320,19 @@ bool ZoneTransformLineData::deserialize(ofJson& jsonGroup) {
     return true;
 }
 
-
-
-
-
-bool ZoneTransformLineData::setSelected(bool v) {
-    
-    if(ZoneTransformBase::setSelected(v)) {
-        if(!selected) {
-            for(size_t i= 0; i<nodes.size(); i++) {
-                nodes[i].stopDrag();
-            }
-        }
-        return true;
-    } else {
-        return false;
-    }
-    
-};
-
+//
+//bool ZoneTransformLineData::setSelected(bool v) {
+//    
+//    if(ZoneTransformBase::setSelected(v)) {
+//        if(!selected) {
+//            for(size_t i= 0; i<nodes.size(); i++) {
+//                nodes[i].stopDrag();
+//            }
+//        }
+//        return true;
+//    } else {
+//        return false;
+//    }
+//    
+//};
+//

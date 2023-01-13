@@ -26,16 +26,16 @@ class OutputZone {
     
     bool getEnabled();
     void setEnabled(bool value);
-    void setVisible(bool value) ;
-    bool getVisible() ;
+    //void setVisible(bool value) ;
+    //bool getVisible() ;
     
     void draw();
     
     string getLabel();
     const int getZoneIndex() const;
 
-    bool getSelected();
-    void setSelected(bool v);
+    //bool getSelected();
+    //void setSelected(bool v);
     
     bool getIsAlternate();
     void setIsAlternate(bool v);
@@ -47,11 +47,11 @@ class OutputZone {
     
 
     // scale and offset are only for the visual interface
-    void setScale(float _scale) ;
-    void setOffset(ofPoint _offset);
-    //void zoneMaskChanged(ofAbstractParameter& e) ;
+    //void setScale(float _scale) ;
+    //void setOffset(ofPoint _offset);
+    
     void paramChanged(ofAbstractParameter& e) ;
-    //void updateZoneMask() ;
+    
     bool setGrid(bool snapstate, int gridsize);
     
     ofRectangle getBounds();
@@ -75,16 +75,16 @@ class OutputZone {
 
     // not sure if i need to store these or not, depends if i make and destroy
     // zoneTransform objects
-    float scale;
-    ofPoint offset;
+    //float scale;
+    //ofPoint offset;
     
     protected :
     bool enabled;
-    bool visible;
+    //bool visible;
     bool isAlternate;
     
-    bool snapToGrid = false;
-    int gridSize = 20; 
+    //bool snapToGrid = false;
+    //int gridSize = 20;
     
 };
 

@@ -34,7 +34,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     virtual bool serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;
 
-    void setSrc(const ofRectangle& rect) override;
+    void updateSrc(const ofRectangle& rect) override;
  
     // resets to perpendicular corners
     void resetToSquare() ;

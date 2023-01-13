@@ -26,13 +26,13 @@ class ZoneTransformLine : public ZoneTransformBase {
 	~ZoneTransformLine();
     
     virtual bool update() override;
-    virtual void draw(string label) override;
+    //virtual void draw(string label) override;
     void resetNodes();
     
 	virtual void init(ofRectangle& srcRect) override;
 
-    virtual void setHue(int hue) override;
-    virtual bool setGrid(bool snapstate, int gridsize) override;
+   // virtual void setHue(int hue) override;
+    //virtual bool setGrid(bool snapstate, int gridsize) override;
     
 	virtual bool serialize(ofJson&json) override;
 	virtual bool deserialize(ofJson&jsonGroup) override;
@@ -41,7 +41,7 @@ class ZoneTransformLine : public ZoneTransformBase {
    
     void getPerimeterPoints(vector<glm::vec3>& points) override;
   
-    virtual bool setSelected(bool v) override;
+    //virtual bool setSelected(bool v) override;
 
     virtual Point getWarpedPoint(const Point& p) override;
     virtual ofPoint getWarpedPoint(const ofPoint& p) override;
@@ -65,17 +65,17 @@ class ZoneTransformLine : public ZoneTransformBase {
 	protected :
 	
     
-    void initListeners();
-    void removeListeners();
-    
-    void mouseMoved(ofMouseEventArgs &e);
-    bool mousePressed(ofMouseEventArgs &e);
-    void mouseDragged(ofMouseEventArgs &e);
-    void mouseReleased(ofMouseEventArgs &e);
-    void paramChanged(ofAbstractParameter& e);
-
-    void updateHandleColours();
-  
+//    void initListeners();
+//    void removeListeners();
+//
+//    void mouseMoved(ofMouseEventArgs &e);
+//    bool mousePressed(ofMouseEventArgs &e);
+//    void mouseDragged(ofMouseEventArgs &e);
+//    void mouseReleased(ofMouseEventArgs &e);
+//    void paramChanged(ofAbstractParameter& e);
+//
+//    void updateHandleColours();
+//
 	
 	bool initialised = false;
 	

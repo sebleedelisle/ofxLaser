@@ -24,7 +24,7 @@ OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
 
     isDirty = true;
     enabled = true;
-    visible = true;
+    
     ofAddListener(zoneParams.parameterChangedE(), this, &OutputZone::paramChanged);
     isAlternate = false;
     
@@ -38,65 +38,58 @@ bool OutputZone :: update() {
     
     bool wasDirty = isDirty;
     wasDirty = getZoneTransform().update() | wasDirty;
-   // if(isDirty) {
-        // bit hacky, need to ensure all transforms are selected / deselected together
-        zoneTransformQuad.setSelected(getZoneTransform().getSelected());
-        zoneTransformLine.setSelected(getZoneTransform().getSelected());
-   // }
-    
-    zoneTransformQuad.setSrc(zone.getRect());
-    zoneTransformLine.setSrc(zone.getRect());
-    
-    zoneTransformQuad.setVisible(transformType==0);
-    zoneTransformLine.setVisible(transformType==1);
+
+    zoneTransformQuad.updateSrc(zone.getRect());
+    zoneTransformLine.updateSrc(zone.getRect());
 
     isDirty = false;
     
     return wasDirty;
 }
-
-bool OutputZone :: setGrid(bool snapstate, int gridsize) {
-    if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
-        snapToGrid = snapstate;
-        gridSize = gridsize;
-        
-        zoneTransformLine.setGrid(snapToGrid, gridSize);
-        zoneTransformQuad.setGrid(snapToGrid, gridSize);
-        return true; 
-    } else {
-        return false;
-    }
-}
-
-void OutputZone :: draw() {
-     
-    if(!visible) return ;
-    ofPushStyle();
-    ofEnableAlphaBlending();
-    string label =ofToString(zone.getIndex()+1);
-    if(getIsAlternate()) label += "ALT";
-    getZoneTransform().draw(label);
-
-    ofDisableAlphaBlending();
-    
-    ofPopStyle();
-
-
-}
+//
+//bool OutputZone :: setGrid(bool snapstate, int gridsize) {
+//    if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
+//        snapToGrid = snapstate;
+//        gridSize = gridsize;
+//
+//        //zoneTransformLine.setGrid(snapToGrid, gridSize);
+//        //zoneTransformQuad.setGrid(snapToGrid, gridSize);
+//        return true;
+//    } else {
+//        return false;
+//    }
+//}
+//
+//void OutputZone :: draw() {
+//     
+//    if(!visible) return ;
+//    ofPushStyle();
+//    ofEnableAlphaBlending();
+//    string label =ofToString(zone.getIndex()+1);
+//    if(getIsAlternate()) label += "ALT";
+//    //getZoneTransform().draw(label);
+//
+//    ofDisableAlphaBlending();
+//    
+//    ofPopStyle();
+//
+//
+//}
 
 string OutputZone :: getLabel() {
     return ofToString(zone.getIndex()+1);
 }
-void OutputZone :: setScale(float _scale) {
-    scale = _scale;
-    
-    getZoneTransform().setScale(scale);
-    //getZoneTransform().scale = scale;
-}
-void OutputZone :: setOffset(ofPoint _offset) {
-    offset = _offset;
-    getZoneTransform().setOffset(offset);
-}
+//
+//void OutputZone :: setScale(float _scale) {
+//    scale = _scale;
+//
+//    getZoneTransform().setScale(scale);
+//    //getZoneTransform().scale = scale;
+//}
+//void OutputZone :: setOffset(ofPoint _offset) {
+//    offset = _offset;
+//    getZoneTransform().setOffset(offset);
+//}
 
 
 void OutputZone :: paramChanged(ofAbstractParameter& e) {
@@ -109,31 +102,31 @@ bool OutputZone::getEnabled() {
 }
 void OutputZone::setEnabled(bool value) {
     enabled = value;
-    getZoneTransform().setEditable(enabled);
+    //getZoneTransform().setEditable(enabled);
 }
-void OutputZone::setVisible(bool value) {
-    visible = value;
-    getZoneTransform().setVisible(visible);
-}
-bool OutputZone::getVisible() {
-    return visible;
-}
+//void OutputZone::setVisible(bool value) {
+//    visible = value;
+//    getZoneTransform().setVisible(visible);
+//}
+//bool OutputZone::getVisible() {
+//    return visible;
+//}
 
 const int OutputZone::getZoneIndex() const {
     return zone.getIndex();
 };
 
-
-bool OutputZone::getSelected() {
-    return getZoneTransform().getSelected();
-    
-};
-
-void OutputZone::setSelected(bool v) {
-
-   getZoneTransform().setSelected(v);
-    
-};
+//
+//bool OutputZone::getSelected() {
+//    return getZoneTransform().getSelected();
+//    
+//};
+//
+//void OutputZone::setSelected(bool v) {
+//
+//   getZoneTransform().setSelected(v);
+//    
+//};
 
 
 ofxLaser::Point OutputZone::getWarpedPoint(const ofxLaser::Point& p){
@@ -158,16 +151,12 @@ bool OutputZone::getIsAlternate() {
 }
 void OutputZone::setIsAlternate(bool v){
     isAlternate = v;
-    if(isAlternate) {
-        zoneTransformLine.setHue(100);
-        zoneTransformQuad.setHue(100);
-    }
+   
 }
 
 void OutputZone ::setSourceRect(ofRectangle & rect) {
-    
-    zoneTransformQuad.setSrc(rect);
-    zoneTransformLine.setSrc(rect);
+    zoneTransformQuad.updateSrc(rect);
+    zoneTransformLine.updateSrc(rect);
 }
 
 void OutputZone :: init(ofRectangle sourceRectangle) {

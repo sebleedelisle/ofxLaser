@@ -41,7 +41,7 @@ class ZoneTransformLineData : public ZoneTransformBase {
    
     void getPerimeterPoints(vector<glm::vec3>& points) override;
   
-    virtual bool setSelected(bool v) override;
+   // virtual bool setSelected(bool v) override;
 
     virtual Point getWarpedPoint(const Point& p) override;
     virtual ofPoint getWarpedPoint(const ofPoint& p) override;
@@ -55,8 +55,6 @@ class ZoneTransformLineData : public ZoneTransformBase {
     void updateNodes();
     bool deleteNode(int i);
     void addNode();
-    
-    
     
     virtual ofPoint getCentre() override;
     

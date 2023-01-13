@@ -37,7 +37,7 @@ ZoneTransformQuadData::ZoneTransformQuadData() {
     
     xDivisions = 1;
     yDivisions = 1;
-    setSrc(ofRectangle(0,0,100,100));
+    updateSrc(ofRectangle(0,0,100,100));
     setDst(ofRectangle(100,100,200,200));
     
     xDivisionsNew.addListener(this, &ZoneTransformQuadData::divisionsChanged);
@@ -64,7 +64,7 @@ void ZoneTransformQuadData::init(ofRectangle& srcRect) {
 //    float srcwidth = srcRect.getWidth();
 //    float srcheight = srcRect.getHeight();
 //
-    setSrc(srcRect);
+    updateSrc(srcRect);
     
     // TODO - better default???
     
@@ -194,7 +194,7 @@ ofxLaser::Point ZoneTransformQuadData::getWarpedPoint(const ofxLaser::Point& p){
 //Point getUnWarpedPoint(const Point& p){
 //    return p;
 //};
-void ZoneTransformQuadData::setSrc(const ofRectangle& rect) {
+void ZoneTransformQuadData::updateSrc(const ofRectangle& rect) {
     
     
     if((srcRect!=rect) || (srcPoints.size()!=((xDivisions+1)*(yDivisions+1)))) {
@@ -374,7 +374,7 @@ void ZoneTransformQuadData:: updateDivisions(){
     // srcpoints is resized in setSrc
     //srcPoints.resize((xDivisions+1)*(yDivisions+1));
     
-    setSrc(srcRect);
+    updateSrc(srcRect);
     
         
     setDstCorners(corners[0], corners[1], corners[2], corners[3]);
@@ -394,7 +394,7 @@ void ZoneTransformQuadData::updateQuads() {
     if(srcPoints.size()!=dstPoints.size()) {
         srcPoints.resize((xDivisions+1)*(yDivisions+1));
         
-        setSrc(srcRect);
+        updateSrc(srcRect);
     }
     
     for(int i = 0; i<quadnum; i++) {

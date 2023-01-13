@@ -16,99 +16,73 @@ using namespace ofxLaser;
 
 
 ZoneTransformQuad::ZoneTransformQuad() {
-     initListeners();
-  
-    
-    dstHandles.resize(4);
-    srcPoints.resize(4);
-    editSubdivisions = false;
-    
-//    gridParams.add(snapToGrid.set("snap to grid", true));
-//    gridParams.add(gridSize.set("grid size", 10));
-//    ofAddListener(gridParams.parameterChangedE(), this, &ZoneTransform::paramChanged);
-//  
-    
-    // Used for serialize / deserialize
-    transformParams.setName("ZoneTransformParams");
-    
-    transformParams.add(editSubdivisions.set("edit subdivisions", false));
-    transformParams.add(xDivisionsNew.set("x divisions", 1,1,6));
-    transformParams.add(yDivisionsNew.set("y divisions", 1,1,6));
-    transformParams.add(useHomography.set("perspective", false));
-    
-    xDivisions = 1;
-    yDivisions = 1;
-    setSrc(ofRectangle(0,0,100,100));
-    setDst(ofRectangle(100,100,200,200));
-    
-    xDivisionsNew.addListener(this, &ZoneTransformQuad::divisionsChanged);
-    yDivisionsNew.addListener(this, &ZoneTransformQuad::divisionsChanged);
-    
-    ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformQuad::paramChanged);
-    
+    initListeners();
     updateHandleColours();
+    
+    scale = 1;
+    offset.set(0,0);
+    
+    editable = true;
+    selected = false;
+    visible = false;
+    
+    
+     uiZoneFillColour  = ofColor::fromHex(0x001123, 128);
+     uiZoneFillColourSelected = ofColor::fromHex(0x001123);
+     uiZoneStrokeColour  = ofColor::fromHex(0x0E87E7);
+     uiZoneStrokeColourSelected = ofColor::fromHex(0x0E87E7);
+     uiZoneHandleColour = ofColor::fromHex(0x0E87E7);
+     uiZoneHandleColourOver = ofColor :: fromHex(0xffffff);
+     uiZoneStrokeSubdivisionColour = ofColor :: fromHex(0x00386D);;
+     uiZoneStrokeSubdivisionColourSelected = ofColor :: fromHex(0x006ADB);;;
+     snapToGrid = false;
+     gridSize  = 0;
+    
+    
 }
 
-void ZoneTransformQuad :: paramChanged(ofAbstractParameter& e) {
-    isDirty= true;
-    
-}
+
 ZoneTransformQuad::~ZoneTransformQuad() {
     removeListeners();
-    xDivisionsNew.removeListener(this, &ZoneTransformQuad::divisionsChanged);
-    yDivisionsNew.removeListener(this, &ZoneTransformQuad::divisionsChanged);
-    ofRemoveListener(transformParams.parameterChangedE(), this, &ZoneTransformQuad::paramChanged);
 }
 
 
 void ZoneTransformQuad::init(ofRectangle& srcRect) {
     
-//    float srcwidth = srcRect.getWidth();
-//    float srcheight = srcRect.getHeight();
-//
-    setSrc(srcRect);
-    
-    // TODO - better default???
-    
-    ofRectangle destRect(600,600,100,100) ;
-    
-    //= srcRect;
-    //destRect.scale(srcwidth/800, srcheight/800);
-    //destRect.x*=srcwidth/800;
-    //destRect.y*=srcheight/800;
-    setDst(destRect);
-    //ofLogNotice("ZoneTransform::init - setDst");
     updateDivisions();
     updateQuads();
     
 }
 
-
 bool ZoneTransformQuad::update(){
-    if(isDirty) {
-        //ofLogNotice("ZoneTransform::update() - isDirty");
-        updateQuads();
-        updateHandleColours();
-        updateConvex();
-        isDirty = false;
-        return true;
-    } else {
-        return false;
-    }
-    
-    
+    // check if laser is dirty and then update
+//    updateHandleColours();
+    return true;
 }
-void ZoneTransformQuad::draw(string label) {
+    
+    
+    
+void ZoneTransformQuad::draw() {
     
     if(!visible) return ;
+    
+    // read from laser eventually
+    bool editSubdivisions = true;
+    int xDivisions = 1;
+    int yDivisions = 1;
+    string label = "label";
+    glm::vec3 centre;
     
     ofPushMatrix();
     ofTranslate(offset);
     ofScale(scale, scale);
     ofSetColor(selected?uiZoneFillColourSelected : uiZoneFillColour);
-    if((!editSubdivisions) && useHomography && (!getIsConvex())) {
-        ofSetColor(80,0,0);
-    }
+    // if invalid then change colours
+//    if((!editSubdivisions) && useHomography && (!getIsConvex())) {
+//        ofSetColor(80,0,0);
+//    }
+    
+    // Draw the filled area within the zone segments
     ofFill();
     ofBeginShape();
     for(int i = 0; i<xDivisions; i++) {
@@ -125,18 +99,18 @@ void ZoneTransformQuad::draw(string label) {
         int index = (yDivisions-i)*(xDivisions+1);
         ofVertex(dstHandles[index]);
     }
-    
     ofEndShape();
     ofNoFill();
     
+    // draw the zone label
     ofSetColor(uiZoneStrokeColour);
-   
-    ofDrawBitmapString(label,getCentre() - ofPoint(4*label.size(),5));
+    ofDrawBitmapString(label, centre - glm::vec3(4*label.size(),5, 0));
     
+    
+    // draw lines between all the vertices. Thick on outside, thin on the inside.
     for(size_t i= 0; i<dstHandles.size(); i++) {
         int x = i%(xDivisions+1);
         int y = (int)i/(xDivisions+1);
-        
         
         if(x<xDivisions) {
             if((y>0)&&(y<yDivisions)) {
@@ -187,338 +161,6 @@ void ZoneTransformQuad::draw(string label) {
     ofPopMatrix();
 }
 
-ofPoint ZoneTransformQuad::getCentre() {
-    ofPoint centre = srcRect.getCenter();
-    return getWarpedPoint(centre);
-}
-
-void ZoneTransformQuad :: resetToSquare() {
-    vector<DragHandle*> cornerhandles = getCornerHandles();
-    vector<ofPoint> corners;
-    // convert to ofPoints
-    for(DragHandle* handle : cornerhandles) corners.push_back(*handle);
-    
-    corners[0].x = corners[2].x = getLeft();
-    corners[0].y = corners[1].y = getTop(); //ofLerp(corners[0].y,corners[1].y, 0.5);
-    corners[1].x = corners[3].x = getRight(); // ofLerp(corners[1].x,corners[3].x,0.5);
-    corners[3].y = corners[2].y = getBottom(); // ofLerp(corners[3].y,corners[2].y,0.5);
-    setDstCorners(corners[0], corners[1], corners[2], corners[3]);
-    isDirty = true;
-}
-
-bool ZoneTransformQuad :: isSquare() {
-    
-    vector<DragHandle*> corners = getCornerHandles();
-    return (corners[0]->x == corners[2]->x) && (corners[0]->y == corners[1]->y) && (corners[1]->x == corners[3]->x) && (corners[2]->y == corners[3]->y);
-    
-}
-
-ofPoint ZoneTransformQuad::getWarpedPoint(const ofPoint& p){
-    
-    //if(useHomography && (!isConvex())) return dstHandles[0];
-    
-    ofPoint rp = p - srcRect.getTopLeft();
-    
-    int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
-    int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
-    
-    //ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
-    
-    x = ofClamp(x,0,xDivisions-1);
-    y = ofClamp(y,0,yDivisions-1);
-    
-    int quadnum = x + (y*xDivisions);
-    Warper & quad = quadWarpers[quadnum];
-    return quad.getWarpedPoint(p, (!editSubdivisions) && useHomography);
-    
-};
-
-ofPoint ZoneTransformQuad::getUnWarpedPoint(const ofPoint& p){
-    ofPoint rp = p - srcRect.getTopLeft();
-    
-    int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
-    int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
-    
-    //ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
-    
-    x = ofClamp(x,0,xDivisions-1);
-    y = ofClamp(y,0,yDivisions-1);
-    
-    int quadnum = x + (y*xDivisions);
-    Warper & quad = quadWarpers[quadnum];
-    return quad.getUnWarpedPoint(p);
-    
-};
-
-
-ofxLaser::Point ZoneTransformQuad::getWarpedPoint(const ofxLaser::Point& p){
-    
-    ofxLaser::Point rp = p;
-    
-    if((!editSubdivisions) && useHomography && (!getIsConvex())) {
-        rp.set(dstHandles[0]);
-        rp.setColour(0,0,0);
-        return rp;
-    }
-        
-    rp.x-=srcRect.getTopLeft().x;
-    rp.y-=srcRect.getTopLeft().y;
-
-    int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
-    int y = (rp.y / srcRect.getHeight()) * (float)(yDivisions);
-    
-    //ofLog(OF_LOG_NOTICE, ofToString(x) + " " + ofToString(y));
-    
-    x = ofClamp(x,0,xDivisions-1);
-    y = ofClamp(y,0,yDivisions-1);
-    
-    int quadnum = x + (y*xDivisions);
-    Warper & quad = quadWarpers[quadnum];
-    rp = quad.getWarpedPoint(p, (!editSubdivisions) && useHomography);
-    
-    return rp;
-    
-};
-//
-//Point getUnWarpedPoint(const Point& p){
-//	return p;
-//};
-void ZoneTransformQuad::setSrc(const ofRectangle& rect) {
-    
-    
-    if((srcRect!=rect) || (srcPoints.size()!=((xDivisions+1)*(yDivisions+1)))) {
-        //ofLogNotice("ZoneTransform:: setSrc ") << rect;
-        srcRect = rect;
-        // update source points?
-        int xpoints = xDivisions+1;
-        int ypoints = yDivisions+1;
-        
-        int numpoints = xpoints*ypoints;
-        
-        // srcPoints should already have enough but let's check
-        if((int)srcPoints.size()!= numpoints) {
-            srcPoints.resize(numpoints);
-        }
-        
-        for(int i= 0; i<numpoints; i++) {
-            float x = ofMap(i%xpoints, 0, xDivisions, rect.getLeft(), rect.getRight());
-            float y = ofMap(i/xpoints, 0, yDivisions, rect.getTop(), rect.getBottom());
-            
-            //ofLog(OF_LOG_NOTICE, ofToString(x) + " " +ofToString(y));
-            
-            srcPoints[i] = glm::vec3(x, y,0);
-            
-        }
-        isDirty = true;
-    }
-}
-void ZoneTransformQuad::setDst(const ofRectangle& rect) {
-    setDstCorners(rect.getTopLeft(), rect.getTopRight(), rect.getBottomLeft(), rect.getBottomRight());
-    updateQuads(); 
-}
-
-void ZoneTransformQuad :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright) {
-    // interpolate dst handle points?
-    
-    // ofLog(OF_LOG_NOTICE, "ZoneTransform::setDstCorners "+displayLabel);
-    vector<cv::Point2f> srcCVPoints, dstCVPoints;
-    srcCVPoints.resize(4);
-    dstCVPoints.resize(4);
-    
-    srcCVPoints[0] = toCv(srcRect.getTopLeft());
-    srcCVPoints[1] = toCv(srcRect.getTopRight());
-    srcCVPoints[2] = toCv(srcRect.getBottomLeft());
-    srcCVPoints[3] = toCv(srcRect.getBottomRight());
-    
-    //cout << topleft << " " << topright << " " << bottomleft << " " << bottomright << endl;
-    
-    dstCVPoints[0] = toCv(topleft);
-    dstCVPoints[1] = toCv(topright);
-    dstCVPoints[2] = toCv(bottomleft);
-    dstCVPoints[3] = toCv(bottomright);
-    
-    // NB 8 is CV_RANSAC which isn't defined in all platforms for some reason.
-    cv::Mat homography = cv::findHomography(cv::Mat(srcCVPoints), cv::Mat(dstCVPoints),8, 100);
-    
-    srcCVPoints.resize(srcPoints.size());
-    dstCVPoints.resize(srcPoints.size());
-    
-    
-    for(size_t i= 0; i<srcPoints.size(); i++) {
-        srcCVPoints[i] = toCv(srcPoints[i]);
-        
-    }
-    try {
-        cv::perspectiveTransform(srcCVPoints, dstCVPoints, homography);
-    } catch ( cv::Exception & e ) {
-        ofLog(OF_LOG_ERROR, e.msg ); // output exception message
-    }
-    
-    for(size_t i= 0; i<dstHandles.size(); i++) {
-        dstHandles[i].set(toOf(dstCVPoints[i]));
-    }
-}
-
-void ZoneTransformQuad::resetFromCorners() {
-    vector<ofPoint> corners = getCorners();
-    setDstCorners(corners[0],corners[1],corners[2],corners[3]);
-    
-}
-
-vector<DragHandle*> ZoneTransformQuad::getCornerHandles(){
-    vector<DragHandle*> corners;
-    corners.push_back(&dstHandles[0]);
-    corners.push_back(&dstHandles[xDivisions]);
-    corners.push_back(&dstHandles[yDivisions*(xDivisions+1)]);
-    corners.push_back(&dstHandles[((xDivisions+1)*(yDivisions+1))-1]);
-    return corners;
-}
-
-vector<ofPoint> ZoneTransformQuad::getCorners(){
-    
-    vector<ofPoint> corners;
-    
-    int indextopleft = 0 ;
-    int indextopright = xDivisions;
-    int indexbotleft =yDivisions*(xDivisions+1);
-    int indexbotright =((xDivisions+1)*(yDivisions+1))-1;
-    
-    corners.push_back(dstHandles[indextopleft]);
-    corners.push_back(dstHandles[indextopright]);
-    corners.push_back(dstHandles[indexbotleft]);
-    corners.push_back(dstHandles[indexbotright]);
-    return corners;
-    
-}
-
-vector<DragHandle*> ZoneTransformQuad::getCornerHandlesClockwise(){
-    vector<DragHandle*> corners;
-    
-    int indextopleft = 0 ;
-    int indextopright = xDivisions;
-    int indexbotleft =yDivisions*(xDivisions+1);
-    int indexbotright =((xDivisions+1)*(yDivisions+1))-1;
-    
-    corners.push_back(&dstHandles[indextopleft]);
-    corners.push_back(&dstHandles[indextopright]);
-    corners.push_back(&dstHandles[indexbotright]);
-    corners.push_back(&dstHandles[indexbotleft]);
-    return corners;
-}
-
-void ZoneTransformQuad::getPerimeterPoints(vector<glm::vec3>& points) {
-    points.clear();
-    
-    for(int i = 0; i<xDivisions; i++) {
-        points.push_back(dstHandles[i]);
-    }
-    for(int i = xDivisions; i<(((xDivisions+1)*(yDivisions+1))-1); i+=(xDivisions+1) ) {
-        points.push_back(dstHandles[i]);
-    }
-    int start =((xDivisions+1)*(yDivisions+1))-1;
-    int end = yDivisions*(xDivisions+1);
-    for(int i =start ; i>end; i--){
-        points.push_back(dstHandles[i]);
-    }
-    start = yDivisions*(xDivisions+1);
-    end = 0;
-    for(int i =start ; i>=end; i-=(xDivisions+1)){
-        points.push_back(dstHandles[i]);
-    }
-    //    points.push_back(dstHandles[yDivisions*(xDivisions+1)]);
-    //
-}
-
-
-
-bool ZoneTransformQuad :: isCorner(int i ) {
-    return (i==0) || (i == xDivisions) || (i == yDivisions*(xDivisions+1)) || (i==((xDivisions+1)*(yDivisions+1))-1);
-    
-}
-
-void ZoneTransformQuad :: setDivisions(int xdivisions, int ydivisions) {
-    xDivisionsNew = xdivisions;
-    yDivisionsNew = ydivisions;
-    
-    
-    updateDivisions();
-    
-}
-
-void ZoneTransformQuad:: divisionsChanged(int& e){
-    if((xDivisionsNew!=xDivisions) || (yDivisionsNew!=yDivisions))
-        updateDivisions();
-}
-
-void ZoneTransformQuad:: updateDivisions(){
-    //ofLogNotice("ZoneTransform::updateDivisions()");
-    
-    //ofLog(OF_LOG_NOTICE, "divisionsChanged");
-    
-    vector<ofPoint> corners  = getCorners();
-    
-    xDivisions = xDivisionsNew;
-    yDivisions = yDivisionsNew;
-    dstHandles.resize((xDivisions+1)*(yDivisions+1));
-    // srcpoints is resized in setSrc
-    //srcPoints.resize((xDivisions+1)*(yDivisions+1));
-    
-    setSrc(srcRect);
-    
-        
-    setDstCorners(corners[0], corners[1], corners[2], corners[3]);
-    
-    updateQuads();
-    
-    
-}
-
-
-void ZoneTransformQuad::updateQuads() {
-    //ofLogNotice("ZoneTransform::updateQuads()");
-    
-    int quadnum = xDivisions*yDivisions;
-    quadWarpers.resize(quadnum);
-    
-    if(srcPoints.size()!=dstHandles.size()) {
-        srcPoints.resize((xDivisions+1)*(yDivisions+1));
-        
-        setSrc(srcRect);
-    }
-    
-    for(int i = 0; i<quadnum; i++) {
-        
-        int x = i%xDivisions;
-        int y = i/xDivisions;
-        
-        int topleft = x+(y*(xDivisions+1));
-        int topright =x+1+(y*(xDivisions+1));
-        int bottomleft=x+((y+1)*(xDivisions+1));
-        int bottomright=x+1+((y+1)*(xDivisions+1));
-        
-        //cout << i<< " " <<x<< " " << y << " " << topleft<< " " << topright<< " " << bottomleft << " " << bottomright<< endl;
-        
-        Warper & quad = quadWarpers[i];
-        quad.updateHomography(srcPoints[topleft],
-                              srcPoints[topright],
-                              srcPoints[bottomleft],
-                              srcPoints[bottomright],
-                              dstHandles[topleft],
-                              dstHandles[topright],
-                              dstHandles[bottomleft],
-                              dstHandles[bottomright]
-                              );
-        
-    }
-    
-    for(DragHandle& handle : dstHandles) {
-        handle.setGrid(snapToGrid, gridSize);
-    } 
-  
-    
-    
-}
-
 
 void ZoneTransformQuad::initListeners() {
     
@@ -552,13 +194,14 @@ void ZoneTransformQuad :: mouseMoved(ofMouseEventArgs &e){
 }
 
 bool ZoneTransformQuad :: mousePressed(ofMouseEventArgs &e){
-    //ofLogNotice("ZoneTransform::mousePressed");
-    // TODO there is currently an issue where if a zone is on top of another
-    // zone, you can't click on a handle underneath. Not sure of how to fix this...
-    // but possibly needs some higher level logic than here.
+
+    // eventually read from laser object
+    bool locked = false;
+    bool editSubdivisions = true;
+    bool isSquare = true;
     
     if((!editable) || (!visible)) return false;
-    //if(ofGetKeyPressed(' ')) return ; // for dragging around previews.
+   
     
     mousePos = e;
     mousePos-=offset;
@@ -592,11 +235,10 @@ bool ZoneTransformQuad :: mousePressed(ofMouseEventArgs &e){
                 handleHit = true;
                 
                 
-                if(!editSubdivisions && (isSquare())) {
+                if(!editSubdivisions && (isSquare)) {
                     
                     DragHandle& currentHandle = dstHandles[i];
                     
-                    // OK MAJOR REWORK AHEAD >>>> >
                     // 1. we are dragging one of the points.
                     // 2. let's find the opposite one - that is the anchor
                     // 3. drag all the points relative to the anchor and the
@@ -604,7 +246,7 @@ bool ZoneTransformQuad :: mousePressed(ofMouseEventArgs &e){
                     //    So, something like,
                     //    point.startDrag(clickpos, anchorpoint, relativetopoint, altpressed)
                     
-                    vector<DragHandle*> corners = getCornerHandlesClockwise();
+                    vector<DragHandle*> corners;// = getCornerHandlesClockwise();
                     
                     int currenthandleindex = 0;
                     while(corners[currenthandleindex]!=&currentHandle) currenthandleindex++;
@@ -700,19 +342,11 @@ void ZoneTransformQuad :: mouseDragged(ofMouseEventArgs &e){
     int dragCount = 0;
     for(size_t i= 0; i<dstHandles.size(); i++) {
         if(dstHandles[i].updateDrag(mousePoint)) dragCount++;
-        //bounds.growToInclude(handles[i]);
     }
-    //	if(!dragging) {
-    //		dragging = centreHandle.updateDrag(mousePoint);
-    //	} else {
-    //		updateCentreHandle();
-    //
-    //	}
-    
+
+    // do we need to track dirtyness? Probably.
     isDirty |= (dragCount>0);
-    //if((dragCount>0)&&(!editSubdivisions)) resetFromCorners();
-    
-    //return dragCount>0;
+
     
     
 }
@@ -737,6 +371,12 @@ void ZoneTransformQuad :: mouseReleased(ofMouseEventArgs &e){
 }
 
 bool ZoneTransformQuad::hitTest(ofPoint mousePoint) {
+    // eventually read from laser object
+    bool locked = false;
+    bool editSubdivisions = true;
+    bool isSquare = true;
+    int xDivisions = 1;
+    int yDivisions = 1;
     
     ofPolyline poly;
     for(int i = 0; i<=xDivisions; i++) {
@@ -782,98 +422,19 @@ bool ZoneTransformQuad::hitTest(ofPoint mousePoint) {
 //	ofSavePrettyJson(getSaveLabel()+".json", json);
 //
 //}
+//
 
-bool ZoneTransformQuad::serialize(ofJson&json) {
-    ofSerialize(json, transformParams);
-    ofJson& handlesjson = json["handles"];
-    for(size_t i= 0; i<dstHandles.size(); i++) {
-        DragHandle& pos = dstHandles[i];
-        handlesjson.push_back({pos.x, pos.y});
-    }
-    
-    return true;
-}
-
-bool ZoneTransformQuad::deserialize(ofJson& jsonGroup) {
-    //ofLogNotice("ZoneTransform::deserialize()");
-    // note that ofDeserialize looks for the json group
-    // with the same name as the parameterGroup
-    ofDeserialize(jsonGroup, transformParams);
-    //cout << jsonGroup.dump(3) << endl;
-    
-    // number of handles could be different now
-    int numhandles = (xDivisionsNew+1)*(yDivisionsNew+1);
-    xDivisions = xDivisionsNew;
-    yDivisions = yDivisionsNew;
-    dstHandles.resize(numhandles);
-    
-    ofJson& handlejson = jsonGroup["handles"];
-    //cout << handlejson.dump(3) << endl;
-    if((int)handlejson.size()>=numhandles) {
-        for(int i = 0; i<numhandles; i++) {
-            ofJson& point = handlejson[i];
-            dstHandles[i].x = point[0];
-            dstHandles[i].y = point[1];
-            dstHandles[i].z = 0;
-           // cout << "setting handle " << i << " : " << dstHandles[i] << endl;
-            
-        }
-    }
-    //updateDivisions(); //< SHOULD BE called automatically I think
-    
-   // ofLogNotice("ZoneTransform::deserialize");
-    return true;
-}
-
-
-float ZoneTransformQuad::getRight() {
-    float right = 0;
-    for(DragHandle& handle : dstHandles) {
-        if(handle.x>right) right = handle.x;
-    }
-    
-    return right;
-}
-float ZoneTransformQuad::getLeft() {
-    float left = 800;
-    for(DragHandle& handle : dstHandles) {
-        if(handle.x<left) left = handle.x;
-    }
-    
-    return left;
-}
-
-float ZoneTransformQuad::getTop() {
-    float top = 800;
-    for(DragHandle& handle : dstHandles) {
-        if(handle.y<top) top = handle.y;
-    }
-    
-    return top;
-}
-float ZoneTransformQuad::getBottom() {
-    float bottom = 0;
-    for(DragHandle& handle : dstHandles) {
-        if(handle.y>bottom) bottom = handle.y;
-    }
-    
-    return bottom;
-}
-
-
-
-bool ZoneTransformQuad :: setGrid(bool snapstate, int gridsize) {
-    if(ZoneTransformBase :: setGrid(snapstate, gridsize)) {
-        for(auto handle : dstHandles) {
-            handle.setGrid(snapToGrid, gridSize);
-        }
-        return true;
-    } else {
-        return false;
-    }
-}
 void ZoneTransformQuad::setHue(int hue) {
-    ZoneTransformBase :: setHue(hue);
+
+    uiZoneFillColour.setHue(hue);
+    uiZoneFillColourSelected.setHue(hue);
+    uiZoneStrokeColour.setHue(hue);
+    uiZoneStrokeColourSelected.setHue(hue);
+    uiZoneHandleColour.setHue(hue);
+    uiZoneHandleColourOver.setHue(hue);
+    uiZoneStrokeSubdivisionColour.setHue(hue);
+    uiZoneStrokeSubdivisionColourSelected.setHue(hue);
+
     updateHandleColours();
   
 }
@@ -887,59 +448,45 @@ void ZoneTransformQuad::updateHandleColours() {
 }
 
 
-bool ZoneTransformQuad :: getIsConvex() {
-    return isConvex;
-    
-}
 
-void ZoneTransformQuad :: updateConvex() {
-    bool convex = true;
-    vector<ofPoint> corners = getCorners();
-    vector<ofPoint> points;
-    points.push_back(corners[0]);
-    points.push_back(corners[1]);
-    points.push_back(corners[3]);
-    points.push_back(corners[2]);
-    for(size_t i = 0; i<4; i++) {
-    
-        ofVec2f p1 = points[i%4];
-        ofVec2f p2 = points[(i+1)%4];
-        ofVec2f p3 = points[(i+2)%4];
-        ofVec2f v1 = p2-p1;
-        ofVec2f v2 = p3-p2;
-        v2.rotate(90);
-        if(v2.dot(v1)>0) convex = false;
-        //ofLogNotice()  << i << " " << p1 << " " << p2 << " " << p3 << " " << v2.dot(v1) ;
-    }
-    
-    if(convex) {
-        for(int i =0; i<3; i++) {
-            for(int j = i+1; j<4; j++) {
-                if(points[i] == points[j]) {
-                    convex = false;
-                }
-            }
-        }
-    }
-        
-    
-    isConvex =  convex;
-    
-}
-
-
-bool ZoneTransformQuad::setSelected(bool v) {
-    
-    if(ZoneTransformBase::setSelected(v)) {
-        if(!selected) {
-            for(size_t i= 0; i<dstHandles.size(); i++) {
-                dstHandles[i].stopDrag();
-            }
-        }
+bool ZoneTransformQuad :: setGrid(bool snapstate, int gridsize) {
+    if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
+        snapToGrid = snapstate;
+        gridSize = gridsize;
         return true;
     } else {
         return false;
     }
+}
+    
+void ZoneTransformQuad :: setScale(float _scale) {
+    scale = _scale;
+    
+}
+void ZoneTransformQuad :: setOffset(ofPoint _offset) {
+    offset = _offset;
+}
+
+
+bool ZoneTransformQuad::getSelected() {
+    return selected;
     
 };
 
+bool ZoneTransformQuad::setSelected(bool v) {
+    if(selected!=v)  {
+        selected = v;
+       
+        return true;
+    } else {
+        return false;
+    }
+};
+
+
+void ZoneTransformQuad :: setEditable(bool warpvisible){
+    editable = warpvisible;
+}
+void ZoneTransformQuad :: setVisible(bool warpvisible){
+    visible = warpvisible;
+}

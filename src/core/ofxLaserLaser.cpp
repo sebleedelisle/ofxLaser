@@ -21,9 +21,9 @@ Laser::Laser(int _index) {
 	guiInitialised = false;
     maskManager.init(800,800);
    
-    previewScale = 1;
-    previewOffset = glm::vec2(0,0);
-    previewDragging = false;
+//    previewScale = 1;
+//    previewOffset = glm::vec2(0,0);
+//    previewDragging = false;
     pauseStateRecorded = false;
     
     lastSaveTime = 0; 
@@ -169,26 +169,26 @@ void Laser :: init() {
 	
 }
 
-
-
-void Laser :: setGrid(bool gridstate, int gridsize){
-  
-    snapToGrid = gridstate;
-    gridSize = gridsize;
-    for(OutputZone* zone : outputZones) {
-        zone->setGrid(gridstate, gridsize);
-    }
-    gridMesh.clear();
-    int spacing = gridSize;
-    while(gridSize<5) spacing *=2;
-    for(int x = 0; x<=800; x+=spacing) {
-        for(int y = 0; y<=800; y+=spacing) {
-            gridMesh.addVertex(ofPoint(x,y));
-        }
-    }
-    gridMesh.setMode(OF_PRIMITIVE_POINTS);
-    
-}
+//
+//
+//void Laser :: setGrid(bool gridstate, int gridsize){
+//
+//    snapToGrid = gridstate;
+//    gridSize = gridsize;
+//    for(OutputZone* zone : outputZones) {
+//        zone->setGrid(gridstate, gridsize);
+//    }
+//    gridMesh.clear();
+//    int spacing = gridSize;
+//    while(gridSize<5) spacing *=2;
+//    for(int x = 0; x<=800; x+=spacing) {
+//        for(int y = 0; y<=800; y+=spacing) {
+//            gridMesh.addVertex(ofPoint(x,y));
+//        }
+//    }
+//    gridMesh.setMode(OF_PRIMITIVE_POINTS);
+//
+//}
 
 void Laser ::setDacArmed(bool& _armed){
     dac->setArmed(_armed);
@@ -230,7 +230,7 @@ void Laser::addZone(InputZone* inputzone, bool isAlternate) {
     
     OutputZone* outputzone = new OutputZone(*inputzone);
 
-    outputzone->setGrid(snapToGrid, gridSize);
+   //outputzone->setGrid(snapToGrid, gridSize);
     outputZones.push_back(outputzone);
     
     ofJson laserZoneJson;
@@ -483,254 +483,254 @@ int Laser::getDacConnectedState() {
         return OFXLASER_DACSTATUS_NO_DAC;
     }
 }
-
-void Laser::drawTransformUI() {
-	
-	ofPushStyle();
-    
-    ofFill();
-    ofSetColor(0);
-    ofDrawRectangle(previewOffset.x, previewOffset.y, 800*previewScale, 800*previewScale);
-	ofNoFill();
-
-    if(snapToGrid) {
-        ofPushMatrix();
-        ofTranslate(previewOffset);
-        ofScale(previewScale);
-        ofSetColor(ofColor::fromHex(0x0E87E7));
-        gridMesh.draw();
-        ofPopMatrix();
-    }
-    
-   // float scale = w/800.0f;
-    //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
-    for(int i = outputZones.size()-1; i>=0; i--) {
-        OutputZone* laserZone = outputZones[i];
-        //if(!laserZone->getEnabled()) continue;
-        laserZone->setScale(previewScale);
-        laserZone->setOffset(previewOffset);
-        laserZone->draw();
-
-    }
-    
-    maskManager.setOffsetAndScale(previewOffset,previewScale);
-    maskManager.draw();
-   
-    ofPopStyle();
-}   
-
-void Laser::zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier){
-    glm::vec2 clickoffset = anchor-previewOffset;
-    clickoffset-=(clickoffset*zoomMultiplier);
-    previewOffset+=clickoffset;
-    previewScale*=zoomMultiplier;
-    
-}
-void Laser::startDrag(glm::vec2 p){
-    
-    previewDragging = true;
-    dragStartPoint = p - previewOffset;
-    
-}
-
-void Laser::stopDrag() {
-    previewDragging = false;
-}
-void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
-    previewOffset = newoffset;
-    previewScale = newscale;
-}
-
-void Laser::drawTransformAndPath(ofRectangle rect) {
-    ofRectangle bounds; // used for the scale widget
-    
-    vector<OutputZone*> activeZones = getActiveZones();
-    
-    
-    
-    for(OutputZone* zone : activeZones) {
-        
-        bounds.growToInclude(zone->getBounds());
-        
-        
-        
-    }
-    //drawTransformUI(rect.x, rect.y, rect.width, rect.height);
-    ofSetColor(255);
-    ofDrawBitmapString(ofToString(laserIndex+1), rect.getRight()-20, rect.getTop()+20);
-
-    ofPushMatrix();
-    ofTranslate(rect.x, rect.y);
-    float rectscale = rect.width/800;
-    ofScale(rect.width/800, rect.height/800);
-    ofPushStyle();
-    ofNoFill();
-    ofSetColor(50,50,200);
-   
-    float scale = 800.0f/bounds.width;
-    if(800/bounds.height<scale) scale = 800/bounds.height;
-    if(scale<1.1) {
-        scale = 1;
-        bounds.set(0,0,800,800);
-    }
-    ofPushMatrix();
-    ofScale(scale, scale);
-    ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
-    drawLaserPath(false, false); // 4/(scale*rectscale));
-   
-    
-    for(OutputZone* zone : activeZones) {
-        zone->drawPerimeterAsShape();
-    }
-    
-    ofPopStyle();
-    
-    ofPopMatrix();
-    if(scale>1) {
-        // draw the scale widget in the bottom right
-        ofPushMatrix();
-        ofPushStyle();
-        ofTranslate(700,700);
-        ofScale(0.1,0.1);
-        ofFill();
-        ofSetColor(0);
-        ofDrawRectangle(0,0,800,800);
-        ofNoFill();
-        ofSetColor(50,50,200);
-        ofDrawRectangle(0,0,800,800);
-        ofDrawRectangle(bounds);
-//        for(LaserZone* zone : laserZones) {
 //
-//            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+//void Laser::drawTransformUI() {
 //
-//            ofBeginShape();
-//            for(glm::vec3& p:perimeterpoints) {
-//                ofVertex(p);
-//            }
-//            ofEndShape();
+//	ofPushStyle();
 //
-//        }
-        ofPopStyle();
-        ofPopMatrix();
-        
-    }
-    
-    ofPopMatrix();
-    
-}
-
-
-//void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
-//	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
+//    ofFill();
+//    ofSetColor(0);
+//    ofDrawRectangle(previewOffset.x, previewOffset.y, 800*previewScale, 800*previewScale);
+//	ofNoFill();
+//
+//    if(snapToGrid) {
+//        ofPushMatrix();
+//        ofTranslate(previewOffset);
+//        ofScale(previewScale);
+//        ofSetColor(ofColor::fromHex(0x0E87E7));
+//        gridMesh.draw();
+//        ofPopMatrix();
+//    }
+//
+//   // float scale = w/800.0f;
+//    //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
+//    for(int i = outputZones.size()-1; i>=0; i--) {
+//        OutputZone* laserZone = outputZones[i];
+//        //if(!laserZone->getEnabled()) continue;
+//        laserZone->setScale(previewScale);
+//        laserZone->setOffset(previewOffset);
+//        laserZone->draw();
+//
+//    }
+//
+//    maskManager.setOffsetAndScale(previewOffset,previewScale);
+//    maskManager.draw();
+//
+//    ofPopStyle();
 //}
-
-void Laser :: drawLaserPath(bool drawDots, bool showMovement) {
-    float radius = 4;
-    ofRectangle previewRect(previewOffset.x, previewOffset.y, previewScale*800, previewScale*800);
-    drawLaserPath(previewRect, drawDots, showMovement, radius);
-}
-
-void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, float radius) {
-	ofPushStyle();
-	
-    ofSetColor(100);
-	ofEnableBlendMode(OF_BLENDMODE_ADD);
-	ofPushMatrix();
-	ofTranslate(rect.getTopLeft());
-	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
-    float scale = rect.getWidth()/800.0f; 
-	//ofTranslate(outputOffset);
-
-	ofPoint p;
-
-  	ofNoFill();
-	
-    if(drawDots) {
-        ofSetColor(100);
-        ofSetLineWidth(0.5f);
-        previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-        previewPathMesh.draw();
-    }
-    ofSetColor(25);
-    ofSetLineWidth(0.5f);
-    previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
-    previewPathMesh.draw();
-        
-    ofSetColor(255);
-    
-    // draw as points just to make sure the dots appear
-    previewPathColoured.setMode(OF_PRIMITIVE_POINTS);
-    previewPathColoured.draw();
-        
-    ofSetLineWidth(2.0f);
-    previewPathColoured.setMode(OF_PRIMITIVE_LINE_STRIP);
-    previewPathColoured.draw();
-    
-    
-    
-    ofPushStyle();
-	// draws the animated laser path
-	if(showMovement && (previewPathMesh.getNumVertices()>0)) {
-		
-        // 100 points per second
-		float time = previewPathMesh.getNumVertices()/100.0f;
-		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
-        
-        Point& lp =laserPoints[pointindex];
-        ofPoint p = previewPathMesh.getVertex(pointindex);
-        ofColor c = lp.getColour()*255;
-        
-        if(c==ofColor::black) {
-            ofSetLineWidth(1 * scale);
-            ofSetColor(200);
-            ofDrawCircle(p, radius);
-        } else {
-            ofFill();
-            c.setBrightness(255);
-            ofSetColor(c);
-            ofDrawCircle(p, radius);
-            ofNoFill();
-            ofSetLineWidth(2*scale);
-            c.setBrightness(128);
-            ofSetColor(c);
-            ofDrawCircle(p, radius*1.5);
-        }
-	}
-    ofPopStyle();
-
-	ofDisableBlendMode();
-	ofPopStyle();
-	
-	
-	ofPopMatrix();
-	
-}
-
-void Laser :: disableTransformGui() {
-	
-    for(OutputZone* laserZone : outputZones) {
-        laserZone->setEnabled(false);
-    }
-    maskManager.disableUI();
-	
-	
-}
-void Laser :: enableTransformGui() {
-    for(OutputZone* laserZone : outputZones) {
-        if(laserZone->getVisible()) laserZone->setEnabled(true);
-    }
-    maskManager.enableUI(); 
-}
-
-
+//
+//void Laser::zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier){
+//    glm::vec2 clickoffset = anchor-previewOffset;
+//    clickoffset-=(clickoffset*zoomMultiplier);
+//    previewOffset+=clickoffset;
+//    previewScale*=zoomMultiplier;
+//
+//}
+//void Laser::startDrag(glm::vec2 p){
+//
+//    previewDragging = true;
+//    dragStartPoint = p - previewOffset;
+//
+//}
+//
+//void Laser::stopDrag() {
+//    previewDragging = false;
+//}
+//void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
+//    previewOffset = newoffset;
+//    previewScale = newscale;
+//}
+//
+//void Laser::drawTransformAndPath(ofRectangle rect) {
+//    ofRectangle bounds; // used for the scale widget
+//
+//    vector<OutputZone*> activeZones = getActiveZones();
+//
+//
+//
+//    for(OutputZone* zone : activeZones) {
+//
+//        bounds.growToInclude(zone->getBounds());
+//
+//
+//
+//    }
+//    //drawTransformUI(rect.x, rect.y, rect.width, rect.height);
+//    ofSetColor(255);
+//    ofDrawBitmapString(ofToString(laserIndex+1), rect.getRight()-20, rect.getTop()+20);
+//
+//    ofPushMatrix();
+//    ofTranslate(rect.x, rect.y);
+//    float rectscale = rect.width/800;
+//    ofScale(rect.width/800, rect.height/800);
+//    ofPushStyle();
+//    ofNoFill();
+//    ofSetColor(50,50,200);
+//
+//    float scale = 800.0f/bounds.width;
+//    if(800/bounds.height<scale) scale = 800/bounds.height;
+//    if(scale<1.1) {
+//        scale = 1;
+//        bounds.set(0,0,800,800);
+//    }
+//    ofPushMatrix();
+//    ofScale(scale, scale);
+//    ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
+//    drawLaserPath(false, false); // 4/(scale*rectscale));
+//
+//
+//    for(OutputZone* zone : activeZones) {
+//        zone->drawPerimeterAsShape();
+//    }
+//
+//    ofPopStyle();
+//
+//    ofPopMatrix();
+//    if(scale>1) {
+//        // draw the scale widget in the bottom right
+//        ofPushMatrix();
+//        ofPushStyle();
+//        ofTranslate(700,700);
+//        ofScale(0.1,0.1);
+//        ofFill();
+//        ofSetColor(0);
+//        ofDrawRectangle(0,0,800,800);
+//        ofNoFill();
+//        ofSetColor(50,50,200);
+//        ofDrawRectangle(0,0,800,800);
+//        ofDrawRectangle(bounds);
+////        for(LaserZone* zone : laserZones) {
+////
+////            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
+////
+////            ofBeginShape();
+////            for(glm::vec3& p:perimeterpoints) {
+////                ofVertex(p);
+////            }
+////            ofEndShape();
+////
+////        }
+//        ofPopStyle();
+//        ofPopMatrix();
+//
+//    }
+//
+//    ofPopMatrix();
+//
+//}
+//
+//
+////void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
+////	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
+////}
+//
+//void Laser :: drawLaserPath(bool drawDots, bool showMovement) {
+//    float radius = 4;
+//    ofRectangle previewRect(previewOffset.x, previewOffset.y, previewScale*800, previewScale*800);
+//    drawLaserPath(previewRect, drawDots, showMovement, radius);
+//}
+//
+//void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, bool showMovement, float radius) {
+//	ofPushStyle();
+//
+//    ofSetColor(100);
+//	ofEnableBlendMode(OF_BLENDMODE_ADD);
+//	ofPushMatrix();
+//	ofTranslate(rect.getTopLeft());
+//	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
+//    float scale = rect.getWidth()/800.0f;
+//	//ofTranslate(outputOffset);
+//
+//	ofPoint p;
+//
+//  	ofNoFill();
+//
+//    if(drawDots) {
+//        ofSetColor(100);
+//        ofSetLineWidth(0.5f);
+//        previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
+//        previewPathMesh.draw();
+//    }
+//    ofSetColor(25);
+//    ofSetLineWidth(0.5f);
+//    previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
+//    previewPathMesh.draw();
+//
+//    ofSetColor(255);
+//
+//    // draw as points just to make sure the dots appear
+//    previewPathColoured.setMode(OF_PRIMITIVE_POINTS);
+//    previewPathColoured.draw();
+//
+//    ofSetLineWidth(2.0f);
+//    previewPathColoured.setMode(OF_PRIMITIVE_LINE_STRIP);
+//    previewPathColoured.draw();
+//
+//
+//
+//    ofPushStyle();
+//	// draws the animated laser path
+//	if(showMovement && (previewPathMesh.getNumVertices()>0)) {
+//
+//        // 100 points per second
+//		float time = previewPathMesh.getNumVertices()/100.0f;
+//		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
+//
+//        Point& lp =laserPoints[pointindex];
+//        ofPoint p = previewPathMesh.getVertex(pointindex);
+//        ofColor c = lp.getColour()*255;
+//
+//        if(c==ofColor::black) {
+//            ofSetLineWidth(1 * scale);
+//            ofSetColor(200);
+//            ofDrawCircle(p, radius);
+//        } else {
+//            ofFill();
+//            c.setBrightness(255);
+//            ofSetColor(c);
+//            ofDrawCircle(p, radius);
+//            ofNoFill();
+//            ofSetLineWidth(2*scale);
+//            c.setBrightness(128);
+//            ofSetColor(c);
+//            ofDrawCircle(p, radius*1.5);
+//        }
+//	}
+//    ofPopStyle();
+//
+//	ofDisableBlendMode();
+//	ofPopStyle();
+//
+//
+//	ofPopMatrix();
+//
+//}
+//
+//void Laser :: disableTransformGui() {
+//
+//    for(OutputZone* laserZone : outputZones) {
+//        laserZone->setEnabled(false);
+//    }
+//    maskManager.disableUI();
+//
+//
+//}
+//void Laser :: enableTransformGui() {
+//    for(OutputZone* laserZone : outputZones) {
+//        if(laserZone->getVisible()) laserZone->setEnabled(true);
+//    }
+//    maskManager.enableUI();
+//}
+//
+//
 
 
 void Laser::update(bool updateZones) {
-	
-    if(previewDragging) {
-        previewOffset = glm::vec2(ofGetMouseX(), ofGetMouseY())-dragStartPoint;
-    }
-        
+//
+//    if(previewDragging) {
+//        previewOffset = glm::vec2(ofGetMouseX(), ofGetMouseY())-dragStartPoint;
+//    }
+//
     
     bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
@@ -739,16 +739,16 @@ void Laser::update(bool updateZones) {
     // mute / solo functionality
     if(soloMode) {
         for(OutputZone* laserZone : outputZones) {
-            laserZone->setVisible(laserZone->soloed);
+            //laserZone->setVisible(laserZone->soloed);
             OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
-            if(altZone!=nullptr) altZone->setVisible(laserZone->soloed);
+            //if(altZone!=nullptr) altZone->setVisible(laserZone->soloed);
         }
         
     } else {
         for(OutputZone* laserZone : outputZones) {
-            laserZone->setVisible(!laserZone->muted);
+            //laserZone->setVisible(!laserZone->muted);
             OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
-            if(altZone!=nullptr) altZone->setVisible(!laserZone->muted);
+            //if(altZone!=nullptr) altZone->setVisible(!laserZone->muted);
         }
     }
     
@@ -768,28 +768,30 @@ void Laser::update(bool updateZones) {
     }
     
     // hack to ensure that only one zone is selected
-    OutputZone* selectedZone = nullptr;
-    for(OutputZone* laserZone : outputZones) {
-        //ZoneTransform& warp = laserZone->zoneTransform;
-        if(laserZone->getSelected()) {
-            if(selectedZone) {
-                laserZone->setSelected(false);
-            } else {
-                selectedZone = laserZone;
-            }
-        }
-    }
+//    OutputZone* selectedZone = nullptr;
+//    for(OutputZone* laserZone : outputZones) {
+//        //ZoneTransform& warp = laserZone->zoneTransform;
+//        if(laserZone->getSelected()) {
+//            if(selectedZone) {
+//                laserZone->setSelected(false);
+//            } else {
+//                selectedZone = laserZone;
+//            }
+//        }
+//    }
+//
+//    if(selectedZone) {
+//        if(find(outputZones.begin(), outputZones.end(),selectedZone)!=outputZones.begin()) {
+//            // reorder zones!
+//            auto it = find(outputZones.begin(), outputZones.end(), selectedZone);
+//            outputZones.erase(it);
+//
+//            outputZones.insert(outputZones.begin(), selectedZone);
+//
+//        }
+//    }
+//
     
-    if(selectedZone) {
-        if(find(outputZones.begin(), outputZones.end(),selectedZone)!=outputZones.begin()) {
-            // reorder zones!
-            auto it = find(outputZones.begin(), outputZones.end(), selectedZone);
-            outputZones.erase(it);
-
-            outputZones.insert(outputZones.begin(), selectedZone);
-
-        }
-    }
     needsSave = maskManager.update() | needsSave;
     
     bool laserZoneChanged = false;
@@ -1282,7 +1284,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 	//for(int i = 0; i<(int)laserZones.size(); i++) {
     for(OutputZone* laserZone : outputZones) {
       
-        if(!laserZone->getVisible()) continue;
+       // if(!laserZone->getVisible()) continue;
         
         // if we're not using the alternate zones and this is an alternate zone then skip it
         if((!useAlternate) && (laserZone->getIsAlternate())) continue;

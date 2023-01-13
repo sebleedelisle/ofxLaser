@@ -15,15 +15,8 @@ using namespace ofxLaser;
 
 ZoneTransformLine :: ZoneTransformLine() {
     
-    scale = 1;
-    offset.set(0,0);
     initListeners();
-    editable = true;
     isDirty = true;
-    selected = false;
-    snapToGrid = false;
-    gridSize  = 1;
-    
     
     resetNodes();
     
@@ -31,7 +24,7 @@ ZoneTransformLine :: ZoneTransformLine() {
     transformParams.setName("ZoneTransformLineParams");
     transformParams.add(zoneWidth.set("Width", 10,0,400));
    
-    setSrc(ofRectangle(0,0,100,100));
+    updateSrc(ofRectangle(0,0,100,100));
 
     ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformLine::paramChanged);
     
@@ -52,7 +45,7 @@ ZoneTransformLine::~ZoneTransformLine() {
 
 void ZoneTransformLine::init(ofRectangle& srcRect) {
 
-    setSrc(srcRect);
+    updateSrc(srcRect);
     resetNodes(); 
 
     
@@ -67,7 +60,7 @@ void ZoneTransformLine::resetNodes() {
     nodes[2].end = true;
     
     for(BezierNode& node : nodes) {
-        node.setGrid(snapToGrid, gridSize);
+       // node.setGrid(snapToGrid, gridSize);
     }
     
 }

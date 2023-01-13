@@ -39,7 +39,7 @@ Manager :: Manager() {
         if(zones.size()==0) createDefaultZone();
         for(Laser* laser : lasers) {
             laser->addZone(zones[0]);
-            laser->setGrid(zoneGridSnap, zoneGridSize);
+            //laser->setGrid(zoneGridSnap, zoneGridSize);
         }
         //showScannerSettingsWindow = true;
         
@@ -120,7 +120,7 @@ void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
     if(lasernum<lasers.size()) {
         Laser& laser = *lasers[lasernum];
         float scale = ((ofGetHeight()/2)-iconBarHeight-menuBarHeight)/800.0f;
-        laser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
+        //laser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
     }
 }
 
@@ -175,7 +175,7 @@ void Manager :: initAndLoadSettings() {
 }
 void Manager :: paramChanged(ofAbstractParameter& e) {
     for(Laser* laser : lasers) {
-        laser->setGrid(zoneGridSnap, zoneGridSize);
+        //laser->setGrid(zoneGridSnap, zoneGridSize);
         laser->maxLatencyMS = globalLatency;
     }
     ofLogNotice() << "paramChanged " << e.getName();
@@ -226,18 +226,18 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
         ofxLaser::Laser& currentLaser = *lasers[getSelectedLaserIndex()];
         if(mouseMode == OFXLASER_MOUSE_ZOOM_IN) { //if(ofGetKeyPressed(OF_KEY_COMMAND)) {
             // zoom in
-            currentLaser.zoomAroundPoint(e,1.2);
+            //currentLaser.zoomAroundPoint(e,1.2);
             return true;
         } else if(mouseMode == OFXLASER_MOUSE_ZOOM_OUT) { //} else if(ofGetKeyPressed(OF_KEY_ALT)) {
             // zoom out
-            currentLaser.zoomAroundPoint(e,0.8);
+            //currentLaser.zoomAroundPoint(e,0.8);
             return true;
         //} else if(ofGetKeyPressed(OF_KEY_CONTROL)) {
         //    currentLaser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing), 1);
             
         } else if(mouseMode == OFXLASER_MOUSE_DRAG) { //} else {
             // start dragging
-            currentLaser.startDrag(e); //  - previewOffset;
+            //currentLaser.startDrag(e); //  - previewOffset;
             return true;
         }
     } else if(viewMode == OFXLASER_VIEW_3D) {
@@ -265,7 +265,7 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
 bool Manager :: mouseReleased(ofMouseEventArgs &e){
     draggingPreview = false;
     for(ofxLaser::Laser* laser : lasers) {
-        laser->stopDrag();
+        //laser->stopDrag();
         
     }
     visualiser3D.mouseReleased(e);
@@ -365,8 +365,6 @@ bool Manager::setGuideImage(string filename){
 
 void Manager:: drawUI(){
     
-    
-    
     drawPreviews();
     
     ofxLaser::UI::startGui();
@@ -415,8 +413,10 @@ void Manager :: renderCustomCursors() {
 void Manager :: drawPreviews() {
     
     if(viewMode == OFXLASER_VIEW_3D) {
+        
         float previewheight = (ofGetHeight()/2)-menuBarHeight-iconBarHeight;
         ofRectangle rect3D(10,menuBarHeight+iconBarHeight,previewheight/9*16, previewheight); // 16/9 ratio
+        // Draw 3D visualiser
         visualiser3D.draw(rect3D, lasers, mouseMode == OFXLASER_MOUSE_DRAG);
         
         // this is same as other views - should break it out
@@ -438,41 +438,22 @@ void Manager :: drawPreviews() {
             if(outputpreviewsize*lasers.size() > availablespace) {
                 outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
             }
-//            if(spaceatbottom>(outputpreviewsize*2)+guiSpacing) {
-//                numrows=2;
-//                outputpreviewsize = (spaceatbottom/2)-guiSpacing;
-//            }
-            
+
             for(size_t i= 0; i<lasers.size(); i++) {
                 
                 ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-               
-//                if(numrows>1) {
-//                    int numinrow = lasers.size()/numrows;
-//                    int rownum = floor(i/numinrow);
-//                    laserOutputPreviewRect.y-=(rownum*(outputpreviewsize+guiSpacing));
-//                    laserOutputPreviewRect.x =guiSpacing+ ((outputpreviewsize+guiSpacing)*(i%numinrow));
-//
-//                }
                 
                 ofFill();
                 ofSetColor(0);
                 ofDrawRectangle(laserOutputPreviewRect);
-                
-                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                
-                // disables the warp interfaces
-                lasers[i]->disableTransformGui();
+
             }
-            
-           
             
         }
        
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
         if(showInputPreview) {
-        
         
             ofPushStyle();
             ofFill();
@@ -553,10 +534,10 @@ void Manager :: drawPreviews() {
                 ofSetColor(0);
                 ofDrawRectangle(laserOutputPreviewRect);
                 
-                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
                 
                 // disables the warp interfaces
-                lasers[i]->disableTransformGui();
+                //lasers[i]->disableTransformGui();
             }
         }
     }
@@ -574,11 +555,11 @@ void Manager :: drawPreviews() {
             if((int)i==selectedLaserIndex) {
                 selectedlaser = lasers[i];
                
-                selectedlaser->enableTransformGui();
-                selectedlaser->drawTransformUI();
+                //selectedlaser->enableTransformGui();
+                //selectedlaser->drawTransformUI();
                 if(zoneEditorShowLaserPath) {
                     // if the laser is paused then show the movement of the laser
-                    selectedlaser->drawLaserPath(zoneEditorShowLaserPoints, selectedlaser->paused);
+                //    selectedlaser->drawLaserPath(zoneEditorShowLaserPoints, selectedlaser->paused);
                 }
                 ofPushStyle();
                 ofPushMatrix();
@@ -587,10 +568,7 @@ void Manager :: drawPreviews() {
                 ofFill();
                 ofEnableBlendMode(OF_BLENDMODE_ADD);
                 ofSetColor(30);
-                //string label = ofToString(i+1);
-                //ofRectangle rect = numberFont.getStringBoundingBox(label, 0, 0);
-                //numberFont.drawStringAsShapes(label, 20, rect.getHeight()+50);
-                
+                  
                 ofTranslate(40,250);
                 ofScale(0.12,-0.12);
                 if((i+1)>9) {
@@ -601,7 +579,7 @@ void Manager :: drawPreviews() {
                 ofPopMatrix();
                 ofPopStyle();
             } else {
-                lasers[i]->disableTransformGui();
+                //lasers[i]->disableTransformGui();
             }
             
         }
@@ -616,8 +594,8 @@ void Manager :: drawPreviews() {
                 float outputpreviewscale = 0.375;
                 
                 float outputpreviewsize = 800*outputpreviewscale;
-                float previewbotton = (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
-                float spaceatbottom = (ofGetHeight() - previewbotton) -(guiSpacing*2);
+                float previewbottom = 0;// (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
+                float spaceatbottom = (ofGetHeight() - previewbottom) -(guiSpacing*2);
                 if (spaceatbottom<50) spaceatbottom = 50;
                 if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
                 ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
@@ -626,7 +604,7 @@ void Manager :: drawPreviews() {
                 ofSetColor(0);
                 ofDrawRectangle(laserOutputPreviewRect);
                 
-                lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
                 if((int)i==selectedLaserIndex) {
                     ofNoFill();
                     ofSetLineWidth(1);
@@ -641,7 +619,7 @@ void Manager :: drawPreviews() {
         
     } else {
         for(Laser* laser : lasers) {
-            laser->disableTransformGui();
+            //laser->disableTransformGui();
         }
         
     }
@@ -1077,7 +1055,7 @@ void Manager::drawLaserGui() {
             
             for(OutputZone* laserZone : laser->outputZones) {
                
-                if(laserZone->getSelected()) {
+                if(false) { // laserZone->getSelected()) {
 
                     ImGui::Separator();
                     ImGui::PushFont(UI::largeFont);
@@ -1775,7 +1753,7 @@ void Manager :: guiTopBar(int ypos) {
             if(viewMode == OFXLASER_VIEW_CANVAS) {
                 zoomPreviewAroundPoint(centre,1.2);
             } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-                currentLaser.zoomAroundPoint(centre,1.2);
+                //currentLaser.zoomAroundPoint(centre,1.2);
        
             }
         }
@@ -1784,7 +1762,7 @@ void Manager :: guiTopBar(int ypos) {
             if(viewMode == OFXLASER_VIEW_CANVAS) {
                 zoomPreviewAroundPoint(centre,0.8);
             } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-                currentLaser.zoomAroundPoint(centre,0.8);
+                //currentLaser.zoomAroundPoint(centre,0.8);
        
             }
         }

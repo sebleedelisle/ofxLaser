@@ -52,7 +52,7 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
-    void setGrid(bool gridstate, int gridsize); 
+    //void setGrid(bool gridstate, int gridsize);
     
     
     void update(bool updateZones);
@@ -102,21 +102,19 @@ class Laser {
     bool areAnyZonesSoloed();
     void clearOutputZones();
     
-    void drawLaserPath(ofRectangle rect, bool drawDots = true, bool showMovement = true, float radius = 4);
-    //void drawLaserPath(float x=0, float y=0, float w=800, float h=800, bool drawDots = true, float radius = 4);
-    void drawLaserPath(bool drawDots = true, bool showMovement = true);
-   //void drawTransformUI(float x=0, float y=0, float w=800, float h=800);
-    void drawTransformUI();
+    //void drawLaserPath(ofRectangle rect, bool drawDots = true, bool showMovement = true, float radius = 4);
+    //void drawLaserPath(bool drawDots = true, bool showMovement = true);
+    //void drawTransformUI();
     
-    void zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier);
-    void startDrag(glm::vec2 p);
-    void stopDrag();
-    void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1); 
+    //void zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier);
+    //void startDrag(glm::vec2 p);
+    //void stopDrag();
+    //void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
     
-    void disableTransformGui();
-    void enableTransformGui();
+    //void disableTransformGui();
+    //void enableTransformGui();
     
-    void drawTransformAndPath(ofRectangle rect); 
+    //void drawTransformAndPath(ofRectangle rect);
 
     vector<Point>& getLaserPoints() { return laserPoints;}; 
    
@@ -199,7 +197,6 @@ class Laser {
  
     MaskManager maskManager;
 
-    
     bool guiInitialised = false;
     
     float lastSaveTime = 0; 
@@ -210,20 +207,19 @@ class Laser {
     bool ignoreParamChange = false;
     
     // for the ui representation
-    glm::vec2 previewOffset;
-    float previewScale;
-    bool previewDragging;
-    glm::vec2 dragStartPoint;
+    //glm::vec2 previewOffset;
+    //float previewScale;
+    //bool previewDragging;
+    //glm::vec2 dragStartPoint;
   
     // parent laser manager is in control of this
-    bool snapToGrid;
-    int gridSize;
-    ofMesh gridMesh; 
+    //bool snapToGrid;
+    //int gridSize;
+    //ofMesh gridMesh;
   
     ofMesh previewPathMesh;
-    ofMesh previewPathColoured; 
-//    vector<ofColor> previewPathColours;
-//
+    ofMesh previewPathColoured;
+
     DacEmpty emptyDac;
  
     //-----------------------------------
