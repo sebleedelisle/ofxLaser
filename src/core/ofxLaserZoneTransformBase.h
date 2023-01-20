@@ -31,7 +31,7 @@ class ZoneTransformBase {
     //virtual void setHue(int hue);
    
 
-    virtual void getPerimeterPoints(vector<glm::vec3>& points) = 0;
+    virtual void getPerimeterPoints(vector<glm::vec2>& points) = 0;
 
 
     
@@ -53,7 +53,7 @@ class ZoneTransformBase {
     virtual ofPoint getWarpedPoint(const ofPoint& p) = 0;
     virtual ofPoint getUnWarpedPoint(const ofPoint& p) = 0;
 	
-    virtual ofPoint getCentre() = 0;
+    virtual glm::vec2 getCentre() = 0;
 	
     ofParameterGroup transformParams; 
 

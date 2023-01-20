@@ -13,7 +13,9 @@ using namespace ofxLaser;
 DragHandle::DragHandle() {
 	set(0,0);
 };
-	
+DragHandle::DragHandle(glm::vec2 p) {
+    set(p);
+}
 DragHandle::DragHandle(glm::vec3 p) {
 	set(p);
 }
@@ -34,21 +36,21 @@ void DragHandle::setSize(float _size) {
 void DragHandle::set(glm::vec3 pos) {
 	x = pos.x;
 	y = pos.y;
-	z = pos.z;
+	//z = pos.z;
 	
 };
 void DragHandle::set(glm::vec2 pos) {
 	x = pos.x;
 	y = pos.y;
-	z = 0;
+	//z = 0;
 	
 };
 
-
 void DragHandle::draw(const glm::vec3& mousepos, float scale) {
-	
+    draw(glm::vec2(mousepos), scale);
+};
+void DragHandle::draw(const glm::vec2& mousepos, float scale) {
 	draw(hitTest(mousepos,scale), scale);
-	
 };
 
 void DragHandle::draw(bool isOver , float scale ) {
@@ -79,7 +81,7 @@ void DragHandle::draw(bool isOver , float scale ) {
 }
 
 
-void DragHandle::startDrag(glm::vec3 clickPos, DragHandle* relativeToHandle){
+void DragHandle::startDrag(glm::vec2 clickPos, DragHandle* relativeToHandle){
     dragProportional = false;
     dragSymmetrical = false;
     
@@ -96,7 +98,7 @@ void DragHandle::startDrag(glm::vec3 clickPos, DragHandle* relativeToHandle){
 
 }
 
-void DragHandle::startDragProportional(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
+void DragHandle::startDragProportional(glm::vec2 clickPos, glm::vec2 _anchorPos, glm::vec2 refPos,  bool dontMoveWhenAltPressed){
 
         
     dragProportional = true;
@@ -110,7 +112,7 @@ void DragHandle::startDragProportional(glm::vec3 clickPos, glm::vec3 _anchorPos,
 
 }
 
-void DragHandle::startDragSymmetrical(glm::vec3 clickPos, glm::vec3 _anchorPos, glm::vec3 refPos,  bool dontMoveWhenAltPressed){
+void DragHandle::startDragSymmetrical(glm::vec2 clickPos, glm::vec2 _anchorPos, glm::vec2 refPos,  bool dontMoveWhenAltPressed){
 
         
     dragSymmetrical = true;
@@ -123,7 +125,7 @@ void DragHandle::startDragSymmetrical(glm::vec3 clickPos, glm::vec3 _anchorPos, 
     isDragging = true;
 
 }
-bool DragHandle::updateDrag(glm::vec3 mousePos) {
+bool DragHandle::updateDrag(glm::vec2 mousePos) {
 	
 	
 	if(isDragging) {
@@ -135,7 +137,7 @@ bool DragHandle::updateDrag(glm::vec3 mousePos) {
 			
             
             // DRAGGING PROPORTIONALLY
-            glm::vec3 currentReferencePos = mousePos - clickOffset;
+            glm::vec2 currentReferencePos = mousePos - clickOffset;
             if(snapToGrid) {
                 currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
                 currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;
@@ -157,13 +159,13 @@ bool DragHandle::updateDrag(glm::vec3 mousePos) {
         } else if(dragSymmetrical) {
             
             // DRAGGING SYMETRICALLY
-            glm::vec3 currentReferencePos = mousePos - clickOffset;
+            glm::vec2 currentReferencePos = mousePos - clickOffset;
             if(snapToGrid) {
                 currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
                 currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;
             }
 
-            glm::vec3 v = currentReferencePos - anchorPos;
+            glm::vec2 v = currentReferencePos - anchorPos;
             this->set(anchorPos-v);
             
         } else {
@@ -198,10 +200,10 @@ bool DragHandle::stopDrag(){
 	}
 };
 
-bool DragHandle::hitTest(glm::vec3 hitpoint, float scale) {
+bool DragHandle::hitTest(glm::vec2 hitpoint, float scale) {
     if(active) {
         if(isCircular) {
-            return (glm::distance( (glm::vec3) *this, hitpoint ) < size/2/scale );
+            return (glm::distance( (glm::vec2) *this, hitpoint ) < size/2/scale );
         } else {
             ofRectangle rect;
             rect.setFromCenter(*this, size/scale, size/scale );

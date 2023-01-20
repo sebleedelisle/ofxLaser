@@ -93,8 +93,8 @@ glm::vec3 ZoneTransformLineData::getVectorNormal(glm::vec3 v1, glm::vec3 v2) {
 }
 
 
-ofPoint ZoneTransformLineData::getCentre() {
-    glm::vec3 average;
+glm::vec2 ZoneTransformLineData::getCentre() {
+    glm::vec2 average;
     for(BezierNode& node : nodes) {
         average+= node.getPosition();
     }
@@ -150,12 +150,12 @@ ofxLaser::Point ZoneTransformLineData::getWarpedPoint(const ofxLaser::Point& p){
 void ZoneTransformLineData::updatePolyline() {
     poly.clear();
     BezierNode* previousnode = &nodes[0];
-    poly.addVertex(previousnode->getPosition());
+    poly.addVertex(glm::vec3(previousnode->getPosition(),0));
     
     for(int i = 1; i<nodes.size(); i++) {
         BezierNode& node = nodes[i];
                     
-        poly.bezierTo(previousnode->getControlPoint2(), node.getControlPoint1(), node.getPosition());
+        poly.bezierTo(glm::vec3(previousnode->getControlPoint2(),0), glm::vec3(node.getControlPoint1(),0), glm::vec3(node.getPosition(),0));
         
         previousnode = &node;
             
@@ -223,10 +223,11 @@ bool ZoneTransformLineData::deleteNode(int i){
 
 void ZoneTransformLineData :: addNode() {
 
-    glm::vec3 endpos = nodes.back().getPosition();
+    glm::vec3 endpos = glm::vec3(nodes.back().getPosition(),0);
     int mode = nodes.back().mode;
     glm::vec3 tangent = poly.getTangentAtIndexInterpolated(poly.getIndexAtPercent(0.99));
-    endpos+=(tangent*10);
+    tangent*=10;
+    endpos+=tangent;
     
     nodes.resize(nodes.size()+1);
     BezierNode& node = nodes.back();
@@ -238,7 +239,7 @@ void ZoneTransformLineData :: addNode() {
 }
 
 
-void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec3>& points) {
+void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
     
     points.clear();
     

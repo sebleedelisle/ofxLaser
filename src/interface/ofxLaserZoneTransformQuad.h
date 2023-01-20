@@ -67,7 +67,7 @@ class ZoneTransformQuad {
     vector<DragHandle> dstHandles; // all handles for all points
 
     // used to record hover position
-    ofPoint mousePos;
+    glm::vec2 mousePos;
 	
     ofColor uiZoneFillColour;
     ofColor uiZoneFillColourSelected;

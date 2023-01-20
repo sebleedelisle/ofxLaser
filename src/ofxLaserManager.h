@@ -8,9 +8,8 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserVisualiser3D.h"
-#include "ofxLaserPresetManager.h"
-#include "ofxLaserPresetBase.h"
-#include "ofxLaserColourSettings.h"
+#include "ofxLaserZoneView.h"
+
 
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
@@ -23,7 +22,6 @@ enum ofxLaserMouseMode {
     OFXLASER_MOUSE_DRAG, //
     OFXLASER_MOUSE_ZOOM_IN, //
     OFXLASER_MOUSE_ZOOM_OUT, //
-    
 };
 
 namespace ofxLaser {
@@ -58,6 +56,7 @@ class Manager : public ManagerBase {
 
     void selectNextLaser();
     void selectPreviousLaser();
+    int getLaserIndex(Laser* laser); 
     int getSelectedLaserIndex();
     void setSelectedLaserIndex(int i);
    // bool isAnyLaserSelected();
@@ -102,6 +101,8 @@ class Manager : public ManagerBase {
     void setGuiVisible(bool visible);
     bool isGuiVisible();
     
+    void drawBigNumber(int number); 
+    
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     bool mouseDragged(ofMouseEventArgs &e);
@@ -128,20 +129,15 @@ class Manager : public ManagerBase {
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     
-    
     ofParameter<bool> lockInputZones;
     ofParameter<bool> showInputZones;
     ofParameter<bool> showInputPreview;
     ofParameter<bool> showOutputPreviews;
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize;
-    
-    //ofParameter<bool> showScannerSettingsWindow;
- 
-    
+        
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;
-    //ofParameter<int> zoneEditorLaserPathStyle;
     
     ofParameter<int> globalLatency; 
     
@@ -161,9 +157,7 @@ class Manager : public ManagerBase {
    
     int selectedLaserIndex;
     //bool showOutputInterface; // the zone editing interface
-     ofxLaserMouseMode mouseMode;
-    
-
+    ofxLaserMouseMode mouseMode;
     
     bool guiIsVisible;
     bool showEditScannerPreset = false;
@@ -175,6 +169,8 @@ class Manager : public ManagerBase {
     
     ofImage guideImage;
   
+    vector<LaserZoneView> laserZoneViews;
+    
     glm::vec2 previewOffset;
     float previewScale;
     
@@ -184,10 +180,8 @@ class Manager : public ManagerBase {
     ofxSVGExtra iconMagMinus;
     vector<ofxSVGExtra> numberSVGs;
     
-    
     PresetManager<ScannerSettings> scannerPresetManager;
     PresetManager<ColourSettings> colourPresetManager;
-    
     
     // copy settings system :
     // TODO Break into its own object
@@ -199,8 +193,7 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
     
-    
-    bool firstUpdate = true; 
+   // bool firstUpdate = true;
    
 
 };

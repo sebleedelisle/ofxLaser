@@ -21,7 +21,7 @@ void BezierNode :: reset(float x, float y){
     
 }
 
-void BezierNode :: draw(glm::vec3 mousePos, float scale) {
+void BezierNode :: draw(glm::vec2 mousePos, float scale) {
     
     handles[0].draw(mousePos, scale);
     if((!start)&&(mode>0)) {
@@ -38,7 +38,7 @@ void BezierNode :: draw(glm::vec3 mousePos, float scale) {
     
 }
 
-bool BezierNode :: hitTest(glm::vec3 mousePos, float scale) {
+bool BezierNode :: hitTest(glm::vec2 mousePos, float scale) {
     if(mode ==0) {
         return handles[0].hitTest(mousePos, scale);
     } else {
@@ -51,7 +51,7 @@ bool BezierNode :: hitTest(glm::vec3 mousePos, float scale) {
     }
 }
 
-bool BezierNode :: startDrag(glm::vec3 mousePos, float scale) {
+bool BezierNode :: startDrag(glm::vec2 mousePos, float scale) {
     // if centre one hit, then drag them all
     if(handles[0].hitTest(mousePos, scale)) {
         handles[0].startDrag(mousePos);
@@ -71,7 +71,7 @@ bool BezierNode :: startDrag(glm::vec3 mousePos, float scale) {
     
 }
 
-bool BezierNode :: startDragAll(glm::vec3 mousePos, DragHandle* relativeToHandle) {
+bool BezierNode :: startDragAll(glm::vec2 mousePos, DragHandle* relativeToHandle) {
     if(relativeToHandle==nullptr) relativeToHandle = &handles[0];
     
     for(DragHandle& handle :handles) {
@@ -82,17 +82,17 @@ bool BezierNode :: startDragAll(glm::vec3 mousePos, DragHandle* relativeToHandle
 }
 
 
-glm::vec3 BezierNode :: getPosition() {
+glm::vec2 BezierNode :: getPosition() {
     return handles[0];
 }
-glm::vec3 BezierNode :: getControlPoint1() {
+glm::vec2 BezierNode :: getControlPoint1() {
     if(mode==0) {
         return getPosition();
     } else {
         return handles[1];
     }
 }
-glm::vec3 BezierNode :: getControlPoint2() {
+glm::vec2 BezierNode :: getControlPoint2() {
     if(mode==0) {
         return getPosition();
     } else {
@@ -114,7 +114,7 @@ void BezierNode :: setColour(ofColor colour1, ofColor colour2) {
     
 }
 
-bool BezierNode :: updateDrag(ofPoint mousePoint) {
+bool BezierNode :: updateDrag(glm::vec2 mousePoint) {
     bool isDragging = false;
     for(DragHandle& handle : handles) {
         if(handle.updateDrag(mousePoint)) {

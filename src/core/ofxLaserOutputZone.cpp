@@ -166,12 +166,13 @@ void OutputZone :: init(ofRectangle sourceRectangle) {
 
 ofRectangle OutputZone :: getBounds() {
     
-    vector<glm::vec3> perimeterpoints;
+    vector<glm::vec2> perimeterpoints;
     ofRectangle bounds;
     getZoneTransform().getPerimeterPoints(perimeterpoints);
-    bounds.setPosition(*perimeterpoints.begin());
+    glm::vec3 start(*perimeterpoints.begin(), 0);
+    bounds.setPosition(start);
     
-    for(glm::vec3& p:perimeterpoints) {
+    for(glm::vec2& p:perimeterpoints) {
         bounds.growToInclude(p);
     }
     
@@ -181,11 +182,11 @@ ofRectangle OutputZone :: getBounds() {
 
 void OutputZone :: drawPerimeterAsShape() {
     
-    vector<glm::vec3> perimeterpoints;
+    vector<glm::vec2> perimeterpoints;
     getZoneTransform().getPerimeterPoints(perimeterpoints);
     
     ofBeginShape();
-    for(glm::vec3& p:perimeterpoints) {
+    for(glm::vec2& p:perimeterpoints) {
         ofVertex(p);
     }
     ofEndShape();

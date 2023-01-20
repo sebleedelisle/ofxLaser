@@ -26,23 +26,23 @@ class BezierNode {
     }
     void reset(float x, float y);
     
-    void draw(glm::vec3 mousePos, float scale);
+    void draw(glm::vec2 mousePos, float scale);
     
-    bool hitTest(glm::vec3 mousePos, float scale) ;
+    bool hitTest(glm::vec2 mousePos, float scale) ;
     
-    bool startDrag(glm::vec3 mousePos, float scale) ;
+    bool startDrag(glm::vec2 mousePos, float scale) ;
     
-    bool startDragAll(glm::vec3 mousePos, DragHandle* relativeToHandle = nullptr);
+    bool startDragAll(glm::vec2 mousePos, DragHandle* relativeToHandle = nullptr);
     
     
-    glm::vec3 getPosition() ;
-    glm::vec3 getControlPoint1();
-    glm::vec3 getControlPoint2();
+    glm::vec2 getPosition() ;
+    glm::vec2 getControlPoint1();
+    glm::vec2 getControlPoint2();
     
     void setGrid(bool snaptogrid, int gridsize) ;
     void setColour(ofColor colour1, ofColor colour2) ;
     
-    bool updateDrag(ofPoint mousePoint);
+    bool updateDrag(glm::vec2 mousePoint);
     bool stopDrag();
     
     bool serialize(ofJson& json);

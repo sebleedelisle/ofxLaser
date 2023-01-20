@@ -425,17 +425,6 @@ void ManagerBase:: update(){
     
 }
 
-void ManagerBase::beginDraw() {
-    ofViewport((ofGetWidth()-canvasWidth)/-2, (ofGetHeight()-canvasHeight)/-2, ofGetWidth(), ofGetHeight()) ;
-    ofPushMatrix();
-    ofTranslate((ofGetWidth()-canvasWidth)/2, (ofGetHeight()-canvasHeight)/2);
-    
-}
-void ManagerBase::endDraw() {
-    ofPopMatrix();
-    ofViewport(0,0,ofGetWidth(), ofGetHeight());
-}
-
 void ManagerBase::send(){
     
     if(laserMasks) {
@@ -759,16 +748,6 @@ InputZone* ManagerBase::getZone(int zonenum) {
 
 int ManagerBase::getNumZones() {
     return (int)zones.size();
-}
-
-InputZone* ManagerBase::getSelectedZone() {
-    for(InputZone* zone : zones) {
-        if(zone->selected) {
-            return zone;
-        }
-    }
-    return nullptr;
-    
 }
 
 bool ManagerBase::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL

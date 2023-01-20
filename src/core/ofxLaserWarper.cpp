@@ -13,7 +13,7 @@ using namespace ofxLaser;
 
 
 
-void Warper::updateHomography(glm::vec3 src1, glm::vec3 src2, glm::vec3 src3, glm::vec3 src4, glm::vec3 dst1, glm::vec3 dst2, glm::vec3 dst3, glm::vec3 dst4) {
+void Warper::updateHomography(glm::vec2 src1, glm::vec2 src2, glm::vec2 src3, glm::vec2 src4, glm::vec2 dst1, glm::vec2 dst2, glm::vec2 dst3, glm::vec2 dst4) {
 	
 	// the source points are the zone points in screen space
 	// the dest points are points in the output space

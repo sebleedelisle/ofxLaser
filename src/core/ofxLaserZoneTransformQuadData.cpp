@@ -98,16 +98,17 @@ bool ZoneTransformQuadData::update(){
 }
 
 
-ofPoint ZoneTransformQuadData::getCentre() {
+glm::vec2 ZoneTransformQuadData::getCentre() {
     ofPoint centre = srcRect.getCenter();
-    return getWarpedPoint(centre);
+    centre = getWarpedPoint(centre);
+    return glm::vec2(centre.x, centre.y);
 }
 
 void ZoneTransformQuadData :: resetToSquare() {
-    vector<glm::vec3*> cornerhandles = getCornerPoints();
+    vector<glm::vec2*> cornerhandles = getCornerPoints();
     vector<ofPoint> corners;
     // convert to ofPoints
-    for(glm::vec3* handle : cornerhandles) corners.push_back(*handle);
+    for(glm::vec2* handle : cornerhandles) corners.push_back(*handle);
     
     corners[0].x = corners[2].x = getLeft();
     corners[0].y = corners[1].y = getTop(); //ofLerp(corners[0].y,corners[1].y, 0.5);
@@ -119,7 +120,7 @@ void ZoneTransformQuadData :: resetToSquare() {
 
 bool ZoneTransformQuadData :: isSquare() {
     
-    vector<glm::vec3*> corners = getCornerPoints();
+    vector<glm::vec2*> corners = getCornerPoints();
     return (corners[0]->x == corners[2]->x) && (corners[0]->y == corners[1]->y) && (corners[1]->x == corners[3]->x) && (corners[2]->y == corners[3]->y);
     
 }
@@ -276,8 +277,8 @@ void ZoneTransformQuadData::resetFromCorners() {
     
 }
 
-vector<glm::vec3*> ZoneTransformQuadData::getCornerPoints(){
-    vector<glm::vec3*> corners;
+vector<glm::vec2*> ZoneTransformQuadData::getCornerPoints(){
+    vector<glm::vec2*> corners;
     corners.push_back(&dstPoints[0]);
     corners.push_back(&dstPoints[xDivisions]);
     corners.push_back(&dstPoints[yDivisions*(xDivisions+1)]);
@@ -302,8 +303,8 @@ vector<ofPoint> ZoneTransformQuadData::getCorners(){
     
 }
 
-vector<glm::vec3*> ZoneTransformQuadData::getCornerPointsClockwise(){
-    vector<glm::vec3*> corners;
+vector<glm::vec2*> ZoneTransformQuadData::getCornerPointsClockwise(){
+    vector<glm::vec2*> corners;
     
     int indextopleft = 0 ;
     int indextopright = xDivisions;
@@ -317,7 +318,7 @@ vector<glm::vec3*> ZoneTransformQuadData::getCornerPointsClockwise(){
     return corners;
 }
 
-void ZoneTransformQuadData::getPerimeterPoints(vector<glm::vec3>& points) {
+void ZoneTransformQuadData::getPerimeterPoints(vector<glm::vec2>& points) {
     points.clear();
     
     for(int i = 0; i<xDivisions; i++) {
@@ -435,7 +436,7 @@ bool ZoneTransformQuadData::serialize(ofJson&json) {
     ofSerialize(json, transformParams);
     ofJson& handlesjson = json["handles"];
     for(size_t i= 0; i<dstPoints.size(); i++) {
-        glm::vec3& pos = dstPoints[i];
+        glm::vec2& pos = dstPoints[i];
         handlesjson.push_back({pos.x, pos.y});
     }
     
@@ -462,7 +463,7 @@ bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
             ofJson& point = handlejson[i];
             dstPoints[i].x = point[0];
             dstPoints[i].y = point[1];
-            dstPoints[i].z = 0;
+            //dstPoints[i].z = 0;
            // cout << "setting handle " << i << " : " << dstHandles[i] << endl;
             
         }
@@ -476,7 +477,7 @@ bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
 
 float ZoneTransformQuadData::getRight() {
     float right = 0;
-    for(glm::vec3& handle : dstPoints) {
+    for(glm::vec2& handle : dstPoints) {
         if(handle.x>right) right = handle.x;
     }
     
@@ -484,7 +485,7 @@ float ZoneTransformQuadData::getRight() {
 }
 float ZoneTransformQuadData::getLeft() {
     float left = 800;
-    for(glm::vec3& handle : dstPoints) {
+    for(glm::vec2& handle : dstPoints) {
         if(handle.x<left) left = handle.x;
     }
     
@@ -493,7 +494,7 @@ float ZoneTransformQuadData::getLeft() {
 
 float ZoneTransformQuadData::getTop() {
     float top = 800;
-    for(glm::vec3& handle : dstPoints) {
+    for(glm::vec2& handle : dstPoints) {
         if(handle.y<top) top = handle.y;
     }
     
@@ -501,7 +502,7 @@ float ZoneTransformQuadData::getTop() {
 }
 float ZoneTransformQuadData::getBottom() {
     float bottom = 0;
-    for(glm::vec3& handle : dstPoints) {
+    for(glm::vec2& handle : dstPoints) {
         if(handle.y>bottom) bottom = handle.y;
     }
     

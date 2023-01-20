@@ -45,21 +45,22 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
 
    
-    void getPerimeterPoints(vector<glm::vec3>& points) override;
+    void getPerimeterPoints(vector<glm::vec2>& points) override;
   
     virtual Point getWarpedPoint(const Point& p) override;
    // virtual Point getUnWarpedPoint(const Point& p) override;
     virtual ofPoint getWarpedPoint(const ofPoint& p) override;
     virtual ofPoint getUnWarpedPoint(const ofPoint& p) override;
     
-    virtual ofPoint getCentre() override;
+    virtual glm::vec2 getCentre() override;
 
     ofParameter<bool>editSubdivisions;
     ofParameter<bool>useHomography;
     ofParameter<int>xDivisionsNew;
     ofParameter<int>yDivisionsNew;
 
-    
+    vector<glm::vec2*> getCornerPoints();
+  
     
     protected :
     
@@ -101,11 +102,14 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     void resetFromCorners();
     vector<ofPoint> getCorners();
    
-    vector<glm::vec3*> getCornerPoints();
-    vector<glm::vec3*> getCornerPointsClockwise();
+//    vector<glm::vec2*> getCornerPoints();
+    vector<glm::vec2*> getCornerPointsClockwise();
     bool isCorner(int index);
     
     cv::Point2f toCv(glm::vec3 p) {
+        return cv::Point2f(p.x, p.y);
+    }
+    cv::Point2f toCv(glm::vec2 p) {
         return cv::Point2f(p.x, p.y);
     }
     glm::vec3 toOf(cv::Point2f p) {
@@ -124,8 +128,8 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     int yDivisions;
     
     
-    vector<glm::vec3> srcPoints;
-    vector<glm::vec3> dstPoints; // all handles for all points
+    vector<glm::vec2> srcPoints;
+    vector<glm::vec2> dstPoints; // all handles for all points
     vector<Warper> quadWarpers;
     
     // used to record hover position

@@ -56,7 +56,7 @@ class QuadGui {
     // optimised hit test for checking many laser points
     bool hitTest(const ofPoint& p);
 
-	void startDragging(int handleIndex, glm::vec3 clickPos);
+	void startDragging(int handleIndex, glm::vec2 clickPos);
 	
 	void updateCentreHandle();
     void updatePoly();
@@ -96,12 +96,12 @@ class QuadGui {
 	float width;
 	float height;
 	
-    ofPoint mousePos;
+    glm::vec2 mousePos;
     bool selected; 
     
 	protected :
     
-    ofPoint offset;
+    glm::vec2 offset;
     float scale = 1;
  
     bool visible = true;

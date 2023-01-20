@@ -215,7 +215,7 @@ bool QuadGui::checkDirty() {
 }
 
 
-void QuadGui :: startDragging(int handleIndex, glm::vec3 clickPos) {
+void QuadGui :: startDragging(int handleIndex, glm::vec2 clickPos) {
 	
     int i = handleIndex;
     DragHandle& currentHandle = handles[i];
@@ -296,7 +296,7 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
     if(!selected) {
         return false;
     }
-    ofPoint mousePoint = e;
+    glm::vec2 mousePoint = e;
     mousePoint-=offset;
     mousePoint/=scale;
     
@@ -381,11 +381,11 @@ void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 void QuadGui :: updatePoly() {
     vector<glm::vec3>& vertices = quadPoly.getVertices(); 
    
-    vertices[0] = (handles[0]);
-    vertices[1] = (handles[1]);
-    vertices[2] = (handles[3]);
-    vertices[3] = (handles[2]);
-    vertices[4] = (handles[0]);
+    vertices[0] = (handles[0].vec3());
+    vertices[1] = (handles[1].vec3());
+    vertices[2] = (handles[3].vec3());
+    vertices[3] = (handles[2].vec3());
+    vertices[4] = (handles[0].vec3());
    
     boundingBox = quadPoly.getBoundingBox();
     
@@ -420,10 +420,9 @@ void QuadGui :: mouseReleased(ofMouseEventArgs &e){
 void QuadGui::updateCentreHandle() {
 	centreHandle.set(0,0);
 	for(int i = 0; i<4; i++) {
-		centreHandle+=(glm::vec3)handles[i];
+		centreHandle+=(glm::vec2) handles[i];
 	}
 	centreHandle/=4;
-	//	centreHandle.set(bounds.getCenter());
 }
 
 
@@ -449,7 +448,6 @@ bool QuadGui::deserialize(ofJson& jsonGroup) {
       
             handles[i].x = point[0];
             handles[i].y = point[1];
-            handles[i].z = 0;
             
         }
         updateCentreHandle();

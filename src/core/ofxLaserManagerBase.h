@@ -60,9 +60,6 @@ class ManagerBase {
     
     virtual void setCanvasSize(int width, int height);
     
-    void beginDraw();
-    void endDraw();
-    
     bool loadSettings();
     bool saveSettings();
     
@@ -114,7 +111,6 @@ class ManagerBase {
    // Zone& getZone(int zonenum);
     InputZone* getZone(int zonenum);
     int getNumZones();
-    InputZone* getSelectedZone(); 
     bool setTargetZone(unsigned int zone);
     int getTargetZone();
     bool setZoneMode(ofxLaserZoneMode newmode);
@@ -141,7 +137,6 @@ class ManagerBase {
     
     ofParameter<bool> dontCalculateDisconnected;
     
-    
     ofParameter<float>globalBrightness;
 
     BitmapMaskManager laserMask;
@@ -155,8 +150,6 @@ class ManagerBase {
     
     protected :
     ofFbo canvasPreviewFbo;
-    
-    
     
     bool doArmAll = false;
     bool doDisarmAll = false;

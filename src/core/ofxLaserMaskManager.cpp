@@ -123,10 +123,10 @@ vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){
         ofPolyline* poly = ofxLaser::Factory :: getPolyline();
         
         
-        poly->addVertex(quad.handles[0]);
-        poly->addVertex(quad.handles[1]);
-        poly->addVertex(quad.handles[3]);
-        poly->addVertex(quad.handles[2]);
+        poly->addVertex(quad.handles[0].vec3());
+        poly->addVertex(quad.handles[1].vec3());
+        poly->addVertex(quad.handles[3].vec3());
+        poly->addVertex(quad.handles[2].vec3());
         poly->setClosed(true);
         polylines.push_back(poly);
         

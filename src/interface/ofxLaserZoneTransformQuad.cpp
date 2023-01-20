@@ -332,7 +332,7 @@ void ZoneTransformQuad :: mouseDragged(ofMouseEventArgs &e){
     if((!editable) || (!visible)) return ;
     if(!selected) return ;
     
-    ofPoint mousePoint;
+    glm::vec2 mousePoint;
     mousePoint.x = e.x;
     mousePoint.y = e.y;
     mousePoint-=offset;
@@ -380,22 +380,22 @@ bool ZoneTransformQuad::hitTest(ofPoint mousePoint) {
     
     ofPolyline poly;
     for(int i = 0; i<=xDivisions; i++) {
-        poly.addVertex(dstHandles[i]);
+        poly.addVertex(dstHandles[i].vec3());
         //ofLog(OF_LOG_NOTICE, ofToString(i));
     }
     //ofLog(OF_LOG_NOTICE, "---");
     for(int i = 2; i<=yDivisions; i++) {
-        poly.addVertex(dstHandles[(i*(xDivisions+1))-1]);
+        poly.addVertex(dstHandles[(i*(xDivisions+1))-1].vec3());
         //ofLog(OF_LOG_NOTICE, ofToString((i*(xDivisions+1))-1));
     }
     //ofLog(OF_LOG_NOTICE, "---");
     for(int i = ((xDivisions+1)*(yDivisions+1))-1; i>=(xDivisions+1)*(yDivisions); i--) {
-        poly.addVertex(dstHandles[i]);
+        poly.addVertex(dstHandles[i].vec3());
         //ofLog(OF_LOG_NOTICE, ofToString(i));
     }
     //ofLog(OF_LOG_NOTICE, "---");
     for(int i = yDivisions-1; i>=0; i--) {
-        poly.addVertex(dstHandles[(i*(xDivisions+1))]);
+        poly.addVertex(dstHandles[(i*(xDivisions+1))].vec3());
         //ofLog(OF_LOG_NOTICE, ofToString((i*(xDivisions+1))));
     }
     
@@ -458,35 +458,36 @@ bool ZoneTransformQuad :: setGrid(bool snapstate, int gridsize) {
         return false;
     }
 }
-    
+
 void ZoneTransformQuad :: setScale(float _scale) {
-    scale = _scale;
-    
+scale = _scale;
+
 }
 void ZoneTransformQuad :: setOffset(ofPoint _offset) {
-    offset = _offset;
+offset = _offset;
 }
 
 
 bool ZoneTransformQuad::getSelected() {
-    return selected;
-    
+return selected;
+
 };
 
 bool ZoneTransformQuad::setSelected(bool v) {
-    if(selected!=v)  {
-        selected = v;
-       
-        return true;
-    } else {
-        return false;
-    }
+if(selected!=v)  {
+    selected = v;
+   
+    return true;
+} else {
+    return false;
+}
 };
 
 
 void ZoneTransformQuad :: setEditable(bool warpvisible){
-    editable = warpvisible;
+editable = warpvisible;
 }
 void ZoneTransformQuad :: setVisible(bool warpvisible){
-    visible = warpvisible;
+visible = warpvisible;
 }
+

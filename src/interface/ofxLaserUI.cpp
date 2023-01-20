@@ -72,6 +72,7 @@ void UI::setupGui() {
     imGui.engine.setup(autoDraw);
     
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    ImGui::GetIO().ConfigDockingWithShift = true; 
     
     
     ImGui::GetIO().MouseDrawCursor = false;
@@ -729,8 +730,13 @@ bool UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
 }
 
 ofMesh UI::dashedLineMesh;
+
+void UI::drawDashedLine(glm::vec2 p1, glm::vec2 p2, float spacing, float scale){
+    UI::drawDashedLine(glm::vec3(p1,0), glm::vec3(p2,0), spacing, scale);
+}
+
 void UI::drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing, float scale){
-    
+
     UI::dashedLineMesh.clear();
     
     float l = glm::length(p2-p1);

@@ -111,10 +111,11 @@ void Manager :: createAndAddLaser()  {
     int laserindex = lasers.size();
     ManagerBase:: createAndAddLaser();
     setLaserDefaultPreviewOffsetAndScale(laserindex);
+    laserZoneViews.emplace_back(lasers.back());
     
-   
-   
 }
+
+
 
 void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
     if(lasernum<lasers.size()) {
@@ -190,14 +191,14 @@ void Manager :: update() {
         zones[i]->setEditable(showInputPreview && (viewMode==OFXLASER_VIEW_CANVAS) && (!lockInputZones) && showInputZones);
     }
     ManagerBase :: update();
-    if(firstUpdate) {
-        
-        setDefaultPreviewOffsetAndScale();
-        for(int i = 0; i<lasers.size(); i++) {
-            setLaserDefaultPreviewOffsetAndScale(i);
-        }
-        firstUpdate = false;
-    }
+//    if(firstUpdate) {
+//
+//        setDefaultPreviewOffsetAndScale();
+//        for(int i = 0; i<lasers.size(); i++) {
+//            setLaserDefaultPreviewOffsetAndScale(i);
+//        }
+//        firstUpdate = false;
+//    }
 }
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
@@ -240,6 +241,11 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
             //currentLaser.startDrag(e); //  - previewOffset;
             return true;
         }
+        
+        for(LaserZoneView& zoneView : laserZoneViews) {
+            zoneView.mousePressed(e);
+        }
+        
     } else if(viewMode == OFXLASER_VIEW_3D) {
         visualiser3D.mousePressed(e);
         
@@ -264,15 +270,19 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
 
 bool Manager :: mouseReleased(ofMouseEventArgs &e){
     draggingPreview = false;
-    for(ofxLaser::Laser* laser : lasers) {
-        //laser->stopDrag();
-        
+    for(LaserZoneView& zoneView : laserZoneViews) {
+        zoneView.mouseReleased(e);
     }
     visualiser3D.mouseReleased(e);
     return false;
 }
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
     visualiser3D.mouseDragged(e);
+    
+    for(LaserZoneView& zoneView : laserZoneViews) {
+        zoneView.mouseDragged(e);
+    }
+    
     if(draggingPreview) {
         previewOffset = e-dragStartPoint;
         return true;
@@ -315,6 +325,9 @@ void Manager :: zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier) {
 }
 
 bool Manager :: deleteLaser(Laser* laser) {
+    
+    int laserindex = getLaserIndex(laser);
+    
     bool success = ManagerBase::deleteLaser(laser);
     if(success) {
         if(selectedLaserIndex>=getNumLasers()) selectedLaserIndex = getNumLasers()-1;
@@ -322,6 +335,11 @@ bool Manager :: deleteLaser(Laser* laser) {
             showLaserOutputSettingsWindow = false;
             viewMode = OFXLASER_VIEW_CANVAS;
         }
+        
+        if(laserindex!=-1) {
+            laserZoneViews.erase(laserZoneViews.begin() + laserindex);
+        }
+        
         return true;
     } else {
         return false;
@@ -357,6 +375,18 @@ void Manager::setSelectedLaserIndex(int i){
     if((selectedLaserIndex!=i) && (i<getNumLasers())) {
         selectedLaserIndex = i;
     }
+}
+
+
+int Manager::getLaserIndex(Laser* laser) {
+    for(int i = 0; i<lasers.size(); i++) {
+        if(lasers[i] == laser) {
+            return i;
+        }
+    }
+    return -1; 
+    
+    
 }
 
 bool Manager::setGuideImage(string filename){
@@ -453,93 +483,93 @@ void Manager :: drawPreviews() {
        
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
-        if(showInputPreview) {
-        
-            ofPushStyle();
-            ofFill();
-            ofSetColor(0);
-            ofPushMatrix();
-            ofTranslate(previewOffset);
-            ofScale(previewScale);
-            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
-            ofPopMatrix();
-            ofPopStyle();
-        
-
-            if(showInputZones) {
-                // this renders the input zones in the graphics source space
-                for(size_t i= 0; i<zones.size(); i++) {
-                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
-                   // zones[i]->setEditable(!lockInputZones);
-                    zones[i]->setVisible(true);
-                    zones[i]->draw();
-                }
-            } else { 
-                // this renders the input zones in the graphics source space
-                for(size_t i= 0; i<zones.size(); i++) {
-                    
-                    zones[i]->setVisible(false);
-                   
-                }
-            }
-            
-            renderPreview();
-            
-            if(showBitmapMask) {
-                ofPushMatrix();
-                laserMask.setOffsetAndScale(previewOffset,previewScale);
-                laserMask.draw(showBitmapMask);
-                ofTranslate(previewOffset);
-                ofScale(previewScale, previewScale);
-                ofPopMatrix();
-            }
-        }
-        
-        if(showOutputPreviews) {
-           // int numrows = 1;
-            float outputpreviewscale = 0.375;
-            float outputpreviewsize = 800*outputpreviewscale;
-            
-            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
-            if (spaceatbottom<50) spaceatbottom = 50;
-            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-            
-            // so we have spaceatbottom which is the gap at the bottom
-            // then we have the height and width of the previews
-            // which is outputpreviewsize.
-            // We know this will fit vertically but we don't know if it
-            // fit horizontally
-            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
-            if(outputpreviewsize*lasers.size() > availablespace) {
-                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
-            }
-//            if(spaceatbottom>(outputpreviewsize*2)+guiSpacing) {
-//                numrows=2;
-//                outputpreviewsize = (spaceatbottom/2)-guiSpacing;
-//            }
-            
-            for(size_t i= 0; i<lasers.size(); i++) {
-                
-                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-               
-//                if(numrows>1) {
-//                    int numinrow = lasers.size()/numrows;
-//                    int rownum = floor(i/numinrow);
-//                    laserOutputPreviewRect.y-=(rownum*(outputpreviewsize+guiSpacing));
-//                    laserOutputPreviewRect.x =guiSpacing+ ((outputpreviewsize+guiSpacing)*(i%numinrow));
+//        if(showInputPreview) {
+//
+//            ofPushStyle();
+//            ofFill();
+//            ofSetColor(0);
+//            ofPushMatrix();
+//            ofTranslate(previewOffset);
+//            ofScale(previewScale);
+//            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
+//            ofPopMatrix();
+//            ofPopStyle();
+//
+//
+//            if(showInputZones) {
+//                // this renders the input zones in the graphics source space
+//                for(size_t i= 0; i<zones.size(); i++) {
+//                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
+//                   // zones[i]->setEditable(!lockInputZones);
+//                    zones[i]->setVisible(true);
+//                    zones[i]->draw();
+//                }
+//            } else {
+//                // this renders the input zones in the graphics source space
+//                for(size_t i= 0; i<zones.size(); i++) {
+//
+//                    zones[i]->setVisible(false);
 //
 //                }
-                
-                ofFill();
-                ofSetColor(0);
-                ofDrawRectangle(laserOutputPreviewRect);
-                
-                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                
-                // disables the warp interfaces
-                //lasers[i]->disableTransformGui();
-            }
-        }
+//            }
+//
+//            renderPreview();
+//
+//            if(showBitmapMask) {
+//                ofPushMatrix();
+//                laserMask.setOffsetAndScale(previewOffset,previewScale);
+//                laserMask.draw(showBitmapMask);
+//                ofTranslate(previewOffset);
+//                ofScale(previewScale, previewScale);
+//                ofPopMatrix();
+//            }
+//        }
+//
+//        if(showOutputPreviews) {
+//           // int numrows = 1;
+//            float outputpreviewscale = 0.375;
+//            float outputpreviewsize = 800*outputpreviewscale;
+//
+//            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
+//            if (spaceatbottom<50) spaceatbottom = 50;
+//            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+//
+//            // so we have spaceatbottom which is the gap at the bottom
+//            // then we have the height and width of the previews
+//            // which is outputpreviewsize.
+//            // We know this will fit vertically but we don't know if it
+//            // fit horizontally
+//            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
+//            if(outputpreviewsize*lasers.size() > availablespace) {
+//                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
+//            }
+////            if(spaceatbottom>(outputpreviewsize*2)+guiSpacing) {
+////                numrows=2;
+////                outputpreviewsize = (spaceatbottom/2)-guiSpacing;
+////            }
+//
+//            for(size_t i= 0; i<lasers.size(); i++) {
+//
+//                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+//
+////                if(numrows>1) {
+////                    int numinrow = lasers.size()/numrows;
+////                    int rownum = floor(i/numinrow);
+////                    laserOutputPreviewRect.y-=(rownum*(outputpreviewsize+guiSpacing));
+////                    laserOutputPreviewRect.x =guiSpacing+ ((outputpreviewsize+guiSpacing)*(i%numinrow));
+////
+////                }
+//
+//                ofFill();
+//                ofSetColor(0);
+//                ofDrawRectangle(laserOutputPreviewRect);
+//
+//                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+//
+//                // disables the warp interfaces
+//                //lasers[i]->disableTransformGui();
+//            }
+//        }
     }
     
     if(viewMode == OFXLASER_VIEW_OUTPUT){
@@ -549,6 +579,7 @@ void Manager :: drawPreviews() {
             zones[i]->setVisible(false);
         }
         
+        // SELECTED LASER IS ENTIRELY A GUI THING
         ofxLaser::Laser* selectedlaser = nullptr;
         // draw laser zone adjustment screen
         for(size_t i= 0; i<lasers.size(); i++) {
@@ -561,35 +592,16 @@ void Manager :: drawPreviews() {
                     // if the laser is paused then show the movement of the laser
                 //    selectedlaser->drawLaserPath(zoneEditorShowLaserPoints, selectedlaser->paused);
                 }
-                ofPushStyle();
-                ofPushMatrix();
-                //ofTranslate(200,300);
-                //ofScale(20,20);
-                ofFill();
-                ofEnableBlendMode(OF_BLENDMODE_ADD);
-                ofSetColor(30);
-                  
-                ofTranslate(40,250);
-                ofScale(0.12,-0.12);
-                if((i+1)>9) {
-                    numberSVGs[(i+1)/10].draw(false);
-                    ofTranslate(1100,0);
-                }
-                numberSVGs[(i+1)%10].draw(false);
-                ofPopMatrix();
-                ofPopStyle();
+                laserZoneViews[i].draw(); 
+                drawBigNumber(i);
+               
             } else {
                 //lasers[i]->disableTransformGui();
             }
-            
         }
-        
-        
-        
+  
         
         if(showOutputPreviews) {
-            
-            
             for(size_t i= 0; i<lasers.size(); i++) {
                 float outputpreviewscale = 0.375;
                 
@@ -2329,6 +2341,30 @@ void Manager :: fitPreviewInRect(ofRectangle fitrect ) {
     previewOffset = fitrect.getTopLeft();
     
 }
+
+
+void Manager :: drawBigNumber(int number) {
+    
+    ofPushStyle();
+    ofPushMatrix();
+    //ofTranslate(200,300);
+    //ofScale(20,20);
+    ofFill();
+    ofEnableBlendMode(OF_BLENDMODE_ADD);
+    ofSetColor(30);
+      
+    ofTranslate(40,250);
+    ofScale(0.12,-0.12);
+    if((number+1)>9) {
+        numberSVGs[(number+1)/10].draw(false);
+        ofTranslate(1100,0);
+    }
+    numberSVGs[(number+1)%10].draw(false);
+    ofPopMatrix();
+    ofPopStyle();
+    
+}
+
 
 void Manager :: initSVGs() {
     

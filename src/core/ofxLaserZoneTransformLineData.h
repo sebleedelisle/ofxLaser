@@ -39,7 +39,7 @@ class ZoneTransformLineData : public ZoneTransformBase {
  
     //bool hitTest(ofPoint mousePoint);
    
-    void getPerimeterPoints(vector<glm::vec3>& points) override;
+    void getPerimeterPoints(vector<glm::vec2>& points) override;
   
    // virtual bool setSelected(bool v) override;
 
@@ -56,7 +56,7 @@ class ZoneTransformLineData : public ZoneTransformBase {
     bool deleteNode(int i);
     void addNode();
     
-    virtual ofPoint getCentre() override;
+    virtual glm::vec2 getCentre() override;
     
     ofParameter<float> zoneWidth;
     

@@ -141,6 +141,7 @@ class UI {
     static ofMesh dashedLineMesh;
 
     static void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6, float scale = 1);
+    static void drawDashedLine(glm::vec2 p1, glm::vec2 p2, float spacing = 6, float scale = 1);
     
     static ImU32 getColourForState(int state);
     
