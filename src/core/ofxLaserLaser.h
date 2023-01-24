@@ -81,6 +81,8 @@ class Laser {
     bool unMuteZone(int zonenum);
     bool soloZone(int zonenum);
     bool unSoloZone(int zonenum);
+    bool isLaserZoneActive(OutputZone* outputZone);
+
     
     // gets output zones (but not alt zones) in order
     vector<OutputZone*> getSortedOutputZones();

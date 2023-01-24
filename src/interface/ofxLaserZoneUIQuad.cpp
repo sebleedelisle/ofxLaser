@@ -10,40 +10,21 @@
 using namespace ofxLaser;
 
 
-ZoneUIQuad :: ZoneUIQuad() {
-    cornerHandles.resize(4);
+ZoneUiQuad :: ZoneUiQuad() {
+    handles.resize(4);
+}
+
+bool ZoneUiQuad :: update() {
     
-    uiZoneFillColour  = ofColor::fromHex(0x001123, 128);
-    uiZoneFillColourSelected = ofColor::fromHex(0x001123);
-    uiZoneStrokeColour  = ofColor::fromHex(0x0E87E7);
-    uiZoneStrokeColourSelected = ofColor::fromHex(0x0E87E7);
-    uiZoneHandleColour = ofColor::fromHex(0x0E87E7);
-    uiZoneHandleColourOver = ofColor :: fromHex(0xffffff);
-    uiZoneStrokeSubdivisionColour = ofColor :: fromHex(0x00386D);;
-    uiZoneStrokeSubdivisionColourSelected = ofColor :: fromHex(0x006ADB);
+    bool wasDirty = ZoneUiBase::update();
+    
+    return wasDirty;
     
 }
 
-bool ZoneUIQuad :: setCorners(const vector<glm::vec2*>& points) {
-    
-    if(points.size()<4) return false;
-    
-    for(int i = 0; i<4; i++) {
-        cornerHandles[i].set(*points[i]);
-    }
-    
-    pointsUpdated();
-    return true; 
-    
-}
-
-void ZoneUIQuad :: draw() {
+void ZoneUiQuad :: draw() {
     
     ofPushStyle();
-   
-    ofSetColor(uiZoneStrokeColour);
-    string label = "1";
-    ofDrawBitmapString(label, centre - glm::vec3(4*label.size(),5, 0));
     
     ofSetColor(selected?uiZoneFillColourSelected : uiZoneFillColour);
     ofFill();
@@ -51,51 +32,52 @@ void ZoneUIQuad :: draw() {
     zoneMesh.draw();
 
     ofNoFill();
-    if(selected) {
+    if(selected&&!locked) {
         ofSetLineWidth(2);
     }
-    ofSetColor(selected ? uiZoneStrokeColourSelected : uiZoneStrokeColour);
+    ofSetColor((selected&&!locked) ? uiZoneStrokeColourSelected : uiZoneStrokeColour);
     zoneMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
     zoneMesh.draw();
     
-    for(DragHandle& handle : cornerHandles) {
-        handle.draw();
-    }
+    drawHandlesIfSelected();
+    drawLabel();
     
     ofPopStyle();
 
 }
 
-void ZoneUIQuad :: pointsUpdated() {
+
+
+void ZoneUiQuad :: updateMeshAndPoly() {
     
     centre = glm::vec2(0,0);
-    for(DragHandle& handle : cornerHandles) {
+    for(DragHandle& handle : handles) {
         centre+=glm::vec2(handle);
     }
     centre/=4;
     
     zoneMesh.clear();
-    zoneMesh.addVertex(glm::vec3(cornerHandles[0],0));
-    zoneMesh.addVertex(glm::vec3(cornerHandles[1],0));
-    zoneMesh.addVertex(glm::vec3(cornerHandles[3],0));
-    zoneMesh.addVertex(glm::vec3(cornerHandles[2],0));
+    zoneMesh.addVertex(glm::vec3(handles[0],0));
+    zoneMesh.addVertex(glm::vec3(handles[1],0));
+    zoneMesh.addVertex(glm::vec3(handles[3],0));
+    zoneMesh.addVertex(glm::vec3(handles[2],0));
     
     zonePoly.clear();
-    zonePoly.addVertex(glm::vec3(cornerHandles[0],0));
-    zonePoly.addVertex(glm::vec3(cornerHandles[1],0));
-    zonePoly.addVertex(glm::vec3(cornerHandles[3],0));
-    zonePoly.addVertex(glm::vec3(cornerHandles[2],0));
+    zonePoly.addVertex(glm::vec3(handles[0],0));
+    zonePoly.addVertex(glm::vec3(handles[1],0));
+    zonePoly.addVertex(glm::vec3(handles[3],0));
+    zonePoly.addVertex(glm::vec3(handles[2],0));
     zonePoly.setClosed(true);
 
 }
 
-vector<DragHandle*> ZoneUIQuad :: getCornersClockwise() {
+vector<DragHandle*> ZoneUiQuad :: getCornersClockwise() {
 
     vector<DragHandle*> corners;
-    corners.push_back(&cornerHandles[0]);
-    corners.push_back(&cornerHandles[1]);
-    corners.push_back(&cornerHandles[3]);
-    corners.push_back(&cornerHandles[2]);
+    corners.push_back(&handles[0]);
+    corners.push_back(&handles[1]);
+    corners.push_back(&handles[3]);
+    corners.push_back(&handles[2]);
 
     return corners;
     
@@ -103,13 +85,9 @@ vector<DragHandle*> ZoneUIQuad :: getCornersClockwise() {
 }
 
 
-void ZoneUIQuad :: mouseMoved(ofMouseEventArgs &e){
-    
-}
 // TODO maybe we can handle selection at a higher level?
-bool ZoneUIQuad :: mousePressed(ofMouseEventArgs &e) {
+bool ZoneUiQuad :: mousePressed(ofMouseEventArgs &e) {
     mousePos = e;
-    
     
      // zoneUiQuad needs to receieve a mousePressed event to handle
      // logic.
@@ -118,59 +96,161 @@ bool ZoneUIQuad :: mousePressed(ofMouseEventArgs &e) {
      // if none of the points are hit, a check for the shape is
      // executed. If true, then it starts dragging the whole shape.
      // If none of that is true and it's selected, deselect.
-    if(getSelected()) {
-        bool handlehit = false;
+    
+    vector<DragHandle*> corners = getCornersClockwise();
+    bool handlehit = false;
+    
+    if(getSelected() && !locked) {
+        
         // then check all the drag points
-        vector<DragHandle*> corners = getCornersClockwise();
+        
         for (int i = 0; i<corners.size() && !handlehit; i++) {
             
+            DragHandle& currentHandle = *corners[i];
             
-            if(corners[i]->hitTest(mousePos, scale)) {
+            if(currentHandle.hitTest(mousePos)) {
                 handlehit = true;
-                corners[i]->startDrag(mousePos);
+                currentHandle.startDrag(mousePos);
                 // if we're not distorted then also start dragging the relavent corners
-                if(isSquare()) {
+                if(true) { // isSquare()) {
+                    DragHandle& anchorHandle = *corners[(i+2)%4];
+                    DragHandle& dragHandle1 = *corners[(i+1)%4];
+                    DragHandle& dragHandle2 = *corners[(i+3)%4];
                     
+                    dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+                    dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
                     
                     
                 }
             }
+        }
+        
+        if(!handlehit) {
+            // if we haven't hit a handle but we have
+            // hit the zone, start dragging the zone
+            if(hitTest(mousePos)) {
+                DragHandle* gridHandle = corners[0];
+                for(size_t i= 0; i<corners.size(); i++) {
+                    if(corners[i] == gridHandle) {
+                        corners[i]->startDrag(mousePos);
+                    } else {
+                        corners[i]->startDrag(mousePos, gridHandle);
+                    }
+                }
+            } else {
+                setSelected(false);
+            }
+             
         }
     }
                 
         
     
     bool hit = hitTest(mousePos);
-    if((hit) &&(!selected)) {
-        selected = true;
-        return false; //  propogates
+    if(hit) {
+        if(!selected) {
+            selected = true;
+            return false; // this way it doesn't scroll the page even if it's locked
+        } else {
+            return locked; //  don't propogate unless it's locked
+        }
+    } else if(handlehit){
+        return false; // don't propogate;
+    } else {
+        selected = false;
+        return true; // propogate
     }
+}
+       
+                
+void ZoneUiQuad :: mouseDragged(ofMouseEventArgs &e){
     
-    return false;
+    if(locked) return; 
+    mousePos = e;
+//    mousePoint.x = e.x;
+//    mousePoint.y = e.y;
+//    mousePoint-=offset;
+//    mousePoint/=scale;
+    
+    //ofRectangle bounds(centreHandle, 0, 0);
+    int dragCount = 0;
+    for(size_t i= 0; i<handles.size(); i++) {
+        if(handles[i].updateDrag(mousePos)) dragCount++;
+    }
+
+    // do we need to track dirtyness? Probably.
+    isDirty |= (dragCount>0);
     
 }
-                
-bool ZoneUIQuad :: isSquare() {
+void ZoneUiQuad :: mouseReleased(ofMouseEventArgs &e){
     
-    vector<DragHandle>& corners = cornerHandles;
+    bool wasDragging = false;
+    
+    for(size_t i= 0; i<handles.size(); i++) {
+        if(handles[i].stopDrag()) wasDragging = true;
+    }
+
+    isDirty|=wasDragging;
+}
+
+
+bool ZoneUiQuad :: hitTest(ofPoint mousePoint)  {
+   
+    return zonePoly.inside(mousePoint);
+    
+}
+
+
+bool ZoneUiQuad :: isSquare() {
+    
+    vector<DragHandle>& corners = handles;
     return (corners[0].x == corners[2].x) && (corners[0].y == corners[1].y) && (corners[1].x == corners[3].x) && (corners[2].y == corners[3].y);
     
 }
-                
-void ZoneUIQuad :: mouseDragged(ofMouseEventArgs &e){
-    
-    
-}
-void ZoneUIQuad :: mouseReleased(ofMouseEventArgs &e){
-    
-}
 
 
-bool ZoneUIQuad :: hitTest(ofPoint mousePoint)  {
-    ofLogNotice() << mousePoint;
-    for(auto& vertex : zonePoly.getVertices()) {
-        ofLogNotice() << vertex;
+bool ZoneUiQuad :: setCorners(const vector<glm::vec2*>& points) {
+    
+    if(points.size()<4) return false;
+    
+    for(int i = 0; i<4; i++) {
+        handles[i].set(*points[i]);
+       
     }
-    return zonePoly.inside(mousePoint);
+    
+    updateHandleColours();
+    updateMeshAndPoly();
+    return true;
+    
+}
+
+
+
+bool ZoneUiQuad :: setSelected(bool v) {
+    if(ZoneUiBase::setSelected(v)) {
+        // if state has changed
+        for(DragHandle& handle : handles) {
+            handle.stopDrag();
+            // TODO - maybe make handle active / inactive?
+        }
+        
+        return true;
+    } else {
+        return false;
+    }
+};
+
+bool ZoneUiQuad :: updateFromOutputZone(OutputZone* outputZone) {
+    if(outputZone->transformType!=0) {
+        ofLogError("ZoneUIQuad :: updateFromOutputZone - WRONG TRANSFORM TYPE!");
+        return false;
+    } else {
+        inputZoneIndex = outputZone->getZoneIndex();
+        inputZoneAlt = outputZone->getIsAlternate(); 
+        setCorners(outputZone->zoneTransformQuad.getCornerPoints());
+        isDirty = false;
+        return true;
+    }
+    
     
 }

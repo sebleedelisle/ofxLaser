@@ -137,7 +137,12 @@ bool DragHandle::updateDrag(glm::vec2 mousePos) {
 			
             
             // DRAGGING PROPORTIONALLY
-            glm::vec2 currentReferencePos = mousePos - clickOffset;
+            // TODO drag a small around when shift is pressed!
+            
+            glm::vec2 currentReferencePos;//  = mousePos - clickOffset;
+            currentReferencePos.x = startPos.x + (((mousePos.x - clickOffset.x) - startPos.x) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+            currentReferencePos.y = startPos.y + (((mousePos.y - clickOffset.y) - startPos.y) * (ofGetKeyPressed(OF_KEY_SHIFT)? 0.2 : 1));
+            
             if(snapToGrid) {
                 currentReferencePos.x = round(currentReferencePos.x*(1/gridSize))*gridSize;
                 currentReferencePos.y = round(currentReferencePos.y*(1/gridSize))*gridSize;

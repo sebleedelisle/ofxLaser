@@ -152,7 +152,6 @@ ofPoint& InputZone::addSortedShapesToVector(vector<ofxLaser::Shape*>& shapesCont
 			
 		} while (currentIndex>-1);
 		
-		// TODO - delete the dummy shape at the start?
 		delete sortedShapes[0];
 		sortedShapes.pop_front();
 		shapes.pop_front();

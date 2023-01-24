@@ -105,8 +105,9 @@ glm::vec2 ZoneTransformQuadData::getCentre() {
 }
 
 void ZoneTransformQuadData :: resetToSquare() {
+    if(locked) return;
     vector<glm::vec2*> cornerhandles = getCornerPoints();
-    vector<ofPoint> corners;
+    vector<glm::vec2> corners;
     // convert to ofPoints
     for(glm::vec2* handle : cornerhandles) corners.push_back(*handle);
     
@@ -229,7 +230,7 @@ void ZoneTransformQuadData::setDst(const ofRectangle& rect) {
     updateQuads();
 }
 
-void ZoneTransformQuadData :: setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright) {
+void ZoneTransformQuadData :: setDstCorners(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright) {
     // interpolate dst handle points?
     
     // ofLog(OF_LOG_NOTICE, "ZoneTransform::setDstCorners "+displayLabel);
@@ -269,11 +270,12 @@ void ZoneTransformQuadData :: setDstCorners(glm::vec3 topleft, glm::vec3 toprigh
     for(size_t i= 0; i<dstPoints.size(); i++) {
         dstPoints[i] = (toOf(dstCVPoints[i]));
     }
+    isDirty = true;
 }
 
 void ZoneTransformQuadData::resetFromCorners() {
-    vector<ofPoint> corners = getCorners();
-    setDstCorners(corners[0],corners[1],corners[2],corners[3]);
+    vector<glm::vec2> corners = getCorners();
+    setDstCorners(corners[0], corners[1], corners[2], corners[3]);
     
 }
 
@@ -286,9 +288,9 @@ vector<glm::vec2*> ZoneTransformQuadData::getCornerPoints(){
     return corners;
 }
 
-vector<ofPoint> ZoneTransformQuadData::getCorners(){
+vector<glm::vec2> ZoneTransformQuadData::getCorners(){
     
-    vector<ofPoint> corners;
+    vector<glm::vec2> corners;
     
     int indextopleft = 0 ;
     int indextopright = xDivisions;
@@ -367,7 +369,7 @@ void ZoneTransformQuadData:: updateDivisions(){
     
     //ofLog(OF_LOG_NOTICE, "divisionsChanged");
     
-    vector<ofPoint> corners  = getCorners();
+    vector<glm::vec2> corners  = getCorners();
     
     xDivisions = xDivisionsNew;
     yDivisions = yDivisionsNew;
@@ -543,8 +545,8 @@ bool ZoneTransformQuadData :: getIsConvex() {
 
 void ZoneTransformQuadData :: updateConvex() {
     bool convex = true;
-    vector<ofPoint> corners = getCorners();
-    vector<ofPoint> points;
+    vector<glm::vec2> corners = getCorners();
+    vector<glm::vec2> points;
     points.push_back(corners[0]);
     points.push_back(corners[1]);
     points.push_back(corners[3]);

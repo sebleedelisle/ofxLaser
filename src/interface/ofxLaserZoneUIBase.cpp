@@ -9,21 +9,72 @@
 #include "ofxLaserZoneUIBase.h"
 using namespace ofxLaser;
 
-void ZoneUIBase :: setScale(float _scale) {
-    scale = _scale;
+
+ZoneUiBase :: ZoneUiBase() {
+    locked = false;
+    selected = false;
+    snapToGrid = false;
+    gridSize = 10;
+    mousePos = {0,0};
+    
+    
+    uiZoneFillColour  = ofColor::fromHex(0x001123, 128);
+    uiZoneFillColourSelected = ofColor::fromHex(0x001123);
+    uiZoneStrokeColour  = ofColor::fromHex(0x0E87E7);
+    uiZoneStrokeColourSelected = ofColor::fromHex(0x0E87E7);
+    uiZoneHandleColour = ofColor::fromHex(0x0E87E7);
+    uiZoneHandleColourOver = ofColor :: fromHex(0xffffff);
+    uiZoneStrokeSubdivisionColour = ofColor :: fromHex(0x00386D);;
+    uiZoneStrokeSubdivisionColourSelected = ofColor :: fromHex(0x006ADB);
+    
     
 }
-void ZoneUIBase :: setOffset(ofPoint _offset) {
-    offset = _offset;
+bool ZoneUiBase :: update() {
+    
+    if(isDirty) {
+        updateMeshAndPoly();
+    }
+    bool wasDirty = isDirty;
+    isDirty = false;
+    return wasDirty;
 }
 
+void ZoneUiBase :: setScale(float _scale) {
+    if(scale!=_scale) {
+        scale = _scale;
+        for(DragHandle& handle : handles) {
+            handle.setSize(10/scale);
+        }
+    }
+}
+void ZoneUiBase :: drawHandlesIfSelected() {
+    
+    if(getSelected() && !locked) {
+        for(DragHandle& handle : handles) {
+            handle.draw(mousePos);
+        }
+    }
+}
+void ZoneUiBase :: drawLabel() {
+    ofPushStyle();
+   
+    ofSetColor(uiZoneStrokeColour);
+    string label = ofToString(inputZoneIndex+1);
+    if(inputZoneAlt) {
+        label = label + " ALT";
+    }
+    if(getLocked()) label = label + " (locked)";
+    ofDrawBitmapString(label, centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofPopStyle(); 
+    
+}
 
-bool ZoneUIBase::getSelected() {
+bool ZoneUiBase::getSelected() {
     return selected;
     
 };
 
-bool ZoneUIBase::setSelected(bool v) {
+bool ZoneUiBase::setSelected(bool v) {
     if(selected!=v)  {
         selected = v;
         
@@ -33,21 +84,63 @@ bool ZoneUIBase::setSelected(bool v) {
     }
 };
 
-
-void ZoneUIBase :: setEditable(bool warpvisible){
-    editable = warpvisible;
+void ZoneUiBase::setLocked(bool _locked){
+    locked = _locked;
 }
-void ZoneUIBase :: setVisible(bool warpvisible){
-    visible = warpvisible;
+bool ZoneUiBase::getLocked(){
+    return locked;
 }
 
+//
+//void ZoneUiBase :: setEditable(bool editable){
+//    editable = editable;
+//}
+//void ZoneUiBase :: setVisible(bool warpvisible){
+//    visible = warpvisible;
+//}
+//bool ZoneUiBase :: getVisible(){
+//    return visible;
+//}
 
-bool ZoneUIBase :: setGrid(bool snapstate, int gridsize) {
+bool ZoneUiBase :: setGrid(bool snapstate, int gridsize) {
     if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
         snapToGrid = snapstate;
         gridSize = gridsize;
+        
+        for(DragHandle& handle : handles) {
+            handle.setGrid(snapstate, gridsize);
+        }
+        
         return true;
     } else {
         return false;
     }
+}
+
+void ZoneUiBase :: mouseMoved(ofMouseEventArgs &e){
+    mousePos = e; 
+}
+
+void ZoneUiBase::setHue(int hue) {
+
+    uiZoneFillColour.setHue(hue);
+    uiZoneFillColourSelected.setHue(hue);
+    uiZoneStrokeColour.setHue(hue);
+    uiZoneStrokeColourSelected.setHue(hue);
+    uiZoneHandleColour.setHue(hue);
+    uiZoneHandleColourOver.setHue(hue);
+    uiZoneStrokeSubdivisionColour.setHue(hue);
+    uiZoneStrokeSubdivisionColourSelected.setHue(hue);
+
+    updateHandleColours();
+  
+}
+
+void ZoneUiBase ::updateHandleColours() {
+    for(DragHandle& handle : handles) {
+        
+        handle.setColour(uiZoneHandleColour, uiZoneHandleColourOver);
+        
+    }
+    
 }

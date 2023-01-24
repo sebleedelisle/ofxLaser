@@ -42,7 +42,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     
     void setDst(const ofRectangle& rect);
     
-    void setDstCorners(glm::vec3 topleft, glm::vec3 topright, glm::vec3 bottomleft, glm::vec3 bottomright);
+    void setDstCorners(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright);
 
    
     void getPerimeterPoints(vector<glm::vec2>& points) override;
@@ -100,7 +100,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     
     // returns in order top left, top right, bottom left, bottom right
     void resetFromCorners();
-    vector<ofPoint> getCorners();
+    vector<glm::vec2> getCorners();
    
 //    vector<glm::vec2*> getCornerPoints();
     vector<glm::vec2*> getCornerPointsClockwise();

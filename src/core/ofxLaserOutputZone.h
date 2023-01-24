@@ -69,7 +69,8 @@ class OutputZone {
     
     ofParameter<bool>muted;
     ofParameter<bool>soloed;
-    ofParameter<int>transformType; 
+    ofParameter<int>transformType;
+    
     
     bool isDirty; 
 

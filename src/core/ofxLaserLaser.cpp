@@ -732,25 +732,11 @@ void Laser::update(bool updateZones) {
 //    }
 //
     
-    bool soloMode = areAnyZonesSoloed();
+   // bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
     
     
-    // mute / solo functionality
-    if(soloMode) {
-        for(OutputZone* laserZone : outputZones) {
-            //laserZone->setVisible(laserZone->soloed);
-            OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
-            //if(altZone!=nullptr) altZone->setVisible(laserZone->soloed);
-        }
-        
-    } else {
-        for(OutputZone* laserZone : outputZones) {
-            //laserZone->setVisible(!laserZone->muted);
-            OutputZone* altZone = getLaserAltZoneForZone(&laserZone->zone);
-            //if(altZone!=nullptr) altZone->setVisible(!laserZone->muted);
-        }
-    }
+  
     
     
     // if any of the source rectangles have changed then update all the warps
@@ -1271,7 +1257,14 @@ float Laser ::getMoveDistanceForShapes(vector<PointsForShape*>& shapes){
     
 }
 
-
+bool Laser ::isLaserZoneActive(OutputZone* outputZone) {
+    // mute / solo functionality
+    if(areAnyZonesSoloed()) {
+        return outputZone->soloed;
+    } else {
+        return !outputZone->muted;
+    }
+}
 void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
 	
 	vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
@@ -1284,7 +1277,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
 	//for(int i = 0; i<(int)laserZones.size(); i++) {
     for(OutputZone* laserZone : outputZones) {
       
-       // if(!laserZone->getVisible()) continue;
+       if(!isLaserZoneActive(laserZone)) continue;
         
         // if we're not using the alternate zones and this is an alternate zone then skip it
         if((!useAlternate) && (laserZone->getIsAlternate())) continue;

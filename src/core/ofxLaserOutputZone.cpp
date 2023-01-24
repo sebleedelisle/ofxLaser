@@ -77,7 +77,7 @@ bool OutputZone :: update() {
 //}
 
 string OutputZone :: getLabel() {
-    return ofToString(zone.getIndex()+1);
+    return ofToString(zone.getIndex()+1) + (getIsAlternate()?" ALT":"");
 }
 //
 //void OutputZone :: setScale(float _scale) {

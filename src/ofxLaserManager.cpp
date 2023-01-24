@@ -21,6 +21,9 @@ Manager * Manager::instance() {
 
 Manager :: Manager() {
     
+    previewOffset = glm::vec2(0,20);
+    previewScale = 1;
+    
     if(laserManager == NULL) {
         laserManager = this;
     } else {
@@ -87,18 +90,21 @@ Manager :: Manager() {
     
     params.add(customParams);
     
+    ofAddListener(ofEvents().mouseMoved, this, &Manager::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
+    ofAddListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
     initSVGs();
     //visFbo.allocate(1000,600, GL_RGBA, 4);
-    
-    
 }
 
 Manager::~Manager() {
+    ofRemoveListener(ofEvents().mouseMoved, this, &Manager::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
+    ofRemoveListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
+
     ofRemoveListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
@@ -112,16 +118,20 @@ void Manager :: createAndAddLaser()  {
     ManagerBase:: createAndAddLaser();
     setLaserDefaultPreviewOffsetAndScale(laserindex);
     laserZoneViews.emplace_back(lasers.back());
+    laserZoneViews.back().setOutputRect(getPreviewRect());
+    laserZoneViews.back().autoFitToOutput();
+    laserZoneViews.back().setGrid(zoneGridSnap, zoneGridSize);
     
 }
 
 
 
 void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
-    if(lasernum<lasers.size()) {
-        Laser& laser = *lasers[lasernum];
-        float scale = ((ofGetHeight()/2)-iconBarHeight-menuBarHeight)/800.0f;
-        //laser.setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
+    LaserZoneViewController* laserview = getLaserViewControllerByIndex(lasernum);
+    if(laserview!=nullptr) {
+        //float scale = ((ofGetHeight()/2)-iconBarHeight-menuBarHeight)/800.0f;
+        //laserview->setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
+        laserview->autoFitToOutput();
     }
 }
 
@@ -179,6 +189,10 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
         //laser->setGrid(zoneGridSnap, zoneGridSize);
         laser->maxLatencyMS = globalLatency;
     }
+    for(LaserZoneViewController& laserview : laserZoneViews) {
+        laserview.setGrid(zoneGridSnap, zoneGridSize);
+        
+    }
     ofLogNotice() << "paramChanged " << e.getName();
     saveSettings();
 }
@@ -200,6 +214,13 @@ void Manager :: update() {
 //        firstUpdate = false;
 //    }
 }
+
+void Manager :: mouseMoved(ofMouseEventArgs &e) {
+    for(LaserZoneViewController& zoneView : laserZoneViews) {
+        zoneView.mouseMoved(e);
+    }
+}
+
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
     //if(ofGetKeyPressed(' ')) {
@@ -242,8 +263,11 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
             return true;
         }
         
-        for(LaserZoneView& zoneView : laserZoneViews) {
-            zoneView.mousePressed(e);
+        LaserZoneViewController* currentLaserView = getCurrentLaserViewController();
+        if(currentLaserView!=nullptr) {
+            currentLaserView->mousePressed(e);
+        } else {
+            ofLogError("ERROR - missing view for laser");
         }
         
     } else if(viewMode == OFXLASER_VIEW_3D) {
@@ -252,6 +276,19 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
     }
     
     return false;
+}
+LaserZoneViewController*  Manager ::getCurrentLaserViewController() {
+    
+    return getLaserViewControllerByIndex(selectedLaserIndex);
+}
+LaserZoneViewController*  Manager ::getLaserViewControllerByIndex(int index) {
+
+    if((index>=0) && (index<laserZoneViews.size())) {
+        return &laserZoneViews[index];
+    } else {
+        return nullptr;
+    }
+
 }
 
 void Manager :: setDefaultPreviewOffsetAndScale(){
@@ -270,7 +307,7 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
 
 bool Manager :: mouseReleased(ofMouseEventArgs &e){
     draggingPreview = false;
-    for(LaserZoneView& zoneView : laserZoneViews) {
+    for(LaserZoneViewController& zoneView : laserZoneViews) {
         zoneView.mouseReleased(e);
     }
     visualiser3D.mouseReleased(e);
@@ -279,7 +316,7 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
     visualiser3D.mouseDragged(e);
     
-    for(LaserZoneView& zoneView : laserZoneViews) {
+    for(LaserZoneViewController& zoneView : laserZoneViews) {
         zoneView.mouseDragged(e);
     }
     
@@ -290,6 +327,18 @@ bool Manager :: mouseDragged(ofMouseEventArgs &e){
         return false;
     }
 }
+
+void Manager :: mouseScrolled(ofMouseEventArgs &e){
+    //visualiser3D.mouseDragged(e);
+    
+    for(LaserZoneViewController& zoneView : laserZoneViews) {
+        zoneView.mouseScrolled(e);
+    }
+    
+   // return false;
+    
+}
+
 bool Manager :: keyPressed(ofKeyEventArgs &e) {
 
     if(ofGetKeyPressed(' ')) {
@@ -337,6 +386,7 @@ bool Manager :: deleteLaser(Laser* laser) {
         }
         
         if(laserindex!=-1) {
+            // laserZoneViews is not a pointer so memory should be freed
             laserZoneViews.erase(laserZoneViews.begin() + laserindex);
         }
         
@@ -592,7 +642,14 @@ void Manager :: drawPreviews() {
                     // if the laser is paused then show the movement of the laser
                 //    selectedlaser->drawLaserPath(zoneEditorShowLaserPoints, selectedlaser->paused);
                 }
-                laserZoneViews[i].draw(); 
+                if(laserZoneViews[i].update()) {
+                    // TODO - update the data!
+                    // CURRENTLY, the updates happen inside the view controller,
+                    // I'm not sure if that's optimal.
+                    
+                }
+                
+                laserZoneViews[i].draw();
                 drawBigNumber(i);
                
             } else {
@@ -906,262 +963,7 @@ void Manager::drawLaserGui() {
     if(viewMode == OFXLASER_VIEW_OUTPUT)  {
 
         // LASER ZONE SETTINGS
-        Laser* laser = lasers[selectedLaserIndex];
-        vector<OutputZone*> activeZones = laser->getActiveZones();
-        
-        glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(canvasWidth, 0));
-        
-        if(UI::startWindow("Laser output zones", ImVec2(800+guiSpacing, guiSpacing+menuBarHeight), ImVec2(380,500))) {
-            
-            ImGui::PushFont(UI::largeFont);
-            ImGui::Text("%s", laser->getLabel().c_str());
-            ImGui::PopFont();
-          
-            ImGuiTreeNodeFlags collapsingheaderflags = ImGuiTreeNodeFlags_None;
-            if(activeZones.size()==0) collapsingheaderflags|=ImGuiTreeNodeFlags_DefaultOpen;
-            
-            if (ImGui::CollapsingHeader("Add / remove zones and masks",collapsingheaderflags)) {
-                    ImGui::Columns(3, "Laser zones columns");
-
-                // ADD / REMOVE ZONES
-                ImGui::Text("Zones");
-                for(InputZone* zone : zones) {
-                    bool checked = laser->hasZone(zone);
-
-                    if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
-                        if(checked) {
-                            laser->addZone(zone);
-                        } else {
-                            laser->removeZone(zone);
-                        }
-                    }
-                }
-                ImGui::NextColumn();
-                ImGui::Text("Alternate zones");
-                for(InputZone* zone : zones) {
-                    bool checked = laser->hasAltZone(zone);
-                    string label = zone->displayLabel + "##alt";
-                    if(ImGui::Checkbox(label.c_str(), &checked)) {
-                        if(checked) {
-                            laser->addAltZone(zone);
-                        } else {
-                            laser->removeAltZone(zone);
-                        }
-                    }
-                }
-                ImGui::NextColumn();
-                
-                
-                // ADD / REMOVE MASKS
-                MaskManager& maskManager = laser->maskManager;
-                if(ImGui::Button("ADD MASK")) {
-                    maskManager.addQuadMask();
-                }
-                ImDrawList*   draw_list = ImGui::GetWindowDrawList();
-                ImVec2 p = ImGui::GetCursorScreenPos();
-                draw_list->AddLine(ImVec2(p.x - 9999, p.y), ImVec2(p.x + 9999, p.y),  ImGui::GetColorU32(ImGuiCol_Border));
-                ImGui::Dummy(ImVec2(0.0f, 2.0f));
-                for(QuadMask* mask : maskManager.quads){
-                    string label = "##"+mask->displayLabel;
-                    ImGui::Text("MASK %s", mask->displayLabel.c_str());
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(40);
-                    int level = mask->maskLevel;
-                    if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) {
-                        mask->maskLevel = level;
-                    }
-                    
-                    ImGui::PopItemWidth();
-                    ImGui::SameLine();
-                    string buttonlabel = "DELETE "+mask->displayLabel+"##mask";
-                    if(ImGui::Button(buttonlabel.c_str())) {
-                        maskManager.deleteQuadMask(mask);
-                        
-                    }
-                    
-                }
-                ImGui::Columns();
-            // -------------------
-            }
-            
-            
-            
-           //
-            ImGui::Separator();
-            
-            UI::addCheckbox(laser->useAlternate);
-            UI::addCheckbox(laser->muteOnAlternate);
-            
-            bool soloActive = laser->areAnyZonesSoloed();
-            
-            // ZONE MUTE SOLO
-           
-            for(OutputZone* laserZone : laser->outputZones) {
-                
-                if(laserZone->getIsAlternate()) continue;
-                
-                bool zonemuted = laserZone->muted;
-                
-    //            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, soloActive?0.5f:1.0f);
-                if(soloActive) UI::startGhosted();
-                string muteLabel = "MUTE##"+laserZone->getLabel();
-                if(zonemuted) UI::secondaryColourStart();
-                if(ImGui::Button(muteLabel.c_str())) { // }, ImVec2(20,20))) {
-                    //laser->toggleZoneMute(laserZone);
-    //                laserZone->muted = !laserZone->muted;
-                    if(laserZone->muted) { laser->unMuteZone(laserZone->getZoneIndex());
-                    } else {
-                        laser->muteZone(laserZone->getZoneIndex());
-                    }
-                };
-                UI::addDelayedTooltip("Mute zone");
-                
-                if(zonemuted) UI::secondaryColourEnd();
-                //ImGui::PopStyleVar();
-                UI::stopGhosted();
-                
-                ImGui::SameLine();
-                bool soloed = laserZone->soloed;
-                if(soloed) UI::secondaryColourStart();
-                string soloLabel = "SOLO##"+laserZone->getLabel();
-                if(ImGui::Button(soloLabel.c_str())) { // }, ImVec2(20,20))){
-                    //laser->toggleZoneSolo(laserZone);
-                   // laserZone->soloed = !laserZone->soloed;
-                    if(laserZone->soloed) { laser->unSoloZone(laserZone->getZoneIndex());
-                    } else {
-                        laser->soloZone(laserZone->getZoneIndex());
-                    }
-                }
-                UI::secondaryColourEnd();
-                UI::addDelayedTooltip("Solo zone");
-                
-                ImGui::SameLine();
-                ImGui::Text("ZONE %s",laserZone->getLabel().c_str());
-               
-                
-            }
-            
-            ImGui::Separator();
-            
-            UI::addIntSlider(laser->testPattern);
-            UI::addCheckbox(laser->hideContentDuringTestPattern);
-            UI::toolTip("Disable this if you want to see the laser content at the same time as the test patterns");
-            
-            UI::addParameter(zoneEditorShowLaserPath);
-            UI::addParameter(zoneEditorShowLaserPoints);
-           
-            if(laser->paused && ((ofGetElapsedTimeMillis()%600)<300)) UI::startGhosted();
-            string label = ofToString(ICON_FK_PLAY ) + ofToString(ICON_FK_PAUSE);
-            if(UI::Button( label, false, laser->paused)) {
-                laser->paused = !laser->paused;
-            }
-            UI::stopGhosted();
-            
-            //UI::addCheckbox(laser->paused);
-            UI::toolTip("Pauses the output of the laser (useful for adjusting the settings)");
-            
-            UI::addParameter(zoneGridSnap);
-            UI::addParameter(zoneGridSize);
-            
-            // Laser Output Masks
-            
-            for(OutputZone* laserZone : laser->outputZones) {
-               
-                if(false) { // laserZone->getSelected()) {
-
-                    ImGui::Separator();
-                    ImGui::PushFont(UI::largeFont);
-                    ImGui::Text("Zone %d", laserZone->getZoneIndex()+1);
-                    ImGui::PopFont();
-                    
-                    bool lineZone = laserZone->transformType == 1;
-                    
-                    if(!lineZone) UI::secondaryColourStart();
-                    if(ImGui::Button("QUAD")) {
-                        laserZone->transformType = 0;
-                    }
-                    UI::secondaryColourEnd();
-                    ImGui::SameLine();
-                    if(lineZone)  UI::secondaryColourStart();
-                    if(ImGui::Button("LINE")) {
-                        laserZone->transformType = 1;
-                    }
-                    UI::secondaryColourEnd();
-
-                    if(!lineZone) {
-                        ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
-                        if(ztq!=nullptr) {
-                            if(ztq->isSquare()) {
-                                UI::startGhosted();
-                            }
-                            if(UI::Button("Reset to square")) {
-                                ztq->resetToSquare();
-                               
-                            }
-                            UI::stopGhosted();
-                            UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                            ImGui::SameLine();
-                            if(UI::Button(ICON_FK_SQUARE_O))  {
-                                ztq->setDst(ofRectangle(200,240,400,200));
-                            }
-                            UI::toolTip("Reset zone to default");
-                            
-                            UI::addParameterGroup(ztq->transformParams, false);
-                        }
-                    } else {
-                            
-                        ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
-                        if(ztl!=nullptr) {
-                            //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
-                            
-                            UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
-                            
-                            vector<BezierNode>& nodes = ztl->getNodes();
-                            for(int i = 0; i<nodes.size(); i++) {
-                                ImGui::PushID(i);
-                                BezierNode& node = nodes[i];
-                                int mode = node.mode;
-                                ImGui::Text("%d", i+1);
-                                ImGui::SameLine();
-                                //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
-                                ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
-                                ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
-                                ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
-                                
-                                if(mode!=node.mode) {
-                                    node.mode = mode;
-                                    ztl->setDirty(true);
-                                }
-                                if(nodes.size()>2) {
-                                    ImGui::SameLine();
-                                    
-                                    string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
-                                    if (UI::DangerButton(label, false)) {
-                                        ztl->deleteNode(i);
-                                        
-                                    }
-                                }
-                                
-                                ImGui::PopID();
-                                
-                                
-                            }
-                            label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
-                            if (UI::Button(label, false)) {
-                                ztl->addNode();
-                                
-                            }
-                        }
-                        
-                    }
-
-                   
-                }
-                 
-            }
-            
-        }
-        UI::endWindow();
+        guiLaserOutputSettings();
     }
     guiDacAssignment();
     
@@ -1170,6 +972,271 @@ void Manager::drawLaserGui() {
     guiCopyLaserSettings();
     
 }
+
+void Manager::guiLaserOutputSettings() {
+    
+    Laser* laser = lasers[selectedLaserIndex];
+    vector<OutputZone*> activeZones = laser->getActiveZones();
+    
+    glm::vec2 laserZonePos = previewOffset + (previewScale*glm::vec2(canvasWidth, 0));
+    
+    if(UI::startWindow("Laser output zones", ImVec2(800+guiSpacing, guiSpacing+menuBarHeight), ImVec2(380,500))) {
+        
+        ImGui::PushFont(UI::largeFont);
+        ImGui::Text("%s", laser->getLabel().c_str());
+        ImGui::PopFont();
+      
+        ImGuiTreeNodeFlags collapsingheaderflags = ImGuiTreeNodeFlags_None;
+        if(activeZones.size()==0) collapsingheaderflags|=ImGuiTreeNodeFlags_DefaultOpen;
+        
+        if (ImGui::CollapsingHeader("Add / remove zones and masks",collapsingheaderflags)) {
+                ImGui::Columns(3, "Laser zones columns");
+
+            // ADD / REMOVE ZONES
+            ImGui::Text("Zones");
+            for(InputZone* zone : zones) {
+                bool checked = laser->hasZone(zone);
+
+                if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
+                    if(checked) {
+                        laser->addZone(zone);
+                    } else {
+                        laser->removeZone(zone);
+                    }
+                }
+            }
+            ImGui::NextColumn();
+            ImGui::Text("Alternate zones");
+            for(InputZone* zone : zones) {
+                bool checked = laser->hasAltZone(zone);
+                string label = zone->displayLabel + "##alt";
+                if(ImGui::Checkbox(label.c_str(), &checked)) {
+                    if(checked) {
+                        laser->addAltZone(zone);
+                    } else {
+                        laser->removeAltZone(zone);
+                    }
+                }
+            }
+            ImGui::NextColumn();
+            
+            
+            // ADD / REMOVE MASKS
+            MaskManager& maskManager = laser->maskManager;
+            if(ImGui::Button("ADD MASK")) {
+                maskManager.addQuadMask();
+            }
+            ImDrawList*   draw_list = ImGui::GetWindowDrawList();
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            draw_list->AddLine(ImVec2(p.x - 9999, p.y), ImVec2(p.x + 9999, p.y),  ImGui::GetColorU32(ImGuiCol_Border));
+            ImGui::Dummy(ImVec2(0.0f, 2.0f));
+            for(QuadMask* mask : maskManager.quads){
+                string label = "##"+mask->displayLabel;
+                ImGui::Text("MASK %s", mask->displayLabel.c_str());
+                ImGui::SameLine();
+                ImGui::PushItemWidth(40);
+                int level = mask->maskLevel;
+                if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) {
+                    mask->maskLevel = level;
+                }
+                
+                ImGui::PopItemWidth();
+                ImGui::SameLine();
+                string buttonlabel = "DELETE "+mask->displayLabel+"##mask";
+                if(ImGui::Button(buttonlabel.c_str())) {
+                    maskManager.deleteQuadMask(mask);
+                    
+                }
+                
+            }
+            ImGui::Columns();
+        // -------------------
+        }
+        
+        
+        
+       //
+        ImGui::Separator();
+        
+        UI::addCheckbox(laser->useAlternate);
+        UI::addCheckbox(laser->muteOnAlternate);
+        
+        bool soloActive = laser->areAnyZonesSoloed();
+        
+        // ZONE MUTE SOLO
+       
+        for(OutputZone* laserZone : laser->outputZones) {
+            
+            if(laserZone->getIsAlternate()) continue;
+            
+            bool zonemuted = laserZone->muted;
+            
+//            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, soloActive?0.5f:1.0f);
+            if(soloActive) UI::startGhosted();
+            string muteLabel = "MUTE##"+laserZone->getLabel();
+            if(zonemuted) UI::secondaryColourStart();
+            if(ImGui::Button(muteLabel.c_str())) { // }, ImVec2(20,20))) {
+                //laser->toggleZoneMute(laserZone);
+//                laserZone->muted = !laserZone->muted;
+                if(laserZone->muted) { laser->unMuteZone(laserZone->getZoneIndex());
+                } else {
+                    laser->muteZone(laserZone->getZoneIndex());
+                }
+            };
+            UI::addDelayedTooltip("Mute zone");
+            
+            if(zonemuted) UI::secondaryColourEnd();
+            //ImGui::PopStyleVar();
+            UI::stopGhosted();
+            
+            ImGui::SameLine();
+            bool soloed = laserZone->soloed;
+            if(soloed) UI::secondaryColourStart();
+            string soloLabel = "SOLO##"+laserZone->getLabel();
+            if(ImGui::Button(soloLabel.c_str())) { // }, ImVec2(20,20))){
+                //laser->toggleZoneSolo(laserZone);
+               // laserZone->soloed = !laserZone->soloed;
+                if(laserZone->soloed) { laser->unSoloZone(laserZone->getZoneIndex());
+                } else {
+                    laser->soloZone(laserZone->getZoneIndex());
+                }
+            }
+            UI::secondaryColourEnd();
+            UI::addDelayedTooltip("Solo zone");
+            
+            ImGui::SameLine();
+            ImGui::Text("ZONE %s",laserZone->getLabel().c_str());
+           
+            
+        }
+        
+        ImGui::Separator();
+        
+        UI::addIntSlider(laser->testPattern);
+        UI::addCheckbox(laser->hideContentDuringTestPattern);
+        UI::toolTip("Disable this if you want to see the laser content at the same time as the test patterns");
+        
+        UI::addParameter(zoneEditorShowLaserPath);
+        UI::addParameter(zoneEditorShowLaserPoints);
+       
+        if(laser->paused && ((ofGetElapsedTimeMillis()%600)<300)) UI::startGhosted();
+        string label = ofToString(ICON_FK_PLAY ) + ofToString(ICON_FK_PAUSE);
+        if(UI::Button( label, false, laser->paused)) {
+            laser->paused = !laser->paused;
+        }
+        UI::stopGhosted();
+        
+        //UI::addCheckbox(laser->paused);
+        UI::toolTip("Pauses the output of the laser (useful for adjusting the settings)");
+        
+        UI::addParameter(zoneGridSnap);
+        UI::addParameter(zoneGridSize);
+        
+        // Laser Output Zones
+        
+        for(OutputZone* laserZone : laser->outputZones) {
+           
+            if(true) { // laserZone->getSelected()) {
+
+                ImGui::Separator();
+                ImGui::PushFont(UI::largeFont);
+                ImGui::Text("Zone %d", laserZone->getZoneIndex()+1);
+                ImGui::PopFont();
+                ImGui::PushID(laserZone->getLabel().c_str());
+                
+                bool lineZone = laserZone->transformType == 1;
+                
+                if(!lineZone) UI::secondaryColourStart();
+                if(ImGui::Button("QUAD")) {
+                    laserZone->transformType = 0;
+                }
+                UI::secondaryColourEnd();
+                ImGui::SameLine();
+                if(lineZone)  UI::secondaryColourStart();
+                if(ImGui::Button("LINE")) {
+                    laserZone->transformType = 1;
+                }
+                UI::secondaryColourEnd();
+
+                if(!lineZone) {
+                    ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
+                    if(ztq!=nullptr) {
+                        if(ztq->isSquare()) {
+                            UI::startGhosted();
+                        }
+                        if(UI::Button("Reset to square")) {
+                            ztq->resetToSquare();
+                           
+                        }
+                        UI::stopGhosted();
+                        UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+                        ImGui::SameLine();
+                        if(UI::Button(ICON_FK_SQUARE_O))  {
+                            ztq->setDst(ofRectangle(200,240,400,200));
+                        }
+                        UI::toolTip("Reset zone to default");
+                        
+                        UI::addParameterGroup(ztq->transformParams, false);
+                    }
+                } else {
+                        
+                    ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
+                    if(ztl!=nullptr) {
+                        //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                        
+                        UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+                        
+                        vector<BezierNode>& nodes = ztl->getNodes();
+                        for(int i = 0; i<nodes.size(); i++) {
+                            ImGui::PushID(i);
+                            BezierNode& node = nodes[i];
+                            int mode = node.mode;
+                            ImGui::Text("%d", i+1);
+                            ImGui::SameLine();
+                            //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
+                            ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
+                            ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
+                            ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
+                            
+                            if(mode!=node.mode) {
+                                node.mode = mode;
+                                ztl->setDirty(true);
+                            }
+                            if(nodes.size()>2) {
+                                ImGui::SameLine();
+                                
+                                string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+                                if (UI::DangerButton(label, false)) {
+                                    ztl->deleteNode(i);
+                                    
+                                }
+                            }
+                            
+                            ImGui::PopID();
+                            
+                            
+                        }
+                        label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
+                        if (UI::Button(label, false)) {
+                            ztl->addNode();
+                            
+                        }
+                    }
+                    
+                }
+                ImGui::PopID();
+               
+            }
+             
+        }
+        
+    }
+    UI::endWindow();
+    
+    
+    
+}
+
 void Manager::guiMenuBar() {
     
     ImGui::PushFont(UI::mediumFont);
@@ -1214,6 +1281,7 @@ void Manager::guiMenuBar() {
                 if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
                     showCustomParametersWindow = !showCustomParametersWindow;
                 }
+                ImGui::EndMenu();
             }
 
             ImGui::EndMenu();

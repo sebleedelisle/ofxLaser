@@ -29,6 +29,7 @@ class UI {
     static ImFont* mediumFont; 
     static ImFont* largeFont;
     static ImFont* symbolFont;
+    
     static bool initialised;
     
     static bool ghosted;

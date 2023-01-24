@@ -10,26 +10,30 @@
 
 #include "ofMain.h"
 #include "ofxLaserLaser.h"
-#include "ofxLaserViewPort.h"
+#include "ofxLaserScrollableView.h"
 #include "ofxLaserZoneUIQuad.h"
+#include "ofxLaserZoneUIBase.h"
 
 namespace ofxLaser {
-class LaserZoneView : public ViewPort {
+class LaserZoneViewController : public ScrollableView {
     
     public :
     // initialise :
-    LaserZoneView();
-    LaserZoneView(Laser * laser);
-    ~LaserZoneView(); 
-        
+    LaserZoneViewController();
+    LaserZoneViewController(Laser * laser);
+    ~LaserZoneViewController();
+    
+    ZoneUiBase* getZoneInterfaceForOutputZone(OutputZone* outputZone);
+    OutputZone*  getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
+    bool createZoneUiForOutputZone(OutputZone* outputZone);
+    void updateSelected(ZoneUiBase* zoneUi); 
+    
+    bool update(); 
     void draw();
     void drawLaserPath();
     bool updateZones(); 
 
     void setGrid(bool snaptogrid, int gridsize);
-    
-  
-  
     
     virtual void mouseMoved(ofMouseEventArgs &e) override;
     virtual bool mousePressed(ofMouseEventArgs &e) override;
@@ -60,10 +64,8 @@ class LaserZoneView : public ViewPort {
     int gridSize = 1;
     bool snapToGrid = false;
     
-    vector<ZoneUIQuad> zoneUiQuads; 
-    
-    
-
+    vector<ZoneUiBase*> zoneUis;
+    vector<ZoneUiBase*> zoneUisSorted;
     
     
 };

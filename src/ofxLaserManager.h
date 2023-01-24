@@ -8,7 +8,7 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserVisualiser3D.h"
-#include "ofxLaserZoneView.h"
+#include "ofxLaserZoneViewController.h"
 
 
 enum ofxLaserViewMode {
@@ -59,7 +59,10 @@ class Manager : public ManagerBase {
     int getLaserIndex(Laser* laser); 
     int getSelectedLaserIndex();
     void setSelectedLaserIndex(int i);
-   // bool isAnyLaserSelected();
+    
+    LaserZoneViewController*  getCurrentLaserViewController();
+    LaserZoneViewController*  getLaserViewControllerByIndex(int index);
+   
 
     void drawUI();
     void drawPreviews();
@@ -79,6 +82,7 @@ class Manager : public ManagerBase {
     void guiDacAssignment();
     void guiLaserOverview();
     void guiLaserSettings(ofxLaser::Laser* laser);
+    void guiLaserOutputSettings(); 
 
     void guiCopyLaserSettings();
     void guiDacAnalytics();
@@ -103,9 +107,12 @@ class Manager : public ManagerBase {
     
     void drawBigNumber(int number); 
     
+    void mouseMoved(ofMouseEventArgs &e);
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
     bool mouseDragged(ofMouseEventArgs &e);
+    void mouseScrolled(ofMouseEventArgs &e);
+  
     bool keyPressed(ofKeyEventArgs &e);
     bool keyReleased(ofKeyEventArgs &e);
 
@@ -169,7 +176,7 @@ class Manager : public ManagerBase {
     
     ofImage guideImage;
   
-    vector<LaserZoneView> laserZoneViews;
+    vector<LaserZoneViewController> laserZoneViews;
     
     glm::vec2 previewOffset;
     float previewScale;
