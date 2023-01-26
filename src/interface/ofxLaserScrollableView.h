@@ -17,19 +17,16 @@ class ScrollableView {
   
     // TODO add source and target rectangle
     
-    ScrollableView() {
-        scale =1;
-        offset = glm::vec2(0,0);
-        outputRect.set(0,0,800,800);
-        sourceRect.set(0,0,800,800);
-    }
+    ScrollableView() ;
+    
+    virtual bool update();
     
     void zoom(glm::vec2 anchor, float zoomMultiplier);
     void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
     
-    
     virtual void mouseMoved(ofMouseEventArgs &e);
     virtual bool mousePressed(ofMouseEventArgs &e);
+    virtual bool mouseDoubleClicked(ofMouseEventArgs &e);
     virtual void mouseDragged(ofMouseEventArgs &e);
     virtual void mouseReleased(ofMouseEventArgs &e);
     virtual void mouseScrolled(ofMouseEventArgs &e);
@@ -38,10 +35,7 @@ class ScrollableView {
     void setOutputRect(ofRectangle rect);
     void autoFitToOutput();
     
-    
     bool hitTest(glm::vec2 screenpos); 
-    
-    
     
     glm::vec2 screenPosToLocalPos(glm::vec2 pos);
     ofMouseEventArgs screenPosToLocalPos(ofMouseEventArgs pos);
@@ -49,21 +43,22 @@ class ScrollableView {
     bool startDrag(glm::vec2 mousepos);
     bool updateDrag(glm::vec2 mousepos);
     bool stopDrag();
-    
-    
-    
-    //void startDrag(glm::vec2 p);
-    //void stopDrag();
+    bool cancelDrag();
+
     
     glm::vec2 offset;
     float scale;
-    //glm::vec2 mousePosLocal;
+
+    
     
     ofRectangle sourceRect;
     ofRectangle outputRect;
     
+    float lastClickTime = 0;
+    float doubleClickMaxInterval = 0.2f; 
     bool isDragging = false;
     glm::vec2 dragOffset;
+    glm::vec2 dragStartPosition; 
     
     float zoomSpeed = 0.02f; 
     

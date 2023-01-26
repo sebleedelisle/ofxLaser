@@ -12,7 +12,7 @@ OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
     
     // init params?
     soloed = false;
-    //ofLogNotice("OutputZone() rect : ") << zone.getRect();
+    
     ofRectangle rect = zone.getRect();
     zoneTransformQuad.init(rect);
     zoneTransformLine.init(rect);
@@ -46,97 +46,36 @@ bool OutputZone :: update() {
     
     return wasDirty;
 }
-//
-//bool OutputZone :: setGrid(bool snapstate, int gridsize) {
-//    if((snapstate!=snapToGrid) || (gridSize!=gridsize)) {
-//        snapToGrid = snapstate;
-//        gridSize = gridsize;
-//
-//        //zoneTransformLine.setGrid(snapToGrid, gridSize);
-//        //zoneTransformQuad.setGrid(snapToGrid, gridSize);
-//        return true;
-//    } else {
-//        return false;
-//    }
-//}
-//
-//void OutputZone :: draw() {
-//     
-//    if(!visible) return ;
-//    ofPushStyle();
-//    ofEnableAlphaBlending();
-//    string label =ofToString(zone.getIndex()+1);
-//    if(getIsAlternate()) label += "ALT";
-//    //getZoneTransform().draw(label);
-//
-//    ofDisableAlphaBlending();
-//    
-//    ofPopStyle();
-//
-//
-//}
+
 
 string OutputZone :: getLabel() {
     return ofToString(zone.getIndex()+1) + (getIsAlternate()?" ALT":"");
 }
-//
-//void OutputZone :: setScale(float _scale) {
-//    scale = _scale;
-//
-//    getZoneTransform().setScale(scale);
-//    //getZoneTransform().scale = scale;
-//}
-//void OutputZone :: setOffset(ofPoint _offset) {
-//    offset = _offset;
-//    getZoneTransform().setOffset(offset);
-//}
 
 
 void OutputZone :: paramChanged(ofAbstractParameter& e) {
     isDirty=true; 
 }
 
+//
+//bool OutputZone::getEnabled() {
+//    return enabled;
+//}
+//void OutputZone::setEnabled(bool value) {
+//    enabled = value;
+//}
 
-bool OutputZone::getEnabled() {
-    return enabled;
-}
-void OutputZone::setEnabled(bool value) {
-    enabled = value;
-    //getZoneTransform().setEditable(enabled);
-}
-//void OutputZone::setVisible(bool value) {
-//    visible = value;
-//    getZoneTransform().setVisible(visible);
-//}
-//bool OutputZone::getVisible() {
-//    return visible;
-//}
 
 const int OutputZone::getZoneIndex() const {
     return zone.getIndex();
 };
-
-//
-//bool OutputZone::getSelected() {
-//    return getZoneTransform().getSelected();
-//    
-//};
-//
-//void OutputZone::setSelected(bool v) {
-//
-//   getZoneTransform().setSelected(v);
-//    
-//};
 
 
 ofxLaser::Point OutputZone::getWarpedPoint(const ofxLaser::Point& p){
     return getZoneTransform().getWarpedPoint(p);
     
 }
-//ofxLaser::Point OutputZone::getUnWarpedPoint(const ofxLaser::Point& p){
-//    return getZoneTransform().getUnWarpedPoint(p);
-//
-//}
+
 ofPoint OutputZone::getWarpedPoint(const ofPoint& p){
     return getZoneTransform().getWarpedPoint(p);
     

@@ -40,7 +40,7 @@ void ZoneUiQuad :: draw() {
     zoneMesh.draw();
     
     drawHandlesIfSelected();
-    drawLabel();
+    //drawLabel();
     
     ofPopStyle();
 

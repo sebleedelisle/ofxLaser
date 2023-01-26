@@ -52,9 +52,6 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
-    //void setGrid(bool gridstate, int gridsize);
-    
-    
     void update(bool updateZones);
     void send( float masterIntensity = 1, ofPixels* pixelmask = NULL);
     
@@ -83,7 +80,6 @@ class Laser {
     bool unSoloZone(int zonenum);
     bool isLaserZoneActive(OutputZone* outputZone);
 
-    
     // gets output zones (but not alt zones) in order
     vector<OutputZone*> getSortedOutputZones();
     vector<OutputZone*> getSortedOutputAltZones();
@@ -103,20 +99,6 @@ class Laser {
     vector<OutputZone*>getActiveZones();
     bool areAnyZonesSoloed();
     void clearOutputZones();
-    
-    //void drawLaserPath(ofRectangle rect, bool drawDots = true, bool showMovement = true, float radius = 4);
-    //void drawLaserPath(bool drawDots = true, bool showMovement = true);
-    //void drawTransformUI();
-    
-    //void zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier);
-    //void startDrag(glm::vec2 p);
-    //void stopDrag();
-    //void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
-    
-    //void disableTransformGui();
-    //void enableTransformGui();
-    
-    //void drawTransformAndPath(ofRectangle rect);
 
     vector<Point>& getLaserPoints() { return laserPoints;}; 
    
@@ -207,17 +189,6 @@ class Laser {
     float frameTimeHistory[200];
     int frameTimeHistoryOffset = 0;
     bool ignoreParamChange = false;
-    
-    // for the ui representation
-    //glm::vec2 previewOffset;
-    //float previewScale;
-    //bool previewDragging;
-    //glm::vec2 dragStartPoint;
-  
-    // parent laser manager is in control of this
-    //bool snapToGrid;
-    //int gridSize;
-    //ofMesh gridMesh;
   
     ofMesh previewPathMesh;
     ofMesh previewPathColoured;
@@ -229,13 +200,11 @@ class Laser {
     
     map<string, string> laserZonesLastSavedMap;
   
-    
     void setDacArmed(bool& armed);
 
     DacBase* dac;
     
     ofPoint laserHomePosition;
-    
      
     vector<Point> laserPoints;
     vector<Point> sparePoints;

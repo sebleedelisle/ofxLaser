@@ -20,32 +20,15 @@ class ZoneTransformBase {
     ~ZoneTransformBase();
     
     virtual bool update(){};
-    //virtual void draw(string label){};
-    
-         
-    
+
     // i think keep this to initialise the source rectangle
     virtual void init(ofRectangle& srcRect){};
     virtual void updateSrc(const ofRectangle& rect) ;
 
-    //virtual void setHue(int hue);
-   
-
     virtual void getPerimeterPoints(vector<glm::vec2>& points) = 0;
-
-
-    
-    //virtual bool setGrid(bool snapstate, int gridsize);
-	
-   // virtual bool getSelected();
-   // virtual bool setSelected(bool v);
-    
 	
 	virtual bool serialize(ofJson&json) = 0;
 	virtual bool deserialize(ofJson&jsonGroup) = 0;
-
-	//void setEditable(bool warpvisible);
-    //void setVisible(bool warpvisible);
 	
     void setDirty(bool state);
 
@@ -60,28 +43,14 @@ class ZoneTransformBase {
     ofParameter<bool>locked;
 
 	ofRectangle srcRect;
-   
 	
 	protected :
-	
 
 	bool isDirty;
 
     bool isConvex;
 	
 	bool initialised = false;
-	
-	//static ofMesh dashedLineMesh;
-	
-	//TODO move to utils
-	//static void drawDashedLine(glm::vec3 p1, glm::vec3 p2) ;
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	

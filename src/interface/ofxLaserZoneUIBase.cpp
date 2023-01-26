@@ -59,13 +59,20 @@ void ZoneUiBase :: drawLabel() {
     ofPushStyle();
    
     ofSetColor(uiZoneStrokeColour);
+    string label = getLabel();
+    if(getLocked()) label = label + " (locked)";
+    ofDrawBitmapString(label, centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    
+    ofPopStyle();
+    
+}
+
+string ZoneUiBase::getLabel(){
     string label = ofToString(inputZoneIndex+1);
     if(inputZoneAlt) {
         label = label + " ALT";
     }
-    if(getLocked()) label = label + " (locked)";
-    ofDrawBitmapString(label, centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
-    ofPopStyle(); 
+    return label;
     
 }
 
@@ -83,6 +90,10 @@ bool ZoneUiBase::setSelected(bool v) {
         return false;
     }
 };
+
+glm::vec2 ZoneUiBase :: getCentre() {
+    return centre;
+}
 
 void ZoneUiBase::setLocked(bool _locked){
     locked = _locked;

@@ -10,12 +10,27 @@
 
 using namespace ofxLaser;
 
+ScrollableView :: ScrollableView() {
+    scale = 1;
+    offset = glm::vec2(0,0);
+    outputRect.set(0,0,800,800);
+    sourceRect.set(0,0,800,800);
+}
+
+bool ScrollableView::update(){
+  
+    return false;
+}
+
+
+
 void ScrollableView::zoom(glm::vec2 anchor, float zoomMultiplier){
     
     glm::vec2 clickoffset = anchor-offset;
     clickoffset-=(clickoffset*zoomMultiplier);
     offset+=clickoffset;
     scale*=zoomMultiplier;
+
 
 }
 void ScrollableView::setSourceRect(ofRectangle rect) {
@@ -25,14 +40,13 @@ void ScrollableView::setOutputRect(ofRectangle rect){
     outputRect = rect;
 }
 void ScrollableView::autoFitToOutput(){
+
     offset = outputRect.getTopLeft();
-    
-    scale = outputRect.getWidth() / sourceRect.getWidth();
-    scale = MIN(scale,outputRect.getHeight() / sourceRect.getHeight());
-    
-    
-    
+    scale =  MIN(outputRect.getWidth() / sourceRect.getWidth(), outputRect.getHeight() / sourceRect.getHeight());
+   
 }
+
+
 
 void ScrollableView::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     offset = newoffset;
@@ -50,20 +64,44 @@ ofMouseEventArgs ScrollableView::screenPosToLocalPos(ofMouseEventArgs e) {
 }
 bool ScrollableView::mousePressed(ofMouseEventArgs &e){
     
-    // if(hitTest(e)) ...
-    startDrag(e);
-    return false;
+    float clicktime = ofGetElapsedTimef();
+    float clickinterval =clicktime-lastClickTime;
+    lastClickTime =clicktime;
+    if(hitTest(e)) {
+        if(clickinterval < doubleClickMaxInterval) {
+            cancelDrag();
+            return mouseDoubleClicked(e);
+        } else {
+            
+            startDrag(e);
+            return false; // don't propogate
+        }
+    }
+    return true; // propogate
 };
 
-void ScrollableView:: mouseMoved(ofMouseEventArgs &e){
-  
-   
+bool ScrollableView::mouseDoubleClicked(ofMouseEventArgs &e){
+
+    // hit test already done
+    autoFitToOutput();
+    return false; // don't propogate
     
+}
+
+bool ScrollableView :: cancelDrag() {
+    if(!isDragging) {return false;
+    } else {
+        offset = dragStartPosition;
+        isDragging = false;
+        return true;
+    }
+}
+void ScrollableView:: mouseMoved(ofMouseEventArgs &e){
+
 }
 
 
 void ScrollableView::mouseDragged(ofMouseEventArgs &e){
-  
     updateDrag(e);
 };
 
@@ -85,20 +123,20 @@ bool ScrollableView :: hitTest(glm::vec2 screenpos) {
     
 }
 bool ScrollableView::startDrag(glm::vec2 mousepos){
+    dragStartPosition = offset;
     dragOffset = mousepos-offset;
     isDragging = true;
     
 }
 bool ScrollableView::updateDrag(glm::vec2 mousepos) {
     if(isDragging) {
-        offset = mousepos-dragOffset;
+        offset =  mousepos-dragOffset;
         return true;
     } else {
         return false;
     }
 
 }
-
 
 bool ScrollableView :: stopDrag(){
     if(isDragging) {

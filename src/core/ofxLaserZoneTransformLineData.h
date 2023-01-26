@@ -26,23 +26,16 @@ class ZoneTransformLineData : public ZoneTransformBase {
     ~ZoneTransformLineData();
     
     virtual bool update() override;
-    //virtual void draw(string label) override;
+    
     void resetNodes();
     
     virtual void init(ofRectangle& srcRect) override;
-
-    //virtual void setHue(int hue) override;
-   //virtual bool setGrid(bool snapstate, int gridsize) override;
     
     virtual bool serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;
  
-    //bool hitTest(ofPoint mousePoint);
-   
     void getPerimeterPoints(vector<glm::vec2>& points) override;
   
-   // virtual bool setSelected(bool v) override;
-
     virtual Point getWarpedPoint(const Point& p) override;
     virtual ofPoint getWarpedPoint(const ofPoint& p) override;
     virtual ofPoint getUnWarpedPoint(const ofPoint& p) override;
@@ -61,25 +54,14 @@ class ZoneTransformLineData : public ZoneTransformBase {
     ofParameter<float> zoneWidth;
     
     protected :
-    
 
     void paramChanged(ofAbstractParameter& e);
-//
-//    void updateHandleColours();
-//
-    
+
     bool initialised = false;
     
     vector<BezierNode> nodes; // all handles for all points
     ofPolyline poly;
     ofPolyline polyPerimeter;
-    
-    // used to record hover position
-    //ofPoint mousePos;
-    
-    
-    
-    
     
     
 };

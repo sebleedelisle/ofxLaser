@@ -21,7 +21,7 @@ Manager * Manager::instance() {
 
 Manager :: Manager() {
     
-    previewOffset = glm::vec2(0,20);
+    previewOffset = glm::vec2(10,60);
     previewScale = 1;
     
     if(laserManager == NULL) {
@@ -92,6 +92,7 @@ Manager :: Manager() {
     
     ofAddListener(ofEvents().mouseMoved, this, &Manager::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
+
     ofAddListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
@@ -533,47 +534,47 @@ void Manager :: drawPreviews() {
        
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
-//        if(showInputPreview) {
-//
-//            ofPushStyle();
-//            ofFill();
-//            ofSetColor(0);
-//            ofPushMatrix();
-//            ofTranslate(previewOffset);
-//            ofScale(previewScale);
-//            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
-//            ofPopMatrix();
-//            ofPopStyle();
-//
-//
-//            if(showInputZones) {
-//                // this renders the input zones in the graphics source space
-//                for(size_t i= 0; i<zones.size(); i++) {
-//                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
-//                   // zones[i]->setEditable(!lockInputZones);
-//                    zones[i]->setVisible(true);
-//                    zones[i]->draw();
-//                }
-//            } else {
-//                // this renders the input zones in the graphics source space
-//                for(size_t i= 0; i<zones.size(); i++) {
-//
-//                    zones[i]->setVisible(false);
-//
-//                }
-//            }
-//
-//            renderPreview();
-//
-//            if(showBitmapMask) {
-//                ofPushMatrix();
-//                laserMask.setOffsetAndScale(previewOffset,previewScale);
-//                laserMask.draw(showBitmapMask);
-//                ofTranslate(previewOffset);
-//                ofScale(previewScale, previewScale);
-//                ofPopMatrix();
-//            }
-//        }
+        if(showInputPreview) {
+
+            ofPushStyle();
+            ofFill();
+            ofSetColor(0);
+            ofPushMatrix();
+            ofTranslate(previewOffset);
+            ofScale(previewScale);
+            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
+            ofPopMatrix();
+            ofPopStyle();
+
+
+            if(showInputZones) {
+                // this renders the input zones in the graphics source space
+                for(size_t i= 0; i<zones.size(); i++) {
+                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
+                   // zones[i]->setEditable(!lockInputZones);
+                    zones[i]->setVisible(true);
+                    zones[i]->draw();
+                }
+            } else {
+                // this renders the input zones in the graphics source space
+                for(size_t i= 0; i<zones.size(); i++) {
+
+                    zones[i]->setVisible(false);
+
+                }
+            }
+
+            renderPreview();
+
+            if(showBitmapMask) {
+                ofPushMatrix();
+                laserMask.setOffsetAndScale(previewOffset,previewScale);
+                laserMask.draw(showBitmapMask);
+                ofTranslate(previewOffset);
+                ofScale(previewScale, previewScale);
+                ofPopMatrix();
+            }
+        }
 //
 //        if(showOutputPreviews) {
 //           // int numrows = 1;
@@ -969,6 +970,10 @@ void Manager::drawLaserGui() {
     
     visualiser3D.drawUI();
 
+    for(LaserZoneViewController& laserzoneview : laserZoneViews ) {
+        laserzoneview.drawImGui();
+    }
+    
     guiCopyLaserSettings();
     
 }

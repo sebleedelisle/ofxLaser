@@ -23,7 +23,8 @@ class ZoneUiBase {
     virtual void draw() = 0;
     
     virtual void drawHandlesIfSelected();
-    virtual void drawLabel(); 
+    virtual void drawLabel();
+    string getLabel(); 
     
     virtual bool updateFromOutputZone(OutputZone* outputZone) = 0;
     
@@ -34,8 +35,9 @@ class ZoneUiBase {
     
     void setLocked(bool _locked);
     bool getLocked();
-//    void setVisible(bool warpvisible);
-//    bool getVisible();
+
+    glm::vec2 getCentre();
+    
     void setScale(float _scale) ;
     
     virtual void updateMeshAndPoly() {} ;
@@ -47,7 +49,7 @@ class ZoneUiBase {
     virtual void mouseDragged(ofMouseEventArgs &e){};
     virtual void mouseReleased(ofMouseEventArgs &e){};
     
-    
+    bool showContextMenu = false; // bit of a hack to show the right click menu
     
     void setHue(int hue) ;
     void updateHandleColours();
@@ -78,7 +80,7 @@ class ZoneUiBase {
     bool snapToGrid;
     int gridSize;
     
-     glm::vec2 centre;
+    glm::vec2 centre;
     
     ofMesh zoneMesh;
     ofPolyline zonePoly;

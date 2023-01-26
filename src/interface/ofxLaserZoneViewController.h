@@ -28,8 +28,10 @@ class LaserZoneViewController : public ScrollableView {
     bool createZoneUiForOutputZone(OutputZone* outputZone);
     void updateSelected(ZoneUiBase* zoneUi); 
     
-    bool update(); 
+    bool update() override;
+    
     void draw();
+    void drawImGui(); 
     void drawLaserPath();
     bool updateZones(); 
 

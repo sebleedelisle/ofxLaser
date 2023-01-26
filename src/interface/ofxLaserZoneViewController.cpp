@@ -23,6 +23,9 @@ LaserZoneViewController ::  ~LaserZoneViewController() {
 
 
 bool LaserZoneViewController :: update() {
+    
+    ScrollableView :: update();
+    
     bool wasUpdated = false;
     
     // RETHINK. Need one object that can handle all the interface elements
@@ -30,10 +33,6 @@ bool LaserZoneViewController :: update() {
     // I don't really need to see any of it here, all i need to do
     // is check the output zones in the laser against my vector of
     // output zone interfaces and see if any have been added / taken away.
-    
-    // 1. IF zones have changed THEN update the zone interfaces
-    
-    updateZones();
 
         
 //    for(int i = 0; i<laser->outputZones.size(); i++) {
@@ -87,9 +86,119 @@ bool LaserZoneViewController :: update() {
         wasUpdated|=zoneupdated;
     }
     
+    
+    // 1. IF zones have changed THEN update the zone interfaces
+    
+    updateZones();
+
+    
     return wasUpdated;
 }
   
+
+void LaserZoneViewController :: drawImGui() {
+    
+    for(ZoneUiBase* zoneUi : zoneUis) {
+        ImGui::PushID(zoneUi->getLabel().c_str());
+        if(zoneUi->showContextMenu) {
+            zoneUi->showContextMenu = false;
+            ImGui::OpenPopup("ZONE SETTINGS");
+            
+            
+        }
+        if(ImGui::BeginPopup("ZONE SETTINGS")) {
+            
+            //OutputZone* laserZone : zoneUi->
+            ImGui::Text("CONTEXT MENU!");
+            bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
+            
+            if(quadZone) UI::secondaryColourStart();
+            if(ImGui::Button("QUAD")) {
+                //laserZone->transformType = 0;
+            }
+            UI::secondaryColourEnd();
+            ImGui::SameLine();
+            if(!quadZone)  UI::secondaryColourStart();
+            if(ImGui::Button("LINE")) {
+                //laserZone->transformType = 1;
+            }
+            UI::secondaryColourEnd();
+            
+            if(quadZone) {
+//                ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
+//                if(ztq!=nullptr) {
+//                    if(ztq->isSquare()) {
+//                        UI::startGhosted();
+//                    }
+//                    if(UI::Button("Reset to square")) {
+//                        ztq->resetToSquare();
+//
+//                    }
+//                    UI::stopGhosted();
+//                    UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+//                    ImGui::SameLine();
+//                    if(UI::Button(ICON_FK_SQUARE_O))  {
+//                        ztq->setDst(ofRectangle(200,240,400,200));
+//                    }
+//                    UI::toolTip("Reset zone to default");
+//
+//                    UI::addParameterGroup(ztq->transformParams, false);
+//                }
+            } else {
+                
+//                ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
+//                if(ztl!=nullptr) {
+//                    //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+//                    
+//                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+//                    
+//                    vector<BezierNode>& nodes = ztl->getNodes();
+//                    for(int i = 0; i<nodes.size(); i++) {
+//                        ImGui::PushID(i);
+//                        BezierNode& node = nodes[i];
+//                        int mode = node.mode;
+//                        ImGui::Text("%d", i+1);
+//                        ImGui::SameLine();
+//                        //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
+//                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
+//                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
+//                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
+//                        
+//                        if(mode!=node.mode) {
+//                            node.mode = mode;
+//                            ztl->setDirty(true);
+//                        }
+//                        if(nodes.size()>2) {
+//                            ImGui::SameLine();
+//                            
+//                            string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+//                            if (UI::DangerButton(label, false)) {
+//                                ztl->deleteNode(i);
+//                                
+//                            }
+//                        }
+//                        
+//                        ImGui::PopID();
+//                        
+//                        
+//                    }
+//                    string label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
+//                    if (UI::Button(label, false)) {
+//                        ztl->addNode();
+//                        
+//                    }
+//                }
+                
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+
+    }
+    
+    
+}
+
 void LaserZoneViewController :: draw() {
     
     
@@ -106,10 +215,20 @@ void LaserZoneViewController :: draw() {
     // Maybe two vectors, with each type of interface? Let's try that
     
     if(laser!=nullptr) {
+        ofPushStyle();
+        ofNoFill();
+        ofSetColor(30);
+        ofDrawRectangle(outputRect);
+        ofPopStyle();
+        
         ofPushView();
-        ofViewport(0,0,1000,800);
+        ofViewport(outputRect);
+        
         ofSetupScreen();
+        
         ofPushMatrix();
+        // offset for the viewport position
+        ofTranslate(-outputRect.getTopLeft());
         ofTranslate(offset);
         ofScale(scale, scale);
         
@@ -128,6 +247,13 @@ void LaserZoneViewController :: draw() {
         // TODO probably need to draw these backwards yeah?
         for(ZoneUiBase* zoneUi: zoneUisSorted) {
             zoneUi->draw();
+            // NASTY HACK AHEAD...
+            // seems to be a bit of a bug in the ofDrawBitmapString
+            // when inside a viewport...
+            ofPushMatrix();
+            ofTranslate(-outputRect.getTopLeft() / scale);
+            zoneUi->drawLabel();
+            ofPopMatrix();
         }
         
         drawLaserPath();
@@ -135,6 +261,7 @@ void LaserZoneViewController :: draw() {
         ofSetColor(ofColor::red);
         ofNoFill();
         ofDrawCircle(screenPosToLocalPos(glm::vec2(ofGetMouseX(), ofGetMouseY())), 10);
+       
     
         
         ofPopMatrix();
@@ -159,8 +286,9 @@ bool LaserZoneViewController :: updateZones()  {
             changed = true;
         } else {
             // if we do have one let's make sure it's current
-            // NO - can't do that or the interface stops working lol
-            //zoneUi->updateFromOutputZone(outputZone);
+            // NOTE This only works because we call it after we have
+            // update the data from the UI components
+            zoneUi->updateFromOutputZone(outputZone);
         }
     }
 
@@ -283,29 +411,44 @@ void LaserZoneViewController :: mouseMoved(ofMouseEventArgs &e){
 }
 
 bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
-    
-    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-    
-    bool propogate = true;
-    
-    for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-    //for(int i = 0; i<zoneUisSorted.size(); i++) {
-        ZoneUiBase* zoneUi = zoneUisSorted[i];
-        
-        propogate &= zoneUi->mousePressed(mouseEvent);
-        
-        if(zoneUi->getSelected() ) {
-            updateSelected(zoneUi);
-            break;
-        }
-    }
-    
-    // if no zones hit then check if the view should drag
-    if(propogate) {
-        propogate & ScrollableView::mousePressed(e);
 
+    bool propogate = true;
+
+    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
+    if(e.button == OF_MOUSE_BUTTON_LEFT) {
+        
+        for(int i = zoneUisSorted.size()-1; i>=0; i--) {
+        //for(int i = 0; i<zoneUisSorted.size(); i++) {
+            ZoneUiBase* zoneUi = zoneUisSorted[i];
+            
+            propogate &= zoneUi->mousePressed(mouseEvent);
+            
+            if(zoneUi->getSelected() ) {
+                updateSelected(zoneUi);
+                break;
+            }
+        }
+        
+        // if no zones hit then check if the view should drag
+        if(propogate) {
+            propogate & ScrollableView::mousePressed(e);
+
+        }
+    } else if(e.button == OF_MOUSE_BUTTON_RIGHT) {
+        
+        for(int i = zoneUisSorted.size()-1; i>=0; i--) {
+        //for(int i = 0; i<zoneUisSorted.size(); i++) {
+            ZoneUiBase* zoneUi = zoneUisSorted[i];
+            
+            if(zoneUi->hitTest(mouseEvent)) {
+                zoneUi->setSelected(true);
+                zoneUi->showContextMenu = true; 
+                updateSelected(zoneUi);
+                break;
+            }
+        }
+        
     }
-    
     return propogate;
 }
 
