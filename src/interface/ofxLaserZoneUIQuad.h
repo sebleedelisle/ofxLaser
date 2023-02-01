@@ -16,26 +16,32 @@ class ZoneUiQuad :public ZoneUiBase {
     public :
     ZoneUiQuad(); 
     
-    virtual void draw()  override;
-    virtual bool update() override;
-    virtual bool setSelected(bool v);
-    bool updateFromOutputZone(OutputZone* outputZone) override; 
+    void draw()  override;
+    bool update() override;
+    bool setSelected(bool v);
     
-    virtual void updateMeshAndPoly() override;
+    void drawHandlesIfSelected() override;
 
-    virtual bool hitTest(ofPoint mousePoint) override ;
+    bool updateDataFromUI(ZoneTransformBase* zonetransform) override;
+    bool updateFromData(ZoneTransformBase* zonetransform) override;
+    
+    void updateMeshAndPoly() override;
+
+    bool hitTest(ofPoint mousePoint) override ;
 
     bool setCorners(const vector<glm::vec2*>& points);
     vector<DragHandle*> getCornersClockwise();
-    bool isSquare(); 
+    bool isSquare();
+    DragHandle* getMainDragHandle();
+    int getMainDragHandleIndexClockwise(); 
 
-   
-    virtual bool mousePressed(ofMouseEventArgs &e) override;
-    virtual void mouseDragged(ofMouseEventArgs &e) override;
-    virtual void mouseReleased(ofMouseEventArgs &e) override;
+    bool mousePressed(ofMouseEventArgs &e) override;
+    void mouseDragged(ofMouseEventArgs &e) override;
+    void mouseReleased(ofMouseEventArgs &e) override;
 
-
-    
+    int mainDragHandleIndexClockwise = -1;
+    bool constrainedToSquare = false;
+    bool isDragging = false; 
 
     
 };

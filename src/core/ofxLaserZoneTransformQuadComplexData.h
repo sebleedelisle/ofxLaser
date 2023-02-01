@@ -1,5 +1,5 @@
 //
-//  ofxLaserZoneTransformQuadData.h
+//  ofxLaserZoneTransformQuadComplexData.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 07/02/2018.
@@ -16,12 +16,12 @@
 
 namespace ofxLaser {
     
-class ZoneTransformQuadData : public ZoneTransformBase {
+class ZoneTransformQuadComplexData : public ZoneTransformBase {
     
     public :
     
-    ZoneTransformQuadData();
-    ~ZoneTransformQuadData();
+    ZoneTransformQuadComplexData();
+    ~ZoneTransformQuadComplexData();
     
     virtual bool update() override;
     

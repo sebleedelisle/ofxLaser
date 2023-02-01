@@ -63,26 +63,40 @@ bool LaserZoneViewController :: update() {
         // make sure the handles are resized
         zoneUi->setScale(scale); 
         bool zoneupdated =zoneUi->update();
+        
         if(zoneupdated) {
-            // how do we update the data?
-            // For now let's just hack it
             OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-            if(outputZone!=nullptr) {
-                ZoneUiQuad* zoneUiQuad = dynamic_cast<ZoneUiQuad*>(zoneUi);
-                if(zoneUiQuad!=nullptr) {
-                    // THIS IS THE PART THAT CHANGES THE ZONE
-                    // How do we separate this from a gross if/then statement?
-                    // Should we send a message?
-                    // Perhaps some functions within outputzone?
-                    // Pretty gross design that we need two separate properties for
-                    // different zone types lol
-                    outputZone->zoneTransformQuad.setDstCorners(zoneUiQuad->handles[0], zoneUiQuad->handles[1], zoneUiQuad->handles[2], zoneUiQuad->handles[3]);
-                   
-                }
-                
-            }
-            
+            zoneUi->updateDataFromUI(&outputZone->getZoneTransform());
         }
+//
+//            // how do we update the data?
+//            // For now let's just hack it
+//            OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
+//            if(outputZone!=nullptr) {
+//                ZoneUiQuad* zoneUiQuad = dynamic_cast<ZoneUiQuad*>(zoneUi);
+//                ZoneTransformQuadData* zoneQuad = dynamic_cast<ZoneTransformQuadData*>(&outputZone->zoneTransformQuad);
+//                if(zoneUiQuad!=nullptr) {
+//                    // THIS IS THE PART THAT CHANGES THE ZONE
+//                    // How do we separate this from a gross if/then statement?
+//                    // Should we send a message?
+//                    // Perhaps some functions within outputzone?
+//                    // Pretty gross design that we need two separate properties for
+//                    // different zone types lol
+//                    //outputZone->zoneTransformQuad.setDstCorners(zoneUiQuad->handles[0], zoneUiQuad->handles[1], zoneUiQuad->handles[2], zoneUiQuad->handles[3]);
+//
+////                    if(zoneUiQuad->getI)
+//                    if(zoneUiQuad->mainDragHandleIndexClockwise>=0) {
+//
+//                        zoneQuad->moveHandle(zoneUiQuad->getMainDragHandleIndexClockwise(), *zoneUiQuad->getMainDragHandle(), zoneUiQuad->constrainedToSquare);
+//                    }
+//
+//
+//
+//                }
+//
+//            }
+//
+//        }
         wasUpdated|=zoneupdated;
     }
     
@@ -100,6 +114,9 @@ void LaserZoneViewController :: drawImGui() {
     
     for(ZoneUiBase* zoneUi : zoneUis) {
         ImGui::PushID(zoneUi->getLabel().c_str());
+        
+        OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
+        
         if(zoneUi->showContextMenu) {
             zoneUi->showContextMenu = false;
             ImGui::OpenPopup("ZONE SETTINGS");
@@ -125,25 +142,25 @@ void LaserZoneViewController :: drawImGui() {
             UI::secondaryColourEnd();
             
             if(quadZone) {
-//                ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
-//                if(ztq!=nullptr) {
-//                    if(ztq->isSquare()) {
-//                        UI::startGhosted();
-//                    }
-//                    if(UI::Button("Reset to square")) {
-//                        ztq->resetToSquare();
-//
-//                    }
-//                    UI::stopGhosted();
-//                    UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-//                    ImGui::SameLine();
-//                    if(UI::Button(ICON_FK_SQUARE_O))  {
-//                        ztq->setDst(ofRectangle(200,240,400,200));
-//                    }
-//                    UI::toolTip("Reset zone to default");
-//
-//                    UI::addParameterGroup(ztq->transformParams, false);
-//                }
+                ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
+                if(ztq!=nullptr) {
+                    if(ztq->isSquare()) {
+                        UI::startGhosted();
+                    }
+                    if(UI::Button("Reset to square")) {
+                        ztq->resetToSquare();
+
+                    }
+                    UI::stopGhosted();
+                    UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+                    ImGui::SameLine();
+                    if(UI::Button(ICON_FK_SQUARE_O))  {
+                        ztq->setDst(ofRectangle(200,240,400,200));
+                    }
+                    UI::toolTip("Reset zone to default");
+
+                    UI::addParameterGroup(ztq->transformParams, false);
+                }
             } else {
                 
 //                ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
@@ -236,10 +253,10 @@ void LaserZoneViewController :: draw() {
         ofSetColor(0);
         ofFill();
         ofDrawRectangle(0,0,800,800);
-        if(gridSize*scale<3) {
-            ofSetColor(ofMap(gridSize*scale, 2, 5, 0,30, true));
+        if(gridSize*scale<5) {
+            ofSetColor(ofMap(gridSize*scale, 2, 5, 0,90, true));
         } else {
-            ofSetColor(ofMap(gridSize*scale, 5, 100, 30,200, true));
+            ofSetColor(ofMap(gridSize*scale, 5, 100, 90,200, true));
         }
         gridMesh.draw();
         ofPopStyle();
@@ -257,13 +274,12 @@ void LaserZoneViewController :: draw() {
         }
         
         drawLaserPath();
-        
-        ofSetColor(ofColor::red);
-        ofNoFill();
-        ofDrawCircle(screenPosToLocalPos(glm::vec2(ofGetMouseX(), ofGetMouseY())), 10);
        
-    
-        
+        // debug mouse position circle
+//        ofSetColor(ofColor::red);
+//        ofNoFill();
+//        ofDrawCircle(screenPosToLocalPos(glm::vec2(ofGetMouseX(), ofGetMouseY())), 10);
+//
         ofPopMatrix();
         ofPopView();
         
@@ -288,7 +304,7 @@ bool LaserZoneViewController :: updateZones()  {
             // if we do have one let's make sure it's current
             // NOTE This only works because we call it after we have
             // update the data from the UI components
-            zoneUi->updateFromOutputZone(outputZone);
+            zoneUi->updateFromData(&outputZone->getZoneTransform());
         }
     }
 
@@ -415,7 +431,9 @@ bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
     bool propogate = true;
 
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-    if(e.button == OF_MOUSE_BUTTON_LEFT) {
+    // also check for middle button because if ALT is pressed it's reported
+    // as button 2 lol 
+    if((e.button == OF_MOUSE_BUTTON_LEFT)||(e.button == OF_MOUSE_BUTTON_MIDDLE)){
         
         for(int i = zoneUisSorted.size()-1; i>=0; i--) {
         //for(int i = 0; i<zoneUisSorted.size(); i++) {
@@ -527,7 +545,9 @@ bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone
     if(outputZone->transformType == 0 )  {
         
         zoneUi = new ZoneUiQuad();
-        zoneUi->updateFromOutputZone(outputZone);
+        zoneUi->updateFromData(&outputZone->getZoneTransform());
+        zoneUi->inputZoneIndex = outputZone->getZoneIndex();
+        zoneUi->inputZoneAlt = outputZone->getIsAlternate();
         zoneUi->setGrid(snapToGrid, gridSize);
         
     }

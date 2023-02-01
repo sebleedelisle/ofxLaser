@@ -48,7 +48,6 @@ void ZoneUiBase :: setScale(float _scale) {
     }
 }
 void ZoneUiBase :: drawHandlesIfSelected() {
-    
     if(getSelected() && !locked) {
         for(DragHandle& handle : handles) {
             handle.draw(mousePos);

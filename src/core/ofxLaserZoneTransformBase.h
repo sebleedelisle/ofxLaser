@@ -19,7 +19,7 @@ class ZoneTransformBase {
     ZoneTransformBase();
     ~ZoneTransformBase();
     
-    virtual bool update(){};
+    virtual bool update(){return false;};
 
     // i think keep this to initialise the source rectangle
     virtual void init(ofRectangle& srcRect){};

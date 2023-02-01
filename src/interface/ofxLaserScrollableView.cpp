@@ -126,6 +126,7 @@ bool ScrollableView::startDrag(glm::vec2 mousepos){
     dragStartPosition = offset;
     dragOffset = mousepos-offset;
     isDragging = true;
+    return true;
     
 }
 bool ScrollableView::updateDrag(glm::vec2 mousepos) {

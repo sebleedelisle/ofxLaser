@@ -6,7 +6,7 @@
 //
 //
 
-#include "ofxLaserZoneTransformQuadData.h"
+#include "ofxLaserZoneTransformQuadComplexData.h"
 
 
 using namespace ofxLaser;
@@ -15,7 +15,7 @@ using namespace ofxLaser;
 
 
 
-ZoneTransformQuadData::ZoneTransformQuadData() {
+ZoneTransformQuadComplexData::ZoneTransformQuadComplexData() {
    
     
     dstPoints.resize(4);
@@ -40,26 +40,26 @@ ZoneTransformQuadData::ZoneTransformQuadData() {
     updateSrc(ofRectangle(0,0,100,100));
     setDst(ofRectangle(100,100,200,200));
     
-    xDivisionsNew.addListener(this, &ZoneTransformQuadData::divisionsChanged);
-    yDivisionsNew.addListener(this, &ZoneTransformQuadData::divisionsChanged);
+    xDivisionsNew.addListener(this, &ZoneTransformQuadComplexData::divisionsChanged);
+    yDivisionsNew.addListener(this, &ZoneTransformQuadComplexData::divisionsChanged);
     
-    ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformQuadData::paramChanged);
+    ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformQuadComplexData::paramChanged);
     
 }
 
-void ZoneTransformQuadData :: paramChanged(ofAbstractParameter& e) {
+void ZoneTransformQuadComplexData :: paramChanged(ofAbstractParameter& e) {
     isDirty= true;
     
 }
-ZoneTransformQuadData::~ZoneTransformQuadData() {
+ZoneTransformQuadComplexData::~ZoneTransformQuadComplexData() {
    
-    xDivisionsNew.removeListener(this, &ZoneTransformQuadData::divisionsChanged);
-    yDivisionsNew.removeListener(this, &ZoneTransformQuadData::divisionsChanged);
-    ofRemoveListener(transformParams.parameterChangedE(), this, &ZoneTransformQuadData::paramChanged);
+    xDivisionsNew.removeListener(this, &ZoneTransformQuadComplexData::divisionsChanged);
+    yDivisionsNew.removeListener(this, &ZoneTransformQuadComplexData::divisionsChanged);
+    ofRemoveListener(transformParams.parameterChangedE(), this, &ZoneTransformQuadComplexData::paramChanged);
 }
 
 
-void ZoneTransformQuadData::init(ofRectangle& srcRect) {
+void ZoneTransformQuadComplexData::init(ofRectangle& srcRect) {
     
 //    float srcwidth = srcRect.getWidth();
 //    float srcheight = srcRect.getHeight();
@@ -82,7 +82,7 @@ void ZoneTransformQuadData::init(ofRectangle& srcRect) {
 }
 
 
-bool ZoneTransformQuadData::update(){
+bool ZoneTransformQuadComplexData::update(){
     if(isDirty) {
         //ofLogNotice("ZoneTransform::update() - isDirty");
         updateQuads();
@@ -98,13 +98,13 @@ bool ZoneTransformQuadData::update(){
 }
 
 
-glm::vec2 ZoneTransformQuadData::getCentre() {
+glm::vec2 ZoneTransformQuadComplexData::getCentre() {
     ofPoint centre = srcRect.getCenter();
     centre = getWarpedPoint(centre);
     return glm::vec2(centre.x, centre.y);
 }
 
-void ZoneTransformQuadData :: resetToSquare() {
+void ZoneTransformQuadComplexData :: resetToSquare() {
     if(locked) return;
     vector<glm::vec2*> cornerhandles = getCornerPoints();
     vector<glm::vec2> corners;
@@ -119,14 +119,14 @@ void ZoneTransformQuadData :: resetToSquare() {
     isDirty = true;
 }
 
-bool ZoneTransformQuadData :: isSquare() {
+bool ZoneTransformQuadComplexData :: isSquare() {
     
     vector<glm::vec2*> corners = getCornerPoints();
     return (corners[0]->x == corners[2]->x) && (corners[0]->y == corners[1]->y) && (corners[1]->x == corners[3]->x) && (corners[2]->y == corners[3]->y);
     
 }
 
-ofPoint ZoneTransformQuadData::getWarpedPoint(const ofPoint& p){
+ofPoint ZoneTransformQuadComplexData::getWarpedPoint(const ofPoint& p){
     
     //if(useHomography && (!isConvex())) return dstHandles[0];
     
@@ -146,7 +146,7 @@ ofPoint ZoneTransformQuadData::getWarpedPoint(const ofPoint& p){
     
 };
 
-ofPoint ZoneTransformQuadData::getUnWarpedPoint(const ofPoint& p){
+ofPoint ZoneTransformQuadComplexData::getUnWarpedPoint(const ofPoint& p){
     ofPoint rp = p - srcRect.getTopLeft();
     
     int x = (rp.x / srcRect.getWidth()) * (float)(xDivisions);
@@ -164,7 +164,7 @@ ofPoint ZoneTransformQuadData::getUnWarpedPoint(const ofPoint& p){
 };
 
 
-ofxLaser::Point ZoneTransformQuadData::getWarpedPoint(const ofxLaser::Point& p){
+ofxLaser::Point ZoneTransformQuadComplexData::getWarpedPoint(const ofxLaser::Point& p){
     
     ofxLaser::Point rp = p;
     
@@ -196,7 +196,7 @@ ofxLaser::Point ZoneTransformQuadData::getWarpedPoint(const ofxLaser::Point& p){
 //Point getUnWarpedPoint(const Point& p){
 //    return p;
 //};
-void ZoneTransformQuadData::updateSrc(const ofRectangle& rect) {
+void ZoneTransformQuadComplexData::updateSrc(const ofRectangle& rect) {
     
     
     if((srcRect!=rect) || (srcPoints.size()!=((xDivisions+1)*(yDivisions+1)))) {
@@ -225,12 +225,12 @@ void ZoneTransformQuadData::updateSrc(const ofRectangle& rect) {
         isDirty = true;
     }
 }
-void ZoneTransformQuadData::setDst(const ofRectangle& rect) {
+void ZoneTransformQuadComplexData::setDst(const ofRectangle& rect) {
     setDstCorners(rect.getTopLeft(), rect.getTopRight(), rect.getBottomLeft(), rect.getBottomRight());
     updateQuads();
 }
 
-void ZoneTransformQuadData :: setDstCorners(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright) {
+void ZoneTransformQuadComplexData :: setDstCorners(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright) {
     // interpolate dst handle points?
     
     // ofLog(OF_LOG_NOTICE, "ZoneTransform::setDstCorners "+displayLabel);
@@ -273,13 +273,13 @@ void ZoneTransformQuadData :: setDstCorners(glm::vec2 topleft, glm::vec2 toprigh
     isDirty = true;
 }
 
-void ZoneTransformQuadData::resetFromCorners() {
+void ZoneTransformQuadComplexData::resetFromCorners() {
     vector<glm::vec2> corners = getCorners();
     setDstCorners(corners[0], corners[1], corners[2], corners[3]);
     
 }
 
-vector<glm::vec2*> ZoneTransformQuadData::getCornerPoints(){
+vector<glm::vec2*> ZoneTransformQuadComplexData::getCornerPoints(){
     vector<glm::vec2*> corners;
     corners.push_back(&dstPoints[0]);
     corners.push_back(&dstPoints[xDivisions]);
@@ -288,7 +288,7 @@ vector<glm::vec2*> ZoneTransformQuadData::getCornerPoints(){
     return corners;
 }
 
-vector<glm::vec2> ZoneTransformQuadData::getCorners(){
+vector<glm::vec2> ZoneTransformQuadComplexData::getCorners(){
     
     vector<glm::vec2> corners;
     
@@ -305,7 +305,7 @@ vector<glm::vec2> ZoneTransformQuadData::getCorners(){
     
 }
 
-vector<glm::vec2*> ZoneTransformQuadData::getCornerPointsClockwise(){
+vector<glm::vec2*> ZoneTransformQuadComplexData::getCornerPointsClockwise(){
     vector<glm::vec2*> corners;
     
     int indextopleft = 0 ;
@@ -320,7 +320,7 @@ vector<glm::vec2*> ZoneTransformQuadData::getCornerPointsClockwise(){
     return corners;
 }
 
-void ZoneTransformQuadData::getPerimeterPoints(vector<glm::vec2>& points) {
+void ZoneTransformQuadComplexData::getPerimeterPoints(vector<glm::vec2>& points) {
     points.clear();
     
     for(int i = 0; i<xDivisions; i++) {
@@ -345,12 +345,12 @@ void ZoneTransformQuadData::getPerimeterPoints(vector<glm::vec2>& points) {
 
 
 
-bool ZoneTransformQuadData :: isCorner(int i ) {
+bool ZoneTransformQuadComplexData :: isCorner(int i ) {
     return (i==0) || (i == xDivisions) || (i == yDivisions*(xDivisions+1)) || (i==((xDivisions+1)*(yDivisions+1))-1);
     
 }
 
-void ZoneTransformQuadData :: setDivisions(int xdivisions, int ydivisions) {
+void ZoneTransformQuadComplexData :: setDivisions(int xdivisions, int ydivisions) {
     xDivisionsNew = xdivisions;
     yDivisionsNew = ydivisions;
     
@@ -359,12 +359,12 @@ void ZoneTransformQuadData :: setDivisions(int xdivisions, int ydivisions) {
     
 }
 
-void ZoneTransformQuadData:: divisionsChanged(int& e){
+void ZoneTransformQuadComplexData:: divisionsChanged(int& e){
     if((xDivisionsNew!=xDivisions) || (yDivisionsNew!=yDivisions))
         updateDivisions();
 }
 
-void ZoneTransformQuadData:: updateDivisions(){
+void ZoneTransformQuadComplexData:: updateDivisions(){
     //ofLogNotice("ZoneTransform::updateDivisions()");
     
     //ofLog(OF_LOG_NOTICE, "divisionsChanged");
@@ -388,7 +388,7 @@ void ZoneTransformQuadData:: updateDivisions(){
 }
 
 
-void ZoneTransformQuadData::updateQuads() {
+void ZoneTransformQuadComplexData::updateQuads() {
     //ofLogNotice("ZoneTransform::updateQuads()");
     
     int quadnum = xDivisions*yDivisions;
@@ -434,7 +434,7 @@ void ZoneTransformQuadData::updateQuads() {
 
 
 
-bool ZoneTransformQuadData::serialize(ofJson&json) {
+bool ZoneTransformQuadComplexData::serialize(ofJson&json) {
     ofSerialize(json, transformParams);
     ofJson& handlesjson = json["handles"];
     for(size_t i= 0; i<dstPoints.size(); i++) {
@@ -445,7 +445,7 @@ bool ZoneTransformQuadData::serialize(ofJson&json) {
     return true;
 }
 
-bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
+bool ZoneTransformQuadComplexData::deserialize(ofJson& jsonGroup) {
     //ofLogNotice("ZoneTransform::deserialize()");
     // note that ofDeserialize looks for the json group
     // with the same name as the parameterGroup
@@ -477,7 +477,7 @@ bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
 }
 
 
-float ZoneTransformQuadData::getRight() {
+float ZoneTransformQuadComplexData::getRight() {
     float right = 0;
     for(glm::vec2& handle : dstPoints) {
         if(handle.x>right) right = handle.x;
@@ -485,7 +485,7 @@ float ZoneTransformQuadData::getRight() {
     
     return right;
 }
-float ZoneTransformQuadData::getLeft() {
+float ZoneTransformQuadComplexData::getLeft() {
     float left = 800;
     for(glm::vec2& handle : dstPoints) {
         if(handle.x<left) left = handle.x;
@@ -494,7 +494,7 @@ float ZoneTransformQuadData::getLeft() {
     return left;
 }
 
-float ZoneTransformQuadData::getTop() {
+float ZoneTransformQuadComplexData::getTop() {
     float top = 800;
     for(glm::vec2& handle : dstPoints) {
         if(handle.y<top) top = handle.y;
@@ -502,7 +502,7 @@ float ZoneTransformQuadData::getTop() {
     
     return top;
 }
-float ZoneTransformQuadData::getBottom() {
+float ZoneTransformQuadComplexData::getBottom() {
     float bottom = 0;
     for(glm::vec2& handle : dstPoints) {
         if(handle.y>bottom) bottom = handle.y;
@@ -513,7 +513,7 @@ float ZoneTransformQuadData::getBottom() {
 
 
 //
-//bool ZoneTransformQuadData :: setGrid(bool snapstate, int gridsize) {
+//bool ZoneTransformQuadComplexData :: setGrid(bool snapstate, int gridsize) {
 //    if(ZoneTransformBase :: setGrid(snapstate, gridsize)) {
 //        for(auto handle : dstHandles) {
 //            handle.setGrid(snapToGrid, gridSize);
@@ -523,12 +523,12 @@ float ZoneTransformQuadData::getBottom() {
 //        return false;
 //    }
 //}
-//void ZoneTransformQuadData::setHue(int hue) {
+//void ZoneTransformQuadComplexData::setHue(int hue) {
 //    ZoneTransformBase :: setHue(hue);
 //    updateHandleColours();
 //
 //}
-//void ZoneTransformQuadData::updateHandleColours() {
+//void ZoneTransformQuadComplexData::updateHandleColours() {
 //
 //    for(size_t i= 0; i<dstHandles.size(); i++) {
 //        dstHandles[i].setColour(uiZoneHandleColour, uiZoneHandleColourOver);
@@ -538,12 +538,12 @@ float ZoneTransformQuadData::getBottom() {
 //}
 
 
-bool ZoneTransformQuadData :: getIsConvex() {
+bool ZoneTransformQuadComplexData :: getIsConvex() {
     return isConvex;
     
 }
 
-void ZoneTransformQuadData :: updateConvex() {
+void ZoneTransformQuadComplexData :: updateConvex() {
     bool convex = true;
     vector<glm::vec2> corners = getCorners();
     vector<glm::vec2> points;

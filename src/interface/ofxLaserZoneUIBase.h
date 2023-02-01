@@ -26,7 +26,8 @@ class ZoneUiBase {
     virtual void drawLabel();
     string getLabel(); 
     
-    virtual bool updateFromOutputZone(OutputZone* outputZone) = 0;
+    virtual bool updateDataFromUI(ZoneTransformBase* zonetransform) = 0;
+    virtual bool updateFromData(ZoneTransformBase* zonetransform) = 0;
     
     virtual bool hitTest(ofPoint mousePoint) {return false;};
     

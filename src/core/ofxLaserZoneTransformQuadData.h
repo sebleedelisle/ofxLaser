@@ -13,6 +13,14 @@
 #include "ofxLaserPoint.h"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "ofxLaserWarper.h"
+#include <glm/gtx/closest_point.hpp>
+
+
+// the basic quad transform is four points, and can either be square or
+// non-square. It needs to have its four points clockwise and can't be
+// inverted.
+// So if it's square, the axes remain aligned, if not then
+
 
 namespace ofxLaser {
     
@@ -31,6 +39,8 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     virtual bool deserialize(ofJson&jsonGroup) override;
 
     void updateSrc(const ofRectangle& rect) override;
+    
+    bool isWindingClockwise(); 
  
     // resets to perpendicular corners
     void resetToSquare() ;
@@ -39,6 +49,8 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     void setDst(const ofRectangle& rect);
     
     void setDstCorners(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright);
+    
+    bool moveHandle(int handleindex, glm::vec2 newpos, bool lockSquare); 
 
     void getPerimeterPoints(vector<glm::vec2>& points) override;
   
@@ -48,11 +60,8 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     
     virtual glm::vec2 getCentre() override;
 
-    ofParameter<bool>editSubdivisions;
     ofParameter<bool>useHomography;
-    ofParameter<int>xDivisionsNew;
-    ofParameter<int>yDivisionsNew;
-
+    
     vector<glm::vec2*> getCornerPoints();
   
     protected :
@@ -62,8 +71,6 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     void updateConvex() ;
     bool getIsConvex() ;
   
-    void setDivisions(int xdivisions, int ydivisions);
-    void updateDivisions();
 
     void updateQuads();
     
@@ -81,6 +88,9 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     vector<glm::vec2*> getCornerPointsClockwise();
     bool isCorner(int index);
     
+    bool clampToVector(glm::vec2& pointToClamp, glm::vec2& v1, glm::vec2&v2);
+    glm::vec2 getClampedToVector(glm::vec2& source, glm::vec2& p1, glm::vec2&p2, bool clampinside, bool clampoutside);
+    
     cv::Point2f toCv(glm::vec3 p) {
         return cv::Point2f(p.x, p.y);
     }
@@ -94,12 +104,10 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     bool isConvex;
     
     bool initialised = false;
-    int xDivisions;
-    int yDivisions;
     
     vector<glm::vec2> srcPoints;
     vector<glm::vec2> dstPoints; // all handles for all points
-    vector<Warper> quadWarpers;
+    Warper quadWarper;
     
 };
     
