@@ -12,7 +12,7 @@ using namespace ofxLaser;
 
 QuadMask::QuadMask() : QuadGui() {
     maskLevel.set("Reduction amount", 100, 0,100);
-    setColours(ofColor::red,ofColor::red,ofColor::red);
+    //setColours(ofColor::red,ofColor::red,ofColor::red);
     maskLevel.addListener(this, &QuadMask::maskLevelChanged);
     
     
@@ -23,44 +23,44 @@ QuadMask::~QuadMask() {
 }
 
 void QuadMask::serialize(ofJson&json) const {
-    QuadGui::serialize(json);
+    ofJson& pointsjson = json["maskpoints"];
+    for(int i = 0; i<points.size(); i++) {
+        const glm::vec2& pos = points[i];
+        pointsjson.push_back({pos.x, pos.y});
+    }
     json["masklevel"] = (int)maskLevel;
+    
+    
+    
   
 }
 
 bool QuadMask::deserialize(ofJson& jsonGroup) {
     
-    QuadGui::deserialize(jsonGroup);
-
-    maskLevel = jsonGroup["masklevel"];
+    ofJson& pointsjson = jsonGroup["maskpoints"];
+    if(pointsjson.size()>=3) {
+        
+        maskLevel = jsonGroup["masklevel"];
+        
+        points.resize(pointsjson.size());
     
-    return true;
+        for(int i = 0; i<points.size(); i++) {
+            ofJson& point = pointsjson[i];
+      
+            points[i].x = point[0];
+            points[i].y = point[1];
+            
+        }
+        isDirty = true;
+        return true;
+    } else {
+        return false;
+    }
+
+    
 }
 
-void QuadMask:: draw() {
-    
-//    ofPushStyle();
-//    
-//    ofPushMatrix();
-//    ofTranslate(offset);
-//    ofScale(scale, scale);
-//    
-//    ofFill();
-//    
-//    //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
-//    //ofDisableBlendMode();
-//    ofSetColor(0,0,0,ofMap(maskLevel,0,100,0,255));
-//
-//    ofBeginShape();
-//    ofVertex(handles[0]);
-//    ofVertex(handles[1]);
-//    ofVertex(handles[3]);
-//    ofVertex(handles[2]);
-//    ofEndShape();
-//    
-//    ofPopMatrix();
-//    ofPopStyle();
-    
-    QuadGui::draw();
-    
+
+void QuadMask::maskLevelChanged(int&e) {
+    isDirty = true;
 }

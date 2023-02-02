@@ -786,15 +786,13 @@ bool UI::startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flag
     //      if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
     //      if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
     //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
-    
-    
+   
     // set the main window size and position
     ImGui::SetNextWindowSize(size, ImGuiCond_Once);
     ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
     
     // start the main window!
     return ImGui::Begin(name.c_str(), openstate, window_flags);
-    
     
 }
 

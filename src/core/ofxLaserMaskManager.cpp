@@ -44,14 +44,14 @@ bool MaskManager  ::update() {
     return wasDirty;
 }
 
-bool MaskManager  ::draw() {
-
-    for(int i= 0; i<quads.size(); i++) {
-        quads[i]->draw();
-    }
-    
-    return true;
-}
+//bool MaskManager  ::draw() {
+//
+//    for(int i= 0; i<quads.size(); i++) {
+//        quads[i]->draw();
+//    }
+//    
+//    return true;
+//}
 
 QuadMask& MaskManager::addQuadMask(int level) {
     QuadMask* quad = new QuadMask();
@@ -61,7 +61,7 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
     
-    quad->setOffsetAndScale(offset, scale);
+   // quad->setOffsetAndScale(offset, scale);
     return *quad;
 }
 
@@ -69,17 +69,17 @@ void MaskManager  ::init(int w, int h){
     width = w;
     height = h;
 }
-
-void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
-    if((offset == newoffset) && (newscale==scale)) return;
-    offset = newoffset;
-    scale = newscale;
-    dirty = true;
-    for(QuadMask* quad : quads) {
-        quad->setOffsetAndScale(offset, scale);
-    }
-    
-}
+//
+//void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
+//    if((offset == newoffset) && (newscale==scale)) return;
+//    offset = newoffset;
+//    scale = newscale;
+//    dirty = true;
+//    for(QuadMask* quad : quads) {
+//        quad->setOffsetAndScale(offset, scale);
+//    }
+//
+//}
 
 
 
@@ -102,17 +102,17 @@ void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     
     
 }
-
-void MaskManager  ::enableUI(){
-    for(QuadMask* quad : quads) {
-        quad->setEditable(true);
-    }
-}
-void MaskManager  ::disableUI(){
-    for(QuadMask* quad : quads) {
-        quad->setEditable(false);
-    }
-}
+//
+//void MaskManager  ::enableUI(){
+//    for(QuadMask* quad : quads) {
+//        quad->setEditable(true);
+//    }
+//}
+//void MaskManager  ::disableUI(){
+//    for(QuadMask* quad : quads) {
+//        quad->setEditable(false);
+//    }
+//}
 
 
 vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){

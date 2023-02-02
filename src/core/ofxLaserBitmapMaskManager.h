@@ -21,7 +21,7 @@ public:
      
     virtual void init(int width, int height) override;
     virtual bool update() override;
-    virtual bool draw(bool showBitmap = false);
+   //b virtual bool draw(bool showBitmap = false);
     
     ofPixels* getPixels();
     float getBrightness(int x, int y);

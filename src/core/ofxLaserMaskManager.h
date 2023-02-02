@@ -23,17 +23,17 @@ public:
      
     virtual void init(int width, int height);
     virtual bool update();
-    virtual bool draw();
+ //   virtual bool draw();
     
-    void enableUI();
-    void disableUI();
-    
+//    void enableUI();
+//    void disableUI();
+//
     virtual bool deleteQuadMask(QuadMask* mask); 
     
     virtual void serialize(ofJson&json);
     virtual bool deserialize(ofJson&jsonGroup);
 
-    void setOffsetAndScale(glm::vec2 offset, float scale);
+  //  void setOffsetAndScale(glm::vec2 offset, float scale);
 	
     
     
@@ -46,9 +46,7 @@ public:
 	
     protected :
     bool dirty;
-	glm::vec2 offset;
-	float scale = 1;
-   // bool firstUpdate = true; 
+    
     
 };
 }

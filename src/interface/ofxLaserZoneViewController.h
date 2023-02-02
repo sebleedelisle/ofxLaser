@@ -33,7 +33,8 @@ class LaserZoneViewController : public ScrollableView {
     void draw();
     void drawImGui(); 
     void drawLaserPath();
-    bool updateZones(); 
+    bool updateZones();
+    bool updateMasks();
 
     void setGrid(bool snaptogrid, int gridsize);
     
@@ -68,6 +69,9 @@ class LaserZoneViewController : public ScrollableView {
     
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;
+    
+    vector<QuadGui*> maskUis;
+    
     
     
 };

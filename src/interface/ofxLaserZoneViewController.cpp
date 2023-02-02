@@ -34,7 +34,6 @@ bool LaserZoneViewController :: update() {
     // is check the output zones in the laser against my vector of
     // output zone interfaces and see if any have been added / taken away.
 
-        
 //    for(int i = 0; i<laser->outputZones.size(); i++) {
 //        // if the ui for this zone doesn't exist then make it
 //        OutputZone* outputZone = laser->outputZones[i];
@@ -104,6 +103,7 @@ bool LaserZoneViewController :: update() {
     // 1. IF zones have changed THEN update the zone interfaces
     
     updateZones();
+    updateMasks();
 
     
     return wasUpdated;
@@ -321,21 +321,56 @@ bool LaserZoneViewController :: updateZones()  {
         }
         else ++it;
     }
-    for(OutputZone* outputZone : laser->outputZones) {
-        ZoneUiBase* zoneUi = getZoneInterfaceForOutputZone(outputZone);
-        if(zoneUi!=nullptr) {
-            zoneUi->setLocked(outputZone->getZoneTransform().locked);
-            
-        } else {
-            ofLogError("Missing View for output zone!");
-        }
-        
-    }
+
     
+    
+    
+    
+    
+    
+    
+    
+        
     return changed;
     
 }
 
+
+
+bool LaserZoneViewController :: updateMasks() {
+    
+    bool changed = false;
+    
+    vector<QuadMask*>& quadMasks = laser->maskManager.quads;
+    for(size_t i = 0; i<quadMasks.size(); i++) {
+        QuadMask* mask = quadMasks[i];
+        
+        
+        // if we don't have an interface object for the mask then make one
+        if(maskUis.size()<=i) {
+            QuadGui* newmask = new QuadGui();
+            newmask->set(mask->points);
+            maskUis.push_back(newmask);
+            
+            changed = true;
+        } else {
+            // TODO - compare and set changed!
+            maskUis[i]->set(mask->points);
+        }
+    }
+
+    
+    // delete no longer existing masks
+    
+    for(size_t i = quadMasks.size(); i<maskUis.size(); i++) {
+        delete maskUis[i];
+        changed = true;
+    }
+    maskUis.resize(quadMasks.size());
+    
+    return changed;
+    
+}
 
 
 

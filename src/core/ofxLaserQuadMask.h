@@ -14,15 +14,14 @@ class QuadMask : public QuadGui{
     public :
     QuadMask();
     ~QuadMask(); 
-    virtual void serialize(ofJson&json) const override;
-    virtual bool deserialize(ofJson&jsonGroup) override;
-    virtual void draw() override;
+    void serialize(ofJson&json) const;
+    bool deserialize(ofJson&jsonGroup);
 
-    void maskLevelChanged(int&e) {
-        isDirty = true; 
-    }
-    
+
+    void maskLevelChanged(int&e);
     ofParameter<int> maskLevel;
+    
+    vector<glm::vec2> points;
 
     
 };

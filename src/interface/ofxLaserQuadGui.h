@@ -24,6 +24,8 @@ class QuadGui {
 	void set(const ofRectangle& rect);
     virtual void set(float x, float y, float w, float h) ;
     void set(const QuadGui& quadToCopy);
+    void set(vector<glm::vec2>& points); 
+    
     void setOffsetAndScale(glm::vec2 newoffset, float newscale) {
         offset = newoffset;
         scale = newscale;
@@ -86,8 +88,8 @@ class QuadGui {
    // bool reversable = true;
     float lineWidth = 1;
     
-	const int numHandles = 4;
-	DragHandle handles[4];
+	//const int numHandles = 4;
+	vector<DragHandle> handles;
 	DragHandle centreHandle;
 	vector<DragHandle*> allHandles;
     ofPolyline quadPoly;

@@ -16,9 +16,7 @@ QuadGui::QuadGui() {
     isDirty=true;
     selected = false;
     
-    for(int i = 0; i<=numHandles; i++) {
-        quadPoly.addVertex(0,0,0);
-    }
+   
     
     set(0,0,60,60);
     initialised = true;
@@ -26,6 +24,8 @@ QuadGui::QuadGui() {
     handleColour.set(255);
     labelColour.set(255);
    
+    handles.resize(4);
+    
     updatePoly();
     
 }
@@ -38,7 +38,15 @@ void QuadGui::setName (string displaylabel) {
     displayLabel = displaylabel;
 }
 
-
+void QuadGui::set(vector<glm::vec2>& points) {
+    if(points.size()>=handles.size()) {
+        for(size_t i = 0; i< handles.size(); i++) {
+            handles[i] = points[i];
+            
+        }
+    }
+    
+}
 void QuadGui::set (const ofRectangle& rect) {
 //    if(rect.getArea()<1) {
 //        ofLogNotice("QuadGui::set - teeny rect");
@@ -50,6 +58,7 @@ void QuadGui::set(float x, float y, float w, float h) {
    // ofLogNotice("QuadGui::set");
     
     allHandles.clear();
+    handles.resize(4); 
     
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
@@ -192,7 +201,7 @@ void QuadGui :: draw() {
        
     }
     if(selected) {
-        for(int i = 0; i<numHandles; i++) {
+        for(int i = 0; i<handles.size(); i++) {
             handles[i].draw(mousePos, scale);
         }
         centreHandle.draw(mousePos, scale);
@@ -309,14 +318,14 @@ bool QuadGui :: mousePressed(ofMouseEventArgs &e){
 		
 		centreHandle.startDrag(mousePoint);
 		handleHit = true;
-		for(int i = 0; i<numHandles; i++) {
+		for(int i = 0; i<handles.size(); i++) {
 			handles[i].startDrag(mousePoint);
 		}
 			
     
     } else {
 
-		for(int i = 0; i<numHandles; i++) {
+		for(int i = 0; i<handles.size(); i++) {
 			if(handles[i].hitTest(mousePoint, scale)) {
 				startDragging(i, mousePoint);
 				handleHit = true;
@@ -352,7 +361,7 @@ void QuadGui :: mouseDragged(ofMouseEventArgs &e){
     
 	ofRectangle bounds(centreHandle, 0, 0);
 	bool dragging = false;
-	for(int i = 0; i<numHandles; i++) {
+	for(int i = 0; i<handles.size(); i++) {
         DragHandle& handle = handles[i];
         if(handle.updateDrag(mousePos)){
            dragging = true;
@@ -379,7 +388,15 @@ void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 	
 }
 void QuadGui :: updatePoly() {
-    vector<glm::vec3>& vertices = quadPoly.getVertices(); 
+    
+    
+    if(quadPoly.size()!=handles.size()) {
+        quadPoly.clear();
+        for(int i = 0; i<handles.size(); i++) {
+            quadPoly.addVertex(0,0,0);
+        }
+    }
+    vector<glm::vec3>& vertices = quadPoly.getVertices();
    
     vertices[0] = (handles[0].vec3());
     vertices[1] = (handles[1].vec3());

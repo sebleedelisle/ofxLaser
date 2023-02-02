@@ -566,14 +566,14 @@ void Manager :: drawPreviews() {
 
             renderPreview();
 
-            if(showBitmapMask) {
-                ofPushMatrix();
-                laserMask.setOffsetAndScale(previewOffset,previewScale);
-                laserMask.draw(showBitmapMask);
-                ofTranslate(previewOffset);
-                ofScale(previewScale, previewScale);
-                ofPopMatrix();
-            }
+//            if(showBitmapMask) {
+//                ofPushMatrix();
+//                laserMask.setOffsetAndScale(previewOffset,previewScale);
+//                laserMask.draw(showBitmapMask);
+//                ofTranslate(previewOffset);
+//                ofScale(previewScale, previewScale);
+//                ofPopMatrix();
+//            }
         }
 //
 //        if(showOutputPreviews) {
@@ -657,34 +657,35 @@ void Manager :: drawPreviews() {
                 //lasers[i]->disableTransformGui();
             }
         }
-  
         
-        if(showOutputPreviews) {
-            for(size_t i= 0; i<lasers.size(); i++) {
-                float outputpreviewscale = 0.375;
-                
-                float outputpreviewsize = 800*outputpreviewscale;
-                float previewbottom = 0;// (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
-                float spaceatbottom = (ofGetHeight() - previewbottom) -(guiSpacing*2);
-                if (spaceatbottom<50) spaceatbottom = 50;
-                if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-                
-                ofFill();
-                ofSetColor(0);
-                ofDrawRectangle(laserOutputPreviewRect);
-                
-                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
-                if((int)i==selectedLaserIndex) {
-                    ofNoFill();
-                    ofSetLineWidth(1);
-                    ofSetColor(255);
-                    ofDrawRectangle(laserOutputPreviewRect);
-                    
-                }
-            }
-            
-        }
+  
+//
+//        if(showOutputPreviews) {
+//            for(size_t i= 0; i<lasers.size(); i++) {
+//                float outputpreviewscale = 0.375;
+//
+//                float outputpreviewsize = 800*outputpreviewscale;
+//                float previewbottom = 0;// (selectedlaser->previewScale*800)+selectedlaser->previewOffset.y;
+//                float spaceatbottom = (ofGetHeight() - previewbottom) -(guiSpacing*2);
+//                if (spaceatbottom<50) spaceatbottom = 50;
+//                if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+//                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+//
+//                ofFill();
+//                ofSetColor(0);
+//                ofDrawRectangle(laserOutputPreviewRect);
+//
+//                //lasers[i]->drawTransformAndPath(laserOutputPreviewRect);
+//                if((int)i==selectedLaserIndex) {
+//                    ofNoFill();
+//                    ofSetLineWidth(1);
+//                    ofSetColor(255);
+//                    ofDrawRectangle(laserOutputPreviewRect);
+//
+//                }
+//            }
+//
+//        }
         
         
     } else {
@@ -955,6 +956,109 @@ void Manager::drawLaserGui() {
     guiLaserOverview();
     guiLaserSettings(&getLaser(getSelectedLaserIndex()));
     guiCustomParameters();
+    
+    if(viewMode == OFXLASER_VIEW_OUTPUT){
+        if(UI::startWindow("Laser select", ImVec2(10,60), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
+            
+            for(int i = 0; i< getNumLasers(); i++ ) {
+                
+                string laserNumberString = ofToString(i+1);
+               
+                if(i==getSelectedLaserIndex()) UI::startGhosted();
+                // LASER BUTTONS
+                if(ImGui::Button(laserNumberString.c_str(), ImVec2(20,0))) {
+                    setSelectedLaserIndex(i);
+                }
+                ImGui::SameLine();
+                UI::stopGhosted();
+                
+            }
+        }
+        UI::endWindow();
+        
+        //string label ="Add zone ";
+        
+        if(UI::startWindow("Zone View Icons", ImVec2(10,100), ImVec2(800,iconBarHeight), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
+            
+            
+            
+            if(UI::Button(ofToString(ICON_FK_MINUS_CIRCLE) + "##AddZone", false, false)) {
+                
+                // MAKE NEW ZONE panel
+                ImGui::OpenPopup("Add zone");
+               
+                
+            }
+            if(UI::Button(ICON_FK_PLUS, false, false)) {
+                
+                // MAKE NEW MASK panel
+                
+            }
+            if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
+                
+                // test pattern show
+                
+            }
+            if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
+                
+                // choose test pattern
+                
+            }
+
+            
+        }
+        
+        if(ImGui::BeginPopupModal("Add zone", NULL)) {
+            
+            static int type = 0;
+            
+            if(type==0) UI::secondaryColourStart();
+            if(ImGui::Button("QUAD")) {
+                type = 0;
+            }
+            UI::secondaryColourEnd();
+            ImGui::SameLine();
+            if(type==1)  UI::secondaryColourStart();
+            if(ImGui::Button("LINE")) {
+                type = 1;
+            }
+            UI::secondaryColourEnd();
+            
+            ImGui::Separator();
+
+            // TODO add selector to add existing zone
+            // TODO add lable
+            
+            
+            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                ImGui::CloseCurrentPopup();
+               
+            }
+            
+            ImGui::SetItemDefaultFocus();
+            ImGui::SameLine();
+            if (ImGui::Button("OK", ImVec2(120, 0))) {
+                
+                addZone(0,0,200,200);
+                int zonenum = zones.size()-1;
+                int lasernum = getSelectedLaserIndex();
+                addZoneToLaser(zonenum, lasernum);
+             
+                
+                ImGui::CloseCurrentPopup();
+                
+            }
+            
+            
+            ImGui::EndPopup();
+        }
+        
+        UI::endWindow();
+        
+       
+        
+    }
+    
 
     // show laser settings :
    

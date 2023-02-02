@@ -323,7 +323,7 @@ bool ZoneUiQuad :: updateFromData(ZoneTransformBase* zonetransform) {
     
     if(data!=nullptr) {
         
-        
+        setLocked(data->locked);
         return setCorners(data->getCornerPoints());
         
         

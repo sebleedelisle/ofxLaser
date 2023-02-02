@@ -66,32 +66,32 @@ bool BitmapMaskManager ::update() {
     }
     return isdirty;
 }
-
-bool BitmapMaskManager ::draw(bool showBitmap) {
-    
-    if(showBitmap) {
-        ofPushStyle();
-		ofPushMatrix();
-		ofTranslate(offset);
-		ofScale(scale, scale);
-        ofEnableBlendMode(OF_BLENDMODE_ADD);
-        ofSetColor(50,0,0);
-        fbo.draw(0,0);
-        
-        ofPopStyle();
-		ofPopMatrix();
-        for(int i= 0; i<quads.size(); i++) {
-            quads[i]->draw();
-        }
-    }
-    return true;
-
-//    if(dirty) {
-//        ofSetColor(255,0,0);
-//        ofFill();
-//        ofDrawRectangle(0,0,20,20);
+//
+//bool BitmapMaskManager ::draw(bool showBitmap) {
+//    
+//    if(showBitmap) {
+//        ofPushStyle();
+//		ofPushMatrix();
+//		ofTranslate(offset);
+//		ofScale(scale, scale);
+//        ofEnableBlendMode(OF_BLENDMODE_ADD);
+//        ofSetColor(50,0,0);
+//        fbo.draw(0,0);
+//        
+//        ofPopStyle();
+//		ofPopMatrix();
+//        for(int i= 0; i<quads.size(); i++) {
+//            quads[i]->draw();
+//        }
 //    }
-}
+//    return true;
+//
+////    if(dirty) {
+////        ofSetColor(255,0,0);
+////        ofFill();
+////        ofDrawRectangle(0,0,20,20);
+////    }
+//}
 
 void BitmapMaskManager ::init(int w, int h){
 	width = w;
