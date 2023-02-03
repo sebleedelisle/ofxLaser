@@ -28,35 +28,6 @@ bool LaserZoneViewController :: update() {
     
     bool wasUpdated = false;
     
-    // RETHINK. Need one object that can handle all the interface elements
-    // of an output zone.
-    // I don't really need to see any of it here, all i need to do
-    // is check the output zones in the laser against my vector of
-    // output zone interfaces and see if any have been added / taken away.
-
-//    for(int i = 0; i<laser->outputZones.size(); i++) {
-//        // if the ui for this zone doesn't exist then make it
-//        OutputZone* outputZone = laser->outputZones[i];
-//        // if it's a quad zone
-//        if(outputZone->transformType==0) {
-//
-//            ZoneUIQuad& zoneUiQuad = zoneUiQuads[i];
-//
-//            if(!zoneUiQuad.getVisible()) {
-//                zoneUiQuad.setVisible(true);
-//                zoneUiQuad.setEditable(true); // TODO check locked state
-//                zoneUiQuad.setCorners(outputZone->zoneTransformQuad.getCornerPoints());
-//            }
-//            // TODO ADD HERE CODE TO CHECK IF THE UI ELEMENT IS DIRTY AND UPDATE THE DATA
-//
-//        } else {
-//            zoneUiQuads[i].setVisible(false);
-//
-//        }
-//
-//    }
-    
-    // update each one, if any are dirty  DO SOMETHING (what?)
     
     for(ZoneUiBase* zoneUi : zoneUis) {
         // make sure the handles are resized
@@ -67,35 +38,7 @@ bool LaserZoneViewController :: update() {
             OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
             zoneUi->updateDataFromUI(&outputZone->getZoneTransform());
         }
-//
-//            // how do we update the data?
-//            // For now let's just hack it
-//            OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-//            if(outputZone!=nullptr) {
-//                ZoneUiQuad* zoneUiQuad = dynamic_cast<ZoneUiQuad*>(zoneUi);
-//                ZoneTransformQuadData* zoneQuad = dynamic_cast<ZoneTransformQuadData*>(&outputZone->zoneTransformQuad);
-//                if(zoneUiQuad!=nullptr) {
-//                    // THIS IS THE PART THAT CHANGES THE ZONE
-//                    // How do we separate this from a gross if/then statement?
-//                    // Should we send a message?
-//                    // Perhaps some functions within outputzone?
-//                    // Pretty gross design that we need two separate properties for
-//                    // different zone types lol
-//                    //outputZone->zoneTransformQuad.setDstCorners(zoneUiQuad->handles[0], zoneUiQuad->handles[1], zoneUiQuad->handles[2], zoneUiQuad->handles[3]);
-//
-////                    if(zoneUiQuad->getI)
-//                    if(zoneUiQuad->mainDragHandleIndexClockwise>=0) {
-//
-//                        zoneQuad->moveHandle(zoneUiQuad->getMainDragHandleIndexClockwise(), *zoneUiQuad->getMainDragHandle(), zoneUiQuad->constrainedToSquare);
-//                    }
-//
-//
-//
-//                }
-//
-//            }
-//
-//        }
+
         wasUpdated|=zoneupdated;
     }
     
@@ -160,6 +103,7 @@ void LaserZoneViewController :: drawImGui() {
                     UI::toolTip("Reset zone to default");
 
                     UI::addParameterGroup(ztq->transformParams, false);
+                    
                 }
             } else {
                 
@@ -342,13 +286,14 @@ bool LaserZoneViewController :: updateMasks() {
     bool changed = false;
     
     vector<QuadMask*>& quadMasks = laser->maskManager.quads;
+    
     for(size_t i = 0; i<quadMasks.size(); i++) {
         QuadMask* mask = quadMasks[i];
         
         
         // if we don't have an interface object for the mask then make one
         if(maskUis.size()<=i) {
-            QuadGui* newmask = new QuadGui();
+            MoveablePoly* newmask = new MoveablePoly();
             newmask->set(mask->points);
             maskUis.push_back(newmask);
             
@@ -389,7 +334,7 @@ void LaserZoneViewController :: setGrid(bool snaptogrid, int gridsize){
     //    }
         gridMesh.clear();
         int spacing = gridSize;
-        while(gridSize<5) spacing *=2;
+        while(spacing<5) spacing *=2;
         for(int x = 0; x<=800; x+=spacing) {
             for(int y = 0; y<=800; y+=spacing) {
                 gridMesh.addVertex(ofPoint(x,y));
@@ -580,6 +525,7 @@ bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone
     if(outputZone->transformType == 0 )  {
         
         zoneUi = new ZoneUiQuad();
+        
         zoneUi->updateFromData(&outputZone->getZoneTransform());
         zoneUi->inputZoneIndex = outputZone->getZoneIndex();
         zoneUi->inputZoneAlt = outputZone->getIsAlternate();

@@ -70,9 +70,7 @@ class LaserZoneViewController : public ScrollableView {
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;
     
-    vector<QuadGui*> maskUis;
-    
-    
-    
+    vector<MoveablePoly*> maskUis;
+
 };
 }

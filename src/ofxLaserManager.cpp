@@ -989,21 +989,41 @@ void Manager::drawLaserGui() {
                
                 
             }
+            UI::addDelayedTooltip("Add new zone");
+            
             if(UI::Button(ICON_FK_PLUS, false, false)) {
                 
                 // MAKE NEW MASK panel
                 
             }
+            UI::addDelayedTooltip("Add new mask");
+
             if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
                 
                 // test pattern show
                 
             }
+            UI::addDelayedTooltip("Show test pattern");
+            
             if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
                 
                 // choose test pattern
                 
             }
+            UI::addDelayedTooltip("Select test pattern");
+            
+            if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
+                
+                // choose test pattern
+                
+            }
+            UI::addDelayedTooltip("Grid on/off");
+            if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
+                
+                // choose test pattern
+                
+            }
+            UI::addDelayedTooltip("Grid size");
 
             
         }

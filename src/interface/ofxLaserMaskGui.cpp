@@ -26,8 +26,6 @@ QuadGui::QuadGui() {
     handleColour.set(255);
     labelColour.set(255);
    
-    //handles.resize(4);
-    
     updatePoly();
     
 }
@@ -40,6 +38,7 @@ void QuadGui::setName (string displaylabel) {
     displayLabel = displaylabel;
 }
 
+
 void QuadGui::set (const ofRectangle& rect) {
 //    if(rect.getArea()<1) {
 //        ofLogNotice("QuadGui::set - teeny rect");
@@ -51,7 +50,6 @@ void QuadGui::set(float x, float y, float w, float h) {
    // ofLogNotice("QuadGui::set");
     
     allHandles.clear();
-    //handles.resize(4);
     
     for(int i = 0; i<4; i++) {
         float xpos = ((float)(i%2)/1.0f*w)+x;
@@ -381,10 +379,7 @@ void QuadGui :: mouseDragged(ofMouseEventArgs &e){
 	
 }
 void QuadGui :: updatePoly() {
-    
-    
-
-    vector<glm::vec3>& vertices = quadPoly.getVertices();
+    vector<glm::vec3>& vertices = quadPoly.getVertices(); 
    
     vertices[0] = (handles[0].vec3());
     vertices[1] = (handles[1].vec3());

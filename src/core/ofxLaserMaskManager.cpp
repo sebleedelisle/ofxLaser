@@ -30,12 +30,9 @@ bool MaskManager  ::update() {
     for(int i = 0; i<quads.size(); i++) {
         
         dirty = quads[i]->checkDirty() | dirty;
-//        if(firstUpdate) {
-//            quads[i]->draw();
-//            
-//        }
+
     }
-   // firstUpdate = false;
+    
     bool wasDirty = dirty;
     if(dirty) {
         dirty = false;
@@ -57,6 +54,7 @@ QuadMask& MaskManager::addQuadMask(int level) {
     QuadMask* quad = new QuadMask();
     quads.push_back(quad);
     quad->maskLevel= level;
+    
     quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
     quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
