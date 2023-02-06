@@ -119,7 +119,7 @@ void ZoneTransformQuadComplexData :: resetToSquare() {
     isDirty = true;
 }
 
-bool ZoneTransformQuadComplexData :: isSquare() {
+bool ZoneTransformQuadComplexData :: isAxisAligned() {
     
     vector<glm::vec2*> corners = getCornerPoints();
     return (corners[0]->x == corners[2]->x) && (corners[0]->y == corners[1]->y) && (corners[1]->x == corners[3]->x) && (corners[2]->y == corners[3]->y);

@@ -28,6 +28,9 @@ class BezierNode {
     
     void draw(glm::vec2 mousePos, float scale);
     
+    
+    
+    
     bool hitTest(glm::vec2 mousePos, float scale) ;
     
     bool startDrag(glm::vec2 mousePos, float scale) ;

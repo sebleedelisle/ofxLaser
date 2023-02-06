@@ -11,8 +11,9 @@
 #include "ofMain.h"
 #include "ofxLaserLaser.h"
 #include "ofxLaserScrollableView.h"
-#include "ofxLaserZoneUIQuad.h"
-#include "ofxLaserZoneUIBase.h"
+#include "ofxLaserZoneUiQuad.h"
+#include "ofxLaserZoneUiBase.h"
+#include "ofxLaserZoneUiLine.h"
 
 namespace ofxLaser {
 class LaserZoneViewController : public ScrollableView {

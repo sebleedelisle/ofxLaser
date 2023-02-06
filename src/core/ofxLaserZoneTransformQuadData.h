@@ -15,6 +15,8 @@
 #include "ofxLaserWarper.h"
 #include <glm/gtx/closest_point.hpp>
 
+#include "ofxLaserGeomUtils.h"
+
 
 // the basic quad transform is four points, and can either be square or
 // non-square. It needs to have its four points clockwise and can't be
@@ -44,7 +46,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
  
     // resets to perpendicular corners
     void resetToSquare() ;
-    bool isSquare() ;
+    bool isAxisAligned() ;
     
     void setDst(const ofRectangle& rect);
     
@@ -71,7 +73,6 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     void updateConvex() ;
     bool getIsConvex() ;
   
-
     void updateQuads();
     
     void divisionsChanged(int& e);
@@ -87,10 +88,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
    
     vector<glm::vec2*> getCornerPointsClockwise();
     bool isCorner(int index);
-    
-    bool clampToVector(glm::vec2& pointToClamp, glm::vec2& v1, glm::vec2&v2);
-    glm::vec2 getClampedToVector(glm::vec2& source, glm::vec2& p1, glm::vec2&p2, bool clampinside, bool clampoutside);
-    
+      
     cv::Point2f toCv(glm::vec3 p) {
         return cv::Point2f(p.x, p.y);
     }

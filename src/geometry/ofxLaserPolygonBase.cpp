@@ -81,6 +81,23 @@ void PolygonBase::setFromPoints(const vector<glm::vec2*>& newpoints) {
     
 }
 
+void PolygonBase::setFromPoints(const vector<glm::vec2>& newpoints) {
+    
+    resize(newpoints.size());
+    
+    for(size_t i = 0 ;i<newpoints.size(); i++) {
+        if(at(i)!=newpoints[i]) {
+            at(i) = newpoints[i];
+            isDirty = true;
+        }
+ 
+    }
+    // huh. This should be auto updated in update
+   // if(isDirty) updateBounds();
+    
+    
+}
+
 void PolygonBase::setRectangle(float x, float y, float w, float h){
     resize(4);
     at(0) = {x, y};
@@ -98,14 +115,37 @@ bool PolygonBase::hitTest(glm::vec2& p) {
 
 
 bool PolygonBase::hitTest(float x, float y) {
+    if(isDirty) update();
+    
     bool boundingboxhit = x>boundsTopLeft.x && x< boundsBottomRight.x && y>boundsTopLeft.y && y<boundsBottomRight.y;
-    if(!boundingboxhit) return false;
+    if(!boundingboxhit) {
+        return false;
+    }
     
     return GeomUtils::pointInPoly(glm::vec2(x,y), *this);
     
 }
 
-bool PolygonBase::isSquare() {
+bool PolygonBase::hitTestEdges(glm::vec2& p, float lineWidth) {
+    return hitTestEdges(p.x, p.y, lineWidth);
+}
+
+bool PolygonBase::hitTestEdges(float x, float y, float lineWidth) {
+    if(hitTest(x, y) ) return true;
+    
+    glm::vec2 pos(x,y);
+    
+    for(int i = 0; i<size(); i++) {
+        glm::vec2& p1 = at(i);
+        glm::vec2& p2 = at((i+1) % size());
+        if(GeomUtils::pointDistanceFromLine(pos, p1, p2) < lineWidth) return true;
+    }
+    return false;
+}
+
+
+
+bool PolygonBase::isAxisAligned() {
     float epsilon = 0.001f;
     return (fabs(at(0).x - at(3).x)<epsilon) &&
         (fabs(at(0).y - at(1).y)<epsilon) &&

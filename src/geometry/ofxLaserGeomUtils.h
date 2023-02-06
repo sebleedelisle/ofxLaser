@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
-
+#include <glm/gtx/closest_point.hpp>
 
 namespace ofxLaser {
 class GeomUtils {
@@ -113,6 +113,116 @@ class GeomUtils {
         }
         return pointInPoly (p1, polypoints, boundleft);
         
+    }
+
+    static bool clampToVector(glm::vec2& pointToClamp, const glm::vec2& p1, const glm::vec2&p2){
+ 
+        glm::vec2 clamped = getClampedToVector(pointToClamp, p1, p2, true, false);
+        if(clamped!=pointToClamp) {
+            pointToClamp = clamped;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    static glm::vec2 getClampedToVector(const glm::vec2& source, const glm::vec2& p1, const glm::vec2&p2, bool clampinside, bool clampoutside){
+        
+        //glm::vec2 returnvector;
+        
+        glm::vec2 v1 = p2-p1;
+        v1 = glm::rotate(v1, ofDegToRad(-90));
+        glm::vec2 v2 = source - p1;
+        
+        float d = glm::dot(v2, v1);
+        
+        // if it's too short then we don't have a valid vector to project onto
+        if(glm::length(v1)<0.01) {
+            ofLogNotice() << v1 << " " << v2;
+            return p1;
+        }
+        
+        if(((d<0) && (clampinside) ) || ((d>0) && (clampoutside))) {
+            glm::vec2 normal = glm::normalize(v1);
+            d = glm::dot(v2, normal);
+            
+            return source-(normal*d);
+
+        } else {
+            return source;
+        }
+        
+    }
+
+    static bool isWindingClockwise(const vector<glm::vec2*>& corners){
+        
+        //vector<glm::vec2*> corners = getCornerPointsClockwise();
+        float sum = 0;
+        for(int i = 0; i<4; i++) {
+            const glm::vec2& p1 = *corners[(i+1)%4];
+            const glm::vec2& p2 = *corners[i];
+            glm::vec2 edge(p2.x-p1.x, p2.y+p2.y);
+            sum+=(edge.x*edge.y);
+        }
+        return sum>=0;
+        
+    }
+    
+    static bool isConvex(const vector<glm::vec2*>& points){
+        bool convex = true;
+        for(size_t i = 0; i<4; i++) {
+        
+            ofVec2f p1 = *points[i%4];
+            ofVec2f p2 = *points[(i+1)%4];
+            ofVec2f p3 = *points[(i+2)%4];
+            ofVec2f v1 = p2-p1;
+            ofVec2f v2 = p3-p2;
+            v2.rotate(90);
+            if(v2.dot(v1)>0) convex = false;
+        }
+        
+        if(convex) {
+            for(int i =0; i<3; i++) {
+                for(int j = i+1; j<4; j++) {
+                    if(points[i] == points[j]) {
+                        convex = false;
+                    }
+                }
+            }
+        }
+        return convex;
+    }
+        
+    
+    static float pointDistanceFromLine(const glm::vec2 pos, const glm::vec2 p1, const glm::vec2 p2) {
+        
+        glm::vec2 closestpoint = glm::closestPointOnLine(pos, p1, p2);
+        
+        return glm::distance(closestpoint, pos);
+
+    }
+    
+    
+    static float getMinimumCrossSectionWidth(const vector<glm::vec2>& points) {
+        
+        float closestDistance = INFINITY;
+        for(int i=0; i<points.size(); i++) {
+            // get one edge at a time
+            const glm::vec2& p1 = points[i];
+            const glm::vec2& p2 = points[(i+1)%points.size()];
+            
+            float maxDistance = 0;
+            for(const glm::vec2 p : points) {
+                float distance = glm::distance(p, getClampedToVector(p, p1, p2, true, true));
+                if(distance>maxDistance) maxDistance = distance;
+            }
+            
+            if(maxDistance<closestDistance) {
+                closestDistance = maxDistance;
+            }
+        }
+        return closestDistance;
+            
     }
 
 };

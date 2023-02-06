@@ -91,7 +91,7 @@ void ZoneTransformQuadData :: resetToSquare() {
     isDirty = true;
 }
 
-bool ZoneTransformQuadData :: isSquare() {
+bool ZoneTransformQuadData :: isAxisAligned() {
 
     vector<glm::vec2*> corners = getCornerPoints();
     
@@ -164,7 +164,7 @@ void ZoneTransformQuadData :: setDstCorners(glm::vec2 topleft, glm::vec2 toprigh
             pointschanged = true;
             
 //            // clamp between points to avoid concave shapes
-//            if(!isSquare()) {
+//            if(!isAxisAligned()) {
 //                clampToVector(*newpoints[i], *points[(i+3)%4], *points[(i+1)%4]);
 //                // clamp between edges to avoid over-extension
 //                clampToVector(*newpoints[i], *points[(i+3)%4], *points[(i+2)%4]);
@@ -194,23 +194,39 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
     vector<glm::vec2*> points = getCornerPointsClockwise();
     bool pointchanged = false;
     if(*points[i]!=newpos) {
-        
-        
         // clamp between points to avoid concave shapes
         if(!lockSquare) {
-            clampToVector(newpos, *points[(i+3)%4], *points[(i+1)%4]);
+            // clamp to vector between neighbours
+            GeomUtils::clampToVector(newpos, *points[(i+3)%4], *points[(i+1)%4]);
+            
+            glm::vec2& pointbefore = *points[(i+3)%4];
+            glm::vec2& pointopposite = *points[(i+2)%4];
             // clamp between edges to avoid over-extension
-            clampToVector(newpos, *points[(i+3)%4], *points[(i+2)%4]);
-            clampToVector(newpos, *points[(i+2)%4], *points[(i+1)%4]);
+            // this mess of code calculates a vector between the adjacent two points,
+            // but then rotates it so that the moving point cannot get quite colinear
+            float minangle = 2.0f;
+            glm::vec2 beforeedge =  pointbefore - pointopposite;
+            beforeedge = glm::rotate(beforeedge, float(minangle*PI/180.0f));
+            GeomUtils::clampToVector(newpos,  pointopposite+beforeedge, pointopposite);
+            
+            glm::vec2& pointafter = *points[(i+1)%4];
+            //glm::vec2& pointafter2 = *points[(i+2)%4];
+            
+            glm::vec2 afteredge = pointafter - pointopposite;
+            afteredge = glm::rotate(afteredge, float(-minangle*PI/180.0f)); // rotate it one degree
+            GeomUtils::clampToVector(newpos,  pointafter, pointafter+afteredge);
+            
+            
+            
             
             *points[i] = newpos;
             
         } else {
             // constrained version
-        
+            float minsize = 2;
             // vectors 90º apart based around the point
-            glm::vec2 v1(10,0);
-            glm::vec2 v2(0,10);
+            glm::vec2 v1(minsize,0);
+            glm::vec2 v2(0,minsize);
             v1 = glm::rotate(v1, float(PI/2*i));
             v2 = glm::rotate(v2, float(PI/2*i));
             
@@ -219,22 +235,29 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             glm::vec2 edgebefore = pointbefore+v1;
             glm::vec2 edgeafter = pointafter-v2;
 
+            // stop the quad getting too small!
+//            ofLogNotice() << glm::distance(pointbefore, newpos);
+//            if(glm::distance(pointbefore, newpos)<minsize) newpos = pointbefore-v2;
+//            if(glm::distance(pointafter, newpos)<minsize) newpos = pointafter-v1;
+//
             // stop the point from crossing inside out
-            clampToVector(newpos, pointbefore, edgebefore );
-            clampToVector(newpos, pointafter, edgeafter);
+            GeomUtils::clampToVector(newpos, pointbefore-v2, edgebefore-v2);
+            GeomUtils::clampToVector(newpos, pointafter-v1, edgeafter-v1);
+            
+            
             *points[i] = newpos;
             
             v1+=pointbefore;
             v2+=pointafter;
 
             // point before needs to clamp onto its own edge
-            pointbefore = getClampedToVector(newpos, pointbefore, v1, true, true);
-            pointafter = getClampedToVector(newpos, pointafter, v2, true, true);
+            pointbefore = GeomUtils::getClampedToVector(newpos, pointbefore, v1, true, true);
+            pointafter = GeomUtils::getClampedToVector(newpos, pointafter, v2, true, true);
             
-            if((pointbefore.x!=newpos.x) || (pointafter.y!=newpos.y)) {
-                std::setprecision(10);
-                std::cout << pointbefore.x << " " << newpos.x << " " << pointafter.y << " " << newpos.y<< endl ;
-            }
+//            if((pointbefore.x!=newpos.x) || (pointafter.y!=newpos.y)) {
+//                std::setprecision(10);
+//                std::cout << pointbefore.x << " " << newpos.x << " " << pointafter.y << " " << newpos.y<< endl ;
+//            }
             
             
         }
@@ -249,79 +272,6 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
     
 }
 
-bool ZoneTransformQuadData :: clampToVector(glm::vec2& pointToClamp, glm::vec2& p1, glm::vec2&p2){
-    
-    
-    glm::vec2 clamped = getClampedToVector(pointToClamp, p1, p2, true, false);
-    if(clamped!=pointToClamp) {
-        pointToClamp = clamped;
-        return true;
-    } else {
-        return false;
-    }
-//
-//    glm::vec2 v1 = p2-p1;
-//    v1 = glm::rotate(v1, ofDegToRad(-90));
-//    glm::vec2 v2 = pointToClamp - p1;
-//
-//    float d = glm::dot(v2, v1);
-//
-//    if(d<0) {
-//        glm::vec2 normal = glm::normalize(v1);
-//        d = glm::dot(v2, normal);
-//        pointToClamp-=(normal*d);
-//        return true;
-//
-//
-//
-//    } else {
-//        return false;
-//    }
-    
-}
-
-glm::vec2 ZoneTransformQuadData :: getClampedToVector(glm::vec2& source, glm::vec2& p1, glm::vec2&p2, bool clampinside, bool clampoutside){
-    
-    //glm::vec2 returnvector;
-    
-    glm::vec2 v1 = p2-p1;
-    v1 = glm::rotate(v1, ofDegToRad(-90));
-    glm::vec2 v2 = source - p1;
-    
-    float d = glm::dot(v2, v1);
-    
-    // if it's too short then we don't have a valid vector to project onto
-    if(glm::length(v1)<0.01) {
-        ofLogNotice() << v1 << " " << v2;
-        return p1;
-    }
-    
-    if(((d<0) && (clampinside) ) || ((d>0) && (clampoutside))) {
-        glm::vec2 normal = glm::normalize(v1);
-        d = glm::dot(v2, normal);
-        
-        return source-(normal*d);
-
-    } else {
-        return source;
-    }
-    
-}
-
-bool ZoneTransformQuadData :: isWindingClockwise(){
-    
-    vector<glm::vec2*> corners = getCornerPointsClockwise();
-    float sum = 0;
-    for(int i = 0; i<4; i++) {
-        const glm::vec2& p1 = *corners[(i+1)%4];
-        const glm::vec2& p2 = *corners[i];
-        glm::vec2 edge(p2.x-p1.x, p2.y+p2.y);
-        sum+=(edge.x*edge.y);
-    }
-    return sum>=0;
-    
-}
-    
 
 void ZoneTransformQuadData::resetFromCorners() {
     vector<glm::vec2> corners = getCorners();
@@ -383,7 +333,6 @@ bool ZoneTransformQuadData :: isCorner(int i ) {
 
 
 void ZoneTransformQuadData::updateQuads() {
-   
 
     quadWarper.updateHomography(srcPoints[0],
                               srcPoints[1],
@@ -395,13 +344,7 @@ void ZoneTransformQuadData::updateQuads() {
                               dstPoints[3]
                               );
     
-   
-    
-    
 }
-
-
-
 
 
 bool ZoneTransformQuadData::serialize(ofJson&json) {
@@ -479,36 +422,16 @@ bool ZoneTransformQuadData :: getIsConvex() {
 }
 
 void ZoneTransformQuadData :: updateConvex() {
-    bool convex = true;
-    vector<glm::vec2> corners = getCorners();
-    vector<glm::vec2> points;
-    points.push_back(corners[0]);
-    points.push_back(corners[1]);
-    points.push_back(corners[3]);
-    points.push_back(corners[2]);
-    for(size_t i = 0; i<4; i++) {
-    
-        ofVec2f p1 = points[i%4];
-        ofVec2f p2 = points[(i+1)%4];
-        ofVec2f p3 = points[(i+2)%4];
-        ofVec2f v1 = p2-p1;
-        ofVec2f v2 = p3-p2;
-        v2.rotate(90);
-        if(v2.dot(v1)>0) convex = false;
-    }
-    
-    if(convex) {
-        for(int i =0; i<3; i++) {
-            for(int j = i+1; j<4; j++) {
-                if(points[i] == points[j]) {
-                    convex = false;
-                }
-            }
-        }
-    }
-        
-    
-    isConvex =  convex;
+//    bool convex = true;
+//    vector<glm::vec2> corners = getCorners();
+//    vector<glm::vec2> points;
+//    points.push_back(corners[0]);
+//    points.push_back(corners[1]);
+//    points.push_back(corners[3]);
+//    points.push_back(corners[2]);
+
+    vector<glm::vec2*> pointsclockwise = getCornerPointsClockwise();
+    isConvex =  GeomUtils::isConvex(pointsclockwise);
     
 }
 

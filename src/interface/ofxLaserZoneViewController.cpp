@@ -36,7 +36,12 @@ bool LaserZoneViewController :: update() {
         
         if(zoneupdated) {
             OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-            zoneUi->updateDataFromUI(&outputZone->getZoneTransform());
+            if(outputZone!=nullptr) {
+                zoneUi->updateDataFromUI(&outputZone->getZoneTransform());
+               
+            } else {
+                ofLogError("missing zone ui for output zone! ");
+            }
         }
 
         wasUpdated|=zoneupdated;
@@ -86,22 +91,27 @@ void LaserZoneViewController :: drawImGui() {
             ImGui::Text("CONTEXT MENU!");
             bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
             
+            // TODO better mechanism for changing zone type!
+            
             if(quadZone) UI::secondaryColourStart();
             if(ImGui::Button("QUAD")) {
-                //laserZone->transformType = 0;
+                outputZone->transformType = 0;
+                zoneUi->setSelected(true);
             }
+            
             UI::secondaryColourEnd();
             ImGui::SameLine();
             if(!quadZone)  UI::secondaryColourStart();
             if(ImGui::Button("LINE")) {
-                //laserZone->transformType = 1;
+                outputZone->transformType = 1;
+                zoneUi->setSelected(true);
             }
             UI::secondaryColourEnd();
             
             if(quadZone) {
                 ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
                 if(ztq!=nullptr) {
-                    if(ztq->isSquare()) {
+                    if(ztq->isAxisAligned()) {
                         UI::startGhosted();
                     }
                     if(UI::Button("Reset to square")) {
@@ -121,12 +131,13 @@ void LaserZoneViewController :: drawImGui() {
                 }
             } else {
                 
-//                ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&laserZone->getZoneTransform());
-//                if(ztl!=nullptr) {
-//                    //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
-//                    
-//                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
-//                    
+                ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());
+                if(ztl!=nullptr) {
+                    //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                    
+                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+                    UI::addCheckbox(ztl->locked);
+//
 //                    vector<BezierNode>& nodes = ztl->getNodes();
 //                    for(int i = 0; i<nodes.size(); i++) {
 //                        ImGui::PushID(i);
@@ -138,31 +149,31 @@ void LaserZoneViewController :: drawImGui() {
 //                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
 //                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
 //                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
-//                        
+//
 //                        if(mode!=node.mode) {
 //                            node.mode = mode;
 //                            ztl->setDirty(true);
 //                        }
 //                        if(nodes.size()>2) {
 //                            ImGui::SameLine();
-//                            
+//
 //                            string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
 //                            if (UI::DangerButton(label, false)) {
 //                                ztl->deleteNode(i);
-//                                
+//
 //                            }
 //                        }
-//                        
+//
 //                        ImGui::PopID();
-//                        
-//                        
+//
 //                    }
+//
 //                    string label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
 //                    if (UI::Button(label, false)) {
 //                        ztl->addNode();
-//                        
+//
 //                    }
-//                }
+                }
                 
             }
             ImGui::EndPopup();
@@ -504,8 +515,8 @@ ZoneUiBase* LaserZoneViewController ::  getZoneInterfaceForOutputZone(OutputZone
         if((zoneUi->inputZoneIndex == outputZone->getZoneIndex()) && (zoneUi->inputZoneAlt == outputZone->getIsAlternate())) {
             if((dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr) && (outputZone->transformType==0)) {
                 return zoneUi;
-//            } else if((dynamic_cast<ZoneUILine>(zoneUi)!=nullptr) && (outputZone->transformType==1)) {
-//                return zoneUi;
+            } else if((dynamic_cast<ZoneUiLine*>(zoneUi)!=nullptr) && (outputZone->transformType==1)) {
+                return zoneUi;
             } else {
                 //NB assumes no doubles
                 return nullptr;
@@ -521,8 +532,8 @@ OutputZone* LaserZoneViewController ::  getOutputZoneForZoneUI(ZoneUiBase* zoneU
     int zoneType;
     if(dynamic_cast<ZoneUiQuad*>(zoneUi)) {
         zoneType = 0;
-//    } else if(dynamic_cast<ZoneUILine*>(zoneUi)) {
-//        zoneType = 1;
+    } else if(dynamic_cast<ZoneUiLine*>(zoneUi)) {
+        zoneType = 1;
     }
     
     for(OutputZone* outputZone : laser->outputZones) {
@@ -542,6 +553,15 @@ bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone
     if(outputZone->transformType == 0 )  {
         
         zoneUi = new ZoneUiQuad();
+        
+        zoneUi->updateFromData(&outputZone->getZoneTransform());
+        zoneUi->inputZoneIndex = outputZone->getZoneIndex();
+        zoneUi->inputZoneAlt = outputZone->getIsAlternate();
+        zoneUi->setGrid(snapToGrid, gridSize);
+        
+    } else if(outputZone->transformType == 1 )  {
+        
+        zoneUi = new ZoneUiLine();
         
         zoneUi->updateFromData(&outputZone->getZoneTransform());
         zoneUi->inputZoneIndex = outputZone->getZoneIndex();

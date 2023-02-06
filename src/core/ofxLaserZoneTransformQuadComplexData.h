@@ -34,7 +34,7 @@ class ZoneTransformQuadComplexData : public ZoneTransformBase {
  
     // resets to perpendicular corners
     void resetToSquare() ;
-    bool isSquare() ;
+    bool isAxisAligned() ;
     
     void setDst(const ofRectangle& rect);
     

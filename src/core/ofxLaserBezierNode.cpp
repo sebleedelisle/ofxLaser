@@ -16,7 +16,7 @@ void BezierNode :: reset(float x, float y){
     handles[1].set(x-20,y);
     handles[2].set(x+20,y);
     handles[1].isCircular = handles[2].isCircular = true;
-    mode = 2;
+    mode = 0;
     start = end = false;
     
 }

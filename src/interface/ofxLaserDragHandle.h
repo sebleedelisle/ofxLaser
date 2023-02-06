@@ -39,7 +39,6 @@ namespace ofxLaser {
         void setColour(ofColor colour, ofColor overColour) {
             col = colour;
             overCol = overColour;
-            
         }
         
         void setGrid(bool snapstate, int gridsize) {

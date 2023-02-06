@@ -81,9 +81,7 @@ class MoveablePoly {
     glm::vec2 centre;
     
     PolygonBase poly;
-//    ofMesh zoneMesh;
-//    ofPolyline zonePoly;
-//  
+
     glm::vec2 mousePos;
     
     bool selected;

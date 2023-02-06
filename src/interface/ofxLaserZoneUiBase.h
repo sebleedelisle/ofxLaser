@@ -1,5 +1,5 @@
 //
-//  ofxLaserZoneUIBase.h
+//  ofxLaserZoneUiBase.h
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.

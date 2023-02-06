@@ -83,8 +83,8 @@ void UI::setupGui() {
     ofEvents().mouseDragged.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
     ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
-    //ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
-    //ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
+    ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
+    ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
 }
 
 void UI::updateGui() {
@@ -933,13 +933,16 @@ bool UI::updateMouse(ofMouseEventArgs &e) {
     return false; // propagate events
 }
 bool UI::mousePressed(ofMouseEventArgs &e) {
-  //  ofLogNotice("UI::mousePressed");
+    //ofLogNotice("UI::mousePressed ")<< e.button;
     int iobutton = e.button;
-    if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
-    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
-    ImGui::GetIO().MouseDown[iobutton] = true;
+    if(iobutton == 1) iobutton = 0; // fix for alt click -> middle button
+    else if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+    
+    ImGuiIO& io =ImGui::GetIO();
+    io.MousePos = ImVec2((float)e.x, (float)e.y);
+    io.MouseDown[iobutton] = true;
     //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
-    if(ImGui::GetIO().WantCaptureMouse) {
+    if(io.WantCaptureMouse) {
         //ofLogNotice("ImGui captured mouse press");
         return true;
       

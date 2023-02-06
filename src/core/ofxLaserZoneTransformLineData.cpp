@@ -48,6 +48,38 @@ void ZoneTransformLineData::init(ofRectangle& srcRect) {
     
 }
 
+bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {
+
+    bool changed = false;
+    if(points.size()!=nodes.size()) {
+        nodes.resize(points.size());
+        changed = true;
+    }
+    
+    for(size_t i = 0; i<points.size(); i++) {
+        BezierNode& node = nodes[i];
+        const glm::vec2& point = *points[i];
+        node.reset(point.x, point.y);
+        changed = true;
+    }
+    
+    isDirty|=changed;
+    return changed;
+    
+}
+bool ZoneTransformLineData :: moveHandle(int handleindex, glm::vec2 newpos) {
+    
+    BezierNode& node = nodes[handleindex];
+    if(node.getPosition()!=newpos) {
+        node.handles[0] = newpos;
+        isDirty = true; 
+        return true;
+    }
+    
+    return false;
+}
+
+
 void ZoneTransformLineData::resetNodes() {
     nodes.resize(3);
     nodes[0].reset(300,400);

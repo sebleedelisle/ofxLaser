@@ -1,12 +1,12 @@
 //
-//  ofxLaserZoneUIBase.cpp
+//  ofxLaserZoneUiBase.cpp
 //  example_HelloLaser
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.
 //
 //
 
-#include "ofxLaserZoneUIBase.h"
+#include "ofxLaserZoneUiBase.h"
 using namespace ofxLaser;
 
 

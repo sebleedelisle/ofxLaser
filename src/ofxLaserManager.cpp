@@ -1292,7 +1292,7 @@ void Manager::guiLaserOutputSettings() {
                 if(!lineZone) {
                     ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&laserZone->getZoneTransform());
                     if(ztq!=nullptr) {
-                        if(ztq->isSquare()) {
+                        if(ztq->isAxisAligned()) {
                             UI::startGhosted();
                         }
                         if(UI::Button("Reset to square")) {

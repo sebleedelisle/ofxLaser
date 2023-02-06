@@ -30,7 +30,12 @@ bool MoveablePoly :: update() {
     if(isDirty) {
         updateMeshAndPoly();
         
+        
+        
     }
+    
+    
+    
     bool wasDirty = isDirty;
     isDirty = false;
     return wasDirty;
@@ -201,7 +206,10 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
         // then check all the drag points
         for (int index = 0; index<handles.size() && !handlehit; index++) {
             
-            int i = clickorder[index];
+            int i = index;
+            
+            // if it's a quad then we need to get the points in the right order
+            if(isQuad()) i = clickorder[index];
             
             DragHandle& currentHandle = handles[i];
             
@@ -210,7 +218,7 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
                 startDraggingHandleByIndex(i);
                 
                 // if we're not distorted then also start dragging the relavent corners
-                if(isQuad() && poly.isSquare()) {
+                if(isQuad() && poly.isAxisAligned()) {
                     DragHandle& anchorHandle = handles[(i+2)%4];
                     DragHandle& dragHandle1 = handles[(i+1)%4];
                     DragHandle& dragHandle2 = handles[(i+3)%4];
@@ -316,13 +324,12 @@ void MoveablePoly :: mouseReleased(ofMouseEventArgs &e){
 
 
 bool MoveablePoly :: hitTest(glm::vec2& p)  {
-   
-    return poly.hitTest(p);
+    return hitTest(p.x, p.y);
+    
     
 }
 bool MoveablePoly :: hitTest(float x, float y)  {
-   
-    return poly.hitTest(x, y);
+    return poly.hitTestEdges(x, y, 4/scale);
 }
 
 void MoveablePoly :: updateMeshAndPoly() {
@@ -334,23 +341,6 @@ void MoveablePoly :: updateMeshAndPoly() {
     centre/=4;
     poly.setFromPoints(getPoints());
     poly.update();
-//    if(poly.size()!=handles.size()) {
-//        poly.resize(handles.size());
-//    }
-//    
-//    zoneMesh.clear();
-//    zoneMesh.addVertex(glm::vec3(handles[0],0));
-//    zoneMesh.addVertex(glm::vec3(handles[1],0));
-//    zoneMesh.addVertex(glm::vec3(handles[2],0));
-//    zoneMesh.addVertex(glm::vec3(handles[3],0));
-//    
-//    zonePoly.clear();
-//    zonePoly.addVertex(glm::vec3(handles[0],0));
-//    zonePoly.addVertex(glm::vec3(handles[1],0));
-//    zonePoly.addVertex(glm::vec3(handles[2],0));
-//    zonePoly.addVertex(glm::vec3(handles[3],0));
-//    zonePoly.setClosed(true);
-
 }
 
 bool MoveablePoly :: setFromPoints(vector<glm::vec2>* points) {
