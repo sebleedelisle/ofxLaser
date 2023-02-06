@@ -28,7 +28,7 @@ MoveablePoly :: MoveablePoly() {
 
 bool MoveablePoly :: update() {
     if(isDirty) {
-        updateMeshAndPoly();
+        updatePoly();
         
         
         
@@ -332,7 +332,7 @@ bool MoveablePoly :: hitTest(float x, float y)  {
     return poly.hitTestEdges(x, y, 4/scale);
 }
 
-void MoveablePoly :: updateMeshAndPoly() {
+void MoveablePoly :: updatePoly() {
     
     centre = glm::vec2(0,0);
     for(DragHandle& handle : handles) {
@@ -359,7 +359,7 @@ bool MoveablePoly :: setFromPoints(vector<glm::vec2>* points) {
     
     if(pointschanged) {
         updateHandleColours();
-        updateMeshAndPoly();
+        updatePoly();
         return true;
     } else {
         return false;

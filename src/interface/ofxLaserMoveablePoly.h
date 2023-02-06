@@ -35,7 +35,7 @@ class MoveablePoly {
     
     vector<glm::vec2*> getPoints(); 
   
-    virtual void updateMeshAndPoly();
+    virtual void updatePoly();
     virtual bool hitTest(glm::vec2& p) ;
     virtual bool hitTest(float x, float y) ;
     virtual bool hitTest(ofVec3f p) {

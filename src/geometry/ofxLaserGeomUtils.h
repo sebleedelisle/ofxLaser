@@ -90,21 +90,20 @@ class GeomUtils {
         
         int intersectcount = 0;
         
-        glm::vec2 raystart = polypoints[0] - glm::vec2(1,0);
+        // find a ray start point that is definitely outside the poly!
+        glm::vec2 raystart(boundleft-1, polypoints[0].y);
         
         for(int i = 0; i<polypoints.size(); i++) {
             const glm::vec2& p1 =  polypoints[i];
             const glm::vec2& p2 = polypoints[(i+1)%polypoints.size()];
-            if(lineIntersectsLine(p1, p2, raystart, p)) {
+            if(lineIntersectsLine(p1, p2, p, raystart)) {
                 intersectcount++;
             }
             
         }
         return (intersectcount%2)==1;
-            
-        
-    
     }
+    
     static bool pointInPoly(const glm::vec2 p1, const vector<glm::vec2>& polypoints) {
         if(polypoints.size()<3) return false;
         float boundleft = polypoints[0].x;
@@ -223,6 +222,17 @@ class GeomUtils {
         }
         return closestDistance;
             
+    }
+    
+    
+    static float isPerpendicularQuad(const vector<glm::vec2>& points) {
+        if(points.size()!=4) return false;
+
+        float epsilon = 0.001f;
+        
+        return
+            (fabs(glm::dot(points.at(0) - points.at(3), points.at(1)- points.at(0)))<epsilon) &&
+            (fabs(glm::dot(points.at(2) - points.at(1), points.at(3)- points.at(2)))<epsilon);
     }
 
 };

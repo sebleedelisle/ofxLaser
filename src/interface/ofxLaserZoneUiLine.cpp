@@ -83,7 +83,6 @@ void ZoneUiLine :: draw() {
     
     ofPopStyle();
     
-    
 }
 
 
@@ -125,4 +124,14 @@ bool ZoneUiLine :: updateFromData(ZoneTransformBase* zonetransform) {
  
     
     
+}
+void ZoneUiLine :: updatePoly() {
+    
+    centre = glm::vec2(0,0);
+    for(DragHandle& handle : handles) {
+        centre+=glm::vec2(handle);
+    }
+    centre/=4;
+//    poly.setFromPoints(getPoints());
+//    poly.update();
 }

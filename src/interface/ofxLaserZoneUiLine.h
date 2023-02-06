@@ -22,8 +22,7 @@ class ZoneUiLine : public ZoneUiBase {
     
     void draw() override;
     
-    
-    //bool setCorners(const vector<glm::vec2*>& points);
+    void updatePoly() override;
     
     
 };

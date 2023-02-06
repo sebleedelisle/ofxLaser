@@ -122,7 +122,7 @@ bool PolygonBase::hitTest(float x, float y) {
         return false;
     }
     
-    return GeomUtils::pointInPoly(glm::vec2(x,y), *this);
+    return GeomUtils::pointInPoly(glm::vec2(x,y), *this, boundsTopLeft.x);
     
 }
 
@@ -146,12 +146,15 @@ bool PolygonBase::hitTestEdges(float x, float y, float lineWidth) {
 
 
 bool PolygonBase::isAxisAligned() {
-    float epsilon = 0.001f;
-    return (fabs(at(0).x - at(3).x)<epsilon) &&
-        (fabs(at(0).y - at(1).y)<epsilon) &&
-        (fabs(at(1).x - at(2).x)<epsilon) &&
-        (fabs(at(3).y - at(2).y)<epsilon);
+//
+//    if(size()!=4) return false;
+//
+//    float epsilon = 0.001f;
+//
+//    return (fabs(glm::dot(at(0) - at(3), at(1)- at(0)))<epsilon) && (fabs(glm::dot(at(2) - at(1), at(3)- at(2)))<epsilon);
+//
     
+    return GeomUtils::isPerpendicularQuad(*this); 
 }
 
 

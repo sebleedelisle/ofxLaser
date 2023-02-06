@@ -92,16 +92,20 @@ void ZoneTransformQuadData :: resetToSquare() {
 }
 
 bool ZoneTransformQuadData :: isAxisAligned() {
-
-    vector<glm::vec2*> corners = getCornerPoints();
+    
+    vector<glm::vec2> points;
+    getPerimeterPoints(points);
+    return GeomUtils::isPerpendicularQuad(points);
     
 //
-//    ofLogNotice() << *corners[0] << " " << *corners[1] << " " << *corners[2] << " " << *corners[3];
-    
-    return (fabs(corners[0]->x - corners[2]->x)<0.01f) &&
-        (fabs(corners[0]->y - corners[1]->y)<0.01f) &&
-        (fabs(corners[1]->x - corners[3]->x)<0.01f) &&
-        (fabs(corners[2]->y - corners[3]->y)<0.01f);
+//    vector<glm::vec2*> corners = getCornerPoints();
+//
+//
+//
+//    return (fabs(corners[0]->x - corners[2]->x)<0.01f) &&
+//        (fabs(corners[0]->y - corners[1]->y)<0.01f) &&
+//        (fabs(corners[1]->x - corners[3]->x)<0.01f) &&
+//        (fabs(corners[2]->y - corners[3]->y)<0.01f);
 
     
 }
@@ -224,22 +228,19 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
         } else {
             // constrained version
             float minsize = 2;
-            // vectors 90º apart based around the point
-            glm::vec2 v1(minsize,0);
-            glm::vec2 v2(0,minsize);
-            v1 = glm::rotate(v1, float(PI/2*i));
-            v2 = glm::rotate(v2, float(PI/2*i));
             
             glm::vec2& pointbefore = *points[(i+3)%4];
+            glm::vec2& pointopposite = *points[(i+2)%4];
             glm::vec2& pointafter = *points[(i+1)%4];
+            
+            // vectors 90º apart based around the opposite point
+            glm::vec2 v1 = glm::normalize(pointopposite - pointbefore)* minsize;
+            glm::vec2 v2 = glm::normalize(pointopposite - pointafter) * minsize;
+            
+            // adding v1 and v2 stops the square getting too small
             glm::vec2 edgebefore = pointbefore+v1;
             glm::vec2 edgeafter = pointafter-v2;
 
-            // stop the quad getting too small!
-//            ofLogNotice() << glm::distance(pointbefore, newpos);
-//            if(glm::distance(pointbefore, newpos)<minsize) newpos = pointbefore-v2;
-//            if(glm::distance(pointafter, newpos)<minsize) newpos = pointafter-v1;
-//
             // stop the point from crossing inside out
             GeomUtils::clampToVector(newpos, pointbefore-v2, edgebefore-v2);
             GeomUtils::clampToVector(newpos, pointafter-v1, edgeafter-v1);
@@ -254,10 +255,6 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             pointbefore = GeomUtils::getClampedToVector(newpos, pointbefore, v1, true, true);
             pointafter = GeomUtils::getClampedToVector(newpos, pointafter, v2, true, true);
             
-//            if((pointbefore.x!=newpos.x) || (pointafter.y!=newpos.y)) {
-//                std::setprecision(10);
-//                std::cout << pointbefore.x << " " << newpos.x << " " << pointafter.y << " " << newpos.y<< endl ;
-//            }
             
             
         }
