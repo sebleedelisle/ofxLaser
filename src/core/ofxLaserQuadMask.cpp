@@ -10,7 +10,7 @@
 
 using namespace ofxLaser;
 
-QuadMask::QuadMask() : QuadGui() {
+QuadMask::QuadMask() {
     maskLevel.set("Reduction amount", 100, 0,100);
     //setColours(ofColor::red,ofColor::red,ofColor::red);
     maskLevel.addListener(this, &QuadMask::maskLevelChanged);
@@ -22,12 +22,17 @@ QuadMask::~QuadMask() {
     maskLevel.removeListener(this, &QuadMask::maskLevelChanged);
 }
 
+
+
+void QuadMask::maskLevelChanged(int&e) {
+    isDirty = true;
+}
+
+
 void QuadMask::serialize(ofJson&json) const {
-    ofJson& pointsjson = json["maskpoints"];
-    for(int i = 0; i<points.size(); i++) {
-        const glm::vec2& pos = points[i];
-        pointsjson.push_back({pos.x, pos.y});
-    }
+    
+    
+    PolygonBase::serialize(json);
     json["masklevel"] = (int)maskLevel;
     
     
@@ -37,30 +42,12 @@ void QuadMask::serialize(ofJson&json) const {
 
 bool QuadMask::deserialize(ofJson& jsonGroup) {
     
-    ofJson& pointsjson = jsonGroup["maskpoints"];
-    if(pointsjson.size()>=3) {
+    if(PolygonBase::deserialize(jsonGroup)) {
         
         maskLevel = jsonGroup["masklevel"];
-        
-        points.resize(pointsjson.size());
-    
-        for(int i = 0; i<points.size(); i++) {
-            ofJson& point = pointsjson[i];
-      
-            points[i].x = point[0];
-            points[i].y = point[1];
-            
-        }
-        isDirty = true;
         return true;
     } else {
         return false;
     }
-
     
-}
-
-
-void QuadMask::maskLevelChanged(int&e) {
-    isDirty = true;
 }

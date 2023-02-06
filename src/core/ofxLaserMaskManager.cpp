@@ -28,9 +28,7 @@ bool MaskManager  ::update() {
     
     dirty = false;
     for(int i = 0; i<quads.size(); i++) {
-        
-        dirty = quads[i]->checkDirty() | dirty;
-
+        dirty = quads[i]->update() | dirty;
     }
     
     bool wasDirty = dirty;
@@ -55,8 +53,8 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quads.push_back(quad);
     quad->maskLevel= level;
     
-    quad->set(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
-    quad->setName(ofToString(quads.size()));
+    quad->setRectangle(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
+    //quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
     
    // quad->setOffsetAndScale(offset, scale);
@@ -91,10 +89,10 @@ void MaskManager  ::init(int w, int h){
      quads.erase(it);
      delete mask;
      
-     for(int i = 0; i<(int)quads.size(); i++) {
-         quads[i]->displayLabel = ofToString(i+1);
-         
-     }
+//     for(int i = 0; i<(int)quads.size(); i++) {
+//         quads[i]->displayLabel = ofToString(i+1);
+//
+//     }
      
      return true;
     
@@ -112,28 +110,28 @@ void MaskManager  ::init(int w, int h){
 //    }
 //}
 
-
-vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){
-    
-    vector<ofPolyline*> polylines;
-    for(int i = 0 ;i<quads.size(); i++) {
-        QuadMask& quad = *quads[i];
-        ofPolyline* poly = ofxLaser::Factory :: getPolyline();
-        
-        
-        poly->addVertex(quad.handles[0].vec3());
-        poly->addVertex(quad.handles[1].vec3());
-        poly->addVertex(quad.handles[3].vec3());
-        poly->addVertex(quad.handles[2].vec3());
-        poly->setClosed(true);
-        polylines.push_back(poly);
-        
-        
-        
-    }
-    return polylines;
-    
-}
+//
+//vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){
+//    
+//    vector<ofPolyline*> polylines;
+//    for(int i = 0 ;i<quads.size(); i++) {
+////        QuadMask& quad = *quads[i];
+////        ofPolyline* poly = ofxLaser::Factory :: getPolyline();
+////
+////
+////        poly->addVertex(quad.handles[0].vec3());
+////        poly->addVertex(quad.handles[1].vec3());
+////        poly->addVertex(quad.handles[3].vec3());
+////        poly->addVertex(quad.handles[2].vec3());
+////        poly->setClosed(true);
+////        polylines.push_back(poly);
+//        
+//        
+//        
+//    }
+//    return polylines;
+//    
+//}
 
 void MaskManager::serialize(ofJson&json) {
     

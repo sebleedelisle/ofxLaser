@@ -7,22 +7,21 @@
 
 #pragma once 
 #include "ofxLaserQuadGui.h"
+#include "ofxLaserPolygonBase.h"
 
 namespace ofxLaser {
-class QuadMask : public QuadGui{
+class QuadMask : public PolygonBase {
     
     public :
     QuadMask();
-    ~QuadMask(); 
-    void serialize(ofJson&json) const;
-    bool deserialize(ofJson&jsonGroup);
-
-
+    ~QuadMask();
+    
+    virtual void serialize(ofJson&json) const override;
+    virtual bool deserialize(ofJson&jsonGroup) override;
+    
     void maskLevelChanged(int&e);
     ofParameter<int> maskLevel;
     
-    vector<glm::vec2> points;
-
     
 };
 }

@@ -29,6 +29,7 @@ MoveablePoly :: MoveablePoly() {
 bool MoveablePoly :: update() {
     if(isDirty) {
         updateMeshAndPoly();
+        
     }
     bool wasDirty = isDirty;
     isDirty = false;
@@ -43,8 +44,9 @@ void MoveablePoly :: draw() {
     ofSetColor(selected?fillColourSelected : fillColour);
     ofFill();
     
-    zoneMesh.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
-    zoneMesh.draw();
+    drawShape();
+//    zoneMesh.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
+//    zoneMesh.draw();
 
     ofNoFill();
     if(selected) {
@@ -52,8 +54,9 @@ void MoveablePoly :: draw() {
     }
     ofSetColor(selected ? strokeColourSelected : strokeColour);
     
-    zoneMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
-    zoneMesh.draw();
+    drawShape(); 
+//    zoneMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
+//    zoneMesh.draw();
     
     drawHandlesIfSelectedAndNotDisabled();
     //drawLabel();
@@ -207,18 +210,18 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
                 startDraggingHandleByIndex(i);
                 
                 // if we're not distorted then also start dragging the relavent corners
-//                if(isSquare()) {
-//                    DragHandle& anchorHandle = corners[(i+2)%4];
-//                    DragHandle& dragHandle1 = corners[(i+1)%4];
-//                    DragHandle& dragHandle2 = corners[(i+3)%4];
-//
-//                    dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
-//                    dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
-//
-//                    constrainedToSquare =true;
-//                } else {
-//                    constrainedToSquare =false;
-//                }
+                if(isQuad() && poly.isSquare()) {
+                    DragHandle& anchorHandle = handles[(i+2)%4];
+                    DragHandle& dragHandle1 = handles[(i+1)%4];
+                    DragHandle& dragHandle2 = handles[(i+3)%4];
+
+                    dragHandle1.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+                    dragHandle2.startDragProportional(mousePos, anchorHandle, currentHandle, true);
+
+                    constrainedToSquare =true;
+                } else {
+                    constrainedToSquare =false;
+                }
             }
         }
         
@@ -226,7 +229,7 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
             // if we haven't hit a handle but we have
             // hit the zone, start dragging the zone
             if(hitTest(mousePos)) {
-                
+                //ofLogNotice("start drag moveable poly");
                 DragHandle* gridHandle = &handles[0];
                 
                 for(size_t i= 0; i<handles.size(); i++) {
@@ -255,14 +258,14 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
             mainDragHandleIndex = -1;
             return false; // this way it doesn't scroll the page even if it's locked
         } else {
-            return isDisabled; //  don't propogate unless it's disabled
+            return isDisabled; //  don't propagate unless it's disabled
         }
     } else if(handlehit){
-        return false; // don't propogate;
+        return false; // don't propagate;
     } else {
         selected = false;
         mainDragHandleIndex = -1;
-        return true; // propogate
+        return true; // propagate
     }
 }
        
@@ -288,7 +291,8 @@ void MoveablePoly :: mouseDragged(ofMouseEventArgs &e){
     for(size_t i= 0; i<handles.size(); i++) {
         if(handles[i].updateDrag(mousePos)) dragCount++;
     }
-
+    
+    //if(dragCount>0) ofLogNotice("dragging! count : ") << dragCount;
     isDirty |= (dragCount>0);
 
 }
@@ -306,15 +310,19 @@ void MoveablePoly :: mouseReleased(ofMouseEventArgs &e){
     }
     // for global drag
     isDragging = false;
-    
+    //if(wasDragging) ofLogNotice("Stop dragging moveable poly");
     isDirty|=wasDragging;
 }
 
 
-bool MoveablePoly :: hitTest(ofPoint mousePoint)  {
+bool MoveablePoly :: hitTest(glm::vec2& p)  {
    
-    return zonePoly.inside(mousePoint);
+    return poly.hitTest(p);
     
+}
+bool MoveablePoly :: hitTest(float x, float y)  {
+   
+    return poly.hitTest(x, y);
 }
 
 void MoveablePoly :: updateMeshAndPoly() {
@@ -324,26 +332,80 @@ void MoveablePoly :: updateMeshAndPoly() {
         centre+=glm::vec2(handle);
     }
     centre/=4;
-    
-    zoneMesh.clear();
-    zoneMesh.addVertex(glm::vec3(handles[0],0));
-    zoneMesh.addVertex(glm::vec3(handles[1],0));
-    zoneMesh.addVertex(glm::vec3(handles[2],0));
-    zoneMesh.addVertex(glm::vec3(handles[3],0));
-    
-    zonePoly.clear();
-    zonePoly.addVertex(glm::vec3(handles[0],0));
-    zonePoly.addVertex(glm::vec3(handles[1],0));
-    zonePoly.addVertex(glm::vec3(handles[2],0));
-    zonePoly.addVertex(glm::vec3(handles[3],0));
-    zonePoly.setClosed(true);
+    poly.setFromPoints(getPoints());
+    poly.update();
+//    if(poly.size()!=handles.size()) {
+//        poly.resize(handles.size());
+//    }
+//    
+//    zoneMesh.clear();
+//    zoneMesh.addVertex(glm::vec3(handles[0],0));
+//    zoneMesh.addVertex(glm::vec3(handles[1],0));
+//    zoneMesh.addVertex(glm::vec3(handles[2],0));
+//    zoneMesh.addVertex(glm::vec3(handles[3],0));
+//    
+//    zonePoly.clear();
+//    zonePoly.addVertex(glm::vec3(handles[0],0));
+//    zonePoly.addVertex(glm::vec3(handles[1],0));
+//    zonePoly.addVertex(glm::vec3(handles[2],0));
+//    zonePoly.addVertex(glm::vec3(handles[3],0));
+//    zonePoly.setClosed(true);
 
 }
 
-bool MoveablePoly :: setFromPoints(vector<glm::vec2>& points) {
-    if(points.size()<2) return false;
+bool MoveablePoly :: setFromPoints(vector<glm::vec2>* points) {
+    if(points->size()<2) return false;
+    bool pointschanged = false;
     
-    return true; 
+    handles.resize(points->size());
+    for(size_t i = 0; i<points->size(); i++) {
+        glm::vec2 originalpoint = handles[i];
+
+        if(originalpoint!=points->at(i)) {
+            handles[i].set(points->at(i));
+            pointschanged = true;
+        }
+    }
+    
+    if(pointschanged) {
+        updateHandleColours();
+        updateMeshAndPoly();
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+bool MoveablePoly :: setFromPoints(vector<glm::vec2>& pointsref) {
+    vector<glm::vec2>* points = &pointsref;
+    return setFromPoints(points);
     
 }
 
+
+vector<glm::vec2*> MoveablePoly :: getPoints() {
+    
+    vector<glm::vec2*> returnpoints;
+    for(DragHandle& handle : handles) {
+        returnpoints.push_back(&handle);
+        
+    }
+    return returnpoints; 
+}
+
+void MoveablePoly :: drawShape() {
+    
+    ofBeginShape();
+    for(DragHandle& handle : handles) {
+        ofVertex(handle);
+    }
+    
+    ofEndShape(true);
+    
+    
+    
+}
+bool MoveablePoly :: isQuad() {
+    return handles.size()==4;
+    
+}

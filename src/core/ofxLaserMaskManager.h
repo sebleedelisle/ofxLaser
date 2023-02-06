@@ -37,7 +37,7 @@ public:
 	
     
     
-	vector<ofPolyline*> getLaserMaskShapes();
+	//vector<ofPolyline*> getLaserMaskShapes();
     QuadMask& addQuadMask(int level=100);
     
     vector<QuadMask*> quads;

@@ -1159,9 +1159,11 @@ void Manager::guiLaserOutputSettings() {
             ImVec2 p = ImGui::GetCursorScreenPos();
             draw_list->AddLine(ImVec2(p.x - 9999, p.y), ImVec2(p.x + 9999, p.y),  ImGui::GetColorU32(ImGuiCol_Border));
             ImGui::Dummy(ImVec2(0.0f, 2.0f));
-            for(QuadMask* mask : maskManager.quads){
-                string label = "##"+mask->displayLabel;
-                ImGui::Text("MASK %s", mask->displayLabel.c_str());
+            
+            for(size_t i = 0; i<maskManager.quads.size(); i++){
+                QuadMask* mask = maskManager.quads[i];
+                string label = "##"+ofToString(i+1);
+                ImGui::Text("MASK %lu", i+1);
                 ImGui::SameLine();
                 ImGui::PushItemWidth(40);
                 int level = mask->maskLevel;
@@ -1171,7 +1173,7 @@ void Manager::guiLaserOutputSettings() {
                 
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
-                string buttonlabel = "DELETE "+mask->displayLabel+"##mask";
+                string buttonlabel = "DELETE "+ofToString(i+1)+"##mask";
                 if(ImGui::Button(buttonlabel.c_str())) {
                     maskManager.deleteQuadMask(mask);
                     

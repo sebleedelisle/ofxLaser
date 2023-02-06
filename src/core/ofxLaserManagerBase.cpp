@@ -427,24 +427,25 @@ void ManagerBase:: update(){
 
 void ManagerBase::send(){
     
+    // for when we reinstate canvas masks, we'll need to rework this
     if(laserMasks) {
-        vector<ofPolyline*> polylines = laserMask.getLaserMaskShapes();
-        for(ofPolyline* poly : polylines) {
-            ofPoint centre= poly->getCentroid2D();
-            poly->translate(-centre);
-            poly->scale(1.01,1.01);
-            poly->translate(centre);
-        }
-        for(size_t i= 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
-            setTargetZone((int)i);
-            for(ofPolyline* poly:polylines) {
-                
-                drawPoly(*poly, ofColor::cyan);
-            }
-            
-        }
-        
-        for(ofPolyline* poly : polylines)  ofxLaser::Factory::releasePolyline(poly);
+//        vector<ofPolyline*> polylines = laserMask.getLaserMaskShapes();
+//        for(ofPolyline* poly : polylines) {
+//            ofPoint centre= poly->getCentroid2D();
+//            poly->translate(-centre);
+//            poly->scale(1.01,1.01);
+//            poly->translate(centre);
+//        }
+//        for(size_t i= 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
+//            setTargetZone((int)i);
+//            for(ofPolyline* poly:polylines) {
+//
+//                drawPoly(*poly, ofColor::cyan);
+//            }
+//
+//        }
+//
+//        for(ofPolyline* poly : polylines)  ofxLaser::Factory::releasePolyline(poly);
     }
     
     

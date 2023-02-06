@@ -930,7 +930,7 @@ void UI::extraLargeItemEnd() {
 bool UI::updateMouse(ofMouseEventArgs &e) {
     ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
     //ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
-    return false; // propogate events
+    return false; // propagate events
 }
 bool UI::mousePressed(ofMouseEventArgs &e) {
   //  ofLogNotice("UI::mousePressed");

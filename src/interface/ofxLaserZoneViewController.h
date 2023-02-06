@@ -26,7 +26,7 @@ class LaserZoneViewController : public ScrollableView {
     ZoneUiBase* getZoneInterfaceForOutputZone(OutputZone* outputZone);
     OutputZone*  getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
     bool createZoneUiForOutputZone(OutputZone* outputZone);
-    void updateSelected(ZoneUiBase* zoneUi); 
+    void updateSelectedZoneUi(ZoneUiBase* zoneUi); 
     
     bool update() override;
     
@@ -71,6 +71,6 @@ class LaserZoneViewController : public ScrollableView {
     vector<ZoneUiBase*> zoneUisSorted;
     
     vector<MoveablePoly*> maskUis;
-
+ 
 };
 }

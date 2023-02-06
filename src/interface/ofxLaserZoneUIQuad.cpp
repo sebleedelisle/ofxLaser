@@ -37,46 +37,60 @@ bool ZoneUiQuad ::  updateDataFromUI(ZoneTransformBase* zonetransform) {
 }
 
 
+//
+//bool ZoneUiQuad :: isSquare() {
+//    
+//    vector<DragHandle>& corners = handles;
+//    
+//    return (fabs(handles[0].x - handles[3].x)<0.01f) &&
+//        (fabs(handles[0].y - handles[1].y)<0.01f) &&
+//        (fabs(handles[1].x - handles[2].x)<0.01f) &&
+//        (fabs(handles[3].y - handles[2].y)<0.01f);
+//    
+//
+//   // return (corners[0].x == corners[2].x) && (corners[0].y == corners[1].y) && (corners[1].x == corners[3].x) && (corners[2].y == corners[3].y);
+//    
+//}
 
-bool ZoneUiQuad :: isSquare() {
-    
-    vector<DragHandle>& corners = handles;
-    
-    return (fabs(handles[0].x - handles[3].x)<0.01f) &&
-        (fabs(handles[0].y - handles[1].y)<0.01f) &&
-        (fabs(handles[1].x - handles[2].x)<0.01f) &&
-        (fabs(handles[3].y - handles[2].y)<0.01f);
-    
 
-   // return (corners[0].x == corners[2].x) && (corners[0].y == corners[1].y) && (corners[1].x == corners[3].x) && (corners[2].y == corners[3].y);
+bool ZoneUiQuad :: setCorners(const vector<glm::vec2*>& newpoints) {
     
-}
-
-
-bool ZoneUiQuad :: setCorners(const vector<glm::vec2*>& points) {
     
-    if(points.size()<4) return false;
-    bool pointschanged = false;
+    if(newpoints.size()<4) return false;
+    vector<glm::vec2> temppoints;
     
     for(int i = 0; i<4; i++) {
-        
+
         int handleindex = i;
         if(i>1) handleindex = 3 - (i%2); // convert to clockwise points
-        glm::vec2 originalpoint = handles[handleindex];
-
-        if(originalpoint!=*points[i]) {
-            handles[handleindex].set(*points[i]);
-            pointschanged = true;
-        }
+        temppoints.push_back(*newpoints[handleindex]);
+        
     }
+    return setFromPoints(temppoints); 
     
-    if(pointschanged) {
-        updateHandleColours();
-        updateMeshAndPoly();
-        return true;
-    } else {
-        return false;
-    }
+//
+//    if(points.size()<4) return false;
+//    bool pointschanged = false;
+//
+//    for(int i = 0; i<4; i++) {
+//
+//        int handleindex = i;
+//        if(i>1) handleindex = 3 - (i%2); // convert to clockwise points
+//        glm::vec2 originalpoint = handles[handleindex];
+//
+//        if(originalpoint!=*points[i]) {
+//            handles[handleindex].set(*points[i]);
+//            pointschanged = true;
+//        }
+//    }
+//
+//    if(pointschanged) {
+//        updateHandleColours();
+//        updateMeshAndPoly();
+//        return true;
+//    } else {
+//        return false;
+//    }
     
 }
 

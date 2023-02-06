@@ -16,16 +16,14 @@ class ZoneUiQuad : public ZoneUiBase {
     public :
     ZoneUiQuad(); 
     
-    
     bool updateDataFromUI(ZoneTransformBase* zonetransform) override;
     bool updateFromData(ZoneTransformBase* zonetransform) override;
     
     bool setCorners(const vector<glm::vec2*>& points);
-    //vector<DragHandle*> getCornersClockwise();
-    bool isSquare();
+    //bool isSquare();
     
   
-    bool constrainedToSquare = false;
+    //bool constrainedToSquare = false;
 
     
 };

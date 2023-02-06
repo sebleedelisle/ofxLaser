@@ -41,6 +41,20 @@ bool LaserZoneViewController :: update() {
 
         wasUpdated|=zoneupdated;
     }
+    vector<QuadMask*>& quadMasks = laser->maskManager.quads;
+    for(int i = 0; i< maskUis.size(); i++) {
+        MoveablePoly* maskUi = maskUis[i];
+        // make sure the handles are resized
+        maskUi->setScale(scale);
+        bool maskupdated =maskUi->update();
+        
+        if(maskupdated) { //  && (quadMasks.size()>i)) {
+            QuadMask* mask = quadMasks[i];
+            mask->setFromPoints(maskUi->getPoints());
+        }
+
+        wasUpdated|=maskupdated;
+    }
     
     
     // 1. IF zones have changed THEN update the zone interfaces
@@ -162,19 +176,6 @@ void LaserZoneViewController :: drawImGui() {
 
 void LaserZoneViewController :: draw() {
     
-    
-    // OK so how do i approach this?
-    // Each output zone can be one of two (three?) different types
-    // each one needs a different type of interface
-    // each one needs to retain information about itself so
-    //  it can respond to mouse movement and drag etc
-    // each one needs to share an index with the outputzone objects
-    //  so we need to keep them in sync
-    // So... when do we sync? I've started doing it here but maybe that's silly?
-    // Don't we need to keep them updated elsewhere?
-    // Or do I not keep them in sync and somehow associate visual elements with the output zones? Via an ID or something?
-    // Maybe two vectors, with each type of interface? Let's try that
-    
     if(laser!=nullptr) {
         ofPushStyle();
         ofNoFill();
@@ -205,7 +206,6 @@ void LaserZoneViewController :: draw() {
         gridMesh.draw();
         ofPopStyle();
        
-        // TODO probably need to draw these backwards yeah?
         for(ZoneUiBase* zoneUi: zoneUisSorted) {
             zoneUi->draw();
             // NASTY HACK AHEAD...
@@ -217,13 +217,15 @@ void LaserZoneViewController :: draw() {
             ofPopMatrix();
         }
         
-        drawLaserPath();
        
-        // debug mouse position circle
-//        ofSetColor(ofColor::red);
-//        ofNoFill();
-//        ofDrawCircle(screenPosToLocalPos(glm::vec2(ofGetMouseX(), ofGetMouseY())), 10);
-//
+        
+        
+        for(MoveablePoly* maskUi: maskUis) {
+            maskUi->draw();
+        }
+        
+        drawLaserPath();
+
         ofPopMatrix();
         ofPopView();
         
@@ -266,15 +268,6 @@ bool LaserZoneViewController :: updateZones()  {
         else ++it;
     }
 
-    
-    
-    
-    
-    
-    
-    
-    
-        
     return changed;
     
 }
@@ -290,17 +283,17 @@ bool LaserZoneViewController :: updateMasks() {
     for(size_t i = 0; i<quadMasks.size(); i++) {
         QuadMask* mask = quadMasks[i];
         
-        
         // if we don't have an interface object for the mask then make one
         if(maskUis.size()<=i) {
             MoveablePoly* newmask = new MoveablePoly();
-            newmask->set(mask->points);
+            newmask->setFromPoints(dynamic_cast<vector<glm::vec2>*>(mask));
+            newmask->setHue(0);
             maskUis.push_back(newmask);
             
             changed = true;
         } else {
             // TODO - compare and set changed!
-            maskUis[i]->set(mask->points);
+            maskUis[i]->setFromPoints(mask);
         }
     }
 
@@ -325,13 +318,12 @@ void LaserZoneViewController :: setGrid(bool snaptogrid, int gridsize){
         snapToGrid = snaptogrid;
         gridSize = gridsize;
         for(ZoneUiBase* zoneUi : zoneUis) {
-            
             zoneUi->setGrid(snaptogrid, gridsize);
         }
             
-    //    for(OutputZone* zone : outputZones) {
-    //        zone->setGrid(snaptogrid, gridsize);
-    //    }
+
+        // should we set grid on masks?
+        
         gridMesh.clear();
         int spacing = gridSize;
         while(spacing<5) spacing *=2;
@@ -382,7 +374,7 @@ void LaserZoneViewController :: drawLaserPath() {
 }
 
 
-void LaserZoneViewController :: updateSelected(ZoneUiBase* zoneUi) {
+void LaserZoneViewController :: updateSelectedZoneUi(ZoneUiBase* zoneUi) {
     
     // deselect all but the one we want
     for(ZoneUiBase* zoneUi2: zoneUis) {
@@ -399,7 +391,10 @@ void LaserZoneViewController :: updateSelected(ZoneUiBase* zoneUi) {
 void LaserZoneViewController :: mouseMoved(ofMouseEventArgs &e){
     ScrollableView :: mouseMoved(e);
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-    
+    for(MoveablePoly* maskUi: maskUis) {
+        maskUi->mouseMoved(mouseEvent);
+        
+    }
     for(ZoneUiBase* zoneUi: zoneUis) {
         zoneUi->mouseMoved(mouseEvent);
     }
@@ -408,46 +403,59 @@ void LaserZoneViewController :: mouseMoved(ofMouseEventArgs &e){
 
 bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
 
-    bool propogate = true;
+    bool propagate = true;
 
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     // also check for middle button because if ALT is pressed it's reported
     // as button 2 lol 
     if((e.button == OF_MOUSE_BUTTON_LEFT)||(e.button == OF_MOUSE_BUTTON_MIDDLE)){
         
-        for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-        //for(int i = 0; i<zoneUisSorted.size(); i++) {
-            ZoneUiBase* zoneUi = zoneUisSorted[i];
+        for(size_t i = 0; i<maskUis.size(); i++) {
+            MoveablePoly* maskUi = maskUis[i];
             
-            propogate &= zoneUi->mousePressed(mouseEvent);
+            propagate &= maskUi->mousePressed(mouseEvent);
             
-            if(zoneUi->getSelected() ) {
-                updateSelected(zoneUi);
+            if(maskUi->getSelected() ) {
+                // deselect all but the one we want
+                for(MoveablePoly* maskUi2: maskUis) {
+                    if(maskUi!=maskUi2) maskUi2->setSelected(false);
+                }
                 break;
             }
+            
+        }
+        if(propagate) {
+            for(int i = zoneUisSorted.size()-1; i>=0; i--) {
+                ZoneUiBase* zoneUi = zoneUisSorted[i];
+                
+                propagate &= zoneUi->mousePressed(mouseEvent);
+                
+                if(zoneUi->getSelected() ) {
+                    updateSelectedZoneUi(zoneUi);
+                    break;
+                }
+            }
+        }
+        // if no zones hit then check if the view should drag
+        if(propagate) {
+            propagate & ScrollableView::mousePressed(e);
         }
         
-        // if no zones hit then check if the view should drag
-        if(propogate) {
-            propogate & ScrollableView::mousePressed(e);
-
-        }
     } else if(e.button == OF_MOUSE_BUTTON_RIGHT) {
         
         for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-        //for(int i = 0; i<zoneUisSorted.size(); i++) {
             ZoneUiBase* zoneUi = zoneUisSorted[i];
             
-            if(zoneUi->hitTest(mouseEvent)) {
+            if(zoneUi->hitTest(mouseEvent.x, mouseEvent.y)) {
                 zoneUi->setSelected(true);
                 zoneUi->showContextMenu = true; 
-                updateSelected(zoneUi);
+                updateSelectedZoneUi(zoneUi);
                 break;
             }
         }
         
     }
-    return propogate;
+    return propagate;
 }
 
 
@@ -457,6 +465,11 @@ void LaserZoneViewController :: mouseDragged(ofMouseEventArgs &e){
     
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
+    
+    for(MoveablePoly* maskUi: maskUis) {
+        maskUi->mouseDragged(mouseEvent);
+        
+    }
     for(ZoneUiBase* zoneUi: zoneUis) {
         zoneUi->mouseDragged(mouseEvent);
         
@@ -471,6 +484,10 @@ void LaserZoneViewController :: mouseReleased(ofMouseEventArgs &e) {
     
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
+    for(MoveablePoly* maskUi: maskUis) {
+        maskUi->mouseReleased(mouseEvent);
+        
+    }
     for(ZoneUiBase* zoneUi: zoneUis) {
         zoneUi->mouseReleased(mouseEvent);
         

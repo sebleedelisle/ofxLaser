@@ -52,10 +52,10 @@ bool BitmapMaskManager ::update() {
             
             ofBeginShape();
             
-            ofVertex(quad.handles[0]);
-            ofVertex(quad.handles[1]);
-            ofVertex(quad.handles[3]);
-            ofVertex(quad.handles[2]);
+            ofVertex(quad[0]);
+            ofVertex(quad[1]);
+            ofVertex(quad[2]);
+            ofVertex(quad[3]);
             ofEndShape();
         }
         

@@ -1141,7 +1141,7 @@ void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofP
                 
                 // check if it's in any of the masks!
                 for(QuadMask* mask : maskManager.quads){
-                    if(mask->hitTest(p)) {
+                    if(mask->hitTest(p.x, p.y)) {
                         p.multiplyColour(ofMap(mask->maskLevel,100,0,0,1));
                     }
                 }

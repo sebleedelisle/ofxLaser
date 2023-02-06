@@ -10,6 +10,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserDragHandle.h"
+#include "ofxLaserPolygonBase.h"
 
 namespace ofxLaser {
 
@@ -29,11 +30,17 @@ class MoveablePoly {
     
     void setScale(float _scale) ;
     
-    bool setFromPoints(vector<glm::vec2>& points); 
+    bool setFromPoints(vector<glm::vec2>& points);
+    bool setFromPoints(vector<glm::vec2>* points);
+    
+    vector<glm::vec2*> getPoints(); 
   
     virtual void updateMeshAndPoly();
-    virtual bool hitTest(ofPoint mousePoint) ;
-    
+    virtual bool hitTest(glm::vec2& p) ;
+    virtual bool hitTest(float x, float y) ;
+    virtual bool hitTest(ofVec3f p) {
+        return hitTest(p.x, p.y);
+    }
     virtual void startDraggingHandleByIndex(int index); 
 
     void setHue(int hue) ;
@@ -43,6 +50,8 @@ class MoveablePoly {
     bool setSelected(bool v);
     bool getDisabled();
     bool setDisabled(bool v);
+    
+    bool isQuad();
     
     bool setGrid(bool snapstate, int gridsize);
     
@@ -66,13 +75,16 @@ class MoveablePoly {
     vector<DragHandle> handles; // all handles for all points
     
     protected :
+    
+    void drawShape(); 
+    
     glm::vec2 centre;
     
-    ofMesh zoneMesh;
-    ofPolyline zonePoly;
-  
+    PolygonBase poly;
+//    ofMesh zoneMesh;
+//    ofPolyline zonePoly;
+//  
     glm::vec2 mousePos;
-    
     
     bool selected;
 
@@ -86,6 +98,8 @@ class MoveablePoly {
     
     bool isDragging = false;
     bool isDisabled = false;
+    
+    bool constrainedToSquare = false; 
     
     
 };

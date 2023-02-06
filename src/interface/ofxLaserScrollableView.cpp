@@ -74,17 +74,17 @@ bool ScrollableView::mousePressed(ofMouseEventArgs &e){
         } else {
             
             startDrag(e);
-            return false; // don't propogate
+            return false; // don't propagate
         }
     }
-    return true; // propogate
+    return true; // propagate
 };
 
 bool ScrollableView::mouseDoubleClicked(ofMouseEventArgs &e){
 
     // hit test already done
     autoFitToOutput();
-    return false; // don't propogate
+    return false; // don't propagate
     
 }
 
