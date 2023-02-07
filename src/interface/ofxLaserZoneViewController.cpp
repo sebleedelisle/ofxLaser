@@ -221,7 +221,7 @@ void LaserZoneViewController :: drawImGui() {
                     // otherwise remove this and also its alt zone if
                     // it has one
                     laser->removeZone(outputZone);
-                    
+                    laser->removeAltZone(outputZone->getZoneIndex());
                     // LATER - TO DO - if this is a laser zone, delete it
                     // if it's a canvas zone, keep it
                     
@@ -268,31 +268,34 @@ void LaserZoneViewController :: drawImGui() {
             string buttonlabel = "DELETE MASK";
            
             if(UI::DangerButton(buttonlabel.c_str())) {
-                ImGui::OpenPopup("DELETE MASK");
+                
+                laser->maskManager.deleteQuadMask(laser->maskManager.quads[i]);
+                deselectAllButThis(nullptr);
+                ImGui::CloseCurrentPopup();
+                //ImGui::OpenPopup("DELETE MASK");
                 
             }
-            if(ImGui::BeginPopupModal("DELETE MASK")) {
-                
-                ImGui::Text("Are you sure you want to delete this mask? All of its settings will be deleted.\n\n");
-                ImGui::Separator();
-                
-                UI::dangerColourStart();
-                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
-                    laser->maskManager.deleteQuadMask(laser->maskManager.quads[i]);
-                    deselectAllButThis(nullptr);
-                    
-                }
-                
-                UI::dangerColourEnd();
-                
-                ImGui::SetItemDefaultFocus();
-                ImGui::SameLine();
-                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
+//            if(ImGui::BeginPopupModal("DELETE MASK")) {
+//
+//                ImGui::Text("Are you sure you want to delete this mask? All of its settings will be deleted.\n\n");
+//                ImGui::Separator();
+//
+//                UI::dangerColourStart();
+//                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+//                    ImGui::CloseCurrentPopup();
+//
+//
+//                }
+//
+//                UI::dangerColourEnd();
+//
+//                ImGui::SetItemDefaultFocus();
+//                ImGui::SameLine();
+//                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+//                    ImGui::CloseCurrentPopup();
+//                }
+//                ImGui::EndPopup();
+//            }
             
             ImGui::EndPopup();
         }
@@ -458,7 +461,7 @@ void LaserZoneViewController :: setGrid(bool snaptogrid, int gridsize){
         while(spacing<5) spacing *=2;
         for(int x = 0; x<=800; x+=spacing) {
             for(int y = 0; y<=800; y+=spacing) {
-                gridMesh.addVertex(ofPoint(x,y));
+                gridMesh.addVertex(ofPoint(MIN(800,x+0.5),MIN(800,y+0.5)));
             }
         }
         gridMesh.setMode(OF_PRIMITIVE_POINTS);

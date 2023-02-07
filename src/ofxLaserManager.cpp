@@ -978,13 +978,13 @@ void Manager::drawLaserGui() {
                 
                 string laserNumberString = ofToString(i+1);
                
-                if(i==getSelectedLaserIndex()) UI::startGhosted();
+                if(i==getSelectedLaserIndex()) UI::secondaryColourStart();
                 // LASER BUTTONS
                 if(ImGui::Button(laserNumberString.c_str(), ImVec2(20,0))) {
                     setSelectedLaserIndex(i);
                 }
                 ImGui::SameLine();
-                UI::stopGhosted();
+                UI::secondaryColourEnd();
                 
             }
         }

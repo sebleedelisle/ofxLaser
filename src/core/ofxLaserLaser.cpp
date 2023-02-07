@@ -237,8 +237,19 @@ void Laser::addAltZone(InputZone* zone) {
     addZone(zone, true);
 }
 
-
-
+void Laser::addAltZone(int zoneIndex) {
+    InputZone* inputZone = getLaserInputZoneForZoneIndex(zoneIndex);
+    if(inputZone!=nullptr) addAltZone(inputZone);
+}
+InputZone* Laser::getLaserInputZoneForZoneIndex(int zoneIndex) {
+    for(OutputZone* outputZone : outputZones) {
+        if(outputZone->zone.getIndex() == zoneIndex) {
+            return &outputZone->zone;
+        }
+    }
+    return nullptr;
+}
+    
 bool Laser :: hasZone(InputZone* zone){
     
     for(OutputZone* laserZone : outputZones) {

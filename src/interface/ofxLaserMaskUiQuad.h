@@ -34,11 +34,20 @@ class MaskUiQuad : public MoveablePoly {
     bool updateFromData(QuadMask* mask){
         bool changed = false;
         
+       
+        
         if(maskLevel!=mask->maskLevel){
             maskLevel = mask->maskLevel;
+            
             changed = true;
         }
         changed |= setFromPoints(dynamic_cast<vector<glm::vec2>*>(mask));
+        
+        if(maskLevel==100) {
+            setHue(0);
+        } else {
+            setHue(30);
+        }
         
         return changed;
         

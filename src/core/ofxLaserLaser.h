@@ -99,6 +99,7 @@ class Laser {
     bool hasAnyAltZones();
     
     OutputZone* getLaserZoneForZone(InputZone* zone);
+    InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
     OutputZone* getLaserAltZoneForZone(InputZone* zone);
     OutputZone* getLaserAltZoneForZone(int zoneIndex);
 
