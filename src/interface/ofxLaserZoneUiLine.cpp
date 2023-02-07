@@ -1,6 +1,6 @@
 //
 //  ofxLaserZoneUiLine.cpp
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 06/02/2023.
 //
@@ -12,33 +12,33 @@ using namespace ofxLaser;
 
 
 ZoneUiLine :: ZoneUiLine() {
-    //handles.resize(4);
+    
 }
 
 
-bool ZoneUiLine ::  updateDataFromUI(ZoneTransformBase* zonetransform) {
+bool ZoneUiLine ::  updateDataFromUI(OutputZone* outputZone) {
+    
+    bool changed = ZoneUiBase :: updateDataFromUI(outputZone);
+    
 
-    ZoneTransformLineData* zoneLine = dynamic_cast<ZoneTransformLineData*>(zonetransform);
+    ZoneTransformLineData* zoneLine = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());
     if(zoneLine==nullptr) {
         // major error occurred
         ofLogError("ZoneUiLine passed wrong kind of zone transform base!");
-        return false;
+        return changed;
     } else {
         
-        
-        
-        
-        // TODO UPDATE DATA!!!
         if(isDragging) {
             zoneLine->setFromPoints(getPoints());
+            changed = true;
         } else if(mainDragHandleIndex>=0) {
             zoneLine->moveHandle(mainDragHandleIndex, *getMainDragHandle());
+            changed = true;
         }
         
-        return true;
+        return changed;
         
     }
-
 
 }
 
@@ -70,16 +70,19 @@ void ZoneUiLine :: draw() {
             ofVertex(handles[i]);
         }
         ofEndShape();
-    } else {
-        ofBeginShape();
-        for(glm::vec2& p : poly) {
-            ofVertex(p);
-        }
-        ofEndShape(true); 
-        
     }
+    // outline of shape
+    ofSetLineWidth(1);
+    ofBeginShape();
+    for(glm::vec2& p : poly) {
+        ofVertex(p);
+    }
+    ofEndShape(true);
+    
+    
     
     drawHandlesIfSelectedAndNotDisabled();
+    //drawLabel();
     
     ofPopStyle();
     
@@ -87,14 +90,13 @@ void ZoneUiLine :: draw() {
 
 
 
-bool ZoneUiLine :: updateFromData(ZoneTransformBase* zonetransform) {
+bool ZoneUiLine :: updateFromData(OutputZone* outputZone) {
     
-    ZoneTransformLineData* zonelinedata = dynamic_cast<ZoneTransformLineData*>(zonetransform);
+    bool changed = ZoneUiBase::updateFromData(outputZone);
+    
+    ZoneTransformLineData* zonelinedata = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());
     
     if(zonelinedata!=nullptr) {
-        
-        setDisabled(zonelinedata->locked);
-        // TODO update handles from data! 
         
         vector<BezierNode>& nodes = zonelinedata->getNodes();
         
@@ -115,10 +117,12 @@ bool ZoneUiLine :: updateFromData(ZoneTransformBase* zonetransform) {
         poly.setFromPoints(points);
         poly.update();
 
+        updateHandleColours();
+        
         return true;
         
     } else {
-        return false;
+        return changed;
     }
     
  
@@ -128,10 +132,11 @@ bool ZoneUiLine :: updateFromData(ZoneTransformBase* zonetransform) {
 void ZoneUiLine :: updatePoly() {
     
     centre = glm::vec2(0,0);
-    for(DragHandle& handle : handles) {
+    for(int i = 0; i<handles.size(); i++) {
+//    for(DragHandle& handle : handles) {
+        DragHandle& handle = handles[i];
         centre+=glm::vec2(handle);
     }
-    centre/=4;
-//    poly.setFromPoints(getPoints());
-//    poly.update();
+    centre/=handles.size();
+
 }

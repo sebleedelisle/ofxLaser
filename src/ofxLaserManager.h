@@ -59,6 +59,7 @@ class Manager : public ManagerBase {
     int getLaserIndex(Laser* laser); 
     int getSelectedLaserIndex();
     void setSelectedLaserIndex(int i);
+    Laser* getSelectedLaser(); 
     
     LaserZoneViewController*  getCurrentLaserViewController();
     LaserZoneViewController*  getLaserViewControllerByIndex(int index);

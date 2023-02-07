@@ -1,6 +1,6 @@
 //
 //  ofxLaserGeomUtils.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 05/02/2023.
 //
@@ -114,9 +114,9 @@ class GeomUtils {
         
     }
 
-    static bool clampToVector(glm::vec2& pointToClamp, const glm::vec2& p1, const glm::vec2&p2){
+    static bool clampToVector(glm::vec2& pointToClamp, const glm::vec2& p1, const glm::vec2&p2, bool clampinside, bool clampoutside){
  
-        glm::vec2 clamped = getClampedToVector(pointToClamp, p1, p2, true, false);
+        glm::vec2 clamped = getClampedToVector(pointToClamp, p1, p2, clampinside, clampoutside);
         if(clamped!=pointToClamp) {
             pointToClamp = clamped;
             return true;
@@ -137,7 +137,7 @@ class GeomUtils {
         
         // if it's too short then we don't have a valid vector to project onto
         if(glm::length(v1)<0.01) {
-            ofLogNotice() << v1 << " " << v2;
+            //ofLogNotice() << v1 << " " << v2;
             return p1;
         }
         

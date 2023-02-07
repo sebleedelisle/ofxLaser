@@ -235,7 +235,6 @@ void Laser::addZone(InputZone* inputzone, bool isAlternate) {
 
 void Laser::addAltZone(InputZone* zone) {
     addZone(zone, true);
-     
 }
 
 
@@ -272,16 +271,24 @@ bool Laser :: hasAnyAltZones() {
 }
 
 
-bool Laser :: removeZone(InputZone* zone){
+bool Laser :: removeZone(InputZone* inputZone){
 
-    OutputZone* laserZone = getLaserZoneForZone(zone);
-    if(laserZone==nullptr) return false;
+    OutputZone* outputZone = getLaserZoneForZone(inputZone);
     
-    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), laserZone);
+    
+    return removeZone(outputZone);
+    
+}
+
+bool Laser :: removeZone(OutputZone* outputZone){
+
+    if(outputZone==nullptr) return false;
+    
+    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
 
     outputZones.erase(it);
-    delete laserZone;
-    removeAltZone(zone);
+    delete outputZone;
+    
     
     saveSettings();
     
@@ -291,20 +298,39 @@ bool Laser :: removeZone(InputZone* zone){
 
 
 bool Laser :: removeAltZone(InputZone* zone){
+    return removeAltZone(getLaserAltZoneForZone(zone));
 
-    OutputZone* laserZone = getLaserAltZoneForZone(zone);
-    if(laserZone==nullptr) return false;
-    
-    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), laserZone);
+}
 
-    outputZones.erase(it);
-    delete laserZone;
+bool Laser :: removeAltZone(OutputZone* outputZone){
+
+    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
+    if(it!=outputZones.end()) {
+        outputZones.erase(it);
+        delete outputZone;
     
-    saveSettings();
+        saveSettings();
     
-    return true;
+        return true;
+    } else {
+        return false;
+    }
     
 }
+
+bool Laser :: removeAltZone(int zoneIndex){
+
+    for(OutputZone* outputZone : outputZones) {
+        if(outputZone->getIsAlternate() && outputZone->getZoneIndex()==zoneIndex) {
+            return removeAltZone(outputZone);
+        }
+        
+    }
+    return false;
+    
+}
+
+
 
 OutputZone* Laser::getLaserZoneForZone(InputZone* zone) {
     for(OutputZone* laserZone : outputZones) {

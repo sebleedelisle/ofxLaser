@@ -1,6 +1,6 @@
 //
 //  ofxLaserMoveablePoly.cpp
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 03/02/2023.
 //
@@ -22,6 +22,7 @@ MoveablePoly :: MoveablePoly() {
     strokeColourSelected = ofColor::fromHex(0x0E87E7);
     handleColour = ofColor::fromHex(0x0E87E7);
     handleColourOver = ofColor :: fromHex(0xffffff);
+    label = "";
     
 }
 
@@ -29,9 +30,7 @@ MoveablePoly :: MoveablePoly() {
 bool MoveablePoly :: update() {
     if(isDirty) {
         updatePoly();
-        
-        
-        
+         
     }
     
     
@@ -95,9 +94,9 @@ void MoveablePoly :: drawLabel() {
     ofPushStyle();
    
     ofSetColor(strokeColour);
-    string label; //  = getLabel();
+
     //if(getLocked()) label = label + " (locked)";
-    ofDrawBitmapString(label, centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     
     ofPopStyle();
     

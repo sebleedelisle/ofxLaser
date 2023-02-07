@@ -72,7 +72,7 @@ bool ZoneTransformLineData :: moveHandle(int handleindex, glm::vec2 newpos) {
     BezierNode& node = nodes[handleindex];
     if(node.getPosition()!=newpos) {
         node.handles[0] = newpos;
-        isDirty = true; 
+        isDirty = true;
         return true;
     }
     
@@ -81,12 +81,12 @@ bool ZoneTransformLineData :: moveHandle(int handleindex, glm::vec2 newpos) {
 
 
 void ZoneTransformLineData::resetNodes() {
-    nodes.resize(3);
+    nodes.resize(2);
     nodes[0].reset(300,400);
     nodes[0].start = true;
-    nodes[1].reset(400,400);
-    nodes[2].reset(500,400);
-    nodes[2].end = true;
+    //nodes[1].reset(400,400);
+    nodes[1].reset(500,400);
+    nodes[1].end = true;
     
 }
 

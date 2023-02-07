@@ -97,17 +97,6 @@ bool ZoneTransformQuadData :: isAxisAligned() {
     getPerimeterPoints(points);
     return GeomUtils::isPerpendicularQuad(points);
     
-//
-//    vector<glm::vec2*> corners = getCornerPoints();
-//
-//
-//
-//    return (fabs(corners[0]->x - corners[2]->x)<0.01f) &&
-//        (fabs(corners[0]->y - corners[1]->y)<0.01f) &&
-//        (fabs(corners[1]->x - corners[3]->x)<0.01f) &&
-//        (fabs(corners[2]->y - corners[3]->y)<0.01f);
-
-    
 }
 
 ofPoint ZoneTransformQuadData::getWarpedPoint(const ofPoint& p){
@@ -201,24 +190,24 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
         // clamp between points to avoid concave shapes
         if(!lockSquare) {
             // clamp to vector between neighbours
-            GeomUtils::clampToVector(newpos, *points[(i+3)%4], *points[(i+1)%4]);
+            GeomUtils::clampToVector(newpos, *points[(i+3)%4], *points[(i+1)%4], true, false);
             
             glm::vec2& pointbefore = *points[(i+3)%4];
             glm::vec2& pointopposite = *points[(i+2)%4];
+            glm::vec2& pointafter = *points[(i+1)%4];
+            
             // clamp between edges to avoid over-extension
             // this mess of code calculates a vector between the adjacent two points,
             // but then rotates it so that the moving point cannot get quite colinear
             float minangle = 2.0f;
             glm::vec2 beforeedge =  pointbefore - pointopposite;
             beforeedge = glm::rotate(beforeedge, float(minangle*PI/180.0f));
-            GeomUtils::clampToVector(newpos,  pointopposite+beforeedge, pointopposite);
+            GeomUtils::clampToVector(newpos,  pointopposite+beforeedge, pointopposite, true, false);
             
-            glm::vec2& pointafter = *points[(i+1)%4];
-            //glm::vec2& pointafter2 = *points[(i+2)%4];
-            
+
             glm::vec2 afteredge = pointafter - pointopposite;
             afteredge = glm::rotate(afteredge, float(-minangle*PI/180.0f)); // rotate it one degree
-            GeomUtils::clampToVector(newpos,  pointafter, pointafter+afteredge);
+            GeomUtils::clampToVector(newpos,  pointafter, pointafter+afteredge, true, false);
             
             
             
@@ -242,8 +231,8 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             glm::vec2 edgeafter = pointafter-v2;
 
             // stop the point from crossing inside out
-            GeomUtils::clampToVector(newpos, pointbefore-v2, edgebefore-v2);
-            GeomUtils::clampToVector(newpos, pointafter-v1, edgeafter-v1);
+            GeomUtils::clampToVector(newpos, pointbefore-v2, edgebefore-v2, true, false);
+            GeomUtils::clampToVector(newpos, pointafter-v1, edgeafter-v1, true, false);
             
             
             *points[i] = newpos;

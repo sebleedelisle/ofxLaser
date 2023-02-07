@@ -1,6 +1,6 @@
 //
 //  LaserZoneView.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 13/01/2023.
 //
@@ -12,8 +12,8 @@
 #include "ofxLaserLaser.h"
 #include "ofxLaserScrollableView.h"
 #include "ofxLaserZoneUiQuad.h"
-#include "ofxLaserZoneUiBase.h"
 #include "ofxLaserZoneUiLine.h"
+#include "ofxLaserMaskUiQuad.h"
 
 namespace ofxLaser {
 class LaserZoneViewController : public ScrollableView {
@@ -25,9 +25,12 @@ class LaserZoneViewController : public ScrollableView {
     ~LaserZoneViewController();
     
     ZoneUiBase* getZoneInterfaceForOutputZone(OutputZone* outputZone);
-    OutputZone*  getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
+    OutputZone* getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
+    
     bool createZoneUiForOutputZone(OutputZone* outputZone);
-    void updateSelectedZoneUi(ZoneUiBase* zoneUi); 
+    void deselectAllButThis(MoveablePoly* uielement);
+    
+    bool doesAltZoneExistForZoneIndex(int zoneIndex); 
     
     bool update() override;
     
@@ -71,7 +74,8 @@ class LaserZoneViewController : public ScrollableView {
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;
     
-    vector<MoveablePoly*> maskUis;
+    vector<MaskUiQuad*> maskUis;
+    vector<MaskUiQuad*> maskUisSorted;
  
 };
 }

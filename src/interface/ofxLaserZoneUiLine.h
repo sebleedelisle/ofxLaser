@@ -1,6 +1,6 @@
 //
 //  ofxLaserZoneUiLine.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 06/02/2023.
 //
@@ -17,8 +17,8 @@ class ZoneUiLine : public ZoneUiBase {
     public :
     ZoneUiLine();
     
-    bool updateDataFromUI(ZoneTransformBase* zonetransform) override;
-    bool updateFromData(ZoneTransformBase* zonetransform) override;
+    bool updateDataFromUI(OutputZone* outputZone) override;
+    bool updateFromData(OutputZone* outputZone) override;
     
     void draw() override;
     

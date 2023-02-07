@@ -1,6 +1,6 @@
 //
 //  ofxLaserMoveablePoly.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 03/02/2023.
 //
@@ -51,6 +51,14 @@ class MoveablePoly {
     bool getDisabled();
     bool setDisabled(bool v);
     
+    void setDirty(){
+        isDirty = true;
+    }
+    
+    string& getLabel() {
+        return label;
+    }
+    
     bool isQuad();
     
     bool setGrid(bool snapstate, int gridsize);
@@ -86,6 +94,8 @@ class MoveablePoly {
     
     bool selected;
 
+    string label; 
+    
     // only used to change the size of handles, all
     // other scale / offset stuff should happen higher up
     float scale = 1;

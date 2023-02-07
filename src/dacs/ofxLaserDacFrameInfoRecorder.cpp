@@ -1,6 +1,6 @@
 //
 //  ofxLaserDacFrameInfoRecorder.cpp
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 20/02/2022.
 //

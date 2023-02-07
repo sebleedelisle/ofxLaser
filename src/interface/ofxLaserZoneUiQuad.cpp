@@ -15,13 +15,14 @@ ZoneUiQuad :: ZoneUiQuad() {
 }
 
 
-bool ZoneUiQuad ::  updateDataFromUI(ZoneTransformBase* zonetransform) {
-
-    ZoneTransformQuadData* zoneQuad = dynamic_cast<ZoneTransformQuadData*>(zonetransform);
+bool ZoneUiQuad ::  updateDataFromUI(OutputZone* outputZone) {
+    bool changed = ZoneUiBase::updateDataFromUI(outputZone);
+    
+    ZoneTransformQuadData* zoneQuad = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
     if(zoneQuad==nullptr) {
         // major error occurred
         ofLogError("ZoneUiQuad passed wrong kind of zone transform base!");
-        return false;
+        return changed;
     } else {
         if(isDragging) {
             zoneQuad->setDstCorners(handles[0], handles[1], handles[3], handles[2]);
@@ -51,16 +52,16 @@ bool ZoneUiQuad :: setCorners(const vector<glm::vec2*>& newpoints) {
 }
 
 
-
-
-bool ZoneUiQuad :: updateFromData(ZoneTransformBase* zonetransform) {
+bool ZoneUiQuad :: updateFromData(OutputZone* outputZone) {
     
-    ZoneTransformQuadData* data = dynamic_cast<ZoneTransformQuadData*>(zonetransform);
+    bool changed = ZoneUiBase::updateFromData(outputZone);
     
-    if(data!=nullptr) {
-        setDisabled(data->locked);
-        bool changed = setCorners(data->getCornerPoints());
-        //ofLogNotice("cross section") << GeomUtils::getMinimumCrossSectionWidth(poly);
+    ZoneTransformQuadData* zonetransform = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
+    
+    if(zonetransform!=nullptr) {
+        
+        changed |= setCorners(zonetransform->getCornerPoints());
+        
         return changed;
         
     } else {

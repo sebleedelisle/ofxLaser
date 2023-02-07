@@ -16,8 +16,8 @@ class ZoneUiQuad : public ZoneUiBase {
     public :
     ZoneUiQuad(); 
     
-    bool updateDataFromUI(ZoneTransformBase* zonetransform) override;
-    bool updateFromData(ZoneTransformBase* zonetransform) override;
+    bool updateDataFromUI(OutputZone* outputZone) override;
+    bool updateFromData(OutputZone* outputZone) override;
     
     bool setCorners(const vector<glm::vec2*>& points);
     

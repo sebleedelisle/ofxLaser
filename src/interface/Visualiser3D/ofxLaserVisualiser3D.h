@@ -1,6 +1,5 @@
 //
 //  ofxLaserVisualiser3D.h
-//  example_LaserEffects
 //
 //  Created by Seb Lee-Delisle on 10/06/2022.
 //

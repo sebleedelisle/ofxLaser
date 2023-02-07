@@ -1,6 +1,6 @@
 //
 //  Object3D.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 10/06/2022.
 //

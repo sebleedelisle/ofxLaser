@@ -74,6 +74,8 @@ class Laser {
     void addZone(InputZone* zone,  bool isAlternate = false);
     bool hasZone(InputZone* zone);
     bool removeZone(InputZone* zone);
+    bool removeZone(OutputZone* zone);
+    
     bool muteZone(int zonenum);
     bool unMuteZone(int zonenum);
     bool soloZone(int zonenum);
@@ -86,10 +88,14 @@ class Laser {
    
     // Alternative zones
     void addAltZone(InputZone* zone);
+    void addAltZone(int zoneIndex);
     bool hasAltZone(InputZone* zone);
     bool hasAltZone(int zoneIndex);
 
     bool removeAltZone(InputZone* zone);
+    bool removeAltZone(OutputZone* zone);
+    bool removeAltZone(int zoneIndex);
+    
     bool hasAnyAltZones();
     
     OutputZone* getLaserZoneForZone(InputZone* zone);

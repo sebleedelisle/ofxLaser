@@ -1,6 +1,6 @@
 //
 //  Header.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 11/05/2022.
 //

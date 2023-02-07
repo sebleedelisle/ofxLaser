@@ -1,6 +1,6 @@
 //
 //  ofxLaserZoneUiBase.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.
 //
@@ -10,7 +10,9 @@
 
 #include "ofMain.h"
 #include "ofxLaserMoveablePoly.h"
-#include "ofxLaserZoneTransformBase.h"
+//#include "ofxLaserZoneTransformBase.h"
+#include "ofxLaserOutputZone.h"
+
 class ZoneTransformBase;
 
 namespace ofxLaser {
@@ -19,22 +21,20 @@ class ZoneUiBase : public MoveablePoly {
   
     public :
     
-    ZoneUiBase();
+    ZoneUiBase() = default;
     virtual ~ZoneUiBase() = default; 
 
-    string getLabel(); 
-    
-    virtual bool updateDataFromUI(ZoneTransformBase* zonetransform) = 0;
-    virtual bool updateFromData(ZoneTransformBase* zonetransform) = 0;
+    virtual bool updateDataFromUI(OutputZone* outputZone);
+    virtual bool updateFromData(OutputZone* outputZone);
 
     bool showContextMenu = false; // bit of a hack to show the right click menu
 
     int inputZoneIndex = -1;
     bool inputZoneAlt = false;
+    bool muted = false; 
 
     protected :
 
-   // bool locked;
     
    
 };

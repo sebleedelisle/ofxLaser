@@ -28,7 +28,6 @@ bool LaserZoneViewController :: update() {
     
     bool wasUpdated = false;
     
-    
     for(ZoneUiBase* zoneUi : zoneUis) {
         // make sure the handles are resized
         zoneUi->setScale(scale); 
@@ -37,7 +36,7 @@ bool LaserZoneViewController :: update() {
         if(zoneupdated) {
             OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
             if(outputZone!=nullptr) {
-                zoneUi->updateDataFromUI(&outputZone->getZoneTransform());
+                zoneUi->updateDataFromUI(outputZone);
                
             } else {
                 ofLogError("missing zone ui for output zone! ");
@@ -46,16 +45,17 @@ bool LaserZoneViewController :: update() {
 
         wasUpdated|=zoneupdated;
     }
+    
     vector<QuadMask*>& quadMasks = laser->maskManager.quads;
     for(int i = 0; i< maskUis.size(); i++) {
-        MoveablePoly* maskUi = maskUis[i];
+        MaskUiQuad* maskUi = maskUis[i];
         // make sure the handles are resized
         maskUi->setScale(scale);
         bool maskupdated =maskUi->update();
         
         if(maskupdated) { //  && (quadMasks.size()>i)) {
             QuadMask* mask = quadMasks[i];
-            mask->setFromPoints(maskUi->getPoints());
+            maskUi->updateDataFromUI(mask); 
         }
 
         wasUpdated|=maskupdated;
@@ -88,10 +88,19 @@ void LaserZoneViewController :: drawImGui() {
         if(ImGui::BeginPopup("ZONE SETTINGS")) {
             
             //OutputZone* laserZone : zoneUi->
-            ImGui::Text("CONTEXT MENU!");
-            bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
+            ImGui::Text("ZONE SETTINGS");
             
-            // TODO better mechanism for changing zone type!
+//            if(ImGui::Checkbox("mute", &zoneUi->muted)) {
+//                outputZone->muted = zoneUi->muted;
+//            }
+//
+            
+            if(UI::Button("MUTE", false, zoneUi->muted)) {
+                zoneUi->muted = !zoneUi->muted;
+                outputZone->muted = zoneUi->muted;
+            }
+            
+            bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
             
             if(quadZone) UI::secondaryColourStart();
             if(ImGui::Button("QUAD")) {
@@ -176,13 +185,121 @@ void LaserZoneViewController :: drawImGui() {
                 }
                 
             }
+            
+            if(!zoneUi->inputZoneAlt) {
+                if(doesAltZoneExistForZoneIndex(zoneUi->inputZoneIndex)) {
+                    if(UI::DangerButton("DELETE ALT ZONE")) {
+                        laser->removeAltZone(zoneUi->inputZoneIndex);
+                    }
+                    
+                } else {
+                    if(UI::Button("ADD ALT ZONE")) {
+                        laser->addAltZone(zoneUi->inputZoneIndex);
+                    }
+                }
+                
+                
+            }
+            
+            
+            string buttonlabel = "DELETE ZONE";
+           
+            if(UI::DangerButton(buttonlabel.c_str())) {
+                ImGui::OpenPopup("DELETE ZONE");
+                
+            }
+            if(ImGui::BeginPopupModal("DELETE ZONE")) {
+                
+                ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
+                ImGui::Separator();
+                
+                UI::dangerColourStart();
+                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                    
+                    // if this is an alt zone, just remove this
+                    // otherwise remove this and also its alt zone if
+                    // it has one
+                    laser->removeZone(outputZone);
+                    
+                    // LATER - TO DO - if this is a laser zone, delete it
+                    // if it's a canvas zone, keep it
+                    
+                    deselectAllButThis(nullptr);
+                    
+                }
+                
+                UI::dangerColourEnd();
+                
+                ImGui::SetItemDefaultFocus();
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
             ImGui::EndPopup();
         }
         ImGui::PopID();
 
     }
     
-    
+    for(size_t i = 0; i< maskUis.size(); i++) {
+        
+        MaskUiQuad* maskUi = maskUis[i];
+        
+        ImGui::PushID(ofToString(maskUi).c_str()); // maybe UID of memory address? Bit dumb
+        if(maskUi->showContextMenu) {
+            maskUi->showContextMenu = false;
+            ImGui::OpenPopup("MASK SETTINGS");
+        }
+        
+        if(ImGui::BeginPopup("MASK SETTINGS")) {
+            ImGui::Text("MASK SETTINGS");
+            int level = maskUi->maskLevel;
+            ImGui::PushItemWidth(60);
+            if (ImGui::DragInt("",&level,1,0,100,"%d%%")) {
+                maskUi->maskLevel = level;
+                maskUi->setDirty();
+            }
+            ImGui::PopItemWidth();
+            
+            string buttonlabel = "DELETE MASK";
+           
+            if(UI::DangerButton(buttonlabel.c_str())) {
+                ImGui::OpenPopup("DELETE MASK");
+                
+            }
+            if(ImGui::BeginPopupModal("DELETE MASK")) {
+                
+                ImGui::Text("Are you sure you want to delete this mask? All of its settings will be deleted.\n\n");
+                ImGui::Separator();
+                
+                UI::dangerColourStart();
+                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                    laser->maskManager.deleteQuadMask(laser->maskManager.quads[i]);
+                    deselectAllButThis(nullptr);
+                    
+                }
+                
+                UI::dangerColourEnd();
+                
+                ImGui::SetItemDefaultFocus();
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+    }
+            
+  
 }
 
 void LaserZoneViewController :: draw() {
@@ -231,7 +348,7 @@ void LaserZoneViewController :: draw() {
        
         
         
-        for(MoveablePoly* maskUi: maskUis) {
+        for(MaskUiQuad* maskUi: maskUisSorted) {
             maskUi->draw();
         }
         
@@ -261,7 +378,7 @@ bool LaserZoneViewController :: updateZones()  {
             // if we do have one let's make sure it's current
             // NOTE This only works because we call it after we have
             // update the data from the UI components
-            zoneUi->updateFromData(&outputZone->getZoneTransform());
+            zoneUi->updateFromData(outputZone);
         }
     }
 
@@ -296,15 +413,15 @@ bool LaserZoneViewController :: updateMasks() {
         
         // if we don't have an interface object for the mask then make one
         if(maskUis.size()<=i) {
-            MoveablePoly* newmask = new MoveablePoly();
-            newmask->setFromPoints(dynamic_cast<vector<glm::vec2>*>(mask));
-            newmask->setHue(0);
+            MaskUiQuad* newmask = new MaskUiQuad();
+            newmask->updateFromData(mask);
+
             maskUis.push_back(newmask);
             
             changed = true;
         } else {
             // TODO - compare and set changed!
-            maskUis[i]->setFromPoints(mask);
+            changed|=maskUis[i]->updateFromData(mask);
         }
     }
 
@@ -316,6 +433,7 @@ bool LaserZoneViewController :: updateMasks() {
         changed = true;
     }
     maskUis.resize(quadMasks.size());
+    if(changed ) maskUisSorted = maskUis; // bit nasty should probably do this better, but this should work for now
     
     return changed;
     
@@ -385,16 +503,28 @@ void LaserZoneViewController :: drawLaserPath() {
 }
 
 
-void LaserZoneViewController :: updateSelectedZoneUi(ZoneUiBase* zoneUi) {
+void LaserZoneViewController :: deselectAllButThis(MoveablePoly* uielement) {
     
     // deselect all but the one we want
-    for(ZoneUiBase* zoneUi2: zoneUis) {
-        if(zoneUi!=zoneUi2) zoneUi2->setSelected(false);
+    for(MoveablePoly* zoneUi: zoneUis) {
+        if(uielement!=zoneUi) zoneUi->setSelected(false);
     }
     
     // move selected to back of array
-    zoneUisSorted.erase(std::remove(zoneUisSorted.begin(), zoneUisSorted.end(), zoneUi), zoneUisSorted.end());
-    zoneUisSorted.push_back(zoneUi);
+    ZoneUiBase* zoneUi = dynamic_cast<ZoneUiBase*>(uielement);
+    if(zoneUi!=nullptr) {
+        zoneUisSorted.erase(std::remove(zoneUisSorted.begin(), zoneUisSorted.end(), zoneUi), zoneUisSorted.end());
+        zoneUisSorted.push_back(zoneUi);
+    }
+    
+    for(MoveablePoly* maskUi: maskUis) {
+        if(uielement!=maskUi) maskUi->setSelected(false);
+    }
+    MaskUiQuad* maskUi = dynamic_cast<MaskUiQuad*>(uielement);
+    if(maskUi!=nullptr) {
+        maskUisSorted.erase(std::remove(maskUisSorted.begin(), maskUisSorted.end(), maskUi), maskUisSorted.end());
+        maskUisSorted.push_back(maskUi);
+    }
     
 
 }
@@ -402,7 +532,7 @@ void LaserZoneViewController :: updateSelectedZoneUi(ZoneUiBase* zoneUi) {
 void LaserZoneViewController :: mouseMoved(ofMouseEventArgs &e){
     ScrollableView :: mouseMoved(e);
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-    for(MoveablePoly* maskUi: maskUis) {
+    for(MaskUiQuad* maskUi: maskUis) {
         maskUi->mouseMoved(mouseEvent);
         
     }
@@ -421,16 +551,15 @@ bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
     // as button 2 lol 
     if((e.button == OF_MOUSE_BUTTON_LEFT)||(e.button == OF_MOUSE_BUTTON_MIDDLE)){
         
-        for(size_t i = 0; i<maskUis.size(); i++) {
-            MoveablePoly* maskUi = maskUis[i];
+        for(int i = maskUisSorted.size()-1; i>=0; i--) {
+        
+            MaskUiQuad* maskUi = maskUisSorted[i];
             
             propagate &= maskUi->mousePressed(mouseEvent);
             
             if(maskUi->getSelected() ) {
                 // deselect all but the one we want
-                for(MoveablePoly* maskUi2: maskUis) {
-                    if(maskUi!=maskUi2) maskUi2->setSelected(false);
-                }
+                deselectAllButThis(maskUi);
                 break;
             }
             
@@ -442,7 +571,7 @@ bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
                 propagate &= zoneUi->mousePressed(mouseEvent);
                 
                 if(zoneUi->getSelected() ) {
-                    updateSelectedZoneUi(zoneUi);
+                    deselectAllButThis(zoneUi);
                     break;
                 }
             }
@@ -453,18 +582,33 @@ bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
         }
         
     } else if(e.button == OF_MOUSE_BUTTON_RIGHT) {
-        
-        for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-            ZoneUiBase* zoneUi = zoneUisSorted[i];
-            
-            if(zoneUi->hitTest(mouseEvent.x, mouseEvent.y)) {
-                zoneUi->setSelected(true);
-                zoneUi->showContextMenu = true; 
-                updateSelectedZoneUi(zoneUi);
+//
+        for(size_t i = 0; i<maskUis.size(); i++) {
+            MaskUiQuad* maskUi = maskUis[i];
+            if(maskUi->hitTest(mouseEvent.x, mouseEvent.y)) {
+                maskUi->setSelected(true);
+                maskUi->showContextMenu = true;
+                deselectAllButThis(maskUi);
+                propagate = false;
                 break;
             }
+
         }
         
+        if(propagate) {
+            
+            for(int i = zoneUisSorted.size()-1; i>=0; i--) {
+                ZoneUiBase* zoneUi = zoneUisSorted[i];
+                
+                if(zoneUi->hitTest(mouseEvent.x, mouseEvent.y)) {
+                    zoneUi->setSelected(true);
+                    zoneUi->showContextMenu = true;
+                    deselectAllButThis(zoneUi);
+                    propagate = false;
+                    break;
+                }
+            }
+        }
     }
     return propagate;
 }
@@ -477,7 +621,7 @@ void LaserZoneViewController :: mouseDragged(ofMouseEventArgs &e){
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
     
-    for(MoveablePoly* maskUi: maskUis) {
+    for(MaskUiQuad* maskUi: maskUis) {
         maskUi->mouseDragged(mouseEvent);
         
     }
@@ -495,7 +639,7 @@ void LaserZoneViewController :: mouseReleased(ofMouseEventArgs &e) {
     
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
-    for(MoveablePoly* maskUi: maskUis) {
+    for(MaskUiQuad* maskUi: maskUis) {
         maskUi->mouseReleased(mouseEvent);
         
     }
@@ -546,6 +690,18 @@ OutputZone* LaserZoneViewController ::  getOutputZoneForZoneUI(ZoneUiBase* zoneU
 }
 
 
+bool LaserZoneViewController :: doesAltZoneExistForZoneIndex(int zoneIndex) {
+  
+    for(ZoneUiBase* zoneUi :  zoneUis) {
+        if(zoneUi->inputZoneAlt && (zoneUi->inputZoneIndex == zoneIndex)) {
+            return true;
+        }
+    }
+    return false; 
+
+    
+    
+}
 
 bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone) {
     
@@ -554,18 +710,14 @@ bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone
         
         zoneUi = new ZoneUiQuad();
         
-        zoneUi->updateFromData(&outputZone->getZoneTransform());
-        zoneUi->inputZoneIndex = outputZone->getZoneIndex();
-        zoneUi->inputZoneAlt = outputZone->getIsAlternate();
+        zoneUi->updateFromData(outputZone);
         zoneUi->setGrid(snapToGrid, gridSize);
         
     } else if(outputZone->transformType == 1 )  {
         
         zoneUi = new ZoneUiLine();
         
-        zoneUi->updateFromData(&outputZone->getZoneTransform());
-        zoneUi->inputZoneIndex = outputZone->getZoneIndex();
-        zoneUi->inputZoneAlt = outputZone->getIsAlternate();
+        zoneUi->updateFromData(outputZone);
         zoneUi->setGrid(snapToGrid, gridSize);
         
     }

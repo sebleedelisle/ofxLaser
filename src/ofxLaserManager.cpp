@@ -428,6 +428,16 @@ void Manager::setSelectedLaserIndex(int i){
     }
 }
 
+Laser* Manager::getSelectedLaser() {
+    
+    if((selectedLaserIndex>=0) && (selectedLaserIndex<lasers.size())) {
+        return lasers.at(selectedLaserIndex);
+    } else {
+        return nullptr;
+    }
+}
+    
+
 
 int Manager::getLaserIndex(Laser* laser) {
     for(int i = 0; i<lasers.size(); i++) {
@@ -954,8 +964,12 @@ void Manager::drawLaserGui() {
     guiMenuBar();
     guiTopBar(menuBarHeight-1);
     guiLaserOverview();
-    guiLaserSettings(&getLaser(getSelectedLaserIndex()));
+    guiLaserSettings(getSelectedLaser());
     guiCustomParameters();
+    
+    Laser* currentLaser = getSelectedLaser();
+        
+        // TODO check null laser
     
     if(viewMode == OFXLASER_VIEW_OUTPUT){
         if(UI::startWindow("Laser select", ImVec2(10,60), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
@@ -994,13 +1008,15 @@ void Manager::drawLaserGui() {
             if(UI::Button(ICON_FK_PLUS, false, false)) {
                 
                 // MAKE NEW MASK panel
-                
+                currentLaser->maskManager.addQuadMask();
             }
             UI::addDelayedTooltip("Add new mask");
 
             if(UI::Button(ICON_FK_XING_SQUARE, false, false)) {
                 
                 // test pattern show
+                
+               
                 
             }
             UI::addDelayedTooltip("Show test pattern");

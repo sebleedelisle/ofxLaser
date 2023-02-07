@@ -1,6 +1,6 @@
 //
 //  ofxLaserPolygon.h
-//  example_HelloLaser
+//
 //
 //  Created by Seb Lee-Delisle on 04/02/2023.
 //
