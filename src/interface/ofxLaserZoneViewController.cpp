@@ -36,7 +36,7 @@ bool LaserZoneViewController :: update() {
         if(zoneupdated) {
             OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
             if(outputZone!=nullptr) {
-                zoneUi->updateDataFromUI(outputZone);
+                zoneUi->updateDataFromUi(outputZone);
                
             } else {
                 ofLogError("missing zone ui for output zone! ");

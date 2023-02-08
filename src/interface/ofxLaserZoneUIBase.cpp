@@ -20,7 +20,7 @@ using namespace ofxLaser;
 //}
 
 
-bool ZoneUiBase::updateDataFromUI(OutputZone* outputZone) {
+bool ZoneUiBase::updateDataFromUi(OutputZone* outputZone) {
     bool changed = false;
     if(muted!=outputZone->muted) {
         outputZone->muted = muted ;

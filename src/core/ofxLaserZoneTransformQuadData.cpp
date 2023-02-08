@@ -101,7 +101,7 @@ bool ZoneTransformQuadData :: isAxisAligned() {
 
 ofPoint ZoneTransformQuadData::getWarpedPoint(const ofPoint& p){
     
-    return quadWarper.getWarpedPoint(p, useHomography);
+    return quadWarper.getWarpedPoint(p, useHomography&&!isConvex);
     
 };
 
@@ -116,7 +116,7 @@ ofPoint ZoneTransformQuadData::getUnWarpedPoint(const ofPoint& p){
 ofxLaser::Point ZoneTransformQuadData::getWarpedPoint(const ofxLaser::Point& p){
     
  
-    return  quadWarper.getWarpedPoint(p, useHomography);
+    return  quadWarper.getWarpedPoint(p, useHomography&&!isConvex);
 
     
 };
@@ -312,11 +312,7 @@ void ZoneTransformQuadData::getPerimeterPoints(vector<glm::vec2>& points) {
 
 bool ZoneTransformQuadData :: isCorner(int i ) {
     return true;
-    
 }
-
-
-
 
 void ZoneTransformQuadData::updateQuads() {
 
@@ -332,7 +328,6 @@ void ZoneTransformQuadData::updateQuads() {
     
 }
 
-
 bool ZoneTransformQuadData::serialize(ofJson&json) {
     ofSerialize(json, transformParams);
     ofJson& handlesjson = json["handles"];
@@ -340,16 +335,15 @@ bool ZoneTransformQuadData::serialize(ofJson&json) {
         glm::vec2& pos = dstPoints[i];
         handlesjson.push_back({pos.x, pos.y});
     }
-    
     return true;
 }
+
 
 bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
     //ofLogNotice("ZoneTransform::deserialize()");
     // note that ofDeserialize looks for the json group
     // with the same name as the parameterGroup
     ofDeserialize(jsonGroup, transformParams);
-    
     
     ofJson& handlejson = jsonGroup["handles"];
     //cout << handlejson.dump(3) << endl;
@@ -359,7 +353,6 @@ bool ZoneTransformQuadData::deserialize(ofJson& jsonGroup) {
             dstPoints[i].x = point[0];
             dstPoints[i].y = point[1];
            
-            
         }
     }
     return true;
@@ -408,13 +401,6 @@ bool ZoneTransformQuadData :: getIsConvex() {
 }
 
 void ZoneTransformQuadData :: updateConvex() {
-//    bool convex = true;
-//    vector<glm::vec2> corners = getCorners();
-//    vector<glm::vec2> points;
-//    points.push_back(corners[0]);
-//    points.push_back(corners[1]);
-//    points.push_back(corners[3]);
-//    points.push_back(corners[2]);
 
     vector<glm::vec2*> pointsclockwise = getCornerPointsClockwise();
     isConvex =  GeomUtils::isConvex(pointsclockwise);

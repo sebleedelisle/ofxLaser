@@ -15,8 +15,8 @@ ZoneUiQuad :: ZoneUiQuad() {
 }
 
 
-bool ZoneUiQuad ::  updateDataFromUI(OutputZone* outputZone) {
-    bool changed = ZoneUiBase::updateDataFromUI(outputZone);
+bool ZoneUiQuad ::  updateDataFromUi(OutputZone* outputZone) {
+    bool changed = ZoneUiBase::updateDataFromUi(outputZone);
     
     ZoneTransformQuadData* zoneQuad = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
     if(zoneQuad==nullptr) {
@@ -61,6 +61,8 @@ bool ZoneUiQuad :: updateFromData(OutputZone* outputZone) {
     if(zonetransform!=nullptr) {
         
         changed |= setCorners(zonetransform->getCornerPoints());
+//        if(GeomUtils::isConvex(getPoints())) setHue(0);
+//        else (setHue(130));
         
         return changed;
         

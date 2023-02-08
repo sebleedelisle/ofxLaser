@@ -168,7 +168,7 @@ class GeomUtils {
     }
     
     static bool isConvex(const vector<glm::vec2*>& points){
-        bool convex = true;
+        bool concave = true;
         for(size_t i = 0; i<4; i++) {
         
             ofVec2f p1 = *points[i%4];
@@ -177,19 +177,19 @@ class GeomUtils {
             ofVec2f v1 = p2-p1;
             ofVec2f v2 = p3-p2;
             v2.rotate(90);
-            if(v2.dot(v1)>0) convex = false;
+            if(v2.dot(v1)>=0) concave = false;
         }
         
-        if(convex) {
+        if(concave) {
             for(int i =0; i<3; i++) {
                 for(int j = i+1; j<4; j++) {
                     if(points[i] == points[j]) {
-                        convex = false;
+                        concave = false;
                     }
                 }
             }
         }
-        return convex;
+        return !concave;
     }
         
     

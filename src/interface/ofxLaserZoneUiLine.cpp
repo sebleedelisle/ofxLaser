@@ -16,9 +16,9 @@ ZoneUiLine :: ZoneUiLine() {
 }
 
 
-bool ZoneUiLine ::  updateDataFromUI(OutputZone* outputZone) {
+bool ZoneUiLine ::  updateDataFromUi(OutputZone* outputZone) {
     
-    bool changed = ZoneUiBase :: updateDataFromUI(outputZone);
+    bool changed = ZoneUiBase :: updateDataFromUi(outputZone);
     
 
     ZoneTransformLineData* zoneLine = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());

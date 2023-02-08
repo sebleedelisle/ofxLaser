@@ -17,7 +17,7 @@ class ZoneUiLine : public ZoneUiBase {
     public :
     ZoneUiLine();
     
-    bool updateDataFromUI(OutputZone* outputZone) override;
+    bool updateDataFromUi(OutputZone* outputZone) override;
     bool updateFromData(OutputZone* outputZone) override;
     
     void draw() override;
