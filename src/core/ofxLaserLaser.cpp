@@ -241,7 +241,13 @@ void Laser::addZone(int zoneIndex, ofRectangle& sourceRect, bool isAlternate) {
 void Laser::addAltZone(int zoneIndex, ofRectangle& sourceRect){
     if(!hasAltZone(zoneIndex)) addZone(zoneIndex, sourceRect, true);
 }
-
+void Laser::addAltZone(int zoneIndex){
+    if(hasZone(zoneIndex)) {
+        OutputZone* zone =getLaserZoneForZoneIndex(zoneIndex);
+        ofRectangle rect =zone->getSourceRect();
+        addAltZone(zoneIndex,rect );
+    }
+}
 //InputZone* Laser::getLaserInputZoneForZoneIndex(int zoneIndex) {
 //    for(OutputZone* outputZone : outputZones) {
 //        if(outputZone->getZoneIndex() == zoneIndex) {

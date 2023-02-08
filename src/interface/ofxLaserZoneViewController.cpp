@@ -194,7 +194,7 @@ void LaserZoneViewController :: drawImGui() {
                     
                 } else {
                     if(UI::Button("ADD ALT ZONE")) {
-                        //laser->addAltZone(zoneUi->inputZoneIndex); ***** FIX
+                        laser->addAltZone(zoneUi->inputZoneIndex); 
                     }
                 }
             }
@@ -329,9 +329,9 @@ void LaserZoneViewController :: draw() {
         ofFill();
         ofDrawRectangle(0,0,800,800);
         if(gridSize*scale<5) {
-            ofSetColor(ofMap(gridSize*scale, 2, 5, 0,90, true));
+            ofSetColor(ofMap(gridSize*scale, 2, 5, 0,60, true));
         } else {
-            ofSetColor(ofMap(gridSize*scale, 5, 100, 90,200, true));
+            ofSetColor(ofMap(gridSize*scale, 5, 100, 60,180, true));
         }
         ofDisableAntiAliasing();
         gridMesh.draw();

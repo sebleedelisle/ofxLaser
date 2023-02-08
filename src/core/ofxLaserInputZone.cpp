@@ -10,11 +10,6 @@
 
 using namespace ofxLaser;
 
-//Zone::Zone() {
-//	ofLog(OF_LOG_NOTICE, "Zone() constructor") ;
-////	editable = false;
-//}
-
 InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
     setIndex(0);
 	set(x, y, w,h);
@@ -26,16 +21,12 @@ InputZone::InputZone(float x, float y, float w, float h) : QuadGui::QuadGui() {
         
     }
     lineWidth = 2;
-    
-   // setConstrained(rect);
 }
 
 void InputZone:: setIndex(int _index)  {
     index = _index;
     setName("Z"+ofToString(index+1));
     zoneLabel = "ZONE " + ofToString(index+1); 
-   
-    
 }
 
 InputZone::~InputZone() {
@@ -70,7 +61,6 @@ bool InputZone::update() {
 	}
 	return false;
 }
-
 
 
 bool InputZone::deserialize(ofJson&jsonGroup) {

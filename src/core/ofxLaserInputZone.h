@@ -17,7 +17,6 @@ namespace ofxLaser {
 		
 		public :
 		
-		//Zone();
 		InputZone(float x=0, float y=0, float w=800, float h=800);
 		~InputZone();
         

@@ -89,6 +89,7 @@ class Laser {
     // Alternative zones
    // void addAltZone(InputZone* zone);
     void addAltZone(int zoneIndex, ofRectangle& sourceRect);
+    void addAltZone(int zoneIndex);
    // bool hasAltZone(InputZone* zone);
     bool hasAltZone(int zoneIndex);
 

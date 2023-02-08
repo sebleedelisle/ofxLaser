@@ -46,7 +46,8 @@ class MoveablePoly {
     void resetColours(); 
     void setHue(int hue) ;
     void setBrightness(int brightness) ;
-   void updateHandleColours();
+    void setSaturationFloat(float saturationmultiplier) ;
+    void updateHandleColours();
     
     bool getSelected();
     bool setSelected(bool v);

@@ -201,6 +201,17 @@ void MoveablePoly::setBrightness(int brightint) {
     
 }
 
+void MoveablePoly::setSaturationFloat(float saturationmultiplier) {
+    fillColour.setSaturation(fillColour.getSaturation()*saturationmultiplier);
+    fillColourSelected.setSaturation(fillColourSelected.getSaturation()*saturationmultiplier);
+    strokeColour.setSaturation(strokeColour.getSaturation()*saturationmultiplier);
+    strokeColourSelected.setSaturation(strokeColourSelected.getSaturation()*saturationmultiplier);
+    handleColour.setSaturation(handleColour.getSaturation()*saturationmultiplier);
+    handleColourOver.setSaturation(handleColourOver.getSaturation()*saturationmultiplier);
+
+}
+
+
 void MoveablePoly ::updateHandleColours() {
     for(DragHandle& handle : handles) {
         handle.setColour(handleColour, handleColourOver);

@@ -41,8 +41,13 @@ bool ZoneUiBase::updateFromData(OutputZone* outputZone){
     
     if(inputZoneAlt != outputZone->getIsAlternate()) {
         inputZoneAlt = outputZone->getIsAlternate();
-        if(inputZoneAlt) setHue(85);
-        else setHue(140);
+        if(inputZoneAlt) {
+            setHue(85);
+            setSaturationFloat(0.8);
+            setBrightness(180);
+        } else {
+            setHue(140);
+        }
         updateHandleColours();
         changed = true;
     }
