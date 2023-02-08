@@ -53,7 +53,7 @@ QuadMask& MaskManager::addQuadMask(int level) {
     quads.push_back(quad);
     quad->maskLevel= level;
     
-    quad->setRectangle(((quads.size()-1)%16)*60,((quads.size()-1)/16)*60,50,50);
+    quad->setRectangle(((quads.size()-1)%16)*60+100,((quads.size()-1)/16)*60+100,50,50);
     //quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
     

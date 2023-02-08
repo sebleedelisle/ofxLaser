@@ -16,12 +16,8 @@ MoveablePoly :: MoveablePoly() {
     gridSize = 10;
     mousePos = {0,0};
     
-    fillColour  = ofColor::fromHex(0x001123, 128);
-    fillColourSelected = ofColor::fromHex(0x001123);
-    strokeColour  = ofColor::fromHex(0x0E87E7);
-    strokeColourSelected = ofColor::fromHex(0x0E87E7);
-    handleColour = ofColor::fromHex(0x0E87E7);
-    handleColourOver = ofColor :: fromHex(0xffffff);
+    resetColours();
+    
     label = "";
     
 }
@@ -170,7 +166,8 @@ bool MoveablePoly :: setGrid(bool snapstate, int gridsize) {
 }
 
 void MoveablePoly::setHue(int hue) {
-
+    
+    resetColours();
     fillColour.setHue(hue);
     fillColourSelected.setHue(hue);
     strokeColour.setHue(hue);
@@ -180,6 +177,28 @@ void MoveablePoly::setHue(int hue) {
     
     updateHandleColours();
   
+}
+
+void MoveablePoly::resetColours() {
+    
+    fillColour  = ofColor::fromHex(0x001123, 128);
+    fillColourSelected = ofColor::fromHex(0x001123);
+    strokeColour  = ofColor::fromHex(0x0E87E7);
+    strokeColourSelected = ofColor::fromHex(0x0E87E7);
+    handleColour = ofColor::fromHex(0x0E87E7);
+    handleColourOver = ofColor :: fromHex(0xffffff);
+    
+}
+void MoveablePoly::setBrightness(int brightint) {
+  
+    float brightness = (float)brightint/255.0f;
+    fillColour *=brightness;
+    fillColourSelected*=brightness;
+    strokeColour*=brightness;
+    strokeColourSelected*=brightness;
+    handleColour*=brightness;
+    handleColourOver*=brightness;
+    
 }
 
 void MoveablePoly ::updateHandleColours() {

@@ -184,7 +184,7 @@ bool ManagerBase :: deleteZone(InputZone* zone) {
     renumberZones();
     
     for(Laser* laser : lasers) {
-        laser->removeZone(zone);
+        laser->removeZone(zone->getIndex());
     }
     delete zone;
     
@@ -208,8 +208,8 @@ void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
         ofLog(OF_LOG_ERROR, "Invalid zone number passed to addZoneToLaser(...)");
         return;
     }
-    
-    lasers[lasernum]->addZone(zones[zonenum]);
+    InputZone* zone = zones[zonenum];
+    lasers[lasernum]->addZone(zone->getIndex(), zone->getRect());
 }
 
 int ManagerBase::createDefaultZone() {
@@ -364,11 +364,6 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 
 void ManagerBase:: update(){
     
-    // etherdreams aren't always available at start time, so here's a hacky delay to check
-//    if((!dacsInitialised) && (ofGetElapsedTimef()>3)) {
-//        dacAssigner.updateDacList();
-//        dacsInitialised = true;
-//    }
     dacAssigner.update();
     
     if(doArmAll) armAllLasers();
@@ -376,8 +371,6 @@ void ManagerBase:: update(){
     
     for(ofxLaser::Laser* laser : lasers) {
         laser->emptyDac.dontCalculate = dontCalculateDisconnected.get();
-        
-        
     }
     
     
@@ -394,9 +387,12 @@ void ManagerBase:: update(){
     // it means that the zone has changed.
     bool updateZoneRects = false;
     for(size_t i= 0; i<zones.size(); i++) {
-        //zones[i]->setEditable(showInputPreview && (!lockInputZones) && showInputZones);
-        updateZoneRects = zones[i]->update() | updateZoneRects  ; // is this dangerous? Optimisation may stop the function being called.
+        if(zones[i]->update()) {
+           updateZoneRects  = true;
+        }
     }
+    
+    
     
     bool dacDisconnected = false;
     // update all the lasers which clears the points,
@@ -455,19 +451,26 @@ void ManagerBase::send(){
     // and send them. When the zones get the shape, they transform them
     // into local zone space.
     
+    vector<deque<Shape*>> shapesByZoneIndex;
+    shapesByZoneIndex.resize(zones.size());
     if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
         for(size_t j = 0; j<zones.size(); j++) {
             InputZone& z = *zones[j];
-            z.shapes.clear();
-            
+//            z.shapes.clear();
+            deque<Shape*>& newshapes = shapesByZoneIndex[j];
             for(size_t i= 0; i<shapes.size(); i++) {
                 Shape* s = shapes[i];
                 // if (zone should have shape) then
                 // TODO zone intersect shape test
                 if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
-                    bool shapeAdded = z.addShape(s);
+                    if(s->intersectsRect(z.getRect())) {
+                        newshapes.push_back(s);
+                    }
+                    
                 } else if(zoneMode == OFXLASER_ZONE_MANUAL) {
-                    if(s->getTargetZone() == (int)j) z.addShape(s);
+                    if((s->getTargetZone() == (int)j) && (s->intersectsRect(z.getRect()))) {
+                        newshapes.push_back(s);
+                    }
                 }
             }
         }
@@ -508,7 +511,7 @@ void ManagerBase::send(){
         
         Laser& p = *lasers[i];
         
-        p.send( globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
+        p.send(shapesByZoneIndex, globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
         
         std::this_thread::yield();
         
@@ -537,7 +540,7 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
         return;
     }
-    laser->sendRawPoints(points, getZone(zonenum), globalBrightness);
+    laser->sendRawPoints(points, zonenum, globalBrightness);
     
 }
 
@@ -622,7 +625,7 @@ bool ManagerBase::loadSettings() {
             dacAssigner.disconnectDacFromLaser(*lasers[i]);
         }
         Laser* laser = lasers[i];
-        laser->loadSettings(zones);
+        laser->loadSettings();
         
         // if the laser has a dac id saved in the settings,
         // tell the dacAssigner about it

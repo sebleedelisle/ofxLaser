@@ -231,8 +231,8 @@ class GeomUtils {
         float epsilon = 0.001f;
         
         return
-            (fabs(glm::dot(points.at(0) - points.at(3), points.at(1)- points.at(0)))<epsilon) &&
-            (fabs(glm::dot(points.at(2) - points.at(1), points.at(3)- points.at(2)))<epsilon);
+            (fabs(glm::dot(points.at(0) - points.at(3), glm::normalize(points.at(1)- points.at(0))))<epsilon) &&
+            (fabs(glm::dot(points.at(2) - points.at(1), glm::normalize(points.at(3)- points.at(2))))<epsilon);
     }
 
 };

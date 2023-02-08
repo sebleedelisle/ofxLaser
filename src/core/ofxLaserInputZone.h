@@ -26,24 +26,16 @@ namespace ofxLaser {
         
         void setIndex(int _index);
         int getIndex(){ return index; };
-		void setHandleSize(float size);
 		
 		bool update();
-        // the zone object stores shapes that intersect with it
-		bool addShape(Shape* s);
-		
         
         virtual bool deserialize(ofJson&jsonGroup) override;
         
-		ofPoint& addSortedShapesToVector(vector<Shape*>& shapes, ofPoint& currentPosition);
-        ofRectangle getRect() {
+	    ofRectangle& getRect() {
             return rect;
         } 
 		
         string zoneLabel;
-		deque<Shape*> shapes;
-
-      //  bool editable;
 	
         protected : 
 		int index = 0;

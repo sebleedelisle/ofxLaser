@@ -19,13 +19,13 @@
 #include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacEmpty.h"
-#include "ofxLaserInputZone.h"
 #include "ofxLaserOutputZone.h"
 #include "ofxLaserManualShape.h"
 #include "PennerEasing.h"
 #include "ofxLaserMaskManager.h"
 #include "ofxLaserScannerSettings.h"
 #include "ofxLaserLine.h"
+#include "ofxLaserDot.h"
 #include "ofxLaserColourSettings.h"
 #include "ofxLaserCircle.h"
 
@@ -48,19 +48,19 @@ class Laser {
     bool hasDac(); 
     
     void paramsChanged(ofAbstractParameter& e);
-    bool loadSettings(vector<InputZone*>& zones);
+    bool loadSettings();
     bool saveSettings();
     bool getSaveStatus();
     
     void update(bool updateZones);
-    void send( float masterIntensity = 1, ofPixels* pixelmask = NULL);
+    void send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterIntensity = 1, ofPixels* pixelmask = NULL);
     
     bool toggleArmed(); 
    
     // adds all the shape points to the vector passed in
-    void getAllShapePoints(vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
+    void getAllShapePoints(const vector<deque<Shape*>>& shapesByZoneIndex, vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
-    void sendRawPoints(const vector<Point>& points, InputZone* zone, float masterIntensity =1);
+    void sendRawPoints(const vector<Point>& points, int targetZoneIndex, float masterIntensity =1);
     int getPointRate();
     float getFrameRate();
     
@@ -71,9 +71,9 @@ class Laser {
     int getDacConnectedState();
     
     // Zones
-    void addZone(InputZone* zone,  bool isAlternate = false);
-    bool hasZone(InputZone* zone);
-    bool removeZone(InputZone* zone);
+    void addZone(int zoneIndex, ofRectangle& sourceRect,  bool isAlternate = false);
+    bool hasZone(int zoneIndex);
+    bool removeZone(int zoneIndex);
     bool removeZone(OutputZone* zone);
     
     bool muteZone(int zonenum);
@@ -87,21 +87,21 @@ class Laser {
     vector<OutputZone*> getSortedOutputAltZones();
    
     // Alternative zones
-    void addAltZone(InputZone* zone);
-    void addAltZone(int zoneIndex);
-    bool hasAltZone(InputZone* zone);
+   // void addAltZone(InputZone* zone);
+    void addAltZone(int zoneIndex, ofRectangle& sourceRect);
+   // bool hasAltZone(InputZone* zone);
     bool hasAltZone(int zoneIndex);
 
-    bool removeAltZone(InputZone* zone);
+    //bool removeAltZone(InputZone* zone);
     bool removeAltZone(OutputZone* zone);
     bool removeAltZone(int zoneIndex);
     
     bool hasAnyAltZones();
     
-    OutputZone* getLaserZoneForZone(InputZone* zone);
-    InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
-    OutputZone* getLaserAltZoneForZone(InputZone* zone);
-    OutputZone* getLaserAltZoneForZone(int zoneIndex);
+    OutputZone* getLaserZoneForZoneIndex(int zoneIndex);
+    //InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
+    //OutputZone* getLaserAltZoneForZone(InputZone* zone);
+    OutputZone* getLaserAltZoneForZoneIndex(int zoneIndex);
 
     vector<OutputZone*>getActiveZones();
     bool areAnyZonesSoloed();
@@ -147,7 +147,7 @@ class Laser {
     
     ofParameter<bool> paused; // pause frame
     bool pauseStateRecorded;
-    map<InputZone*, deque<Shape*>> pauseShapesByZone;
+    map<int, deque<Shape*>> pauseShapesByZoneIndex;
     
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)

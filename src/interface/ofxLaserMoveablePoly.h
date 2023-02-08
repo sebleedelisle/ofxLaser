@@ -43,8 +43,10 @@ class MoveablePoly {
     }
     virtual void startDraggingHandleByIndex(int index); 
 
+    void resetColours(); 
     void setHue(int hue) ;
-    void updateHandleColours();
+    void setBrightness(int brightness) ;
+   void updateHandleColours();
     
     bool getSelected();
     bool setSelected(bool v);

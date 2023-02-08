@@ -188,26 +188,24 @@ void LaserZoneViewController :: drawImGui() {
             
             if(!zoneUi->inputZoneAlt) {
                 if(doesAltZoneExistForZoneIndex(zoneUi->inputZoneIndex)) {
-                    if(UI::DangerButton("DELETE ALT ZONE")) {
-                        laser->removeAltZone(zoneUi->inputZoneIndex);
-                    }
+//                    if(UI::DangerButton("DELETE ALT ZONE")) {
+//                        laser->removeAltZone(zoneUi->inputZoneIndex);
+//                    }
                     
                 } else {
                     if(UI::Button("ADD ALT ZONE")) {
-                        laser->addAltZone(zoneUi->inputZoneIndex);
+                        //laser->addAltZone(zoneUi->inputZoneIndex); ***** FIX
                     }
                 }
-                
-                
             }
             
-            
             string buttonlabel = "DELETE ZONE";
+            if(zoneUi->inputZoneAlt) buttonlabel = "DELETE ALT ZONE";
            
             if(UI::DangerButton(buttonlabel.c_str())) {
                 ImGui::OpenPopup("DELETE ZONE");
-                
             }
+            
             if(ImGui::BeginPopupModal("DELETE ZONE")) {
                 
                 ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
@@ -220,8 +218,9 @@ void LaserZoneViewController :: drawImGui() {
                     // if this is an alt zone, just remove this
                     // otherwise remove this and also its alt zone if
                     // it has one
+                    int zoneindex = outputZone->getZoneIndex();
                     laser->removeZone(outputZone);
-                    laser->removeAltZone(outputZone->getZoneIndex());
+                    laser->removeAltZone(zoneindex);
                     // LATER - TO DO - if this is a laser zone, delete it
                     // if it's a canvas zone, keep it
                     
@@ -334,7 +333,9 @@ void LaserZoneViewController :: draw() {
         } else {
             ofSetColor(ofMap(gridSize*scale, 5, 100, 90,200, true));
         }
+        ofDisableAntiAliasing();
         gridMesh.draw();
+        ofEnableAntiAliasing();
         ofPopStyle();
        
         for(ZoneUiBase* zoneUi: zoneUisSorted) {

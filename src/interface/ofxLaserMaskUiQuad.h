@@ -19,6 +19,8 @@ class MaskUiQuad : public MoveablePoly {
     
     MaskUiQuad() {
         setHue(0);
+        setBrightness(180);
+        
     }
     
     void updateDataFromUI(QuadMask* mask) {
@@ -45,8 +47,10 @@ class MaskUiQuad : public MoveablePoly {
         
         if(maskLevel==100) {
             setHue(0);
+            setBrightness(180);
         } else {
             setHue(30);
+            setBrightness(180);
         }
         
         return changed;

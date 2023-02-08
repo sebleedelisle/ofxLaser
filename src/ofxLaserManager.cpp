@@ -41,7 +41,7 @@ Manager :: Manager() {
 
         if(zones.size()==0) createDefaultZone();
         for(Laser* laser : lasers) {
-            laser->addZone(zones[0]);
+            laser->addZone(0,zones[0]->getRect());
             //laser->setGrid(zoneGridSnap, zoneGridSize);
         }
         //showScannerSettingsWindow = true;
@@ -999,8 +999,11 @@ void Manager::drawLaserGui() {
             if(UI::Button(ofToString(ICON_FK_MINUS_CIRCLE) + "##AddZone", false, false)) {
                 
                 // MAKE NEW ZONE panel
-                ImGui::OpenPopup("Add zone");
-               
+                //ImGui::OpenPopup("Add zone");
+                addZone(0,0,200,200);
+                int zonenum = zones.size()-1;
+                int lasernum = getSelectedLaserIndex();
+                addZoneToLaser(zonenum, lasernum);
                 
             }
             UI::addDelayedTooltip("Add new zone");
@@ -1044,6 +1047,7 @@ void Manager::drawLaserGui() {
             
         }
         
+        /*
         if(ImGui::BeginPopupModal("Add zone", NULL)) {
             
             static int type = 0;
@@ -1087,7 +1091,7 @@ void Manager::drawLaserGui() {
             
             
             ImGui::EndPopup();
-        }
+        }*/
         
         UI::endWindow();
         
@@ -1140,26 +1144,29 @@ void Manager::guiLaserOutputSettings() {
             // ADD / REMOVE ZONES
             ImGui::Text("Zones");
             for(InputZone* zone : zones) {
-                bool checked = laser->hasZone(zone);
+                int zoneIndex = zone->getIndex();
+                
+                bool checked = laser->hasZone(zoneIndex);
 
                 if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
                     if(checked) {
-                        laser->addZone(zone);
+                        laser->addZone(zoneIndex, zone->getRect());
                     } else {
-                        laser->removeZone(zone);
+                        laser->removeZone(zoneIndex);
                     }
                 }
             }
             ImGui::NextColumn();
             ImGui::Text("Alternate zones");
             for(InputZone* zone : zones) {
-                bool checked = laser->hasAltZone(zone);
+                int zoneIndex = zone->getIndex();
+                bool checked = laser->hasAltZone(zoneIndex);
                 string label = zone->displayLabel + "##alt";
                 if(ImGui::Checkbox(label.c_str(), &checked)) {
                     if(checked) {
-                        laser->addAltZone(zone);
+                        laser->addAltZone(zoneIndex, zone->getRect());
                     } else {
-                        laser->removeAltZone(zone);
+                        laser->removeAltZone(zoneIndex);
                     }
                 }
             }
@@ -2448,10 +2455,10 @@ void Manager :: guiCopyLaserSettings() {
                             
                             
                             if(!targetLaser.hasAltZone(targetzoneindex)) {
-                                targetLaser.addAltZone(getZone(targetzoneindex));
+                                targetLaser.addAltZone(targetzoneindex, getZone(targetzoneindex)->getRect());
                             }
-                            OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZone(sourcezone->getZoneIndex());
-                            OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZone(targetzone->getZoneIndex());
+                            OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZoneIndex(sourcezone->getZoneIndex());
+                            OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZoneIndex(targetzone->getZoneIndex());
                             ofJson zonejson;
                             sourceAltZone->serialize(zonejson);
                             targetAltZone->deserialize(zonejson);
@@ -2459,7 +2466,7 @@ void Manager :: guiCopyLaserSettings() {
                             
                         } else {
                             // remove alt zone from target
-                            targetLaser.removeAltZone(getZone(targetzoneindex));
+                            targetLaser.removeAltZone(targetzoneindex);
                         }
                         
                         

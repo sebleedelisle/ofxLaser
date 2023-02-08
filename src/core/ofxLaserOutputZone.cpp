@@ -8,14 +8,15 @@
 #include "ofxLaserOutputZone.h"
 using namespace ofxLaser;
 
-OutputZone :: OutputZone(InputZone& _zone) : zone(_zone) {
+OutputZone :: OutputZone(int zoneindex, ofRectangle sourcerect ) {
     
     // init params?
     soloed = false;
     
-    ofRectangle rect = zone.getRect();
-    zoneTransformQuad.init(rect);
-    zoneTransformLine.init(rect);
+    sourceRect =sourcerect;
+    zoneTransformQuad.init(sourceRect);
+    zoneTransformLine.init(sourceRect);
+    zoneIndex = zoneindex;
     
     zoneParams.setName("OutputZone");
     zoneParams.add(muted.set("mute", false));
@@ -39,8 +40,9 @@ bool OutputZone :: update() {
     bool wasDirty = isDirty;
     wasDirty = getZoneTransform().update() | wasDirty;
 
-    zoneTransformQuad.updateSrc(zone.getRect());
-    zoneTransformLine.updateSrc(zone.getRect());
+    
+    //zoneTransformQuad.updateSrc(zone.getRect());
+    //zoneTransformLine.updateSrc(zone.getRect());
 
     isDirty = false;
     
@@ -49,7 +51,7 @@ bool OutputZone :: update() {
 
 
 string OutputZone :: getLabel() {
-    return ofToString(zone.getIndex()+1) + (getIsAlternate()?" ALT":"");
+    return ofToString(getZoneIndex()+1) + (getIsAlternate()?" ALT":"");
 }
 
 
@@ -67,7 +69,7 @@ void OutputZone :: paramChanged(ofAbstractParameter& e) {
 
 
 const int OutputZone::getZoneIndex() const {
-    return zone.getIndex();
+    return zoneIndex;
 };
 
 
@@ -93,15 +95,24 @@ void OutputZone::setIsAlternate(bool v){
    
 }
 
-void OutputZone ::setSourceRect(ofRectangle & rect) {
-    zoneTransformQuad.updateSrc(rect);
-    zoneTransformLine.updateSrc(rect);
+bool OutputZone ::setSourceRect(ofRectangle & rect) {
+    if(rect!=sourceRect) {
+        sourceRect = rect;
+        zoneTransformQuad.updateSrc(sourceRect);
+        zoneTransformLine.updateSrc(sourceRect);
+        return true;
+    } else {
+        return false;
+    }
 }
-
-void OutputZone :: init(ofRectangle sourceRectangle) {
-    zoneTransformQuad.init(sourceRectangle);
-    zoneTransformLine.init(sourceRectangle);
-}
+ofRectangle OutputZone :: getSourceRect() {
+    return sourceRect;
+} 
+//
+//void OutputZone :: init(ofRectangle sourceRectangle) {
+//    zoneTransformQuad.init(sourceRectangle);
+//    zoneTransformLine.init(sourceRectangle);
+//}
 
 ofRectangle OutputZone :: getBounds() {
     
