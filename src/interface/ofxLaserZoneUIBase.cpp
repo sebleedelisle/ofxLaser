@@ -25,9 +25,7 @@ bool ZoneUiBase::updateDataFromUi(OutputZone* outputZone) {
     if(muted!=outputZone->muted) {
         outputZone->muted = muted ;
         changed = true;
-        
     }
-    
     return changed;
 }
 

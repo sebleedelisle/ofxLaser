@@ -30,6 +30,7 @@ OutputZone :: OutputZone(int zoneindex, ofRectangle sourcerect ) {
     isAlternate = false;
     
 }
+
 OutputZone :: ~OutputZone() {
     // Transform object should be automatically deleted i think
     // make sure destructor cleans up ok
