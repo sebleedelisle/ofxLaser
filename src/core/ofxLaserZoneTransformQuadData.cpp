@@ -40,15 +40,12 @@ ZoneTransformQuadData::~ZoneTransformQuadData() {
 }
 
 
-void ZoneTransformQuadData::init(ofRectangle& srcRect) {
+void ZoneTransformQuadData::init() {
     
-    updateSrc(srcRect);
-    
-     ofRectangle destRect(600,600,100,100) ;
+    ofRectangle destRect(300,300,200,200) ;
   
     setDst(destRect);
-    
-    
+
     updateQuads();
     
 }

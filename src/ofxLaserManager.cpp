@@ -41,17 +41,13 @@ Manager :: Manager() {
 
         if(zones.size()==0) createDefaultZone();
         for(Laser* laser : lasers) {
-            laser->addZone(0,zones[0]->getRect());
-            //laser->setGrid(zoneGridSnap, zoneGridSize);
+            laser->addZone(0);
+
         }
-        //showScannerSettingsWindow = true;
+       
         
     }
     
-//    showDacAssignmentWindow = false;
-//    copySettingsWindowOpen = false;
-//    showCustomParametersWindow = false;
-//    showLaserManagementWindow = false;
     
     selectedLaserIndex = 0;
     viewMode  = OFXLASER_VIEW_CANVAS;
@@ -1150,7 +1146,7 @@ void Manager::guiLaserOutputSettings() {
 
                 if(ImGui::Checkbox(zone->displayLabel.c_str(), &checked)) {
                     if(checked) {
-                        laser->addZone(zoneIndex, zone->getRect());
+                        laser->addZone(zoneIndex);
                     } else {
                         laser->removeZone(zoneIndex);
                     }
@@ -1164,7 +1160,7 @@ void Manager::guiLaserOutputSettings() {
                 string label = zone->displayLabel + "##alt";
                 if(ImGui::Checkbox(label.c_str(), &checked)) {
                     if(checked) {
-                        laser->addAltZone(zoneIndex, zone->getRect());
+                        laser->addAltZone(zoneIndex);
                     } else {
                         laser->removeAltZone(zoneIndex);
                     }
@@ -2455,7 +2451,7 @@ void Manager :: guiCopyLaserSettings() {
                             
                             
                             if(!targetLaser.hasAltZone(targetzoneindex)) {
-                                targetLaser.addAltZone(targetzoneindex, getZone(targetzoneindex)->getRect());
+                                targetLaser.addAltZone(targetzoneindex);
                             }
                             OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZoneIndex(sourcezone->getZoneIndex());
                             OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZoneIndex(targetzone->getZoneIndex());

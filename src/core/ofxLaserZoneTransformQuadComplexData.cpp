@@ -59,16 +59,16 @@ ZoneTransformQuadComplexData::~ZoneTransformQuadComplexData() {
 }
 
 
-void ZoneTransformQuadComplexData::init(ofRectangle& srcRect) {
+void ZoneTransformQuadComplexData::init() {
     
 //    float srcwidth = srcRect.getWidth();
 //    float srcheight = srcRect.getHeight();
 //
-    updateSrc(srcRect);
+   
     
     // TODO - better default???
     
-    ofRectangle destRect(600,600,100,100) ;
+    ofRectangle destRect(300,300,200,200) ;
     
     //= srcRect;
     //destRect.scale(srcwidth/800, srcheight/800);

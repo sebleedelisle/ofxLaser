@@ -209,7 +209,7 @@ void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
         return;
     }
     InputZone* zone = zones[zonenum];
-    lasers[lasernum]->addZone(zone->getIndex(), zone->getRect());
+    lasers[lasernum]->addZone(zone->getIndex());
 }
 
 int ManagerBase::createDefaultZone() {
@@ -451,15 +451,24 @@ void ManagerBase::send(){
     // and send them. When the zones get the shape, they transform them
     // into local zone space.
     
-    vector<deque<Shape*>> shapesByZoneIndex;
-    shapesByZoneIndex.resize(zones.size());
+    //vector<deque<Shape*>> shapesByZoneIndex;
+    vector<ZoneContent> zonesContent;
+    
+    
+    zonesContent.resize(zones.size());
+    
     if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
         for(size_t j = 0; j<zones.size(); j++) {
             InputZone& z = *zones[j];
 //            z.shapes.clear();
-            deque<Shape*>& newshapes = shapesByZoneIndex[j];
-            for(size_t i= 0; i<shapes.size(); i++) {
-                Shape* s = shapes[i];
+            //deque<Shape*>& newshapes = shapesByZoneIndex[j];
+            ZoneContent& zoneContent = zonesContent[j];
+            vector<Shape*>& newshapes = zoneContent.shapes;
+            zoneContent.zoneIndex = j;
+            zoneContent.sourceRectangle = z.getRect(); 
+            
+            for(Shape* s : shapes) { //size_t i= 0; i<shapes.size(); i++) {
+               // Shape* s = shapes[i];
                 // if (zone should have shape) then
                 // TODO zone intersect shape test
                 if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
@@ -511,7 +520,7 @@ void ManagerBase::send(){
         
         Laser& p = *lasers[i];
         
-        p.send(shapesByZoneIndex, globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
+        p.send(zonesContent, globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
         
         std::this_thread::yield();
         

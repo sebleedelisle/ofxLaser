@@ -13,9 +13,9 @@ OutputZone :: OutputZone(int zoneindex, ofRectangle sourcerect ) {
     // init params?
     soloed = false;
     
-    sourceRect =sourcerect;
-    zoneTransformQuad.init(sourceRect);
-    zoneTransformLine.init(sourceRect);
+//    sourceRect =sourcerect;
+    zoneTransformQuad.init();
+    zoneTransformLine.init();
     zoneIndex = zoneindex;
     
     zoneParams.setName("OutputZone");
@@ -96,24 +96,21 @@ void OutputZone::setIsAlternate(bool v){
    
 }
 
-bool OutputZone ::setSourceRect(ofRectangle & rect) {
-    if(rect!=sourceRect) {
-        sourceRect = rect;
-        zoneTransformQuad.updateSrc(sourceRect);
-        zoneTransformLine.updateSrc(sourceRect);
+bool OutputZone ::setSourceRect(const ofRectangle & rect) {
+    if(zoneTransformQuad.srcRect!=rect) {
+        //sourceRect = rect;
+        zoneTransformQuad.updateSrc(rect);
+        zoneTransformLine.updateSrc(rect);
         return true;
     } else {
         return false;
     }
 }
-ofRectangle OutputZone :: getSourceRect() {
-    return sourceRect;
-} 
-//
-//void OutputZone :: init(ofRectangle sourceRectangle) {
-//    zoneTransformQuad.init(sourceRectangle);
-//    zoneTransformLine.init(sourceRectangle);
+
+//ofRectangle OutputZone :: getSourceRect() {
+//    return sourceRect;
 //}
+
 
 ofRectangle OutputZone :: getBounds() {
     

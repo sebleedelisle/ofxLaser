@@ -29,10 +29,10 @@ class ZoneTransformLineData : public ZoneTransformBase {
     
     void resetNodes();
     
-    virtual void init(ofRectangle& srcRect) override;
+    virtual void init() override;
     
     bool setFromPoints(const vector<glm::vec2*> points);
-    bool  moveHandle(int handleindex, glm::vec2 newpos); 
+    bool  moveHandle(int handleindex, glm::vec2 newpos);
     virtual bool serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;
  

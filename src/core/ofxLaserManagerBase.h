@@ -20,6 +20,7 @@
 #include "ofxLaserBitmapMaskManager.h"
 #include "ofxLaserGraphic.h"
 #include "ofxLaserLaser.h"
+#include "ofxLaserZoneContent.h"
 
 enum ofxLaserZoneMode {
     OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want

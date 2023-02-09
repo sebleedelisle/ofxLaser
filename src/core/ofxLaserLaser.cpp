@@ -189,7 +189,7 @@ void Laser:: colourShiftChanged(float& e){
 }
 
 
-void Laser::addZone(int zoneIndex, ofRectangle& sourceRect, bool isAlternate) {
+void Laser::addZone(int zoneIndex, bool isAlternate) {
 
 	if(hasZone(zoneIndex) && !isAlternate) {
 		ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
@@ -203,7 +203,7 @@ void Laser::addZone(int zoneIndex, ofRectangle& sourceRect, bool isAlternate) {
         ofLog(OF_LOG_ERROR, "Laser :: addZone(...) can only add alt if laser has zone already");
     }
     
-    OutputZone* outputzone = new OutputZone(zoneIndex, sourceRect);
+    OutputZone* outputzone = new OutputZone(zoneIndex);
 
    //outputzone->setGrid(snapToGrid, gridSize);
     outputZones.push_back(outputzone);
@@ -238,24 +238,9 @@ void Laser::addZone(int zoneIndex, ofRectangle& sourceRect, bool isAlternate) {
 //    addZone(zone, true);
 //}
 
-void Laser::addAltZone(int zoneIndex, ofRectangle& sourceRect){
-    if(!hasAltZone(zoneIndex)) addZone(zoneIndex, sourceRect, true);
-}
 void Laser::addAltZone(int zoneIndex){
-    if(hasZone(zoneIndex)) {
-        OutputZone* zone =getLaserZoneForZoneIndex(zoneIndex);
-        ofRectangle rect =zone->getSourceRect();
-        addAltZone(zoneIndex,rect );
-    }
+    if(!hasAltZone(zoneIndex)) addZone(zoneIndex, true);
 }
-//InputZone* Laser::getLaserInputZoneForZoneIndex(int zoneIndex) {
-//    for(OutputZone* outputZone : outputZones) {
-//        if(outputZone->getZoneIndex() == zoneIndex) {
-//            return &outputZone->zone;
-//        }
-//    }
-//    return nullptr;
-//}
     
 bool Laser :: hasZone(int zoneIndex){
     
@@ -477,18 +462,9 @@ int Laser::getDacConnectedState() {
 
 
 void Laser::update(bool updateZones) {
-//
-//    if(previewDragging) {
-//        previewOffset = glm::vec2(ofGetMouseX(), ofGetMouseY())-dragStartPoint;
-//    }
-//
-    
+
    // bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
-    
-    
-  
-    
     
     // if any of the source rectangles have changed then update all the warps
     // (shouldn't need anything saving)
@@ -504,7 +480,6 @@ void Laser::update(bool updateZones) {
         //updateZoneMasks();
     }
     
-
     needsSave = maskManager.update() | needsSave;
     
     bool laserZoneChanged = false;
@@ -527,83 +502,83 @@ void Laser::update(bool updateZones) {
 void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, int targetZoneIndex, float masterIntensity ){
     
     clearPoints();
-    
-    OutputZone* laserZone = getLaserZoneForZoneIndex(targetZoneIndex);
-    if(laserZone==nullptr) {
-        ofLogError("Laser::sendRawPoints(...), zone "+ ofToString(targetZoneIndex+1) + " not added to laser ");
-        return;
-        
-    }
-    ofRectangle maskRectangle = laserZone->getSourceRect();
-    //ZoneTransform& warp = laserZone->zoneTransform;
-    bool offScreen = true;
-    
-    vector<Point>segmentpoints;
-    
-    //iterate through the points
-    for(size_t k = 0; k<points.size(); k++) {
-        
-        Point p = points[k];
-        
-        // are we outside the mask? NB can't use inside because I want points on the edge
-        //
-        
-        if(p.x<maskRectangle.getLeft() ||
-           p.x>maskRectangle.getRight() ||
-           p.y<maskRectangle.getTop() ||
-           p.y>maskRectangle.getBottom())  {
-            
-            if(!offScreen) {
-                offScreen = true;
-                // if we already have points then add an inbetween point
-                if(k>0) {
-                    Point lastpoint = p;
-                    
-                    // TODO better point on edge rather than just clamp
-                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-                    segmentpoints.push_back(lastpoint);
-                    
-                    
-                }
-            }
-            
-        } else {
-            // we're on screen!
-            if(offScreen) {
-
-                offScreen = false;
-                if(k>0) {
-                    Point lastpoint = points[k-1];
-                    
-                    // TODO better point on edge rather than just clamp
-                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-                    
-                    segmentpoints.push_back(lastpoint);
-                }
-            }
-            segmentpoints.push_back(p);
-        }
-        
-        // create a point object for it
-        
-    } // end shapepoints
-    // add the segment points to the points for the zone
-
-
-    
-    // go through all the points and warp them into output space
-
-    for(size_t k= 0; k<segmentpoints.size(); k++) {
-        addPoint(laserZone->getWarpedPoint(segmentpoints[k]));
-    }
-    
-    
-    
-    processPoints(masterIntensity, false);
-    dac->sendPoints(laserPoints);
-    
+//    
+//    OutputZone* laserZone = getLaserZoneForZoneIndex(targetZoneIndex);
+//    if(laserZone==nullptr) {
+//        ofLogError("Laser::sendRawPoints(...), zone "+ ofToString(targetZoneIndex+1) + " not added to laser ");
+//        return;
+//        
+//    }
+//    ofRectangle maskRectangle = laserZone->getSourceRect();
+//
+//    bool offScreen = true;
+//    
+//    vector<Point>segmentpoints;
+//    
+//    //iterate through the points
+//    for(size_t k = 0; k<points.size(); k++) {
+//        
+//        Point p = points[k];
+//        
+//        // are we outside the mask? NB can't use inside because I want points on the edge
+//        //
+//        
+//        if(p.x<maskRectangle.getLeft() ||
+//           p.x>maskRectangle.getRight() ||
+//           p.y<maskRectangle.getTop() ||
+//           p.y>maskRectangle.getBottom())  {
+//            
+//            if(!offScreen) {
+//                offScreen = true;
+//                // if we already have points then add an inbetween point
+//                if(k>0) {
+//                    Point lastpoint = p;
+//                    
+//                    // TODO better point on edge rather than just clamp
+//                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
+//                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
+//                    segmentpoints.push_back(lastpoint);
+//                    
+//                    
+//                }
+//            }
+//            
+//        } else {
+//            // we're on screen!
+//            if(offScreen) {
+//
+//                offScreen = false;
+//                if(k>0) {
+//                    Point lastpoint = points[k-1];
+//                    
+//                    // TODO better point on edge rather than just clamp
+//                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
+//                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
+//                    
+//                    segmentpoints.push_back(lastpoint);
+//                }
+//            }
+//            segmentpoints.push_back(p);
+//        }
+//        
+//        // create a point object for it
+//        
+//    } // end shapepoints
+//    // add the segment points to the points for the zone
+//
+//
+//    
+//    // go through all the points and warp them into output space
+//
+//    for(size_t k= 0; k<segmentpoints.size(); k++) {
+//        addPoint(laserZone->getWarpedPoint(segmentpoints[k]));
+//    }
+//    
+//    
+//    
+//    processPoints(masterIntensity, false);
+//    dac->sendPoints(laserPoints);
+//    
    
 }
 
@@ -612,12 +587,10 @@ void Laser :: clearPoints() {
     laserPoints.clear();
     previewPathMesh.clear();
     previewPathColoured.clear();
-    
-    
 }
 
-void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterIntensity, ofPixels* pixelmask) {
 
+void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity, ofPixels* pixelmask) {
 
 	if(!guiInitialised) {
 		ofLog(OF_LOG_ERROR, "Error, ofxLaser::laser not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
@@ -629,6 +602,15 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
         return;
     }
     
+    for(OutputZone* laserZone : outputZones) {
+        if(zonesContent.size()>=laserZone->getZoneIndex()) {
+            const ZoneContent& zoneContent = zonesContent[laserZone->getZoneIndex()];
+            laserZone->setSourceRect(zoneContent.sourceRectangle); 
+            
+        }
+        
+    }
+    
     // PAUSE FUNCTION
     if(paused) {
         if(!pauseStateRecorded) {
@@ -636,11 +618,13 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
             pauseStateRecorded = true;
             
             for(OutputZone* laserZone : outputZones) {
+
+                
                 if(laserZone->getIsAlternate()) continue; // to ensure we don't get two sets of shapes
-                //InputZone& zone = laserZone->zone;
-                if(shapesByZoneIndex.size()<laserZone->getZoneIndex()) {
-                    const deque<Shape*>& zoneShapes = shapesByZoneIndex[laserZone->getZoneIndex()];
-                    deque<Shape*>& shapes = pauseShapesByZoneIndex[laserZone->getZoneIndex()];
+                if(zonesContent.size()>=laserZone->getZoneIndex()) {
+                    const ZoneContent& zoneContent = zonesContent[laserZone->getZoneIndex()];
+                    const vector<Shape*>& zoneShapes = zoneContent.shapes;
+                    vector<Shape*>& shapes = pauseShapesByZoneIndex[laserZone->getZoneIndex()];
                     for(Shape* shape : zoneShapes) {
                         shapes.push_back(shape->clone());
                     }
@@ -665,7 +649,7 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
 	vector<PointsForShape> allzoneshapepoints;
 
 	// TODO add speed multiplier to getPointsForMove function
-	getAllShapePoints(shapesByZoneIndex, &allzoneshapepoints, pixelmask, speedMultiplier);
+	getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, speedMultiplier);
 	
 	vector<PointsForShape*> sortedshapes;
 	
@@ -916,7 +900,6 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
             currentPosition = laserPoints.back();
         }
         
-		//if(smoothHomePosition)
         addPointsForMoveTo(currentPosition, laserHomePosition);
 		
 	}
@@ -925,7 +908,6 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
 		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
     }
         
-    
     
 	int targetNumPoints;
     
@@ -963,6 +945,7 @@ void Laser::send(const vector<deque<Shape*>>& shapesByZoneIndex, float masterInt
 	}
 }
 
+
 float Laser ::getMoveDistanceForShapes(vector<PointsForShape>& shapes){
     float distance = 0;
     ofPoint position = laserHomePosition;
@@ -994,16 +977,22 @@ bool Laser ::isLaserZoneActive(OutputZone* outputZone) {
         return !outputZone->muted;
     }
 }
-void Laser ::getAllShapePoints(const vector<deque<Shape*>>& shapesByZoneIndex, vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
+
+void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
 	
+    
+    
+        
 	vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
 	
 	// temp vectors for storing the shapes in
 	vector<PointsForShape> zonePointsForShapes;
 	vector<Point> shapePointBuffer;
+    
+    
+     
 	
 	// go through each zone
-	//for(int i = 0; i<(int)laserZones.size(); i++) {
     for(OutputZone* laserZone : outputZones) {
       
        if(!isLaserZoneActive(laserZone)) continue;
@@ -1016,31 +1005,23 @@ void Laser ::getAllShapePoints(const vector<deque<Shape*>>& shapesByZoneIndex, v
            ((muteOnAlternate) ||
             ((!laserZone->getIsAlternate()) && (hasAltZone(laserZone->getZoneIndex()))))) continue;
         
-		//InputZone& zone = laserZone->zone;
-        //ZoneTransform& warp = laserZone->zoneTransform;
-		ofRectangle maskRectangle = laserZone->getSourceRect();
-        
-        
-        // doesn't make a copy, just a pointer to the original shapes in the zone
-        //deque<Shape*> emptyzoneshapes;
-        const deque<Shape*>* zoneshapes;
-        if(paused) {
-            // get pausedshapes
-            zoneshapes = &pauseShapesByZoneIndex[laserZone->getZoneIndex()];
-        } else if(shapesByZoneIndex.size()>laserZone->getZoneIndex()) {
-            zoneshapes = &shapesByZoneIndex[laserZone->getZoneIndex()];
-        } else {
-            ofLogError("NOT ENOUGH ZONE SHAPES SENT TO laser::getAllShapePoints()");
+		 
+        if(zonesContent.size()<=laserZone->getZoneIndex()) {
+            ofLogError("Laser ::getAllShapePoints not enough zone content for zone!");
             continue;
-//            zoneshapes = &emptyzoneshapes; // make temporary one on the stack - shouldn't happen
         }
+        const ZoneContent& zoneContent = zonesContent[laserZone->getZoneIndex()];
+        const vector<Shape*>* zoneshapes = (paused ? &pauseShapesByZoneIndex[laserZone->getZoneIndex()] : &zoneContent.shapes);
+        
+        ofRectangle maskRectangle = zoneContent.sourceRectangle;
+       
         // get test pattern shapes - we have to do this even if
         // we don't have a test pattern, so that the code at the end
         // of this function can delete the shapes.
-        deque<Shape*> testPatternShapes = getTestPatternShapesForZone(*laserZone);
+        vector<Shape*> testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPattern, zoneContent.sourceRectangle);
         
         // define this here so we don't lose scope
-        deque<Shape*> zoneShapesWithTestPatternShapes;
+        vector<Shape*> zoneShapesWithTestPatternShapes;
         
         if(testPattern>0) {
             // copy zone shapes into it
@@ -1051,10 +1032,9 @@ void Laser ::getAllShapePoints(const vector<deque<Shape*>>& shapesByZoneIndex, v
             zoneshapes = &zoneShapesWithTestPatternShapes;
         }
         
-        
         // so this is either going to be the test pattern shapes or
         // a reference to the zone shapes
-        const deque<Shape*>& shapesInZone = *zoneshapes;
+        const vector<Shape*>& shapesInZone = *zoneshapes;
         
         // reuse the last vector of shapepoints
 		zonePointsForShapes.clear();
@@ -1209,198 +1189,6 @@ RenderProfile& Laser::getRenderProfile(string profilelabel) {
 			profilelabel = OFXLASER_PROFILE_DEFAULT;
 		}
 		return scannerSettings.renderProfiles.at(profilelabel);
-	
-}
-
-deque<Shape*> Laser ::getTestPatternShapesForZone(OutputZone& laserZone) {
-	
-	deque<Shape*> shapes;
-    if(testPattern==0) return shapes;
-   
-	//InputZone& zone = laserZone.zone;
-
-	ofRectangle maskRectangle = laserZone.getSourceRect();
-
-	if(testPattern==1) {
-
-		ofRectangle& rect = maskRectangle;
-
-		ofColor col = ofColor(0,255,0);
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-        shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-        
-        float cornersize = rect.getWidth()*0.2;
-        float spacer = rect.getWidth()*0.05;
-        
-        if(cornersize > rect.getHeight()*0.5) {
-            cornersize = rect.getHeight()*0.5;
-            spacer = cornersize*0.25;
-        } 
-        
-        shapes.push_back(new Line(rect.getTopLeft()+glm::vec3(spacer,spacer, 0), rect.getTopLeft()+glm::vec3(cornersize,spacer,0), ofColor::white, OFXLASER_PROFILE_FAST));
-        shapes.push_back(new Line(rect.getTopLeft()+glm::vec3(spacer,spacer, 0), rect.getTopLeft()+glm::vec3(spacer,cornersize,0), ofColor::white, OFXLASER_PROFILE_FAST));
-      //shapes.push_back(new Circle(rect.getTopLeft()+glm::vec3(cornersize,cornersize, 0), cornersize*0.8, ofColor::white, OFXLASER_PROFILE_FAST));
-
-
-	} else if(testPattern==2) {
-
-		ofRectangle rect = maskRectangle;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-		for(float y = 0; y<=1.1; y+=0.333333333) {
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
-		}
-
-		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
-		}
-
-		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/6, ofFloatColor(0,1,0), OFXLASER_PROFILE_DEFAULT));
-
-
-	}else if(testPattern==3) {
-
-		ofRectangle rect = maskRectangle;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-
-		for(float y = 0; y<=1.1; y+=0.333333333) {
-
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-		}
-		shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(rect.getBottomLeft(), glm::mix(rect.getTopLeft(), rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line( glm::mix(rect.getTopRight(), rect.getBottomRight(), 1.0f/3.0f), mix(rect.getTopRight(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-
-	} else if(testPattern==4) {
-
-		ofRectangle rect = maskRectangle;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-
-		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
-
-		}
-
-		shapes.push_back(new Line(rect.getTopLeft(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(rect.getTopRight(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 1.0f/3.0f), glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-
-	} else if((testPattern>=5) && (testPattern<=8)) {
-		ofColor c;
-
-		ofRectangle rect = maskRectangle;
-
-		rect.scaleFromCenter(0.5, 0.1);
-		vector<ofPoint> points;
-		vector<ofColor> colours;
-
-		ofPoint currentPosition = rect.getTopLeft();
-
-		for(int row = 0; row<5; row ++ ) {
-
-
-			float y =rect.getTop() + (rect.getHeight()*row/4);
-
-			ofPoint left = ofPoint(rect.getLeft(), y);
-
-			ofPoint right = ofPoint(rect.getRight(), y);
-
-			int moveIterations = currentPosition.distance(left)/1;
-
-			for(int i = 0; i<moveIterations; i++) {
-				points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
-				colours.push_back(ofColor(0));
-
-			}
-			currentPosition = right;
-
-			if(testPattern == 5) c.set(255,0,0);
-			else if(testPattern == 6) c.set(0,255,0);
-			else if(testPattern == 7) c.set(0,0,255);
-			else if(testPattern == 8) c.set(255,255,255);
-
-			switch (row) {
-				case 0 :
-					c.r *= colourSettings.red100;
-					c.g *= colourSettings.green100;
-					c.b *= colourSettings.blue100;
-					break;
-				case 1 :
-					c.r *= colourSettings.red75;
-					c.g *= colourSettings.green75;
-					c.b *= colourSettings.blue75;
-					break;
-				case 2 :
-					c.r *= colourSettings.red50;
-					c.g *= colourSettings.green50;
-					c.b *= colourSettings.blue50;
-					break;
-				case 3 :
-					c.r *= colourSettings.red25;
-					c.g *= colourSettings.green25;
-					c.b *= colourSettings.blue25;
-					break;
-				case 4 :
-					c.r *= colourSettings.red0;
-					c.g *= colourSettings.green0;
-					c.b *= colourSettings.blue0;
-					break;
-			}
-
-			float speed = 10 * ( 1- (row*0.25));
-			if(speed<2.5) speed = 2.5;
-
-			int blanks = 5;
-			for(int i = 0; i< blanks; i++) {
-				points.push_back(left);
-				colours.push_back(ofColor(0));
-			}
-			for(float x =left.x ; x<=right.x; x+=speed) {
-				points.push_back(ofPoint(x,y));
-				colours.push_back(c);
-			}
-
-			for(int i = 0; i< blanks; i++) {
-				points.push_back(right);
-				colours.push_back(ofColor(0));
-			}
-
-
-		}
-		shapes.push_back(new ManualShape(points, colours, false,OFXLASER_PROFILE_DEFAULT));
-
-	} else if(testPattern ==9) {
-		ofRectangle rect = maskRectangle;
-
-		shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-
-	} else if(testPattern ==10) {
-        ofRectangle rect = maskRectangle;
-
-        float progress = (float)(ofGetElapsedTimeMillis()%2000) /1000.0f;
-        
-        float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
-        
-        shapes.push_back(new Line( ofPoint(x,rect.getTop()), ofPoint(x, rect.getBottom()), ofColor::white, OFXLASER_PROFILE_DEFAULT));
-
-    }
-	return shapes; 
 	
 }
 
@@ -1576,11 +1364,8 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 //            p.y = laserHomePosition.y;
 //		}
 	
-		
 	}
-	
 }
-
 
 void Laser::paramsChanged(ofAbstractParameter& e){
     if(ignoreParamChange) return;

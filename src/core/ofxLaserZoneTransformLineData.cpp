@@ -40,9 +40,9 @@ ZoneTransformLineData::~ZoneTransformLineData() {
 }
 
 
-void ZoneTransformLineData::init(ofRectangle& srcRect) {
+void ZoneTransformLineData::init() {
 
-    updateSrc(srcRect);
+    //updateSrc(srcRect);
     resetNodes();
 
     

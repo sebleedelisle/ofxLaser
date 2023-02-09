@@ -35,7 +35,7 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     
     virtual bool update() override;
     
-    virtual void init(ofRectangle& srcRect) override;
+    virtual void init() override;
     
     virtual bool serialize(ofJson&json) override;
     virtual bool deserialize(ofJson&jsonGroup) override;

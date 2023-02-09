@@ -22,7 +22,7 @@ class ZoneTransformBase {
     virtual bool update(){return false;};
 
     // i think keep this to initialise the source rectangle
-    virtual void init(ofRectangle& srcRect){};
+    virtual void init(){};
     virtual void updateSrc(const ofRectangle& rect) ;
 
     virtual void getPerimeterPoints(vector<glm::vec2>& points) = 0;

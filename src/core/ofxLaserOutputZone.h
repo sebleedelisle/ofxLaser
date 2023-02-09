@@ -22,8 +22,8 @@ class OutputZone {
     
     virtual bool update();
     
-    bool setSourceRect(ofRectangle & rect);
-    ofRectangle getSourceRect();
+    bool setSourceRect(const ofRectangle & rect);
+   //ofRectangle getSourceRect();
 
     void draw();
     
@@ -66,7 +66,7 @@ class OutputZone {
     bool enabled;
     
     bool isAlternate;
-    ofRectangle sourceRect;
+    //ofRectangle sourceRect;
     int zoneIndex; 
     
 };
