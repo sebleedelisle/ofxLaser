@@ -10,13 +10,13 @@
 
 #include "ofMain.h"
 #include "ofxLaserLaser.h"
-#include "ofxLaserScrollableView.h"
+#include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserZoneUiQuad.h"
 #include "ofxLaserZoneUiLine.h"
 #include "ofxLaserMaskUiQuad.h"
 
 namespace ofxLaser {
-class LaserZoneViewController : public ScrollableView {
+class LaserZoneViewController : public ViewWithMoveables {
     
     public :
     // initialise :
@@ -28,24 +28,28 @@ class LaserZoneViewController : public ScrollableView {
     OutputZone* getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
     
     bool createZoneUiForOutputZone(OutputZone* outputZone);
-    void deselectAllButThis(MoveablePoly* uielement);
+    void deselectAllButThis(MoveablePoly* uielement) override; 
     
     bool doesAltZoneExistForZoneIndex(int zoneIndex); 
     
     bool update() override;
+    void draw() override;
     
-    void draw();
     void drawImGui(); 
     void drawLaserPath();
     bool updateZones();
     bool updateMasks();
+    int getLaserIndex(); 
 
-    void setGrid(bool snaptogrid, int gridsize);
+    //void setGrid(bool snaptogrid, int gridsize);
     
-    virtual void mouseMoved(ofMouseEventArgs &e) override;
-    virtual bool mousePressed(ofMouseEventArgs &e) override;
-    virtual void mouseDragged(ofMouseEventArgs &e) override;
-    virtual void mouseReleased(ofMouseEventArgs &e) override; 
+//    virtual void mouseMoved(ofMouseEventArgs &e) override;
+//    virtual bool mousePressed(ofMouseEventArgs &e) override;
+//    virtual void mouseDragged(ofMouseEventArgs &e) override;
+//    virtual void mouseReleased(ofMouseEventArgs &e) override;
+//    
+    void resetUiElements();
+    void moveMasksToBack();
     
 
     
@@ -67,9 +71,9 @@ class LaserZoneViewController : public ScrollableView {
     
     Laser* laser;
     
-    ofMesh gridMesh; 
-    int gridSize = 1;
-    bool snapToGrid = false;
+//    ofMesh gridMesh; 
+//    int gridSize = 1;
+//    bool snapToGrid = false;
     
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;

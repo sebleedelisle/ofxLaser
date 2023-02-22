@@ -15,8 +15,9 @@ Laser::Laser(int _index) {
     dac = &emptyDac;
     
 	laserHomePosition = ofPoint(400,400);
-	
-	numTestPatterns = 10;
+    testPatternActive = false;
+    testPattern = 1;
+	//numTestPatterns = 10;
  	
 	guiInitialised = false;
     maskManager.init(800,800);
@@ -88,7 +89,7 @@ void Laser :: init() {
     params.add(intensity.set("Brightness", 1,0,1));
 //    params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
     armed.set("ARM", false);
-    testPattern.set("Test Pattern", 0,0,numTestPatterns);
+    //testPattern.set("Test Pattern", 0,0,numTestPatterns);
     
     paused.set("Paused", false);
     
@@ -141,27 +142,26 @@ void Laser :: init() {
     pps.addListener(this, &Laser::ppsChanged);
     colourChangeShift.addListener(this, &Laser::colourShiftChanged);
 
-    //loadSettings();
    
     dac->setPointsPerSecond(pps);
 	// error checking on blank shift for older config files
 	if(colourChangeShift<0) colourChangeShift = 0;
 
-//	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-//		zoneTransforms[i]->initGuiListeners();
-//		zoneTransforms[i]->loadSettings();
-//	}
 	
 	armed = false;
-	testPattern = 0;
-    //for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
+	
     
     ofAddListener(params.parameterChangedE(), this, &Laser::paramsChanged);
    
 	guiInitialised = true;
 
-    //masks.resize(5); 
 	
+}
+
+
+void Laser :: setGlobalTestPattern(bool active, int pattern) {
+    testPatternGlobal = pattern;
+    testPatternGlobalActive = active;
 }
 
 
@@ -1018,7 +1018,14 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
         // get test pattern shapes - we have to do this even if
         // we don't have a test pattern, so that the code at the end
         // of this function can delete the shapes.
-        vector<Shape*> testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPattern, zoneContent.sourceRectangle);
+        vector<Shape*> testPatternShapes;
+        
+        if(testPatternActive) {
+            testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPattern, zoneContent.sourceRectangle);
+        } else if(testPatternGlobalActive) {
+            testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPatternGlobal, zoneContent.sourceRectangle);
+            
+        }
         
         // define this here so we don't lose scope
         vector<Shape*> zoneShapesWithTestPatternShapes;

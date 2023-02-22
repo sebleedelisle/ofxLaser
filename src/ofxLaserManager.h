@@ -9,7 +9,8 @@
 #include "ofxLaserUI.h"
 #include "ofxLaserVisualiser3D.h"
 #include "ofxLaserZoneViewController.h"
-
+#include "ofxLaserCanvasViewController.h"
+#include "ofxLaserIconSVGs.h"
 
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
@@ -25,6 +26,10 @@ enum ofxLaserMouseMode {
 };
 
 namespace ofxLaser {
+
+
+//class CanvasViewController; 
+
 class Manager : public ManagerBase {
     
     public :
@@ -41,14 +46,13 @@ class Manager : public ManagerBase {
     virtual void createAndAddLaser() override;
     void paramChanged(ofAbstractParameter& e) ;
     
-    void initSVGs(); 
-    
     bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
     glm::vec2 getPreviewOffset();
     float getPreviewScale();
     ofRectangle getPreviewRect();
+    ofRectangle getZonePreviewRect();
     void fitPreviewInRect(ofRectangle fitrect);
     
     virtual void setCanvasSize(int width, int height) override; 
@@ -178,15 +182,12 @@ class Manager : public ManagerBase {
     ofImage guideImage;
   
     vector<LaserZoneViewController> laserZoneViews;
+    CanvasViewController canvasViewController;
     
     glm::vec2 previewOffset;
     float previewScale;
     
-    ofxSVGExtra iconGrabOpen;
-    ofxSVGExtra iconGrabClosed;
-    ofxSVGExtra iconMagPlus;
-    ofxSVGExtra iconMagMinus;
-    vector<ofxSVGExtra> numberSVGs;
+
     
     PresetManager<ScannerSettings> scannerPresetManager;
     PresetManager<ColourSettings> colourPresetManager;
@@ -202,6 +203,8 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyZonePositions;
     
    // bool firstUpdate = true;
+    
+    IconSVGs iconSVGs; 
    
 
 };

@@ -58,7 +58,7 @@ class MaskUiQuad : public MoveablePoly {
         
     }
 
-    bool showContextMenu = false; // bit of a hack to show the right click menu
+  //  bool showContextMenu = false; // bit of a hack to show the right click menu
     int maskLevel = 100;
     
     

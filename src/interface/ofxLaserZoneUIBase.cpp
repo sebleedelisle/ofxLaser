@@ -26,6 +26,8 @@ bool ZoneUiBase::updateDataFromUi(OutputZone* outputZone) {
         outputZone->muted = muted ;
         changed = true;
     }
+    updateLabel();
+    dimmed = muted;
     return changed;
 }
 
@@ -62,16 +64,27 @@ bool ZoneUiBase::updateFromData(OutputZone* outputZone){
     }
     
     
+    
     if(changed) {
-        label = ofToString(inputZoneIndex+1);
-        if(inputZoneAlt) {
-            label = label + " ALT";
-        }
-        if(outputZone->getZoneTransform().locked) {
-            label = label + " (locked)";
-            
-        }
+        updateLabel();
+        dimmed = muted;
     }
     
     return changed;
+}
+
+void ZoneUiBase :: updateLabel() {
+    
+    label = ofToString(inputZoneIndex+1);
+    if(inputZoneAlt) {
+        label = label + " ALT";
+    }
+    if(getDisabled()) {
+        label = label + " (locked)";
+    }
+    if(muted) {
+        label = label + " (muted)";
+    }
+    
+    
 }

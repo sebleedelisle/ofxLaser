@@ -18,6 +18,10 @@ namespace ofxLaser {
 class TestPatternGenerator {
     public :
     
+    static int getNumTestPatterns() {
+        return 10;
+    } 
+    
     static vector<ofxLaser::Shape*> getTestPatternShapes(int testPattern, const ofRectangle& rect) {
         vector<Shape*> shapes;
 

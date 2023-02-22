@@ -41,26 +41,24 @@ void MoveablePoly :: draw() {
     
     ofPushStyle();
     
-    ofSetColor(selected?fillColourSelected : fillColour);
-    ofFill();
+    ofColor fColour = selected ? fillColourSelected : fillColour;
+    if(dimmed) fColour*=0.5;
+    ofSetColor(fColour);
     
-    drawShape();
-//    zoneMesh.setMode(OF_PRIMITIVE_TRIANGLE_FAN);
-//    zoneMesh.draw();
-
+    ofFill();
+    if(!isDisabled) drawShape();
+    
     ofNoFill();
     if(selected) {
         ofSetLineWidth(2);
     }
-    ofSetColor(selected ? strokeColourSelected : strokeColour);
     
+    ofColor sColour = selected ? strokeColourSelected : strokeColour;
+    if(dimmed) sColour*=0.5;
+    else if(isDisabled) sColour*=0.7;
+    ofSetColor(sColour);
     drawShape(); 
-//    zoneMesh.setMode(OF_PRIMITIVE_LINE_LOOP);
-//    zoneMesh.draw();
-    
     drawHandlesIfSelectedAndNotDisabled();
-    //drawLabel();
-    
     ofPopStyle();
 }
 
@@ -89,8 +87,11 @@ void MoveablePoly :: drawHandlesIfSelectedAndNotDisabled() {
 void MoveablePoly :: drawLabel() {
     ofPushStyle();
    
-    ofSetColor(strokeColour);
-
+    if(dimmed) {
+        ofSetColor(strokeColour*0.5);
+    } else {
+        ofSetColor(strokeColour);
+    }
     //if(getLocked()) label = label + " (locked)";
     ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     
@@ -428,3 +429,17 @@ bool MoveablePoly :: isQuad() {
     return handles.size()==4;
     
 }
+
+bool MoveablePoly :: getRightClickPressed(bool reset) {
+    bool returnvalue = rightClickPressed;
+    if(reset) rightClickPressed = false;
+    return returnvalue;
+}
+ 
+
+void MoveablePoly :: setRightClickPressed(bool value) {
+    rightClickPressed = value;
+}
+void MoveablePoly :: setLabel(string newlabel) {
+    label = newlabel;
+} 

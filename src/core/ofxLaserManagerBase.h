@@ -74,7 +74,7 @@ class ManagerBase {
     void disarmAllLasersListener();
     void armAllLasers();
     void disarmAllLasers();
-    void testPatternAllLasers(int& pattern);
+    void updateGlobalTestPattern();
     void canvasSizeChanged(int&size);
     void useAltZonesChanged(bool& state); 
     bool areAllLasersUsingAlternateZones();
@@ -128,7 +128,8 @@ class ManagerBase {
     
     ofParameter<int> canvasWidth, canvasHeight;
 
-    ofParameter<int> testPattern;
+    int testPatternGlobal;
+    bool testPatternGlobalActive;
     
     ofParameter<bool> useAltZones;
     ofParameter<bool> useBitmapMask;

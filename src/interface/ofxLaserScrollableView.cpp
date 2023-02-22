@@ -17,12 +17,99 @@ ScrollableView :: ScrollableView() {
     sourceRect.set(0,0,800,800);
 }
 
-bool ScrollableView::update(){
-  
-    return false;
+void ScrollableView :: drawFrame() {
+    // draw frame
+    ofPushStyle();
+    ofNoFill();
+    ofSetColor(30);
+    ofDrawRectangle(outputRect);
+    ofPopStyle();
+    
+    
 }
 
 
+void ScrollableView::beginViewPort() {
+    
+   
+    
+    ofPushView();
+    ofViewport(outputRect);
+    
+    ofSetupScreen();
+    
+        
+    
+    ofPushMatrix();
+    // offset for the viewport position
+    ofTranslate(-outputRect.getTopLeft());
+
+   
+
+
+    ofTranslate(offset);
+    ofScale(scale, scale);
+    
+
+    
+    
+    
+    
+}
+
+void ScrollableView :: drawEdges() {
+    
+    
+    // draw edges if visible
+    ofPushMatrix();
+    ofScale(1.0f/scale, 1.0f/scale);
+    ofTranslate(-offset);
+    ofTranslate(outputRect.getTopLeft());
+    ofPushStyle();
+    ofSetColor(0);
+    ofFill();
+    if(offset.x>0) {
+        ofDrawRectangle(0, 0, offset.x-outputRect.getLeft(), outputRect.getHeight());
+    }
+   
+    if(offset.y>0) {
+        ofDrawRectangle(0, 0, outputRect.getWidth(), offset.y-outputRect.getTop());
+    }
+    
+    float inputRight = offset.x+(sourceRect.getWidth()*scale)-outputRect.getLeft();
+    if(inputRight<outputRect.getRight()) {
+        ofDrawRectangle(inputRight, 0, outputRect.getRight()-inputRight, outputRect.getHeight());
+    }
+    
+    float inputBottom = offset.y+(sourceRect.getHeight()*scale)-outputRect.getTop();
+    if(inputBottom<outputRect.getBottom()) {
+        ofDrawRectangle(0, inputBottom, outputRect.getWidth(), outputRect.getBottom()-inputBottom);
+    }
+    ofPopStyle();
+    ofPopMatrix();
+    
+} 
+void ScrollableView::endViewPort() {
+    ofPopMatrix();
+    ofPopView();
+    
+}
+bool ScrollableView::update(){
+    
+    return false;
+}
+
+bool ScrollableView::setIsVisible(bool visible) {
+    if(visible!=isVisible) {
+        isVisible = visible;
+        return true;
+    } else {
+        return false;
+    }
+}
+bool ScrollableView::getIsVisible(){
+    return isVisible;
+}
 
 void ScrollableView::zoom(glm::vec2 anchor, float zoomMultiplier){
     
@@ -30,8 +117,8 @@ void ScrollableView::zoom(glm::vec2 anchor, float zoomMultiplier){
     clickoffset-=(clickoffset*zoomMultiplier);
     offset+=clickoffset;
     scale*=zoomMultiplier;
-
-
+    
+    
 }
 void ScrollableView::setSourceRect(ofRectangle rect) {
     sourceRect = rect;
@@ -40,10 +127,10 @@ void ScrollableView::setOutputRect(ofRectangle rect){
     outputRect = rect;
 }
 void ScrollableView::autoFitToOutput(){
-
+    
     offset = outputRect.getTopLeft();
     scale =  MIN(outputRect.getWidth() / sourceRect.getWidth(), outputRect.getHeight() / sourceRect.getHeight());
-   
+    
 }
 
 
@@ -64,6 +151,8 @@ ofMouseEventArgs ScrollableView::screenPosToLocalPos(ofMouseEventArgs e) {
 }
 bool ScrollableView::mousePressed(ofMouseEventArgs &e){
     
+    if(!getIsVisible()) return true;
+    
     float clicktime = ofGetElapsedTimef();
     float clickinterval =clicktime-lastClickTime;
     lastClickTime =clicktime;
@@ -81,7 +170,6 @@ bool ScrollableView::mousePressed(ofMouseEventArgs &e){
 };
 
 bool ScrollableView::mouseDoubleClicked(ofMouseEventArgs &e){
-
     // hit test already done
     autoFitToOutput();
     return false; // don't propagate
@@ -97,11 +185,12 @@ bool ScrollableView :: cancelDrag() {
     }
 }
 void ScrollableView:: mouseMoved(ofMouseEventArgs &e){
-
+    
 }
 
 
 void ScrollableView::mouseDragged(ofMouseEventArgs &e){
+    if(!getIsVisible()) return;
     updateDrag(e);
 };
 
@@ -110,9 +199,8 @@ void ScrollableView::mouseReleased(ofMouseEventArgs &e){
 };
 
 void ScrollableView::mouseScrolled(ofMouseEventArgs &e){
-   // ofLogNotice() << e.scrollX << " " << e.scrollY;
-    //offset.x+=e.scrollX;
-    //offset.y+=e.scrollY;
+    if(!getIsVisible()) return ;
+    
     if(hitTest(e)) {
         zoom(e, 1+(e.scrollY*zoomSpeed));
     }
@@ -136,7 +224,7 @@ bool ScrollableView::updateDrag(glm::vec2 mousepos) {
     } else {
         return false;
     }
-
+    
 }
 
 bool ScrollableView :: stopDrag(){

@@ -47,9 +47,7 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     
     params.setName("Laser");
     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
-    //params.add(showLaserSettings.set("Edit laser", false));
-    params.add(testPattern.set("Global test pattern", 0,0,10));
-    testPattern.addListener(this, &ofxLaser::ManagerBase::testPatternAllLasers);
+
     
     params.add(canvasWidth.set("Canvas width", 800,0,5000));
     params.add(canvasHeight.set("Canvas height", 800,0,5000));
@@ -63,7 +61,8 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.add(dontCalculateDisconnected.set("Don't calculate disconnected", false));
     useAltZones.addListener(this, &ofxLaser::ManagerBase::useAltZonesChanged);
     
-    testPattern = 0;
+    testPatternGlobal = 1;
+    testPatternGlobalActive = false; 
     
     //beepSound.load("Beep1.wav");
     
@@ -575,9 +574,9 @@ void ManagerBase::disarmAllLasers(){
     }
     doDisarmAll = false;
 }
-void ManagerBase::testPatternAllLasers(int &pattern){
+void ManagerBase::updateGlobalTestPattern(){
     for(size_t i= 0; i<lasers.size(); i++) {
-        lasers[i]->testPattern = testPattern;
+        lasers[i]->setGlobalTestPattern(testPatternGlobalActive, testPatternGlobal);
     }
 }
 void ManagerBase::useAltZonesChanged(bool& state) {

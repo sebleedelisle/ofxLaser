@@ -71,6 +71,8 @@ class Laser {
     string getDacLabel() ;
     int getDacConnectedState();
     
+    void setGlobalTestPattern(bool active, int pattern); 
+    
     // Zones
     void addZone(int zoneIndex,  bool isAlternate = false);
     bool removeZone(int zoneIndex);
@@ -93,7 +95,6 @@ class Laser {
     vector<OutputZone*> getSortedOutputZones();
     vector<OutputZone*> getSortedOutputAltZones();
    
-    
     
     OutputZone* getLaserZoneForZoneIndex(int zoneIndex);
     //InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
@@ -121,7 +122,7 @@ class Laser {
     
     void ppsChanged(int& e);
     void colourShiftChanged(float& e);
-    //deque<Shape*> getTestPatternShapesForZone(OutputZone& zone);
+
     float getMoveDistanceForShapes(vector<PointsForShape>& shapes);
     float getMoveDistanceForShapes(vector<PointsForShape*>& shapes);
 
@@ -157,10 +158,15 @@ class Laser {
     ofParameter<float> colourChangeShift;
     int maxLatencyMS; 
     
-    ofParameter<int> testPattern;
+    int testPattern;
+    bool testPatternActive;
+    
+    int testPatternGlobal;
+    int testPatternGlobalActive;
+
     ofParameter<bool>hideContentDuringTestPattern;
  
-    int numTestPatterns;
+    //int numTestPatterns;
     ofParameter<bool> useAlternate;
     ofParameter<bool> muteOnAlternate;
     

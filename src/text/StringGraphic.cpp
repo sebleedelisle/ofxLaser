@@ -53,21 +53,21 @@ void StringGraphic :: updateGraphic() {
 
     }
     polylineCharacters.clear();
-//	clear();
-//	textPath.clear();
-//
-//	hersheyFont.setColor(colour);
-//	textPath = hersheyFont.getPath(textString,1);
-//	//ofPushMatrix();
-//	if(alignment == ALIGN_RIGHT) {
-////		ofTranslate(-getWidth(), 0);
-//        textPath.translate(glm::vec2(-getWidth(), 0));
-//	} else if(alignment == ALIGN_CENTRE) {
-//		//ofTranslate(-getWidth()/2, 0);
-//        textPath.translate(glm::vec2(-getWidth()/2, 0));
-//	}
-//
-//	addPath(textPath, false, false);
+	clear();
+	textPath.clear();
+
+	hersheyFont.setColor(colour);
+	textPath = hersheyFont.getPath(textString,1);
+	//ofPushMatrix();
+	if(alignment == ALIGN_RIGHT) {
+//		ofTranslate(-getWidth(), 0);
+        textPath.translate(glm::vec2(-getWidth(), 0));
+	} else if(alignment == ALIGN_CENTRE) {
+		//ofTranslate(-getWidth()/2, 0);
+        textPath.translate(glm::vec2(-getWidth()/2, 0));
+	}
+
+	addPath(textPath, false, false);
 	
 }
 

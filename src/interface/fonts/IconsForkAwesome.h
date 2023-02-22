@@ -6,8 +6,8 @@
 #define FONT_ICON_FILE_NAME_FK "forkawesome-webfont.ttf"
 
 #define ICON_MIN_FK 0xf000
-#define ICON_MAX_16_FK 0xf372
-#define ICON_MAX_FK 0xf372
+#define ICON_MAX_16_FK 0xfb04
+#define ICON_MAX_FK 0xfb04
 #define ICON_FK_GLASS "\xef\x80\x80"	// U+f000
 #define ICON_FK_MUSIC "\xef\x80\x81"	// U+f001
 #define ICON_FK_SEARCH "\xef\x80\x82"	// U+f002
@@ -818,4 +818,11 @@
 #define ICON_FK_LEMMY "\xef\x8d\xb1"	// U+f371
 #define ICON_FK_IPFS "\xef\x8d\xb2"	// U+f372
 #define ICON_FK_CANONICAL "\xef\x8d\xaa"	// U+f36a
-#define ICON_FK_UBUNTU "\xef\x8d\xab"	// U+f36b
+#define ICON_FK_UBUNTU "\xef\x8d\xab"    // U+f36b
+#define ICON_FK_LIB_ADDMASK "\xef\x8d\xac"    // U+f36c
+#define ICON_FK_LIB_ADDZONE "\xef\x8d\xad"    // U+f36d
+#define ICON_FK_LIB_GRID "\xef\x8d\xae"    // U+f36e
+#define ICON_FK_LIB_TESTPATTERN "\xef\x8d\xaf"    // U+f36f
+
+//0x65c0
+//ee9a40

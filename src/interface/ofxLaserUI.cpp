@@ -15,6 +15,7 @@ ImFont* ofxLaser::UI::font;
 ImFont* ofxLaser::UI::mediumFont;
 ImFont* ofxLaser::UI::largeFont;
 ImFont* ofxLaser::UI::symbolFont;
+
 bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
 bool ofxLaser::UI:: secondaryColourActive = false;
@@ -42,6 +43,8 @@ void UI::setupGui() {
     config.GlyphMinAdvanceX = 13;
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
+    
+
     
     mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,16, &config, icon_ranges);
@@ -1018,7 +1021,7 @@ void UI::addHover(const char* desc) {
     }
 }
 void UI::addDelayedTooltip(const char* desc) {
-    if (ImGui::IsItemHovered() && (GImGui->HoveredIdTimer >1)) {
+    if (ImGui::IsItemHovered() && (GImGui->HoveredIdNotActiveTimer >1)) {
         ImGui::PushFont(font);
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);

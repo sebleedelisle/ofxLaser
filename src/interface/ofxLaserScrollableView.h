@@ -24,12 +24,20 @@ class ScrollableView {
     void zoom(glm::vec2 anchor, float zoomMultiplier);
     void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
     
+    void beginViewPort();
+    void drawFrame();
+    void drawEdges(); 
+    void endViewPort();
+    
     virtual void mouseMoved(ofMouseEventArgs &e);
     virtual bool mousePressed(ofMouseEventArgs &e);
     virtual bool mouseDoubleClicked(ofMouseEventArgs &e);
     virtual void mouseDragged(ofMouseEventArgs &e);
     virtual void mouseReleased(ofMouseEventArgs &e);
     virtual void mouseScrolled(ofMouseEventArgs &e);
+    
+    bool setIsVisible(bool visible);
+    bool getIsVisible(); 
     
     void setSourceRect(ofRectangle rect);
     void setOutputRect(ofRectangle rect);
@@ -46,11 +54,12 @@ class ScrollableView {
     bool cancelDrag();
 
     
+    protected :
+    bool isVisible;
+    
     glm::vec2 offset;
     float scale;
 
-    
-    
     ofRectangle sourceRect;
     ofRectangle outputRect;
     

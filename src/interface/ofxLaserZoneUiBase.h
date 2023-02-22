@@ -26,8 +26,9 @@ class ZoneUiBase : public MoveablePoly {
 
     virtual bool updateDataFromUi(OutputZone* outputZone);
     virtual bool updateFromData(OutputZone* outputZone);
+    void updateLabel(); 
 
-    bool showContextMenu = false; // bit of a hack to show the right click menu
+   
 
     int inputZoneIndex = -1;
     bool inputZoneAlt = false;

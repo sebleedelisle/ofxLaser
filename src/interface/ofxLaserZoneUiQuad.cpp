@@ -47,8 +47,7 @@ bool ZoneUiQuad :: setCorners(const vector<glm::vec2*>& newpoints) {
         temppoints.push_back(*newpoints[handleindex]);
         
     }
-    return setFromPoints(temppoints); 
-    
+    return setFromPoints(temppoints);
 }
 
 

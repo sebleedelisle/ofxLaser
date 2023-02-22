@@ -32,6 +32,7 @@ class MoveablePoly {
     
     bool setFromPoints(vector<glm::vec2>& points);
     bool setFromPoints(vector<glm::vec2>* points);
+    void setLabel(string newlabel); 
     
     vector<glm::vec2*> getPoints(); 
   
@@ -74,6 +75,9 @@ class MoveablePoly {
     DragHandle* getMainDragHandle();
     int getMainDragHandleIndex();
     
+    bool getRightClickPressed(bool reset = true);
+    void setRightClickPressed(bool value = true);
+    
     int mainDragHandleIndex = -1;
     
     ofColor fillColour;
@@ -84,6 +88,9 @@ class MoveablePoly {
     ofColor handleColourOver;
     
     vector<DragHandle> handles; // all handles for all points
+    
+    
+    
     
     protected :
     
@@ -99,10 +106,12 @@ class MoveablePoly {
 
     string label; 
     
+     
     // only used to change the size of handles, all
     // other scale / offset stuff should happen higher up
     float scale = 1;
     bool isDirty = true;
+    bool dimmed = false;
     
     bool snapToGrid;
     int gridSize;
@@ -110,8 +119,10 @@ class MoveablePoly {
     bool isDragging = false;
     bool isDisabled = false;
     
-    bool constrainedToSquare = false; 
+    bool constrainedToSquare = false;
     
+    bool rightClickPressed = false; // bit of a hack to show the right click menu
+ 
     
 };
 }

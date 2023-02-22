@@ -266,13 +266,13 @@ void QuadGui :: startDragging(int handleIndex, glm::vec2 clickPos) {
     
 	
 }
-bool QuadGui :: hitTestScreen(ofPoint mousePoint) {
+bool QuadGui :: hitTestScreen(glm::vec2 mousePoint) {
     
     mousePoint-=offset;
     mousePoint/=scale;
     
     if(!boundingBox.inside(mousePoint)) return false;
-    return(quadPoly.inside(mousePoint));
+    return(quadPoly.inside((ofPoint)mousePoint));
 
 }
 bool QuadGui :: hitTest(const ofPoint& p) {

@@ -24,7 +24,7 @@ void ofApp::update(){
 
 void ofApp::draw() {
     
-    ofBackground(15,15,20);
+    ofBackground(5,5,10);
     
     // Drawing a laser line, provide the start point, end point and colour.
     // (you can also use glm::vec3). The final parameter is the render profile.

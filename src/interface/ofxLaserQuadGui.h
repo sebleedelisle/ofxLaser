@@ -51,7 +51,7 @@ class QuadGui {
     
     // hit test in screen space
     // (takes into account the offset and scale)
-    bool hitTestScreen(ofPoint mousepoint);
+    bool hitTestScreen(glm::vec2 mousepoint);
     
     // optimised hit test for checking many laser points
     bool hitTest(const ofPoint& p);
