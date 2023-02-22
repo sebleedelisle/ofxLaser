@@ -88,7 +88,7 @@ void ScrollableView :: drawEdges() {
     ofPopStyle();
     ofPopMatrix();
     
-} 
+}
 void ScrollableView::endViewPort() {
     ofPopMatrix();
     ofPopView();
@@ -125,6 +125,10 @@ void ScrollableView::setSourceRect(ofRectangle rect) {
 }
 void ScrollableView::setOutputRect(ofRectangle rect){
     outputRect = rect;
+}
+
+ofRectangle ScrollableView::getOutputRect() {
+    return outputRect;
 }
 void ScrollableView::autoFitToOutput(){
     

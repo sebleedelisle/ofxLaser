@@ -458,26 +458,26 @@ void ManagerBase::send(){
     
     if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
         for(size_t j = 0; j<zones.size(); j++) {
-            InputZone& z = *zones[j];
+            InputZone& inputzone = *zones[j];
 //            z.shapes.clear();
             //deque<Shape*>& newshapes = shapesByZoneIndex[j];
             ZoneContent& zoneContent = zonesContent[j];
             vector<Shape*>& newshapes = zoneContent.shapes;
             zoneContent.zoneIndex = j;
-            zoneContent.sourceRectangle = z.getRect(); 
+            zoneContent.sourceRectangle = inputzone.getRect(); 
             
-            for(Shape* s : shapes) { //size_t i= 0; i<shapes.size(); i++) {
+            for(Shape* shape : shapes) { //size_t i= 0; i<shapes.size(); i++) {
                // Shape* s = shapes[i];
                 // if (zone should have shape) then
                 // TODO zone intersect shape test
                 if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
-                    if(s->intersectsRect(z.getRect())) {
-                        newshapes.push_back(s);
+                    if(shape->intersectsRect(inputzone.getRect())) {
+                        newshapes.push_back(shape);
                     }
                     
                 } else if(zoneMode == OFXLASER_ZONE_MANUAL) {
-                    if((s->getTargetZone() == (int)j) && (s->intersectsRect(z.getRect()))) {
-                        newshapes.push_back(s);
+                    if((shape->getTargetZone() == (int)j) && (shape->intersectsRect(inputzone.getRect()))) {
+                        newshapes.push_back(shape);
                     }
                 }
             }

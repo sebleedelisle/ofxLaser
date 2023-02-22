@@ -1030,7 +1030,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
         // define this here so we don't lose scope
         vector<Shape*> zoneShapesWithTestPatternShapes;
         
-        if(testPattern>0) {
+        if(testPatternActive || testPatternGlobalActive) {
             // copy zone shapes into it
             if(!hideContentDuringTestPattern) zoneShapesWithTestPatternShapes = *zoneshapes; // should copy
             

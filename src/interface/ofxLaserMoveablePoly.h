@@ -32,6 +32,9 @@ class MoveablePoly {
     
     bool setFromPoints(vector<glm::vec2>& points);
     bool setFromPoints(vector<glm::vec2>* points);
+    
+    bool setFromRect(ofRectangle rect);
+    
     void setLabel(string newlabel); 
     
     vector<glm::vec2*> getPoints(); 

@@ -124,24 +124,7 @@ void LaserZoneViewController :: draw() {
     
 
     drawMoveables();
-//    for(ZoneUiBase* zoneUi: zoneUisSorted) {
-//        zoneUi->draw();
-//        // NASTY HACK AHEAD...
-//        // seems to be a bit of a bug in the ofDrawBitmapString
-//        // when inside a viewport...
-//        ofPushMatrix();
-//        ofTranslate(-outputRect.getTopLeft() / scale);
-//        zoneUi->drawLabel();
-//        ofPopMatrix();
-//    }
-//
-//
-//
-//
-//    for(MaskUiQuad* maskUi: maskUisSorted) {
-//        maskUi->draw();
-//    }
-//
+
     drawLaserPath();
 
     endViewPort();
@@ -236,32 +219,6 @@ bool LaserZoneViewController :: updateMasks() {
     
 }
 
-
-//
-//void LaserZoneViewController :: setGrid(bool snaptogrid, int gridsize){
-//
-//    if((snapToGrid!=snaptogrid) || (gridSize!=gridsize)) {
-//        snapToGrid = snaptogrid;
-//        gridSize = gridsize;
-//        for(ZoneUiBase* zoneUi : zoneUis) {
-//            zoneUi->setGrid(snaptogrid, gridsize);
-//        }
-//
-//
-//        // should we set grid on masks?
-//
-//        gridMesh.clear();
-//        int spacing = gridSize;
-//        while(spacing<5) spacing *=2;
-//        for(int x = 0; x<=800; x+=spacing) {
-//            for(int y = 0; y<=800; y+=spacing) {
-//                gridMesh.addVertex(ofPoint(MIN(800,x),MIN(800,y)));
-//            }
-//        }
-//        gridMesh.setMode(OF_PRIMITIVE_POINTS);
-//    }
-//}
-
 void LaserZoneViewController :: drawLaserPath() {
     
     if(laser==nullptr) return;
@@ -307,154 +264,10 @@ void LaserZoneViewController :: deselectAllButThis(MoveablePoly* uielement) {
     
     ViewWithMoveables::deselectAllButThis(uielement);
     moveMasksToBack(); 
-//
-//    // deselect all but the one we want
-//    for(MoveablePoly* zoneUi: zoneUis) {
-//        if(uielement!=zoneUi) zoneUi->setSelected(false);
-//    }
-//
-//    // move selected to back of array
-//    ZoneUiBase* zoneUi = dynamic_cast<ZoneUiBase*>(uielement);
-//    if(zoneUi!=nullptr) {
-//        zoneUisSorted.erase(std::remove(zoneUisSorted.begin(), zoneUisSorted.end(), zoneUi), zoneUisSorted.end());
-//        zoneUisSorted.push_back(zoneUi);
-//    }
-//
-//    for(MoveablePoly* maskUi: maskUis) {
-//        if(uielement!=maskUi) maskUi->setSelected(false);
-//    }
-//    MaskUiQuad* maskUi = dynamic_cast<MaskUiQuad*>(uielement);
-//    if(maskUi!=nullptr) {
-//        maskUisSorted.erase(std::remove(maskUisSorted.begin(), maskUisSorted.end(), maskUi), maskUisSorted.end());
-//        maskUisSorted.push_back(maskUi);
-//    }
+
 
 
 }
-//
-//void LaserZoneViewController :: mouseMoved(ofMouseEventArgs &e){
-//    ScrollableView :: mouseMoved(e);
-//    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-//    for(MaskUiQuad* maskUi: maskUis) {
-//        maskUi->mouseMoved(mouseEvent);
-//
-//    }
-//    for(ZoneUiBase* zoneUi: zoneUis) {
-//        zoneUi->mouseMoved(mouseEvent);
-//    }
-//
-//}
-//
-//bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
-//
-//    bool propagate = true;
-//
-//    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-//    // also check for middle button because if ALT is pressed it's reported
-//    // as button 2 lol
-//    if((e.button == OF_MOUSE_BUTTON_LEFT)||(e.button == OF_MOUSE_BUTTON_MIDDLE)){
-//
-//        for(int i = maskUisSorted.size()-1; i>=0; i--) {
-//
-//            MaskUiQuad* maskUi = maskUisSorted[i];
-//
-//            propagate &= maskUi->mousePressed(mouseEvent);
-//
-//            if(maskUi->getSelected() ) {
-//                // deselect all but the one we want
-//                deselectAllButThis(maskUi);
-//                break;
-//            }
-//
-//        }
-//        if(propagate) {
-//            for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-//                ZoneUiBase* zoneUi = zoneUisSorted[i];
-//
-//                propagate &= zoneUi->mousePressed(mouseEvent);
-//
-//                if(zoneUi->getSelected() ) {
-//                    deselectAllButThis(zoneUi);
-//                    break;
-//                }
-//            }
-//        }
-//        // if no zones hit then check if the view should drag
-//        if(propagate) {
-//            propagate & ScrollableView::mousePressed(e);
-//        }
-//
-//    } else if(e.button == OF_MOUSE_BUTTON_RIGHT) {
-////
-//        for(size_t i = 0; i<maskUis.size(); i++) {
-//            MaskUiQuad* maskUi = maskUis[i];
-//            if(maskUi->hitTest(mouseEvent.x, mouseEvent.y)) {
-//                maskUi->setSelected(true);
-//                maskUi->showContextMenu = true;
-//                deselectAllButThis(maskUi);
-//                propagate = false;
-//                break;
-//            }
-//
-//        }
-//
-//        if(propagate) {
-//
-//            for(int i = zoneUisSorted.size()-1; i>=0; i--) {
-//                ZoneUiBase* zoneUi = zoneUisSorted[i];
-//
-//                if(zoneUi->hitTest(mouseEvent.x, mouseEvent.y)) {
-//                    zoneUi->setSelected(true);
-//                    zoneUi->showContextMenu = true;
-//                    deselectAllButThis(zoneUi);
-//                    propagate = false;
-//                    break;
-//                }
-//            }
-//        }
-//    }
-//    return propagate;
-//}
-//
-//
-//void LaserZoneViewController :: mouseDragged(ofMouseEventArgs &e){
-//
-//    ScrollableView::mouseDragged(e);
-//
-//    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-//
-//
-//    for(MaskUiQuad* maskUi: maskUis) {
-//        maskUi->mouseDragged(mouseEvent);
-//
-//    }
-//    for(ZoneUiBase* zoneUi: zoneUis) {
-//        zoneUi->mouseDragged(mouseEvent);
-//
-//    }
-//
-//
-//
-//
-//}
-//void LaserZoneViewController :: mouseReleased(ofMouseEventArgs &e) {
-//    ScrollableView::mouseReleased(e);
-//
-//    ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
-//
-//    for(MaskUiQuad* maskUi: maskUis) {
-//        maskUi->mouseReleased(mouseEvent);
-//
-//    }
-//    for(ZoneUiBase* zoneUi: zoneUis) {
-//        zoneUi->mouseReleased(mouseEvent);
-//
-//    }
-//
-//
-//
-//}
-
 
 ZoneUiBase* LaserZoneViewController ::  getZoneInterfaceForOutputZone(OutputZone* outputZone) {
     
@@ -594,13 +407,13 @@ void LaserZoneViewController :: drawImGui() {
                 ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
                 if(ztq!=nullptr) {
                     if(ztq->isAxisAligned()) {
-                        UI::startGhosted();
+                        UI::startDisabled();
                     }
                     if(UI::Button("Reset to square")) {
                         ztq->resetToSquare();
 
                     }
-                    UI::stopGhosted();
+                    UI::stopDisabled();
                     UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
                     ImGui::SameLine();
                     if(UI::Button(ICON_FK_SQUARE_O))  {
@@ -747,27 +560,6 @@ void LaserZoneViewController :: drawImGui() {
                 //ImGui::OpenPopup("DELETE MASK");
                 
             }
-//            if(ImGui::BeginPopupModal("DELETE MASK")) {
-//
-//                ImGui::Text("Are you sure you want to delete this mask? All of its settings will be deleted.\n\n");
-//                ImGui::Separator();
-//
-//                UI::dangerColourStart();
-//                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-//                    ImGui::CloseCurrentPopup();
-//
-//
-//                }
-//
-//                UI::dangerColourEnd();
-//
-//                ImGui::SetItemDefaultFocus();
-//                ImGui::SameLine();
-//                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-//                    ImGui::CloseCurrentPopup();
-//                }
-//                ImGui::EndPopup();
-//            }
             
             ImGui::EndPopup();
         }
@@ -775,4 +567,12 @@ void LaserZoneViewController :: drawImGui() {
     }
             
   
+}
+void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize) {
+    
+    ViewWithMoveables::setGrid(snaptogrid, gridsize);
+    for(MaskUiQuad* mask : maskUis) {
+        mask->setGrid(false, 1);
+    }
+    
 }

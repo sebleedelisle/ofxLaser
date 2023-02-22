@@ -28,12 +28,16 @@ class LaserZoneViewController : public ViewWithMoveables {
     OutputZone* getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
     
     bool createZoneUiForOutputZone(OutputZone* outputZone);
-    void deselectAllButThis(MoveablePoly* uielement) override; 
+    void deselectAllButThis(MoveablePoly* uielement) override;
     
     bool doesAltZoneExistForZoneIndex(int zoneIndex); 
     
     bool update() override;
     void draw() override;
+    
+    
+    void setGrid(bool snaptogrid, int gridsize) override;
+    
     
     void drawImGui(); 
     void drawLaserPath();
@@ -41,39 +45,10 @@ class LaserZoneViewController : public ViewWithMoveables {
     bool updateMasks();
     int getLaserIndex(); 
 
-    //void setGrid(bool snaptogrid, int gridsize);
-    
-//    virtual void mouseMoved(ofMouseEventArgs &e) override;
-//    virtual bool mousePressed(ofMouseEventArgs &e) override;
-//    virtual void mouseDragged(ofMouseEventArgs &e) override;
-//    virtual void mouseReleased(ofMouseEventArgs &e) override;
-//    
     void resetUiElements();
     void moveMasksToBack();
-    
 
-    
-    // set source and output rect? Or is that in draw?
-    // draw
-    // for now let's not zoom, let's just concentrate on drawing stuff!
-    //
-    //
-
-    // one view per laser
-    // zone object
-    // periodically needs to update from the laser object
-    
-    
-    // settings :
-    // show path preview
-    // show dots
-    // visible / enabled
-    
     Laser* laser;
-    
-//    ofMesh gridMesh; 
-//    int gridSize = 1;
-//    bool snapToGrid = false;
     
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;

@@ -109,12 +109,21 @@ void ViewWithMoveables :: deselectAllButThis(MoveablePoly* uielement) {
     }
     
     // move selected to back of array
-    
-    uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uielement), uiElementsSorted.end());
-    uiElementsSorted.push_back(uielement);
+    if(uielement!=nullptr) {
+        uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uielement), uiElementsSorted.end());
+        uiElementsSorted.push_back(uielement);
+    }
 
 }
 
+void ViewWithMoveables :: deselectAll() {
+    
+    // deselect all but the one we want
+    for(MoveablePoly* uiElement: uiElements) {
+        uiElement->setSelected(false);
+    }
+    
+}
 
 void ViewWithMoveables :: mouseMoved(ofMouseEventArgs &e){
     ScrollableView :: mouseMoved(e);
@@ -210,6 +219,15 @@ bool ViewWithMoveables :: setUiElementsEnabled(bool enabled) {
         return true;
     } else {
         return false;
+    }
+    
+}
+
+
+
+void ViewWithMoveables :: setLockedAll(bool lockstate) {
+    for(MoveablePoly* uiElement: uiElements) {
+        uiElement->setDisabled(lockstate);
     }
     
 }

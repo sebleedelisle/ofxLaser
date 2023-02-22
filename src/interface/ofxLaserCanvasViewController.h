@@ -15,7 +15,7 @@ namespace ofxLaser {
 class CanvasViewController : public ViewWithMoveables {
     
     public :
-    
+    void drawImGui();
     bool updateZonesFromUI(vector<InputZone*>& zones);
     void updateUIFromZones(const vector<InputZone*>& zones);
     

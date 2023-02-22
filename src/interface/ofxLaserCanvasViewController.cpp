@@ -45,19 +45,20 @@ void CanvasViewController :: updateUIFromZones(const vector<InputZone*>& zones) 
         
         }
         vector<glm::vec2> points;
-        for(int j = 0; j<4; j++) {
-            int index = j;
-            if(index>1) index = 3 - (index%2);
-            points.push_back(zones[i]->handles[index]);
-
-        }
-        //DragHandle& handles =  zones[i]->handles;
-        poly->setFromPoints(points); //(vector<glm::vec2>));
+//        for(int j = 0; j<4; j++) {
+//            int index = j;
+//            if(index>1) index = 3 - (index%2);
+//            points.push_back(zones[i]->handles[index]);
+//
+//        }
+        
+        poly->setFromRect(zones[i]->getRect());
         poly->setLabel(ofToString(i+1));
+        poly->setGrid(true, 1); 
+        
             
     }
-    //vector<MoveablePoly*>::iterator it = uiElements.begin();
-    
+    // delete extra elements from the end, and remove them from the sorted array
     for(int i = zones.size(); i<uiElements.size(); i++) {
        
         uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uiElements[i]), uiElementsSorted.end());
@@ -68,3 +69,85 @@ void CanvasViewController :: updateUIFromZones(const vector<InputZone*>& zones) 
     
     
 }
+
+
+void CanvasViewController :: drawImGui() {
+    vector<MoveablePoly*> uiElementsToMoveBack;
+    
+    for(int i = 0; i<uiElements.size(); i++) {
+        ImGui::PushID(uiElements[i]->getLabel().c_str());
+        MoveablePoly& uiElement = *uiElements[i];
+        // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
+        
+        if(uiElement.getRightClickPressed()) {
+            ImGui::OpenPopup("CANVAS ZONE SETTINGS");
+        }
+        if(ImGui::BeginPopup("CANVAS ZONE SETTINGS")) {
+            
+            //OutputZone* laserZone : zoneUi->
+            ImGui::Text("CANVAS ZONE");
+            if(find(uiElementsSorted.begin(), uiElementsSorted.end(), &uiElement) == uiElementsSorted.begin()) {
+                UI::startDisabled();
+            }
+            if(UI::Button("Move to back")) {
+                uiElementsToMoveBack.push_back(&uiElement);
+                ImGui::CloseCurrentPopup();
+            }
+            UI::stopDisabled();
+            
+            string buttonlabel = "DELETE ZONE";
+            
+            if(UI::DangerButton(buttonlabel.c_str())) {
+                ImGui::OpenPopup("DELETE ZONE");
+            }
+            
+            if(ImGui::BeginPopupModal("DELETE ZONE")) {
+                
+                ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
+                ImGui::Separator();
+                
+                UI::dangerColourStart();
+                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                    
+                    // if this is an alt zone, just remove this
+                    // otherwise remove this and also its alt zone if
+                    // it has one
+                    //int zoneindex = i;//outputZone->getZoneIndex();
+                    //laser->removeZone(outputZone);
+                    //laser->removeAltZone(zoneindex);
+                    // LATER - TO DO - if this is a laser zone, delete it
+                    // if it's a canvas zone, keep it
+                    
+                    deselectAll();
+                    
+                }
+                
+                UI::dangerColourEnd();
+                
+                ImGui::SetItemDefaultFocus();
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        
+    }
+    
+    for(MoveablePoly* uiElement : uiElementsToMoveBack) {
+        vector<MoveablePoly*>::iterator it = find(uiElementsSorted.begin(), uiElementsSorted.end(), uiElement);
+        if(it!=uiElementsSorted.end()) {
+            uiElementsSorted.erase(it);
+            uiElementsSorted.insert(uiElementsSorted.begin(), uiElement);
+            uiElement->setSelected(false);
+        }
+        
+    }
+  
+}
+

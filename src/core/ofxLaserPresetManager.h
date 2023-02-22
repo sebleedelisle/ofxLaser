@@ -188,7 +188,7 @@ void PresetManager<T> :: drawSaveButtons(T& settings) {
     
     bool presetEdited = (settings!=currentPreset);
     
-    if(!presetEdited) UI::startGhosted();
+    if(!presetEdited) UI::startDisabled();
     label ="SAVE##"+T::getTypeName();
     
     if(ImGui::Button(label.c_str())) {
@@ -196,7 +196,7 @@ void PresetManager<T> :: drawSaveButtons(T& settings) {
         if(presetEdited)ImGui::OpenPopup(label.c_str());
         
     }
-    UI::stopGhosted();
+    UI::stopDisabled();
     label = "Save "+T::getTypeName()+" Preset";
     if (ImGui::BeginPopupModal(label.c_str(), 0)){
         string presetlabel = settings.getLabel();

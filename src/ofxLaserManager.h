@@ -18,12 +18,12 @@ enum ofxLaserViewMode {
     OFXLASER_VIEW_OUTPUT, // show laser output system
     
 };
-enum ofxLaserMouseMode {
-    OFXLASER_MOUSE_DEFAULT,
-    OFXLASER_MOUSE_DRAG, //
-    OFXLASER_MOUSE_ZOOM_IN, //
-    OFXLASER_MOUSE_ZOOM_OUT, //
-};
+//enum ofxLaserMouseMode {
+//    OFXLASER_MOUSE_DEFAULT,
+//    OFXLASER_MOUSE_DRAG, //
+//    OFXLASER_MOUSE_ZOOM_IN, //
+//    OFXLASER_MOUSE_ZOOM_OUT, //
+//};
 
 namespace ofxLaser {
 
@@ -49,11 +49,11 @@ class Manager : public ManagerBase {
     bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
-    glm::vec2 getPreviewOffset();
-    float getPreviewScale();
+//    glm::vec2 getPreviewOffset();
+//    float getPreviewScale();
     ofRectangle getPreviewRect();
     ofRectangle getZonePreviewRect();
-    void fitPreviewInRect(ofRectangle fitrect);
+   //oid fitPreviewInRect(ofRectangle fitrect);
     
     virtual void setCanvasSize(int width, int height) override; 
     bool setGuideImage(string filename);
@@ -95,7 +95,7 @@ class Manager : public ManagerBase {
     void guiShowLaserZoneContextMenu(); 
     
     // pop ups
-    void guiDeleteLaserButtonAndPopup(Laser* laser, int index);
+    bool guiDeleteLaserButtonAndPopup(Laser* laser, int index);
     void guiEditDacAliasButtonAndPopup(string daclabel);
 
     ofParameter<bool> showCustomParametersWindow;
@@ -122,12 +122,12 @@ class Manager : public ManagerBase {
     bool keyReleased(ofKeyEventArgs &e);
 
     void setDefaultPreviewOffsetAndScale();
-    void zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier);
+    //void zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier);
     void setLaserDefaultPreviewOffsetAndScale(int lasernum);
     
-    bool draggingPreview;
-    glm::vec2 dragStartPoint;
-    
+//    bool draggingPreview;
+//    glm::vec2 dragStartPoint;
+//    
     //----------- DEPRECATED ------------------------
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::nextProjector - use selectNextLaser() ", void nextProjector());
@@ -169,7 +169,7 @@ class Manager : public ManagerBase {
    
     int selectedLaserIndex;
     //bool showOutputInterface; // the zone editing interface
-    ofxLaserMouseMode mouseMode;
+    //ofxLaserMouseMode mouseMode;
     
     bool guiIsVisible;
     bool showEditScannerPreset = false;
@@ -184,9 +184,9 @@ class Manager : public ManagerBase {
     vector<LaserZoneViewController> laserZoneViews;
     CanvasViewController canvasViewController;
     
-    glm::vec2 previewOffset;
-    float previewScale;
-    
+//    glm::vec2 previewOffset;
+//    float previewScale;
+//
 
     
     PresetManager<ScannerSettings> scannerPresetManager;

@@ -41,6 +41,8 @@ class ScrollableView {
     
     void setSourceRect(ofRectangle rect);
     void setOutputRect(ofRectangle rect);
+    ofRectangle getOutputRect();
+    
     void autoFitToOutput();
     
     bool hitTest(glm::vec2 screenpos); 

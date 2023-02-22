@@ -24,14 +24,16 @@ class ViewWithMoveables : public ScrollableView  {
     bool setUiElementsEnabled(bool enabled);
     
     virtual void deselectAllButThis(MoveablePoly* uielement);
+    virtual void deselectAll(); 
 
-    void setGrid(bool snaptogrid, int gridsize);
+    virtual void setGrid(bool snaptogrid, int gridsize);
     
     virtual void mouseMoved(ofMouseEventArgs &e) override;
     virtual bool mousePressed(ofMouseEventArgs &e) override;
     virtual void mouseDragged(ofMouseEventArgs &e) override;
     virtual void mouseReleased(ofMouseEventArgs &e) override;
     
+    virtual void setLockedAll(bool lockstate);
     
     vector<MoveablePoly*> uiElements;
     vector<MoveablePoly*> uiElementsSorted;

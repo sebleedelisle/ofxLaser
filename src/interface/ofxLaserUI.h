@@ -17,12 +17,9 @@
 
 namespace ofxLaser {
 
-
 class UI {
     
     public :
-    
-    
     
     static ofxImGui::Gui imGui;
     static ImFont* font;
@@ -32,6 +29,7 @@ class UI {
     static bool initialised;
     
     static bool ghosted;
+    static bool disabled;
     static bool secondaryColourActive;
     static bool dangerColourActive;
     static bool largeItemActive; 
@@ -101,7 +99,9 @@ class UI {
     
     static void startGhosted() ;
     static void stopGhosted() ;
-    
+    static void startDisabled() ;
+    static void stopDisabled() ;
+
     static bool startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) ;
     static void drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled = false, bool fromCentre=false, float thickness = 2.0f) ;
     

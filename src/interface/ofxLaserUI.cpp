@@ -18,6 +18,7 @@ ImFont* ofxLaser::UI::symbolFont;
 
 bool ofxLaser::UI::initialised = false;
 bool ofxLaser::UI::ghosted = false;
+bool ofxLaser::UI::disabled = false;
 bool ofxLaser::UI:: secondaryColourActive = false;
 bool ofxLaser::UI:: dangerColourActive = false;
 bool ofxLaser::UI:: largeItemActive = false;
@@ -775,6 +776,18 @@ void UI::stopGhosted() {
     }
 }
 
+void UI::startDisabled() {
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+    ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+    disabled = true;
+}
+void UI::stopDisabled() {
+    if(disabled) {
+        ImGui::PopStyleVar();
+        ImGui::PopItemFlag();
+        disabled = false;
+    }
+}
 bool UI::startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flags, bool resetPosition, bool* openstate) {
     ImGuiWindowFlags window_flags = flags;
     window_flags |= ImGuiWindowFlags_NoNav;

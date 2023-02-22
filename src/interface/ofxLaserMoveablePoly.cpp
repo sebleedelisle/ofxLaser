@@ -92,7 +92,7 @@ void MoveablePoly :: drawLabel() {
     } else {
         ofSetColor(strokeColour);
     }
-    //if(getLocked()) label = label + " (locked)";
+    
     ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     
     ofPopStyle();
@@ -402,7 +402,18 @@ bool MoveablePoly :: setFromPoints(vector<glm::vec2>& pointsref) {
     
 }
 
-
+bool MoveablePoly :: setFromRect(ofRectangle rect) {
+    
+    bool changed = false;
+    if(handles.size()!=4) {
+        handles.resize(4);
+        changed = true;
+    }
+    vector<glm::vec2> points = {rect.getTopLeft(), rect.getTopRight(), rect.getBottomRight(), rect.getBottomLeft()};
+    
+    return setFromPoints(points) | changed;
+    
+}
 vector<glm::vec2*> MoveablePoly :: getPoints() {
     
     vector<glm::vec2*> returnpoints;
