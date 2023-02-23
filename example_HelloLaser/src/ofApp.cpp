@@ -25,7 +25,7 @@ void ofApp::update(){
 void ofApp::draw() {
     
     ofBackground(5,5,10);
-    
+   
     // Drawing a laser line, provide the start point, end point and colour.
     // (you can also use glm::vec3). The final parameter is the render profile.
     // Three profiles are provided, default, fast and detail.
@@ -62,6 +62,7 @@ void ofApp::draw() {
     laser.drawCircle(mousepos, 5, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
     
     ofPopMatrix();
+    
     // sends points to the DAC
     laser.send();
     // draw the laser UI elements

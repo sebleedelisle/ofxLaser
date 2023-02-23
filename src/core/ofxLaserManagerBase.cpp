@@ -230,7 +230,7 @@ void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const o
     
     
     //Line l = new Line(gLProject(start), gLProject(end), ofFloatColor(col), 1, 1);
-    Line* l = new Line(gLProject(start), gLProject(end), col, profileLabel);
+    Line* l = new Line(convert3DTo2D(start), convert3DTo2D(end), col, profileLabel);
     l->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
     shapes.push_back(l);
     
@@ -246,7 +246,7 @@ void ManagerBase::drawDot( const glm::vec2& p, const ofColor& col, float intensi
 }
 void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensity, string profileLabel) {
     
-    Dot* d = new Dot(gLProject(p), col, intensity, profileLabel);
+    Dot* d = new Dot(convert3DTo2D(p), col, intensity, profileLabel);
     d->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
     shapes.push_back(d);
 }
@@ -263,10 +263,8 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
     polyline = poly;
     
     for(glm::vec3& v : polyline.getVertices()) {
-        v = gLProject(v);
+        v = convert3DTo2D(v);
     }
-    
-    
     
     Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
     p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
@@ -287,7 +285,7 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
     polyline = poly;
     
     for(glm::vec3& v : polyline.getVertices()) {
-        v = gLProject(v);
+        v = convert3DTo2D(v);
     }
     if(brightness<1) {
         for(ofColor & c : colours) {
@@ -306,17 +304,9 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     if(points.size()==0) return;
     tmpPoints = points;
     for(glm::vec3& v : tmpPoints) {
-        v = gLProject(v);
+        v = convert3DTo2D(v);
     }
-    //vector<ofColor>* colourPointer = &colours;
-    
-    //    if(brightness<1) {
-    //        tmpColours = colours;
-    //        for(ofColor & c : tmpColours) {
-    //            c*=brightness;
-    //
-    //        }
-    //    }
+
     ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
     
     if(p->polylinePointer->getPerimeter()>0.1) {
@@ -340,7 +330,7 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
     ofPolyline& polyline = c->polyline;
     
     for(glm::vec3& v : polyline.getVertices()) {
-        v = gLProject(v);
+        v = convert3DTo2D(v);
     }
     shapes.push_back(c);
     
@@ -592,15 +582,12 @@ bool ManagerBase::loadSettings() {
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
     if((json.contains("canvasWidth")) && (json.contains("canvasHeight"))){
-        
-        
+
     }
-        
-    
+
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
-    
-    
+
     // load the zone config files
     
     ofJson zonesJson;
@@ -697,12 +684,13 @@ bool ManagerBase::saveSettings() {
 }
 
 // converts openGL coords to screen coords //
-ofPoint ManagerBase::gLProject(ofPoint p) {
-    return gLProject(p.x, p.y, p.z);
+ofPoint ManagerBase::convert3DTo2D(ofPoint p) {
+    return convert3DTo2D(p.x, p.y, p.z);
     
 }
-ofPoint ManagerBase::gLProject( float x, float y, float z ) {
-    
+
+ofPoint ManagerBase::convert3DTo2D( float x, float y, float z ) {
+
     ofRectangle rViewport = ofGetCurrentViewport();
     
     glm::mat4 modelview, projection;
@@ -721,7 +709,7 @@ ofPoint ManagerBase::gLProject( float x, float y, float z ) {
     
     dScreen.y *= rViewport.height;
     dScreen.y += rViewport.y;
-    
+
     return ofPoint(dScreen.x, dScreen.y, 0.0f);// - offset;
     
 }
@@ -737,12 +725,6 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 
 
 
-//
-//Zone& ManagerBase::getZone(int zonenum) {
-//    // TODO bounds check?
-//    return *zones.at(zonenum);
-//    
-//}
 InputZone* ManagerBase::getZone(int zonenum) {
     // TODO bounds check?
     if((zonenum>=0) && (zonenum<zones.size())) {
@@ -805,6 +787,7 @@ bool ManagerBase::hasAnyAltZones() {
     }
     return false;
 }
+
 void ManagerBase::setAllAltZones() {
     for(Laser* laser : lasers) {
         laser->useAlternate = true;

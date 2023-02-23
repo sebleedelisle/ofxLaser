@@ -43,7 +43,6 @@ class ManagerBase {
     ManagerBase();
     ~ManagerBase();
     
-    
     virtual void update();
    
     virtual bool deleteLaser(Laser* laser);
@@ -70,8 +69,6 @@ class ManagerBase {
     int getLaserPointRate(unsigned int lasernum = 0);
     float getLaserFrameRate(unsigned int lasernum);
     
-//    void armAllLasersListener();
-//    void disarmAllLasersListener();
     void armAllLasers();
     void disarmAllLasers();
     void updateGlobalTestPattern();
@@ -116,8 +113,6 @@ class ManagerBase {
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
     
-    ofPoint gLProject(ofPoint p);
-    ofPoint gLProject( float ax, float ay, float az ) ;
   
     //--------------------------------------------------------
     
@@ -148,6 +143,24 @@ class ManagerBase {
     ofJson loadedJson;
     
     protected :
+    
+    ofPoint convert3DTo2D(ofPoint p);
+    ofPoint convert3DTo2D( float ax, float ay, float az );
+    
+    void beginDraw() {
+        // to do : check target
+        ofViewport((ofGetWidth()-canvasWidth)/-2, (ofGetHeight()-canvasHeight)/-2, ofGetWidth(), ofGetHeight()) ;
+        ofPushMatrix();
+        ofTranslate((ofGetWidth()-canvasWidth)/2, (ofGetHeight()-canvasHeight)/2);
+        
+    }
+    void endDraw() {
+        ofPopMatrix();
+        ofViewport(0,0,ofGetWidth(), ofGetHeight());
+    }
+    
+    
+    
     ofFbo canvasPreviewFbo;
     
 //    bool doArmAll = false;
