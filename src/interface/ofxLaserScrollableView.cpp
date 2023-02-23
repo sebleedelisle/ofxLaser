@@ -123,8 +123,19 @@ void ScrollableView::zoom(glm::vec2 anchor, float zoomMultiplier){
 void ScrollableView::setSourceRect(ofRectangle rect) {
     sourceRect = rect;
 }
-void ScrollableView::setOutputRect(ofRectangle rect){
-    outputRect = rect;
+void ScrollableView::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
+    if(outputRect!=rect) {
+        if(updatescaleandoffset) {
+            float relativescale = rect.getWidth()/outputRect.getWidth();
+            glm::vec2 topleft(outputRect.getLeft(), outputRect.getTop());
+            offset -=topleft;
+            offset *=relativescale;
+            offset+=topleft;
+            scale*=relativescale;
+        }
+        
+        outputRect = rect;
+    }
 }
 
 ofRectangle ScrollableView::getOutputRect() {

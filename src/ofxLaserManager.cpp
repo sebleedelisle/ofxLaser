@@ -21,9 +21,6 @@ Manager * Manager::instance() {
 
 Manager :: Manager() {
     
-//    previewOffset = glm::vec2(10,60);
-//    previewScale = 1;
-//
     if(laserManager == NULL) {
         laserManager = this;
     } else {
@@ -42,20 +39,16 @@ Manager :: Manager() {
         if(zones.size()==0) createDefaultZone();
         for(Laser* laser : lasers) {
             laser->addZone(0);
-
         }
-       
-        
     }
     
     
     selectedLaserIndex = 0;
     viewMode  = OFXLASER_VIEW_CANVAS;
-    //mouseMode = OFXLASER_MOUSE_DEFAULT;
+
     guiIsVisible = true;
     guiLaserSettingsPanelWidth = 320;
     guiSpacing = 8;
-    //draggingPreview = false;
      
     setDefaultPreviewOffsetAndScale();
     
@@ -64,17 +57,14 @@ Manager :: Manager() {
     params.add(guideImageFilename.set("Guide image filename", ""));
     dacSettingsTimeSlice.set("Magnification", 0.5, 0.1, 20);
     
-    // bit of a hack - ideally UI elements should be completely separate from
-    // the ManagerBase but I'm not quite there yet.
-    if(!loadJson.empty()) {
-        if(loadJson.contains("Laser")) {
-            //cout << loadJson["Laser"]["Show_guide_image"].dump(3)<< endl;
-            //cout << loadJson["Laser"]["Guide_image_colour"].dump(3)<< endl;
-            //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
+    // loadedJson is filled on loadSettings. So now check the extras.
+    if(!loadedJson.empty()) {
+        if(loadedJson.contains("Laser")) {
+          
             try {
-                ofDeserialize(loadJson["Laser"], showGuideImage);
-                ofDeserialize(loadJson["Laser"], guideImageColour);
-                ofDeserialize(loadJson["Laser"], guideImageFilename);
+                ofDeserialize(loadedJson["Laser"], showGuideImage);
+                ofDeserialize(loadedJson["Laser"], guideImageColour);
+                ofDeserialize(loadedJson["Laser"], guideImageFilename);
                 if(guideImageFilename.get()!="") setGuideImage("guideImages/" + guideImageFilename.get());
                
             } catch(...) {
@@ -125,8 +115,6 @@ void Manager :: createAndAddLaser()  {
 void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
     LaserZoneViewController* laserview = getLaserViewControllerByIndex(lasernum);
     if(laserview!=nullptr) {
-        //float scale = ((ofGetHeight()/2)-iconBarHeight-menuBarHeight)/800.0f;
-        //laserview->setOffsetAndScale(glm::vec2(guiSpacing, guiSpacing+iconBarHeight+menuBarHeight), scale);
         laserview->autoFitToOutput();
     }
 }
@@ -151,7 +139,6 @@ void Manager :: initAndLoadSettings() {
     params.add(interfaceParams);
     
     customParams.setName("CUSTOM PARAMETERS");
-    //params.add(customParams);
     
     // is this still used ?
     params.add(zoneEditorShowLaserPath.set("Show path in zone editor", true));
@@ -159,8 +146,7 @@ void Manager :: initAndLoadSettings() {
     params.add(zoneGridSnap.set("Zone snap to grid", true));
     params.add(zoneGridSize.set("Zone grid size", 20,1,50));
     params.add(globalLatency.set("Latency (ms)", 150,0,400));
-   
-    
+
    // params.add(showDacAssignmentWindow.set("showDacAssignmentWindow", false));
     params.add(showCustomParametersWindow.set("showCustomParametersWindow", true));
     params.add(showLaserManagementWindow.set("showLaserManagementWindow", true));
@@ -223,7 +209,7 @@ void Manager :: mouseMoved(ofMouseEventArgs &e) {
 
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
-    //if(ofGetKeyPressed(' ')) {
+
    // ofLogNotice("Manager :: mousePressed"); 
     if (viewMode  == OFXLASER_VIEW_CANVAS) {
         canvasViewController.mousePressed(e);
@@ -298,38 +284,15 @@ void Manager :: mouseScrolled(ofMouseEventArgs &e){
 }
 
 bool Manager :: keyPressed(ofKeyEventArgs &e) {
-
-//    if(ofGetKeyPressed(' ')) {
-//        if(ofGetKeyPressed(OF_KEY_COMMAND))  {
-//            mouseMode = OFXLASER_MOUSE_ZOOM_IN;
-//        } else if(ofGetKeyPressed(OF_KEY_ALT)) {
-//            mouseMode = OFXLASER_MOUSE_ZOOM_OUT;
-//        } else {
-//            mouseMode = OFXLASER_MOUSE_DRAG;
-//        }
-//    }
     // false means we keep the event bubbling
     return false;
 }
        
 bool Manager :: keyReleased(ofKeyEventArgs &e){
-//    if(e.key == ' ' ) {
-//
-//        mouseMode = OFXLASER_MOUSE_DEFAULT;
-//
-//    }
     //false means we keep the event bubbling
     return false;
 }
 
-//
-//void Manager :: zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier) {
-////    glm::vec2 offset = anchor-previewOffset;
-////    offset-=(offset*zoomMultiplier);
-////    previewOffset+=offset;
-////    previewScale*=zoomMultiplier;
-//
-//}
 
 bool Manager :: deleteLaser(Laser* laser) {
     
@@ -426,30 +389,9 @@ void Manager :: startLaserUI() {
 void Manager :: finishLaserUI() {
     ofxLaser::UI::render();
     renderCustomCursors();
-    
-    
 }
 
 void Manager :: renderCustomCursors() {
-//
-//    if(mouseMode!=OFXLASER_MOUSE_DEFAULT) {
-//        ofHideCursor(); // TODO add so that it only happens over the preview
-//        ofPushMatrix();
-//        ofTranslate(ofGetMouseX(), ofGetMouseY());
-//        ofScale(0.6);
-//        ofTranslate(-12,-12);
-//        // ofEnableDepthTest();
-//        if(mouseMode == OFXLASER_MOUSE_ZOOM_IN) { // ofGetKeyPressed(OF_KEY_COMMAND)) {
-//            iconSVGs.iconMagPlus.draw();
-//        } else if(mouseMode == OFXLASER_MOUSE_ZOOM_OUT) { // if(ofGetKeyPressed(OF_KEY_ALT)) {
-//            iconSVGs.iconMagMinus.draw();
-//        } else if(mouseMode == OFXLASER_MOUSE_DRAG) { // } else if(ofGetMousePressed()){
-//            if(ofGetMousePressed()) iconSVGs.iconGrabClosed.draw();
-//            else iconSVGs.iconGrabOpen.draw();
-//        }
-//        // ofDisableDepthTest();
-//        ofPopMatrix();
-//    } else ofShowCursor();
     
 }
 
@@ -458,7 +400,7 @@ void Manager :: drawPreviews() {
     // update visibility and size on views
     for(LaserZoneViewController& laserZoneView : laserZoneViews) {
         laserZoneView.setIsVisible((viewMode==OFXLASER_VIEW_OUTPUT) &&(laserZoneView.laser==getSelectedLaser()));
-        //laserZoneView.setOutputRect(getZonePreviewRect());
+        laserZoneView.setOutputRect(getZonePreviewRect(), true);
     }
     
     canvasViewController.setIsVisible(viewMode==OFXLASER_VIEW_CANVAS);
@@ -567,50 +509,8 @@ void Manager :: drawPreviews() {
     
 }
 void Manager :: renderPreview() {
-    
-    //
-    //    ofPushStyle();
-    //    ofFill();
-    //    ofSetColor(0);
-    //    ofPushMatrix();
-    //    ofTranslate(previewOffset);
-    //    ofScale(previewScale);
-    //    ofDrawRectangle(0,0,width, height);
-    //    ofPopMatrix();
-    //    ofPopStyle();
-    //
-//
-//    ofRectangle previewRect = getPreviewRect();
-//    ofRectangle screenRect(0,0,ofGetWidth(), ofGetHeight());
-//    ofRectangle visibleRect = previewRect.getIntersection(screenRect);
-//
-//    int fbowidth = visibleRect.getWidth();
-//    int fboheight = visibleRect.getHeight();
-//
-//    if((canvasPreviewFbo.getWidth()!=fbowidth) || (canvasPreviewFbo.getHeight()!=fboheight)) {
-//        // previewFbo.clear();
-//        canvasPreviewFbo.allocate(fbowidth, fboheight, GL_RGB, 3);
-//    }
-//
-//    canvasPreviewFbo.begin();
-    
-   // ofClear(0,0,0,0);
     ofPushStyle();
-    // ofEnableSmoothing();
-//    ofPushMatrix();
-//    ofTranslate(previewRect.getTopLeft()-visibleRect.getTopLeft());
-//    //ofTranslate(previewOffset);
-//    ofScale(previewScale, previewScale);
-//
-    
-    // draw outline of laser output area
-//    ofSetColor(0);
-//    ofFill();
-//    ofDrawRectangle(0,0,canvasWidth,canvasHeight);
-//    ofSetColor(50);
-//    ofNoFill();
-//    ofDrawRectangle(0,0,canvasWidth,canvasHeight);
-    
+
     // Draw laser graphics preview ----------------
     ofMesh mesh;
     ofEnableBlendMode(OF_BLENDMODE_ADD);
@@ -622,31 +522,31 @@ void Manager :: renderPreview() {
         shapes[i]->addPreviewToMesh(mesh);
     }
     
-    if(useBitmapMask) {
-        ofRectangle laserRect(0,0,canvasWidth, canvasHeight);
-        const vector<glm::vec3>& points = mesh.getVertices();
-        std::vector<ofFloatColor>& colours = mesh.getColors();
-        
-        for(size_t i= 0;i<points.size(); i++ ){
-            
-            ofFloatColor& c = colours.at(i);
-            const glm::vec3& p = points[i];
-            
-            
-            float brightness;
-            
-            if(laserRect.inside(p)) {
-                brightness = laserMask.getBrightness(p.x, p.y);
-            } else {
-                brightness = 0;
-            }
-            
-            c.r*=brightness;
-            c.g*=brightness;
-            c.b*=brightness;
-            
-        }
-    }
+//    if(useBitmapMask) {
+//        ofRectangle laserRect(0,0,canvasWidth, canvasHeight);
+//        const vector<glm::vec3>& points = mesh.getVertices();
+//        std::vector<ofFloatColor>& colours = mesh.getColors();
+//
+//        for(size_t i= 0;i<points.size(); i++ ){
+//
+//            ofFloatColor& c = colours.at(i);
+//            const glm::vec3& p = points[i];
+//
+//
+//            float brightness;
+//
+//            if(laserRect.inside(p)) {
+//                brightness = laserMask.getBrightness(p.x, p.y);
+//            } else {
+//                brightness = 0;
+//            }
+//
+//            c.r*=brightness;
+//            c.g*=brightness;
+//            c.b*=brightness;
+//
+//        }
+//    }
     
     ofSetLineWidth(1.5);
     mesh.draw();
@@ -670,15 +570,7 @@ void Manager :: renderPreview() {
         
     }
     ofDisableBlendMode();
-    // ofDisableSmoothing();
-    
-    //ofPopMatrix();
-    
- //   ofPopStyle();
-//    canvasPreviewFbo.end();
-//    ofPushStyle();
-//    ofEnableBlendMode(OF_BLENDMODE_ADD);
-//    canvasPreviewFbo.draw(visibleRect.getTopLeft());
+
     ofPopStyle();
 }
 
@@ -702,12 +594,12 @@ void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettin
     customParams.add(param);
     if(loadFromSettings){
         //loadJson.find("custom");
-        if(!loadJson.empty()) {
-            if(loadJson.contains("Laser")) {
-                if(loadJson["Laser"].contains("CUSTOM_PARAMETERS")) {
+        if(!loadedJson.empty()) {
+            if(loadedJson.contains("Laser")) {
+                if(loadedJson["Laser"].contains("CUSTOM_PARAMETERS")) {
                     //     auto value = loadJson["Laser"]["Custom"][param.getName()];
                     try {
-                        ofDeserialize(loadJson["Laser"]["CUSTOM_PARAMETERS"], param);
+                        ofDeserialize(loadedJson["Laser"]["CUSTOM_PARAMETERS"], param);
                     } catch(...) {
                         
                     }

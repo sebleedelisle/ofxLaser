@@ -55,7 +55,7 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     canvasHeight.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
   
     
-    useBitmapMask = showBitmapMask = laserMasks = false;
+    //useBitmapMask = showBitmapMask = laserCanvasMaskOutlines = false;
     params.add(numLasers.set("numLasers", 0));
     params.add(useAltZones.set("Use alternative zones", false));
     params.add(dontCalculateDisconnected.set("Don't calculate disconnected", false));
@@ -365,17 +365,13 @@ void ManagerBase:: update(){
     
     dacAssigner.update();
     
-    if(doArmAll) armAllLasers();
-    if(doDisarmAll) disarmAllLasers();
-    
     for(ofxLaser::Laser* laser : lasers) {
         laser->emptyDac.dontCalculate = dontCalculateDisconnected.get();
     }
     
-    
     zonesChanged = false;
     
-    if(useBitmapMask) laserMask.update();
+    //if(useBitmapMask) laserMask.update();
     // delete all the shapes - all shape objects need a destructor!
     for(size_t i= 0; i<shapes.size(); i++) {
         delete shapes[i];
@@ -423,7 +419,7 @@ void ManagerBase:: update(){
 void ManagerBase::send(){
     
     // for when we reinstate canvas masks, we'll need to rework this
-    if(laserMasks) {
+//    if(laserCanvasMaskOutlines) {
 //        vector<ofPolyline*> polylines = laserMask.getLaserMaskShapes();
 //        for(ofPolyline* poly : polylines) {
 //            ofPoint centre= poly->getCentroid2D();
@@ -441,7 +437,7 @@ void ManagerBase::send(){
 //        }
 //
 //        for(ofPolyline* poly : polylines)  ofxLaser::Factory::releasePolyline(poly);
-    }
+//    }
     
     
     // here's where the magic happens.
@@ -519,7 +515,7 @@ void ManagerBase::send(){
         
         Laser& p = *lasers[i];
         
-        p.send(zonesContent, globalBrightness, useBitmapMask?laserMask.getPixels():NULL);
+        p.send(zonesContent, globalBrightness, NULL);// useBitmapMask?laserMask.getPixels():NULL);
         
         std::this_thread::yield();
         
@@ -553,26 +549,25 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
 }
 
 
-
-void ManagerBase::armAllLasersListener() {
-    doArmAll = true;
-}
-
-void ManagerBase::disarmAllLasersListener(){
-    doDisarmAll = true;
-}
+//
+//void ManagerBase::armAllLasersListener() {
+//    doArmAll = true;
+//}
+//
+//void ManagerBase::disarmAllLasersListener(){
+//    doDisarmAll = true;
+//}
 void ManagerBase::armAllLasers() {
     
     for(size_t i= 0; i<lasers.size(); i++) {
         lasers[i]->armed = true;
     }
-    doArmAll = false;
+   
 }
 void ManagerBase::disarmAllLasers(){
     for(size_t i= 0; i<lasers.size(); i++) {
         lasers[i]->armed = false;
     }
-    doDisarmAll = false;
 }
 void ManagerBase::updateGlobalTestPattern(){
     for(size_t i= 0; i<lasers.size(); i++) {
@@ -589,7 +584,7 @@ void ManagerBase::useAltZonesChanged(bool& state) {
 }
 
 bool ManagerBase::loadSettings() {
-    ofJson& json = loadJson;
+    ofJson& json = loadedJson;
     string filename ="ofxLaser/laserSettings.json";
     if(ofFile(filename).exists()) {
         json = ofLoadJson("ofxLaser/laserSettings.json");

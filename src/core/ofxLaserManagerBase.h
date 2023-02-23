@@ -70,8 +70,8 @@ class ManagerBase {
     int getLaserPointRate(unsigned int lasernum = 0);
     float getLaserFrameRate(unsigned int lasernum);
     
-    void armAllLasersListener();
-    void disarmAllLasersListener();
+//    void armAllLasersListener();
+//    void disarmAllLasersListener();
     void armAllLasers();
     void disarmAllLasers();
     void updateGlobalTestPattern();
@@ -107,9 +107,6 @@ class ManagerBase {
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
   
-    
-     
-   // Zone& getZone(int zonenum);
     InputZone* getZone(int zonenum);
     int getNumZones();
     bool setTargetZone(unsigned int zone);
@@ -132,9 +129,9 @@ class ManagerBase {
     bool testPatternGlobalActive;
     
     ofParameter<bool> useAltZones;
-    ofParameter<bool> useBitmapMask;
-    ofParameter<bool> showBitmapMask;
-    ofParameter<bool> laserMasks;
+    //ofParameter<bool> useBitmapMask;
+    //ofParameter<bool> showBitmapMask;
+    //ofParameter<bool> laserCanvasMaskOutlines;
     ofParameter<int> numLasers; // << not used except for load / save
     
     ofParameter<bool> dontCalculateDisconnected;
@@ -148,13 +145,13 @@ class ManagerBase {
     
     ofParameterGroup params;
  
-    ofJson loadJson;
+    ofJson loadedJson;
     
     protected :
     ofFbo canvasPreviewFbo;
     
-    bool doArmAll = false;
-    bool doDisarmAll = false;
+//    bool doArmAll = false;
+//    bool doDisarmAll = false;
     
     virtual void createAndAddLaser();
     

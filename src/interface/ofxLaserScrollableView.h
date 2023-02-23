@@ -40,7 +40,7 @@ class ScrollableView {
     bool getIsVisible(); 
     
     void setSourceRect(ofRectangle rect);
-    void setOutputRect(ofRectangle rect);
+    void setOutputRect(ofRectangle rect, bool updatescaleandoffset = false);
     ofRectangle getOutputRect();
     
     void autoFitToOutput();
