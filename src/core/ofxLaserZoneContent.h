@@ -27,8 +27,7 @@ class ZoneContent {
     vector<Shape*> shapes;
     
     ofRectangle sourceRectangle;
-    bool globalTestPatternState;
-    int globalTestPatternStyle;
+
 
 };
 

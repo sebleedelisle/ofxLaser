@@ -67,10 +67,10 @@ void ViewWithMoveables :: drawGrid() {
         ofSetColor(ofMap(gridSize*scale, 5, 100, 60,180, true));
     }
     ofDisableAntiAliasing();
-    ofPushMatrix();
-    ofTranslate(0.5f/scale, 0.5f/scale);
+    //ofPushMatrix();
+    //ofTranslate(0.5f/scale, 0.5f/scale);
     gridMesh.draw();
-    ofPopMatrix();
+    //ofPopMatrix();
     ofEnableAntiAliasing();
     ofPopStyle();
 }
@@ -93,7 +93,7 @@ void ViewWithMoveables :: setGrid(bool snaptogrid, int gridsize){
         while(spacing<5) spacing *=2;
         for(int x = 0; x<=800; x+=spacing) {
             for(int y = 0; y<=800; y+=spacing) {
-                gridMesh.addVertex(ofPoint(MIN(800,x+0.5),MIN(800,y+0.5)));
+                gridMesh.addVertex(ofPoint(MIN(800,x),MIN(800,y)));
             }
         }
         gridMesh.setMode(OF_PRIMITIVE_POINTS);

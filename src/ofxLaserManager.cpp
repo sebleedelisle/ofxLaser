@@ -36,13 +36,11 @@ Manager :: Manager() {
     if(lasers.size()==0) {
         createAndAddLaser();
 
-        if(zones.size()==0) createDefaultZone();
-        for(Laser* laser : lasers) {
-            laser->addZone(0);
-        }
+        if(canvasTarget.zones.size()==0) createDefaultZone();
+        lasers[0]->addZone(0);
+       
     }
-    
-    
+
     selectedLaserIndex = 0;
     viewMode  = OFXLASER_VIEW_CANVAS;
 
@@ -189,10 +187,10 @@ void Manager :: update() {
     canvasViewController.setSourceRect(ofRectangle(0,0,canvasWidth, canvasHeight));
     canvasViewController.setOutputRect(ofRectangle(10,10,canvasWidth, canvasHeight));
     if(canvasViewController.update()) {
-        canvasViewController.updateZonesFromUI(zones);
+        canvasViewController.updateZonesFromUI(canvasTarget.zones);
         saveSettings();
     }
-    canvasViewController.updateUIFromZones(zones);
+    canvasViewController.updateUIFromZones(canvasTarget.zones);
     canvasViewController.setLockedAll(lockInputZones);
    
     
@@ -517,6 +515,11 @@ void Manager :: renderPreview() {
     mesh.clear();
     mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
     
+    // TODO - render preview move to canvas object!
+    // Which then also means pushing all the bitmap mask,
+    // guide image, width height etc into the canvas object!
+    
+    std::deque <ofxLaser::Shape*>& shapes = canvasTarget.shapes;
     // Draw the preview laser graphics, with zones overlaid
     for(size_t i= 0; i<shapes.size(); i++) {
         shapes[i]->addPreviewToMesh(mesh);
@@ -690,8 +693,8 @@ void Manager::drawLaserGui() {
                 
                 // MAKE NEW ZONE panel
                 //ImGui::OpenPopup("Add zone");
-                addZone(0,0,200,200);
-                int zonenum = zones.size()-1;
+                addCanvasZone(0,0,200,200);
+                int zonenum = canvasTarget.zones.size()-1;
                 int lasernum = getSelectedLaserIndex();
                 addZoneToLaser(zonenum, lasernum);
                 
@@ -852,7 +855,7 @@ void Manager::guiLaserOutputSettings() {
 
             // ADD / REMOVE ZONES
             ImGui::Text("Zones");
-            for(InputZone* zone : zones) {
+            for(InputZone* zone : canvasTarget.zones) {
                 int zoneIndex = zone->getIndex();
                 
                 bool checked = laser->hasZone(zoneIndex);
@@ -867,7 +870,7 @@ void Manager::guiLaserOutputSettings() {
             }
             ImGui::NextColumn();
             ImGui::Text("Alternate zones");
-            for(InputZone* zone : zones) {
+            for(InputZone* zone : canvasTarget.zones) {
                 int zoneIndex = zone->getIndex();
                 bool checked = laser->hasAltZone(zoneIndex);
                 string label = ofToString(zoneIndex+1) + "##alt";
@@ -1319,7 +1322,7 @@ void Manager :: guiLaserOverview() {
     
         ImGui::SameLine();
         if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
-            addZone(0,0,280,110);
+            addCanvasZone(0,0,280,110);
             lockInputZones = false;
             saveSettings();
         }

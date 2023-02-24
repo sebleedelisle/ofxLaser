@@ -461,24 +461,24 @@ int Laser::getDacConnectedState() {
 }
 
 
-void Laser::update(bool updateZones) {
+void Laser::update() {
 
    // bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
     
     // if any of the source rectangles have changed then update all the warps
     // (shouldn't need anything saving)
-    if(updateZones) {
-       
-        for(OutputZone* laserZone : outputZones) {
-            //ZoneTransform& warp = laserZone->zoneTransform;
-            //laserZone->init(laserZone->zone.rect);
-            //laserZone->updateHomography();
-            
-        }
-        
-        //updateZoneMasks();
-    }
+//    if(updateZones) {
+//       
+//        for(OutputZone* laserZone : outputZones) {
+//            //ZoneTransform& warp = laserZone->zoneTransform;
+//            //laserZone->init(laserZone->zone.rect);
+//            //laserZone->updateHomography();
+//            
+//        }
+//        
+//        //updateZoneMasks();
+//    }
     
     needsSave = maskManager.update() | needsSave;
     

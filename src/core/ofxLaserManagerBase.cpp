@@ -48,13 +48,11 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.setName("Laser");
     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
 
-    
     params.add(canvasWidth.set("Canvas width", 800,0,5000));
     params.add(canvasHeight.set("Canvas height", 800,0,5000));
     canvasWidth.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
     canvasHeight.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
   
-    
     //useBitmapMask = showBitmapMask = laserCanvasMaskOutlines = false;
     params.add(numLasers.set("numLasers", 0));
     params.add(useAltZones.set("Use alternative zones", false));
@@ -71,18 +69,6 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
 ManagerBase :: ~ManagerBase() {
     //ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
     saveSettings();
-    
-    //    // clean up
-    //    for(Laser* laser : lasers) {
-    //        delete laser;
-    //    }
-    //    lasers.clear();
-    //
-    //    for(Zone* zone : zones) {
-    //        delete zone;
-    //    }
-    //    zones.clear();
-    //    // anything else?
     
 }
 void ManagerBase::canvasSizeChanged(int &size){
@@ -160,42 +146,26 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     return true;
 }
 
-void ManagerBase::addZone(const ofRectangle& rect) {
-    addZone(rect.x, rect.y, rect.width, rect.height);
+void ManagerBase::addCanvasZone(const ofRectangle& rect) {
+    addCanvasZone(rect.x, rect.y, rect.width, rect.height);
     
 }
 
-void ManagerBase :: addZone(float x, float y, float w, float h) {
+void ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
     if(w<=0) w = canvasWidth;
     if(h<=0) h = canvasHeight;
-    zones.push_back(new InputZone( x, y, w, h));
-    //zones.back()->loadSettings();
-    renumberZones();
+    canvasTarget.addInputZone(x, y, w, h);
 }
 
-bool ManagerBase :: deleteZone(InputZone* zone) {
-    
-    vector<InputZone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
-    if(it == zones.end()) return false;
-    
-    
-    zones.erase(it);
-    renumberZones();
-    
+bool ManagerBase :: deleteCanvasZone(InputZone* zone) {
+    // TODO need to renumber references in lasers!
     for(Laser* laser : lasers) {
         laser->removeZone(zone->getIndex());
     }
-    delete zone;
-    
-    return true;
+    canvasTarget.deleteInputZone(zone);
     
 }
 
-void ManagerBase :: renumberZones() {
-    for(int i = 0; i<zones.size(); i++ ) {
-        zones[i]->setIndex(i);
-    }
-}
 
 
 void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
@@ -203,19 +173,18 @@ void ManagerBase::addZoneToLaser(unsigned int zonenum, unsigned int lasernum) {
         ofLog(OF_LOG_ERROR, "Invalid laser number passed to addZoneToLaser(...)");
         return;
     }
-    if(zones.size()<=zonenum) {
+    if(canvasTarget.zones.size()<=zonenum) {
         ofLog(OF_LOG_ERROR, "Invalid zone number passed to addZoneToLaser(...)");
         return;
     }
-    InputZone* zone = zones[zonenum];
-    lasers[lasernum]->addZone(zone->getIndex());
+    lasers[lasernum]->addZone(zonenum);
 }
 
 int ManagerBase::createDefaultZone() {
     // check there aren't any zones yet?
     // create a zone equal to the width and height of the total output space
-    addZone(0,0,canvasWidth,canvasHeight);
-    return (int)zones.size()-1;
+    addCanvasZone(0,0,canvasWidth,canvasHeight);
+    return (int)canvasTarget.zones.size()-1;
     
 }
 void ManagerBase::drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName){
@@ -232,7 +201,7 @@ void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const o
     //Line l = new Line(gLProject(start), gLProject(end), ofFloatColor(col), 1, 1);
     Line* l = new Line(convert3DTo2D(start), convert3DTo2D(end), col, profileLabel);
     l->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    shapes.push_back(l);
+    canvasTarget.addShape(l);
     
     
 }
@@ -248,7 +217,7 @@ void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensit
     
     Dot* d = new Dot(convert3DTo2D(p), col, intensity, profileLabel);
     d->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    shapes.push_back(d);
+    canvasTarget.addShape(d);
 }
 
 void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
@@ -268,7 +237,7 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
     
     Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
     p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    shapes.push_back(p);
+    canvasTarget.addShape(p);
     
 }
 
@@ -295,7 +264,7 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
     }
     ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
     p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    shapes.push_back(p);
+    canvasTarget.addShape(p);
     
 }
 
@@ -311,7 +280,7 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     
     if(p->polylinePointer->getPerimeter()>0.1) {
         p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-        shapes.push_back(p);
+        canvasTarget.addShape(p);
     } else {
         delete p;
     }
@@ -332,7 +301,7 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
     for(glm::vec3& v : polyline.getVertices()) {
         v = convert3DTo2D(v);
     }
-    shapes.push_back(c);
+    canvasTarget.addShape(c);
     
 }
 
@@ -359,23 +328,18 @@ void ManagerBase:: update(){
         laser->emptyDac.dontCalculate = dontCalculateDisconnected.get();
     }
     
-    zonesChanged = false;
-    
     //if(useBitmapMask) laserMask.update();
     // delete all the shapes - all shape objects need a destructor!
-    for(size_t i= 0; i<shapes.size(); i++) {
-        delete shapes[i];
-    }
-    shapes.clear();
+    canvasTarget.deleteShapes();
     
     // updates all the zones. If zone->update returns true, then
     // it means that the zone has changed.
     bool updateZoneRects = false;
-    for(size_t i= 0; i<zones.size(); i++) {
-        if(zones[i]->update()) {
-           updateZoneRects  = true;
-        }
-    }
+//    for(size_t i= 0; i<zones.size(); i++) {
+//        if(zones[i]->update()) {
+//           updateZoneRects  = true;
+//        }
+//    }
     
     
     
@@ -383,7 +347,7 @@ void ManagerBase:: update(){
     // update all the lasers which clears the points,
     // and updates all the zone settings
     for(Laser* laser : lasers){
-        laser->update(updateZoneRects); // clears the points
+        laser->update(); // clears the points
         if(laser->hasDac()) {
             int laserstatus = laser->getDac()->getStatus();
             
@@ -398,8 +362,7 @@ void ManagerBase:: update(){
             beepSound.play();
         }
     }
-    zonesChanged = updateZoneRects;
-    
+     
     if(useAltZones && (!hasAnyAltZones())) {
         useAltZones.set(false);
     }
@@ -438,60 +401,61 @@ void ManagerBase::send(){
     
     //vector<deque<Shape*>> shapesByZoneIndex;
     vector<ZoneContent> zonesContent;
-    
+    vector<InputZone*>& zones = canvasTarget.zones;
     
     zonesContent.resize(zones.size());
     
-    if(zoneMode!=OFXLASER_ZONE_OPTIMISE) {
-        for(size_t j = 0; j<zones.size(); j++) {
-            InputZone& inputzone = *zones[j];
+    
+    // NEW ALGORITHM
+    
+
+    // from now on, add the shapes to the current zone as it's being drawn.
+    // Current zone can be a beam zone or a canvas.
+    // Beam zones / canvas stores a bunch of shapes.
+    // This code below for the logic of how to send shapes to zones
+    // is only relevant for the canvas.
+    
+    // is the ZoneContent object still relevant? Maybe!
+    // So now we need to go through the ZoneTargets and convert them to ZoneContents.
+    // The question is, how do we identify the zones so that the lasers know which
+    // zones belong to them. Previously it was just a simple index number, but now
+    // that won't work for canvas zones.
+    //
+    // How much do the lasers need to know about
+    // the zones?
+    // All they need is a UID right?
+    // For beam zones, it's just an index (although this could change so need
+    // a way to reorg)
+    // For canvas zones, it's a canvas index then a canvas zone index I think
+    
+    
+    for(size_t i = 0; i<zones.size(); i++) {
+        InputZone& inputzone = *zones[i];
 //            z.shapes.clear();
-            //deque<Shape*>& newshapes = shapesByZoneIndex[j];
-            ZoneContent& zoneContent = zonesContent[j];
-            vector<Shape*>& newshapes = zoneContent.shapes;
-            zoneContent.zoneIndex = j;
-            zoneContent.sourceRectangle = inputzone.getRect(); 
-            
-            for(Shape* shape : shapes) { //size_t i= 0; i<shapes.size(); i++) {
-               // Shape* s = shapes[i];
-                // if (zone should have shape) then
-                // TODO zone intersect shape test
-                if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
-                    if(shape->intersectsRect(inputzone.getRect())) {
-                        newshapes.push_back(shape);
-                    }
-                    
-                } else if(zoneMode == OFXLASER_ZONE_MANUAL) {
-                    if((shape->getTargetZone() == (int)j) && (shape->intersectsRect(inputzone.getRect()))) {
-                        newshapes.push_back(shape);
-                    }
-                }
-            }
-        }
-    } else {
-        // TODO : 	OPTIMISE ALGORITHM GOES HERE
-        // figure out which shapes are in each zone
-        // if a shape is entirely enclosed in a zone, then
-        // mark the shape as such
-        // if a shape is partially enclosed in a zone then
-        // mark it as such
+        //deque<Shape*>& newshapes = shapesByZoneIndex[j];
+        ZoneContent& zoneContent = zonesContent[i];
+        vector<Shape*>& newshapes = zoneContent.shapes;
+        zoneContent.zoneIndex = i;
+        zoneContent.sourceRectangle = inputzone.getRect();
+        zoneContent.shapes = canvasTarget.getShapesForZone(i);
         
-        // LOGIC IS AS FOLLOWS :
-        // if a shape is entirely in one or more zones, then :
-        // put it in the zone with the nearest other shape
-        // UNLESS that zone already has too many shapes (greater than half
-        // if we're dealing with two zones)
-        // IF the shape is only in that zone, and it is already full, have
-        // a look through the other shapes in the zone
-        // 		IF the shape is in another zone
-        // 			FIND the zone that
-        //				a) has the nearest other shape
-        //				b) AND isn't too full
-        
-        
-        
-        
+//        for(Shape* shape : shapes) { //size_t i= 0; i<shapes.size(); i++) {
+//            Shape* s = shapes[i];
+//            // if (zone should have shape) then
+//
+//            //if(zoneMode == OFXLASER_ZONE_AUTOMATIC) {
+//                if(shape->intersectsRect(inputzone.getRect())) {
+//                    newshapes.push_back(shape);
+//                }
+////
+//            //} else if(zoneMode == OFXLASER_ZONE_MANUAL) {
+//            //    if((shape->getTargetZone() == (int)j) && (shape->intersectsRect(inputzone.getRect()))) {
+//            //        newshapes.push_back(shape);
+//            //    }
+//            //}
+//        }
     }
+
     
     // 2 :
     // The lasers go through each of their zones, and pull out each shape
@@ -530,7 +494,7 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         return;
     }
     Laser* laser = lasers.at(lasernum);
-    if(zonenum>=zones.size()) {
+    if(zonenum>=canvasTarget.zones.size()) {
         ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
         return;
     }
@@ -595,10 +559,12 @@ bool ManagerBase::loadSettings() {
     if(ofFile(filename).exists()) {
         zonesJson= ofLoadJson(filename);
     }
-    zones.clear();
+//    zones.clear();
+    canvasTarget.clearZones();
     for(ofJson& zoneJson : zonesJson) {
-        zones.push_back(new InputZone());
-        zones.back()->deserialize(zoneJson);
+        //zones.push_back(new InputZone());
+        canvasTarget.addInputZone(0,0,100,100);
+        canvasTarget.zones.back()->deserialize(zoneJson);
         
     }
     
@@ -634,14 +600,14 @@ bool ManagerBase::loadSettings() {
     disarmAllLasers();
     
     
-    
-    
-    if(zones.size()==0) {
-        
-    } else {
-        renumberZones();
-    }
-    
+//
+//
+//    if(zones.size()==0) {
+//
+//    } else {
+//        renumberCanvasZones();
+//    }
+//
     
     return true;
     
@@ -670,9 +636,10 @@ bool ManagerBase::saveSettings() {
     
     // Save zones :
     ofJson zoneJson;
-    for(int i = 0; i<zones.size(); i++) {
+    
+    for(int i = 0; i<canvasTarget.zones.size(); i++) {
         ofJson jsonGroup;
-        zones[i]->serialize(jsonGroup);
+        canvasTarget.zones[i]->serialize(jsonGroup);
         zoneJson.push_back(jsonGroup);
     }
     
@@ -725,35 +692,14 @@ std::vector<Laser*>& ManagerBase::getLasers(){
 
 
 
-InputZone* ManagerBase::getZone(int zonenum) {
-    // TODO bounds check?
-    if((zonenum>=0) && (zonenum<zones.size())) {
-        return zones.at(zonenum);
-    } else {
-        return nullptr;
-    }
-    
-}
 
-int ManagerBase::getNumZones() {
-    return (int)zones.size();
-}
-
-bool ManagerBase::setTargetZone(unsigned int zone){  // only for OFX_ZONE_MANUAL
-    if(zone>=zones.size()) return false;
-    else if(zone<0) return false;
+bool ManagerBase::setTargetZone(unsigned int zoneindex){  // only for OFX_ZONE_MANUAL
+    if(zoneindex>=canvasTarget.zones.size()) return false;
+    else if(zoneindex<0) return false;
     else {
-        targetZone = zone;
+        targetZone = zoneindex;
         return true;
     }
-}
-int ManagerBase::getTargetZone() {
-    return targetZone;
-}
-
-bool ManagerBase::setZoneMode(ofxLaserZoneMode newmode) {
-    zoneMode = newmode;
-    return true;
 }
 
 bool ManagerBase::isLaserArmed(unsigned int i){

@@ -53,7 +53,7 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
-    void update(bool updateZones);
+    void update();
     void send(const vector<ZoneContent>& zonesContent, float masterIntensity = 1, ofPixels* pixelmask = NULL);
     
     bool toggleArmed(); 

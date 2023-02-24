@@ -22,12 +22,7 @@
 #include "ofxLaserLaser.h"
 #include "ofxLaserZoneContent.h"
 
-enum ofxLaserZoneMode {
-    OFXLASER_ZONE_MANUAL, // all zones are separate, you manually specify which zone you want
-    OFXLASER_ZONE_AUTOMATIC, // non-overlapping zones assumed - shapes go in all zones that
-    // contain it
-    OFXLASER_ZONE_OPTIMISE // automatically puts it in the best zone -- NOT CURRENTLY IMPLEMENTED
-};
+#include "ofxLaserShapeTargetCanvas.h"
 
 namespace ofxLaser {
 class UI;
@@ -47,14 +42,17 @@ class ManagerBase {
    
     virtual bool deleteLaser(Laser* laser);
     
-    void addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
-    void addZone(const ofRectangle& zoneRect);
-    bool deleteZone(InputZone* zone);
+    void addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
+    void addCanvasZone(const ofRectangle& zoneRect);
+    bool deleteCanvasZone(InputZone* zone);
+   // void renumberCanvasZones();
+    
+    
     bool hasAnyAltZones();
     void setAllAltZones();
     void unSetAllAltZones(); 
 
-    void renumberZones(); 
+
     
     void addZoneToLaser(unsigned int zonenum, unsigned int lasernum);
     
@@ -104,11 +102,11 @@ class ManagerBase {
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
   
-    InputZone* getZone(int zonenum);
-    int getNumZones();
+
+   
     bool setTargetZone(unsigned int zone);
-    int getTargetZone();
-    bool setZoneMode(ofxLaserZoneMode newmode);
+    //int getTargetZone();
+    //bool setZoneMode(ofxLaserZoneMode newmode);
     
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
@@ -135,8 +133,8 @@ class ManagerBase {
 
     BitmapMaskManager laserMask;
                 
-    bool zonesChanged;
-    std::vector<InputZone*> zones;
+  //  bool zonesChanged;
+    //std::vector<InputZone*> zones;
     
     ofParameterGroup params;
  
@@ -161,28 +159,25 @@ class ManagerBase {
     
     
     
-    ofFbo canvasPreviewFbo;
-    
-//    bool doArmAll = false;
-//    bool doDisarmAll = false;
+
     
     virtual void createAndAddLaser();
     
     int createDefaultZone();
     
-    ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
+    //ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
     int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
     
     std::vector<Laser*> lasers;
     
-    std::deque <ofxLaser::Shape*> shapes;
-    //ofParameter<int> testPattern;
-    
-    ofPolyline tmpPoly; // to avoid generating polyline objects
+    ShapeTargetCanvas canvasTarget;
+    //std::deque <ofxLaser::Shape*> shapes;
+
+    // used in "drawPoly" functions
+    // to avoid generating polyline objects
+    ofPolyline tmpPoly;
     vector<glm::vec3> tmpPoints;
-  //  vector<ofColor> tmpColours;
-    
-   // bool dacsInitialised = false;
+  
     ofSoundPlayer beepSound; 
    
     private:

@@ -40,18 +40,18 @@ void InputZone:: set(float x, float y, float w, float h) {
 
 }
 
-
-bool InputZone::update() {
-
-    // not sure why we need this now?
-	if(isDirty) {
-		//rect.set(handles[0], handles[3]);
-		isDirty = false;
-		return true;
-		
-	}
-	return false;
-}
+//
+//bool InputZone::update() {
+//
+//    // not sure why we need this now?
+//	if(isDirty) {
+//		//rect.set(handles[0], handles[3]);
+//		isDirty = false;
+//		return true;
+//		
+//	}
+//	return false;
+//}
 
 void InputZone::serialize(ofJson&json) const{
     
