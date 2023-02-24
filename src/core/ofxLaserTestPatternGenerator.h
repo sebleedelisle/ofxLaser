@@ -194,10 +194,12 @@ class TestPatternGenerator {
 
          } else if(testPattern ==10) {
        
-             float progress = (float)(ofGetElapsedTimeMillis()%2000) /1000.0f;
+             float progress = (float)(ofGetElapsedTimeMillis()%3000) /1500.0f;
+             // progress is between 0 and 2
+             progress*=PI;
              
-             float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
-             
+//             float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
+             float x = ofMap(sin(progress), -1,1,rect.getLeft(), rect.getRight());
              shapes.push_back(new Line( ofPoint(x,rect.getTop()), ofPoint(x, rect.getBottom()), ofColor::white, OFXLASER_PROFILE_DEFAULT));
 
          }
