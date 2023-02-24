@@ -18,12 +18,10 @@ class OutputZone {
     
     OutputZone(int zoneindex, ofRectangle sourcerect = ofRectangle(0,0,400,400));
     ~OutputZone();
-    //void init(ofRectangle sourceRectangle);
     
     virtual bool update();
     
     bool setSourceRect(const ofRectangle & rect);
-   //ofRectangle getSourceRect();
 
     void draw();
     
@@ -66,7 +64,7 @@ class OutputZone {
     bool enabled;
     
     bool isAlternate;
-    //ofRectangle sourceRect;
+    
     int zoneIndex; 
     
 };

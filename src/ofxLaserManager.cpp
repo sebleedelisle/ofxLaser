@@ -184,8 +184,8 @@ void Manager :: update() {
 
     // bit of a nasty way to update the canvas zones
     // will be better as a listener view / control system in future
-    canvasViewController.setSourceRect(ofRectangle(0,0,canvasWidth, canvasHeight));
-    canvasViewController.setOutputRect(ofRectangle(10,10,canvasWidth, canvasHeight));
+    canvasViewController.setSourceRect(ofRectangle(0,0,canvasTarget.getWidth(), canvasTarget.getHeight()));
+    canvasViewController.setOutputRect(ofRectangle(10,10,canvasTarget.getWidth(), canvasTarget.getHeight()));
     if(canvasViewController.update()) {
         canvasViewController.updateZonesFromUI(canvasTarget.zones);
         saveSettings();
@@ -467,7 +467,7 @@ void Manager :: drawPreviews() {
 //            ofPushMatrix();
 //            ofTranslate(previewOffset);
 //            ofScale(previewScale);
-//            ofDrawRectangle(0,0,canvasWidth, canvasHeight);
+//            ofDrawRectangle(0,0,canvasTarget.getWidth(), canvasTarget.getHeight());
 //            ofPopMatrix();
 //            ofPopStyle();
 //
@@ -526,7 +526,7 @@ void Manager :: renderPreview() {
     }
     
 //    if(useBitmapMask) {
-//        ofRectangle laserRect(0,0,canvasWidth, canvasHeight);
+//        ofRectangle laserRect(0,0,canvasTarget.getWidth(), canvasTarget.getHeight());
 //        const vector<glm::vec3>& points = mesh.getVertices();
 //        std::vector<ofFloatColor>& colours = mesh.getColors();
 //
@@ -568,7 +568,7 @@ void Manager :: renderPreview() {
     
     if(showGuideImage && guideImage.isAllocated()) {
         ofSetColor(guideImageColour);
-        guideImage.draw(0,0,canvasWidth, guideImage.getHeight() * ((float)canvasWidth/(float)guideImage.getWidth()));
+        guideImage.draw(0,0,canvasTarget.getWidth(), guideImage.getHeight() * ((float)canvasTarget.getWidth()/(float)guideImage.getWidth()));
         
         
     }
@@ -1336,13 +1336,13 @@ void Manager :: guiLaserOverview() {
         UI::addIntSlider(globalLatency);
         
         if(viewMode == OFXLASER_VIEW_CANVAS) {
-            if(UI::addParameter(canvasWidth)) {
-                saveSettings();
-            }
-           
-            if(UI::addParameter(canvasHeight)) {
-                saveSettings();
-            }
+//            if(UI::addParameter(canvasTarget.getWidth())) {
+//                saveSettings();
+//            }
+//           
+//            if(UI::addParameter(canvasTarget.getHeight())) {
+//                saveSettings();
+//            }
                 
             
             if(UI::Button("LOAD CANVAS GUIDE IMAGE")) {
@@ -1714,7 +1714,7 @@ void Manager :: guiTopBar(int ypos) {
 //            mouseMode = OFXLASER_MOUSE_DRAG;
 //        }ImGui::SameLine();
 //
-//        glm::vec2 centre = glm::vec2(canvasWidth/2, canvasHeight/2);
+//        glm::vec2 centre = glm::vec2(canvasTarget.getWidth()/2, canvasTarget.getHeight()/2);
 //        ofxLaser::Laser& currentLaser = *lasers[getSelectedLaserIndex()];
 //        
 //        if(UI::Button(ICON_FK_PLUS, false, false)) {
@@ -2297,7 +2297,7 @@ void Manager::guiDacAnalytics() {
 //}
 ofRectangle Manager :: getPreviewRect() {
     return canvasViewController.getOutputRect();
-    // ofRectangle(previewOffset.x, previewOffset.y, canvasWidth*previewScale, canvasHeight*previewScale);
+    // ofRectangle(previewOffset.x, previewOffset.y, canvasTarget.getWidth()*previewScale, canvasTarget.getHeight()*previewScale);
     
 }
 

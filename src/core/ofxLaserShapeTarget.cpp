@@ -26,6 +26,12 @@ bool ShapeTarget :: addShape(Shape* shapetoadd){
     }
     
 }
+
+bool ShapeTarget :: setBounds(float x, float y, float w, float h){
+    ofRectangle rect(x, y, w,h);
+    return setBounds(rect);
+}
+
 bool ShapeTarget :: setBounds(ofRectangle& boundsrect){
     if(boundsRect!=boundsrect) {
         boundsRect = boundsrect;
@@ -34,4 +40,11 @@ bool ShapeTarget :: setBounds(ofRectangle& boundsrect){
         return false;
     }
     
+}
+
+float ShapeTarget :: getWidth() {
+    return boundsRect.getWidth();
+}
+float ShapeTarget :: getHeight() {
+    return boundsRect.getHeight();
 }

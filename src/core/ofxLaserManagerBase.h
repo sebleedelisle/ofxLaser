@@ -45,15 +45,11 @@ class ManagerBase {
     void addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addCanvasZone(const ofRectangle& zoneRect);
     bool deleteCanvasZone(InputZone* zone);
-   // void renumberCanvasZones();
-    
     
     bool hasAnyAltZones();
     void setAllAltZones();
     void unSetAllAltZones(); 
 
-
-    
     void addZoneToLaser(unsigned int zonenum, unsigned int lasernum);
     
     virtual void setCanvasSize(int width, int height);
@@ -70,7 +66,7 @@ class ManagerBase {
     void armAllLasers();
     void disarmAllLasers();
     void updateGlobalTestPattern();
-    void canvasSizeChanged(int&size);
+    //void canvasSizeChanged(int&size);
     void useAltZonesChanged(bool& state); 
     bool areAllLasersUsingAlternateZones();
 
@@ -116,7 +112,7 @@ class ManagerBase {
     
     DacAssigner& dacAssigner;
     
-    ofParameter<int> canvasWidth, canvasHeight;
+    //ofParameter<int> canvasWidth, canvasHeight;
 
     int testPatternGlobal;
     bool testPatternGlobalActive;
@@ -147,9 +143,9 @@ class ManagerBase {
     
     void beginDraw() {
         // to do : check target
-        ofViewport((ofGetWidth()-canvasWidth)/-2, (ofGetHeight()-canvasHeight)/-2, ofGetWidth(), ofGetHeight()) ;
+        ofViewport((ofGetWidth()-canvasTarget.getWidth())/-2, (ofGetHeight()-canvasTarget.getHeight())/-2, ofGetWidth(), ofGetHeight()) ;
         ofPushMatrix();
-        ofTranslate((ofGetWidth()-canvasWidth)/2, (ofGetHeight()-canvasHeight)/2);
+        ofTranslate((ofGetWidth()-canvasTarget.getWidth())/2, (ofGetHeight()-canvasTarget.getHeight())/2);
         
     }
     void endDraw() {

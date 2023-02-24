@@ -17,6 +17,8 @@ Laser::Laser(int _index) {
 	laserHomePosition = ofPoint(400,400);
     testPatternActive = false;
     testPattern = 1;
+    testPatternGlobalActive = false;
+    testPatternGlobal = 1;
 	//numTestPatterns = 10;
  	
 	guiInitialised = false;

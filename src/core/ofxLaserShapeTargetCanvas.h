@@ -12,7 +12,7 @@
 
 namespace ofxLaser {
 class ShapeTargetCanvas : public ShapeTarget {
-    public : 
+    public :
     
     void clearZones(); 
     void addInputZone(float x, float y, float w, float h);
