@@ -8,12 +8,12 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxLaserShape.h"
-#include "ofxLaserDot.h"
-#include "ofxLaserQuadGui.h"
+#include "ofxLaserZoneId.h"
+#include "ofxLaserZoneIdContainer.h"
+
 namespace ofxLaser {
 
-	class InputZone  {
+	class InputZone : public ObjectWithZoneId {
 		
 		public :
 		
@@ -23,8 +23,8 @@ namespace ofxLaser {
         virtual void set(float x, float y, float w, float h) ;
         //virtual void draw() override;
         
-        void setIndex(int _index);
-        int getIndex(){ return index; };
+        void setZoneId(ZoneId zoneId);
+        ZoneId& getZoneId(){ return zoneId; };
 		
 		bool update();
         
@@ -45,6 +45,7 @@ namespace ofxLaser {
         ofRectangle rect;
 
         bool isDirty = true;
+        ZoneId zoneId;
 		
 	};
 }

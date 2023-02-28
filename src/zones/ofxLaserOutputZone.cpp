@@ -8,7 +8,7 @@
 #include "ofxLaserOutputZone.h"
 using namespace ofxLaser;
 
-OutputZone :: OutputZone(int zoneindex, ofRectangle sourcerect ) {
+OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
     
     // init params?
     soloed = false;
@@ -16,7 +16,7 @@ OutputZone :: OutputZone(int zoneindex, ofRectangle sourcerect ) {
 //    sourceRect =sourcerect;
     zoneTransformQuad.init();
     zoneTransformLine.init();
-    zoneIndex = zoneindex;
+    zoneId = zoneid;
     
     zoneParams.setName("OutputZone");
     zoneParams.add(muted.set("mute", false));
@@ -52,7 +52,7 @@ bool OutputZone :: update() {
 
 
 string OutputZone :: getLabel() {
-    return ofToString(getZoneIndex()+1) + (getIsAlternate()?" ALT":"");
+    return zoneId.getLabel() + (getIsAlternate()?" ALT":"");
 }
 
 
@@ -69,8 +69,8 @@ void OutputZone :: paramChanged(ofAbstractParameter& e) {
 //}
 
 
-const int OutputZone::getZoneIndex() const {
-    return zoneIndex;
+ZoneId OutputZone::getZoneId() const {
+    return zoneId;
 };
 
 

@@ -11,13 +11,13 @@
 using namespace ofxLaser;
 
 InputZone::InputZone(float x, float y, float w, float h) {
-    setIndex(0);
+    //setIndex(0);
 	set(x, y, w,h);
 
 }
 
-void InputZone:: setIndex(int _index)  {
-    index = _index;
+void InputZone:: setZoneId(ZoneId zoneid)  {
+    zoneId = zoneid;
    // setName("Z"+ofToString(index+1));
    // zoneLabel = "ZONE " + ofToString(index+1);
 }

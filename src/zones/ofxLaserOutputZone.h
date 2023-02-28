@@ -8,7 +8,7 @@
 #include "ofMain.h"
 #include "ofxLaserZoneTransformQuadData.h"
 #include "ofxLaserZoneTransformLineData.h"
-//#include "ofxLaserInputZone.h"
+#include "ofxLaserZoneId.h"
 
 namespace ofxLaser {
 
@@ -16,7 +16,7 @@ class OutputZone {
     
     public :
     
-    OutputZone(int zoneindex, ofRectangle sourcerect = ofRectangle(0,0,400,400));
+    OutputZone(ZoneId zoneid, ofRectangle sourcerect = ofRectangle(0,0,400,400));
     ~OutputZone();
     
     virtual bool update();
@@ -26,7 +26,7 @@ class OutputZone {
     void draw();
     
     string getLabel();
-    const int getZoneIndex() const;
+    ZoneId getZoneId() const;
     
     bool getIsAlternate();
     void setIsAlternate(bool v);
@@ -65,7 +65,7 @@ class OutputZone {
     
     bool isAlternate;
     
-    int zoneIndex; 
+    ZoneId zoneId; 
     
 };
 

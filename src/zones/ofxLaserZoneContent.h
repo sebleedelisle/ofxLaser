@@ -8,6 +8,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxLaserZoneId.h"
 
 class Shape; 
 
@@ -15,15 +16,8 @@ namespace ofxLaser {
 
 class ZoneContent {
     public :
-    
-    enum ZoneType {
-        BEAM,
-        CANVAS
-    };
-    
-    int zoneIndex;
-    ZoneType zoneType;
-    string label;
+   
+    ZoneId zoneId;
     vector<Shape*> shapes;
     
     ofRectangle sourceRectangle;
