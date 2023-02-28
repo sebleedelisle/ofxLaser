@@ -2165,13 +2165,15 @@ void Clipper::IntersectEdges(TEdge *e1, TEdge *e2,
         if (e2Contributing) e2->OutIdx = Unassigned;
       }
     }
-
-    if (e1stops)
-      if (e1->OutIdx < 0) DeleteFromAEL(e1);
-      else throw clipperException("Error intersecting polylines");
-    if (e2stops) 
-      if (e2->OutIdx < 0) DeleteFromAEL(e2);
-      else throw clipperException("Error intersecting polylines");
+      
+      if (e1stops) {
+          if (e1->OutIdx < 0) DeleteFromAEL(e1);
+          else throw clipperException("Error intersecting polylines");
+      }
+      if (e2stops){
+          if (e2->OutIdx < 0) DeleteFromAEL(e2);
+          else throw clipperException("Error intersecting polylines");
+      }
     return;
   }
 #endif
