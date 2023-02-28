@@ -30,7 +30,7 @@ class ZoneUiBase : public MoveablePoly {
 
    
 
-    int inputZoneIndex = -1;
+    ZoneId zoneId;
     bool inputZoneAlt = false;
     bool muted = false; 
 

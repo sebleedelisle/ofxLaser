@@ -42,7 +42,7 @@ void ofxHersheyFont::draw(string stringValue, float xPos, float yPos, float scal
 
 	ofPushMatrix();
 	ofTranslate(xPos, yPos);
-	ofRotate(angle);
+	ofRotateZDeg(angle);
 	ofTranslate(-center, 0);
 	
 		//iterate through each character of the input string

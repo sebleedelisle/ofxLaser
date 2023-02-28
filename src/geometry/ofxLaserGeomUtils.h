@@ -211,7 +211,7 @@ class GeomUtils {
             const glm::vec2& p2 = points[(i+1)%points.size()];
             
             float maxDistance = 0;
-            for(const glm::vec2 p : points) {
+            for(const glm::vec2& p : points) {
                 float distance = glm::distance(p, getClampedToVector(p, p1, p2, true, true));
                 if(distance>maxDistance) maxDistance = distance;
             }

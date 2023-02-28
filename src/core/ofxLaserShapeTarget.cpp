@@ -14,13 +14,14 @@ ShapeTarget :: ShapeTarget (){
    boundsRect.set(0,0,800,800);
 }
 
-bool ShapeTarget :: deleteShapes(){
-    for(Shape* shape : shapes) {
-        delete shape;
-    }
-    shapes.clear(); 
+void ShapeTarget :: deleteShapes(){
+        for(Shape* shape : shapes) {
+            delete shape;
+        }
+        shapes.clear();
+    
 }
-bool ShapeTarget :: addShape(Shape* shapetoadd){
+void ShapeTarget :: addShape(Shape* shapetoadd){
     if(shapetoadd->intersectsRect(boundsRect)) {
         shapes.push_back(shapetoadd);
     }

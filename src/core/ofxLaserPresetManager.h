@@ -163,7 +163,7 @@ bool PresetManager<T> :: drawComboBox(T& settings, int idnum) {
     string comboname = T::getTypeName() + " presets##"+ofToString(idnum);
     if (ImGui::BeginCombo(comboname.c_str(), label.c_str())) { // The second parameter is the label previewed before opening the combo.
         
-        for(const string presetName : presets) {
+        for(const string& presetName : presets) {
             string presetlabel =presetName+"##"+ofToString(idnum);
             if (ImGui::Selectable(presetlabel.c_str(), presetName == settings.getLabel())) {
                 //get the preset and make a copy of it

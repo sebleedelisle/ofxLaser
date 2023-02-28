@@ -9,11 +9,13 @@
 
 using namespace ofxLaser;
 
-bool CanvasViewController :: updateZonesFromUI(vector<InputZone*>& zones){
+bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
     //return false;
     for(int i = 0; i<uiElements.size(); i++) {
-        if(zones.size()>i) {
-            InputZone& zone = *zones[i];
+        
+        InputZone* zonepointer = canvasTarget.getInputZoneForZoneIndex(i);
+        if(zonepointer!=nullptr) {
+            
             MoveablePoly& poly = *uiElements[i];
             vector<glm::vec2*> points = poly.getPoints();
             
@@ -23,16 +25,16 @@ bool CanvasViewController :: updateZonesFromUI(vector<InputZone*>& zones){
             float w = points[2]->x - points[0]->x;
             float h = points[2]->y - points[0]->y;
 
-            zone.set( x, y, w, h); 
-            
+            zonepointer->set( x, y, w, h);
         }
         
     }
     
     return true;
 }
-void CanvasViewController :: updateUIFromZones(const vector<InputZone*>& zones) {
-    for(int i = 0; i<zones.size(); i++) {
+void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget) {
+    
+    for(int i = 0; i<canvasTarget.getNumZoneIds(); i++) {
         MoveablePoly* poly;
         if(uiElements.size()<=i) {
             poly = new MoveablePoly();
@@ -51,20 +53,20 @@ void CanvasViewController :: updateUIFromZones(const vector<InputZone*>& zones) 
 //            points.push_back(zones[i]->handles[index]);
 //
 //        }
-        
-        poly->setFromRect(zones[i]->getRect());
+        InputZone* inputzone =canvasTarget.getInputZoneForZoneIndex(i);
+        poly->setFromRect(inputzone->getRect());
         poly->setLabel(ofToString(i+1));
         poly->setGrid(true, 1); 
         
             
     }
     // delete extra elements from the end, and remove them from the sorted array
-    for(int i = zones.size(); i<uiElements.size(); i++) {
+    for(int i = canvasTarget.getNumZoneIds(); i<uiElements.size(); i++) {
        
         uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uiElements[i]), uiElementsSorted.end());
         delete uiElements[i];
     }
-    uiElements.resize(zones.size());
+    uiElements.resize(canvasTarget.getNumZoneIds());
     
     
     

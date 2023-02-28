@@ -23,6 +23,8 @@
 #include "ofxLaserZoneContent.h"
 
 #include "ofxLaserShapeTargetCanvas.h"
+#include "ofxLaserShapeTargetBeamZone.h"
+#include "ofxLaserBeamZoneContainer.h"
 
 namespace ofxLaser {
 class UI;
@@ -42,6 +44,9 @@ class ManagerBase {
    
     virtual bool deleteLaser(Laser* laser);
     
+    ZoneId createNewBeamZone();
+    bool addBeamZoneToLaser(int beamZoneIndex, int laserIndex) ;
+    
     void addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addCanvasZone(const ofRectangle& zoneRect);
     bool deleteCanvasZone(InputZone* zone);
@@ -50,7 +55,7 @@ class ManagerBase {
     void setAllAltZones();
     void unSetAllAltZones(); 
 
-    void addZoneToLaser(unsigned int zonenum, unsigned int lasernum);
+    void addZoneToLaser(ZoneId& zoneId, unsigned int lasernum);
     
     virtual void setCanvasSize(int width, int height);
     
@@ -58,7 +63,7 @@ class ManagerBase {
     bool saveSettings();
     
     void send();
-    void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, int zonenum = 0);
+    void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);
     
     int getLaserPointRate(unsigned int lasernum = 0);
     float getLaserFrameRate(unsigned int lasernum);
@@ -99,13 +104,28 @@ class ManagerBase {
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
   
 
-   
-    bool setTargetZone(unsigned int zone);
+    bool setTargetBeamZone(int index);
+    bool setTargetCanvas(int canvasIndex = 0);
+    
+    //bool setTargetZone(unsigned int zone);
     //int getTargetZone();
     //bool setZoneMode(ofxLaserZoneMode newmode);
     
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
+    
+    void beginDraw() {
+        // to do : check target
+        ofViewport((ofGetWidth()-canvasTarget.getWidth())/-2, (ofGetHeight()-canvasTarget.getHeight())/-2, ofGetWidth(), ofGetHeight()) ;
+        ofPushMatrix();
+        ofTranslate((ofGetWidth()-canvasTarget.getWidth())/2, (ofGetHeight()-canvasTarget.getHeight())/2);
+        
+    }
+    void endDraw() {
+        ofPopMatrix();
+        ofViewport(0,0,ofGetWidth(), ofGetHeight());
+    }
+    
     
   
     //--------------------------------------------------------
@@ -141,32 +161,19 @@ class ManagerBase {
     ofPoint convert3DTo2D(ofPoint p);
     ofPoint convert3DTo2D( float ax, float ay, float az );
     
-    void beginDraw() {
-        // to do : check target
-        ofViewport((ofGetWidth()-canvasTarget.getWidth())/-2, (ofGetHeight()-canvasTarget.getHeight())/-2, ofGetWidth(), ofGetHeight()) ;
-        ofPushMatrix();
-        ofTranslate((ofGetWidth()-canvasTarget.getWidth())/2, (ofGetHeight()-canvasTarget.getHeight())/2);
-        
-    }
-    void endDraw() {
-        ofPopMatrix();
-        ofViewport(0,0,ofGetWidth(), ofGetHeight());
-    }
-    
-    
-    
-
-    
     virtual void createAndAddLaser();
     
-    int createDefaultZone();
+    void createDefaultCanvasZone();
     
     //ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
-    int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
+    //int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
     
     std::vector<Laser*> lasers;
     
+    ShapeTarget* currentShapeTarget; 
     ShapeTargetCanvas canvasTarget;
+    BeamZoneContainer beamZoneContainer;
+    //vector<ShapeTargetBeamZone> zones;
     //std::deque <ofxLaser::Shape*> shapes;
 
     // used in "drawPoly" functions

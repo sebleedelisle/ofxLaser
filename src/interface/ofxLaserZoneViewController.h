@@ -30,7 +30,7 @@ class LaserZoneViewController : public ViewWithMoveables {
     bool createZoneUiForOutputZone(OutputZone* outputZone);
     void deselectAllButThis(MoveablePoly* uielement) override;
     
-    bool doesAltZoneExistForZoneIndex(int zoneIndex); 
+    bool doesAltZoneExistForZoneIndex(ZoneId zoneId); 
     
     bool update() override;
     void draw() override;

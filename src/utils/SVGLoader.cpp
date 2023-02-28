@@ -89,8 +89,8 @@ void SVGLoader::threadedFunction() {
             if(!useLoadOptimisation) {
                 ofxlgfile.remove();
             } else {
-                time_t ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
-                time_t originalfiletime = std::filesystem::last_write_time(file);
+                std::filesystem::file_time_type ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
+                std::filesystem::file_time_type originalfiletime = std::filesystem::last_write_time(file);
                 if(ofxlgfiletime>originalfiletime) {
                     loadOptimised = true;
                 }

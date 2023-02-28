@@ -34,8 +34,8 @@ bool ZoneUiBase::updateDataFromUi(OutputZone* outputZone) {
 bool ZoneUiBase::updateFromData(OutputZone* outputZone){
     bool changed = false;
     
-    if(inputZoneIndex!= outputZone->getZoneIndex()) {
-        inputZoneIndex= outputZone->getZoneIndex();
+    if(zoneId!= outputZone->getZoneId()) {
+        zoneId= outputZone->getZoneId();
         changed = true;
     }
     
@@ -75,7 +75,7 @@ bool ZoneUiBase::updateFromData(OutputZone* outputZone){
 
 void ZoneUiBase :: updateLabel() {
     
-    label = ofToString(inputZoneIndex+1);
+    label = ofToString(zoneId.getLabel());
     if(inputZoneAlt) {
         label = label + " ALT";
     }

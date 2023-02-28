@@ -34,11 +34,11 @@ class Shape {
     virtual void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) ;
     virtual bool intersectsRect(ofRectangle & rect) = 0;
 	
-    void setTargetZone(int zonenumber);
-	
-    int getTargetZone();
-    
-    
+//    void setTargetZone(int zonenumber);
+//
+//    int getTargetZone();
+//
+//
     bool tested = false;
     bool reversed = false;
     bool reversable = false;
@@ -50,7 +50,7 @@ class Shape {
 	ofPoint startPos;
 	ofPoint endPos;
 	ofFloatColor colour;
-	int targetZoneNumber = 0;
+	//int targetZoneNumber = 0;
 	
 
 };

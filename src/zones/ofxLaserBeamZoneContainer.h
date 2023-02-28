@@ -8,17 +8,18 @@
 #pragma once
 
 #include "ofxLaserZoneIdContainer.h"
+#include "ofxLaserShapeTargetBeamZone.h"
 
 namespace ofxLaser {
 class BeamZoneContainer : public ZoneIdContainer {
     
     public :
     
-    
-    
-    
-    
-    
+    ZoneId addBeamZone();
+    ShapeTargetBeamZone* getBeamZoneForZoneId(ZoneId& zoneid);
+    ShapeTargetBeamZone* getBeamZoneAtIndex(int index);
+    void deleteShapes(); 
+
 };
 
 }

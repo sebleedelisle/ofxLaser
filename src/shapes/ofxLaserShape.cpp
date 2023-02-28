@@ -92,11 +92,11 @@ ofFloatColor& Shape :: getColour() {
 void Shape :: appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) {
     
 };
-
-void Shape :: setTargetZone(int zonenumber) {
-    targetZoneNumber = zonenumber;
-}
-
-int Shape :: getTargetZone() {
-    return targetZoneNumber;
-}
+//
+//void Shape :: setTargetZone(int zonenumber) {
+//    targetZoneNumber = zonenumber;
+//}
+//
+//int Shape :: getTargetZone() {
+//    return targetZoneNumber;
+//}

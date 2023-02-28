@@ -8,7 +8,8 @@
 #pragma once
 
 #include "ofxLaserViewWithMoveables.h"
-#include "ofxLaserInputZone.h"
+#include "ofxLaserUI.h"
+#include "ofxLaserShapeTargetCanvas.h"
 
 namespace ofxLaser {
 
@@ -16,8 +17,8 @@ class CanvasViewController : public ViewWithMoveables {
     
     public :
     void drawImGui();
-    bool updateZonesFromUI(vector<InputZone*>& zones);
-    void updateUIFromZones(const vector<InputZone*>& zones);
+    bool updateZonesFromUI(ShapeTargetCanvas& canvasTarget);
+    void updateUIFromZones(ShapeTargetCanvas& canvasTarget);
     
     
     

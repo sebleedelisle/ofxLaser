@@ -61,7 +61,7 @@ class Laser {
     // adds all the shape points to the vector passed in
     void getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
 
-    void sendRawPoints(const vector<Point>& points, int targetZoneIndex, float masterIntensity =1);
+    void sendRawPoints(const vector<Point>& points, ZoneId* zoneId = nullptr, float masterIntensity =1);
     int getPointRate();
     float getFrameRate();
     
@@ -74,21 +74,21 @@ class Laser {
     void setGlobalTestPattern(bool active, int pattern); 
     
     // Zones
-    void addZone(int zoneIndex,  bool isAlternate = false);
-    bool removeZone(int zoneIndex);
+    void addZone(ZoneId zoneId,  bool isAlternate = false);
+    bool removeZone(ZoneId zoneId);
     bool removeZone(OutputZone* zone);
-    bool hasZone(int zoneIndex);
+    bool hasZone(ZoneId zoneId);
     
-    void addAltZone(int zoneIndex);
+    void addAltZone(ZoneId zoneId);
     bool removeAltZone(OutputZone* zone);
-    bool removeAltZone(int zoneIndex);
-    bool hasAltZone(int zoneIndex);
+    bool removeAltZone(ZoneId zoneId);
+    bool hasAltZone(ZoneId zoneId);
     bool hasAnyAltZones();
     
-    bool muteZone(int zonenum);
-    bool unMuteZone(int zonenum);
-    bool soloZone(int zonenum);
-    bool unSoloZone(int zonenum);
+    bool muteZone(ZoneId zoneId);
+    bool unMuteZone(ZoneId zoneId);
+    bool soloZone(ZoneId zoneId);
+    bool unSoloZone(ZoneId zoneId);
     bool isLaserZoneActive(OutputZone* outputZone);
 
     // gets output zones (but not alt zones) in order
@@ -96,11 +96,13 @@ class Laser {
     vector<OutputZone*> getSortedOutputAltZones();
    
     
-    OutputZone* getLaserZoneForZoneIndex(int zoneIndex);
+    OutputZone* getLaserZoneForZoneId(ZoneId zoneId);
     //InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
     //OutputZone* getLaserAltZoneForZone(InputZone* zone);
-    OutputZone* getLaserAltZoneForZoneIndex(int zoneIndex);
-
+    OutputZone* getLaserAltZoneForZoneId(ZoneId zoneId);
+    const int findZoneContentIndexForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent );
+    bool hasZoneContentForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent );
+ 
     vector<OutputZone*>getActiveZones();
     bool areAnyZonesSoloed();
     void clearOutputZones();
@@ -145,7 +147,7 @@ class Laser {
     
     ofParameter<bool> paused; // pause frame
     bool pauseStateRecorded;
-    map<int, vector<Shape*>> pauseShapesByZoneIndex;
+    map<string, vector<Shape*>> pauseShapesByZoneUid;
     
     // used to keep track of the dac that we're connected to
     // (particularly when loading / saving)

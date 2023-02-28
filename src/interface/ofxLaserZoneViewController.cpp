@@ -272,7 +272,7 @@ void LaserZoneViewController :: deselectAllButThis(MoveablePoly* uielement) {
 ZoneUiBase* LaserZoneViewController ::  getZoneInterfaceForOutputZone(OutputZone* outputZone) {
     
     for(ZoneUiBase* zoneUi: zoneUis) {
-        if((zoneUi->inputZoneIndex == outputZone->getZoneIndex()) && (zoneUi->inputZoneAlt == outputZone->getIsAlternate())) {
+        if((zoneUi->zoneId.getUid() == outputZone->getZoneId().getUid()) && (zoneUi->inputZoneAlt == outputZone->getIsAlternate())) {
             if((dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr) && (outputZone->transformType==0)) {
                 return zoneUi;
             } else if((dynamic_cast<ZoneUiLine*>(zoneUi)!=nullptr) && (outputZone->transformType==1)) {
@@ -299,7 +299,7 @@ OutputZone* LaserZoneViewController ::  getOutputZoneForZoneUI(ZoneUiBase* zoneU
     }
     
     for(OutputZone* outputZone : laser->outputZones) {
-        if((outputZone->getZoneIndex() == zoneUi->inputZoneIndex) && (outputZone->getIsAlternate() == zoneUi->inputZoneAlt) && (outputZone->transformType == zoneType) ) {
+        if((outputZone->getZoneId() == zoneUi->zoneId) && (outputZone->getIsAlternate() == zoneUi->inputZoneAlt) && (outputZone->transformType == zoneType) ) {
             return outputZone;
         }
     }
@@ -308,10 +308,10 @@ OutputZone* LaserZoneViewController ::  getOutputZoneForZoneUI(ZoneUiBase* zoneU
 }
 
 
-bool LaserZoneViewController :: doesAltZoneExistForZoneIndex(int zoneIndex) {
+bool LaserZoneViewController :: doesAltZoneExistForZoneIndex(ZoneId zoneId) {
   
     for(ZoneUiBase* zoneUi :  zoneUis) {
-        if(zoneUi->inputZoneAlt && (zoneUi->inputZoneIndex == zoneIndex)) {
+        if(zoneUi->inputZoneAlt && (zoneUi->zoneId == zoneId)) {
             return true;
         }
     }
@@ -473,14 +473,14 @@ void LaserZoneViewController :: drawImGui() {
             }
             
             if(!zoneUi->inputZoneAlt) {
-                if(doesAltZoneExistForZoneIndex(zoneUi->inputZoneIndex)) {
+                if(doesAltZoneExistForZoneIndex(zoneUi->zoneId)) {
                     if(UI::DangerButton("DELETE ALT ZONE")) {
-                        laser->removeAltZone(zoneUi->inputZoneIndex);
+                        laser->removeAltZone(zoneUi->zoneId);
                     }
                     
                 } else {
                     if(UI::Button("ADD ALT ZONE")) {
-                        laser->addAltZone(zoneUi->inputZoneIndex);
+                        laser->addAltZone(zoneUi->zoneId);
                     }
                 }
             }
@@ -504,9 +504,9 @@ void LaserZoneViewController :: drawImGui() {
                     // if this is an alt zone, just remove this
                     // otherwise remove this and also its alt zone if
                     // it has one
-                    int zoneindex = outputZone->getZoneIndex();
-                    laser->removeZone(outputZone);
-                    laser->removeAltZone(zoneindex);
+                    ZoneId zoneid = outputZone->getZoneId();
+                    laser->removeZone(zoneid);
+                    laser->removeAltZone(zoneid);
                     // LATER - TO DO - if this is a laser zone, delete it
                     // if it's a canvas zone, keep it
                     

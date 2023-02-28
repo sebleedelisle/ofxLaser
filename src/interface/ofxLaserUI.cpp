@@ -544,7 +544,7 @@ bool UI::addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSu
     if(parent) label = label+"##"+parent.getName();
  
     
-    if(addNumberedCheckBox(number, label.c_str(), (bool*)&param.get()), large) {
+    if(addNumberedCheckBox(number, label.c_str(), (bool*)&param.get(), large)) {
         param.set(param.get()); // trigger the events
         return true;
     } else {
