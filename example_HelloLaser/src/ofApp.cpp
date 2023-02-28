@@ -16,7 +16,6 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    
     // prepares laser manager to receive new graphics
     laser.update();
 }

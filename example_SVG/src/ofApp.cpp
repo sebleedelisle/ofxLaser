@@ -5,6 +5,9 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
+    // ensures the laser framerate can be faster than the screen update
+    ofSetVerticalSync(false);
+    
     
     // get the filenames of all the svgs in the data/svgs folder
     string path = "svgs/";
@@ -71,11 +74,12 @@ void ofApp::draw() {
             renderProfile = OFXLASER_PROFILE_FAST;
             break;
     }
-    renderProfileLabel = "Render Profile : OFXLASER_PROFILE_" + renderProfile;
+    if(renderProfileLabel.get() != ("Render Profile : OFXLASER_PROFILE_" + renderProfile))
+        renderProfileLabel = ("Render Profile : OFXLASER_PROFILE_" + renderProfile);
     
 	ofxLaser::Graphic& laserGraphic = laserGraphics[currentSVG];
 	
-    currentSVGFilename = fileNames[currentSVG];
+    if(currentSVGFilename.get()!=fileNames[currentSVG]) currentSVGFilename = fileNames[currentSVG];
 	
     laserManager.beginDraw();
     

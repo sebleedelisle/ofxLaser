@@ -5,6 +5,9 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
+    // enables the laser to have a faster framerate than the screen
+    ofSetVerticalSync(false);
+    
 	laserWidth = 800;
 	laserHeight = 800;
 	laserManager.setCanvasSize(laserWidth, laserHeight);
