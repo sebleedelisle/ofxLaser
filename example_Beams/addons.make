@@ -1,0 +1,4 @@
+ofxOpenCv
+ofxNetwork
+ofxPoco
+ofxLaser
