@@ -45,7 +45,8 @@ class ManagerBase {
     virtual bool deleteLaser(Laser* laser);
     
     ZoneId createNewBeamZone();
-    bool addBeamZoneToLaser(int beamZoneIndex, int laserIndex) ;
+    //bool addBeamZoneToLaser(int beamZoneIndex, int laserIndex);
+    bool deleteBeamZone(ZoneId& zoneid);
     
     void addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     void addCanvasZone(const ofRectangle& zoneRect);
@@ -96,6 +97,7 @@ class ManagerBase {
     vector<Laser*>& getLasers();
     Laser& getLaser(int index = 0);
     int getNumLasers() { return (int)lasers.size(); };
+    int getNumBeamZones() { return (int)beamZoneContainer.getNumZoneIds(); }; 
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
     OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));

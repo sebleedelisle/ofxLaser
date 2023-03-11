@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserManager.h"
+#include "StringGraphic.h"
 
 class ofApp : public ofBaseApp{
 	
@@ -10,14 +11,10 @@ public:
 	void update();
 	void draw();
 	
-    ofPolyline makeStarPolyline(int numsides);
-    
 	void keyPressed(ofKeyEventArgs& e);
     
 	ofxLaser::Manager laser;
     
-    ofPolyline starPoly;
-    //bool testscale = false; 
-    
+    StringGraphic textGraphic; 
 };
 

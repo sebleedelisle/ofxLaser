@@ -423,7 +423,11 @@ vector<glm::vec2*> MoveablePoly :: getPoints() {
     }
     return returnpoints; 
 }
-
+ofRectangle MoveablePoly :: getBoundingBox() {
+    
+    return poly.getBoundingBox();
+    
+}
 void MoveablePoly :: drawShape() {
     
     ofBeginShape();

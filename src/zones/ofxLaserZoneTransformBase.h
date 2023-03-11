@@ -27,7 +27,7 @@ class ZoneTransformBase {
 
     virtual void getPerimeterPoints(vector<glm::vec2>& points) = 0;
 	
-	virtual bool serialize(ofJson&json) = 0;
+	virtual void serialize(ofJson&json) const = 0;
 	virtual bool deserialize(ofJson&jsonGroup) = 0;
 	
     void setDirty(bool state);

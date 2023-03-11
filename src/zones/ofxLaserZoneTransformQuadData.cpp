@@ -325,14 +325,13 @@ void ZoneTransformQuadData::updateQuads() {
     
 }
 
-bool ZoneTransformQuadData::serialize(ofJson&json) {
+void ZoneTransformQuadData::serialize(ofJson&json) const {
     ofSerialize(json, transformParams);
     ofJson& handlesjson = json["handles"];
     for(size_t i= 0; i<dstPoints.size(); i++) {
-        glm::vec2& pos = dstPoints[i];
+        const glm::vec2& pos = dstPoints[i];
         handlesjson.push_back({pos.x, pos.y});
     }
-    return true;
 }
 
 

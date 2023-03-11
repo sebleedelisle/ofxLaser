@@ -27,7 +27,7 @@ class ZoneTransformQuadComplexData : public ZoneTransformBase {
     
     virtual void init() override;
     
-    virtual bool serialize(ofJson&json) override;
+    virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
 
     void updateSrc(const ofRectangle& rect) override;

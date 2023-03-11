@@ -16,20 +16,25 @@ ViewWithMoveables :: ViewWithMoveables() {
 }
 bool ViewWithMoveables :: update() {
     
-    ScrollableView :: update();
+    //ScrollableView :: update();
    
     bool wasUpdated = false;
     
+
+    boundingRect = sourceRect;
     for(MoveablePoly* uiElement : uiElements) {
         
         uiElement->setScale(scale);
         bool elementupdated =uiElement->update();
         wasUpdated|=elementupdated;
+        
+        boundingRect.growToInclude(uiElement->getBoundingBox());
     }
+    checkEdges();
     
     return wasUpdated;
 }
-  
+//
 
 void ViewWithMoveables :: draw() {
     

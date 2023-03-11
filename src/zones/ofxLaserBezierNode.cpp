@@ -135,7 +135,7 @@ bool BezierNode :: stopDrag() {
     return wasDragging;
 }
 
-bool BezierNode :: serialize(ofJson& json) {
+void BezierNode :: serialize(ofJson& json) const{
     
     json["node"] = {
         {"mode", mode},
@@ -150,8 +150,6 @@ bool BezierNode :: serialize(ofJson& json) {
     
     
     //cout << json.dump(3) << endl;
-    
-    return true;
 }
 
 bool BezierNode :: deserialize(ofJson& jsonGroup) {

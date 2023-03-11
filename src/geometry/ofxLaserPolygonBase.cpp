@@ -64,6 +64,11 @@ void PolygonBase :: updateBounds() {
     
     
 }
+
+ofRectangle PolygonBase::getBoundingBox() {
+    return ofRectangle(boundsTopLeft, boundsBottomRight);
+}
+
 void PolygonBase::setFromPoints(const vector<glm::vec2*>& newpoints) {
     
     resize(newpoints.size());

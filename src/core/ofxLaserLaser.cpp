@@ -382,6 +382,33 @@ vector<OutputZone*> Laser::getActiveZones(){
 }
 
 
+bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
+    
+    bool changed = false;
+    for(OutputZone* outputZone : outputZones) {
+        //for (auto const& [key, val] : symbolTable)
+        const ZoneId oldid = outputZone->getZoneId();
+        ZoneId newid;
+        for(auto const& [key, val] : changedZones) {
+            if(key == oldid) {
+                newid = val;
+                outputZone->setZoneId(newid);
+                changed = true;
+                break;
+            }
+            
+        }
+        
+        
+    }
+    if(changed) {
+        saveSettings();
+        return true;
+    } else {
+        return false;
+    }
+}
+
 void Laser::clearOutputZones() {
     
     for(OutputZone* zone : outputZones) {
@@ -1396,6 +1423,7 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
     }
 }
 
+
 void Laser::paramsChanged(ofAbstractParameter& e){
     if(ignoreParamChange) return;
     else saveSettings();
@@ -1414,36 +1442,36 @@ bool Laser::loadSettings(){
     ofJson zoneNumJson = json["laserzones"];
     
     // if the json node isn't found then this should do nothing
-//    for(auto jsonitem : zoneNumJson) {
-//        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-//        int zoneNum = (int)jsonitem;
-//
-//        // if a zone exists with this index then add a LaserZone for it
-//
-//        OutputZone* laserZone = new OutputZone(ZoneId());
-//        outputZones.push_back(laserZone);
-//
-//        string filename ="laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json";
-//        ofJson laserZoneJson = ofLoadJson(savePath + filename);
-//        if(laserZone->deserialize(laserZoneJson)) {
-//            success&=true;
-//            laserZonesLastSavedMap[filename] = laserZoneJson.dump();
-//
-//        }
-//    }
+    for(auto jsonitem : zoneNumJson) {
+        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
+        string zoneUid = (string)jsonitem;
+
+        // if a zone exists with this index then add a LaserZone for it
+
+        OutputZone* laserZone = new OutputZone(ZoneId());
+        outputZones.push_back(laserZone);
+
+        string filename ="laser"+ ofToString(laserIndex) +"zone" + zoneUid + ".json";
+        ofJson laserZoneJson = ofLoadJson(savePath + filename);
+        if(laserZone->deserialize(laserZoneJson)) {
+            success&=true;
+            laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+
+        }
+    }
     
     ofJson altZoneNumJson = json["laseraltzones"];
     
     // if the json node isn't found then this should do nothing
     for(auto jsonitem : altZoneNumJson) {
         //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-        int zoneNum = (int)jsonitem;
+        string zoneUid = (string)jsonitem;
         
         // if a zone exists with this index then add a LaserZone for it
         
         OutputZone* laserZone = new OutputZone(ZoneId());
         laserZone->setIsAlternate(true);
-        string filename = "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + "alt.json";
+        string filename = "laser"+ ofToString(laserIndex) +"zone" + zoneUid + "alt.json";
         outputZones.push_back(laserZone);
         ofJson laserZoneJson = ofLoadJson(savePath + filename);
         
@@ -1476,19 +1504,21 @@ bool Laser::saveSettings(){
     ofJson json;
     ofSerialize(json, params);
     
-    vector<string>laserzonenums;
-    vector<string>laseraltzonenums;
+
+    // save the list of zones so we know which zone files to load
+    vector<string>laserzoneuids;
+    vector<string>laseraltzoneuids;
     for(OutputZone* laserZone : outputZones) {
         if(laserZone->getIsAlternate()) {
-            laseraltzonenums.push_back(laserZone->getZoneId().getUid());
+            laseraltzoneuids.push_back(laserZone->getZoneId().getUid());
         } else {
-            laserzonenums.push_back(laserZone->getZoneId().getUid());
+            laserzoneuids.push_back(laserZone->getZoneId().getUid());
         }
-        
+
     }
-    json["laserzones"] = laserzonenums;
-    json["laseraltzones"] = laseraltzonenums;
-    
+    json["laserzones"] = laserzoneuids;
+    json["laseraltzones"] = laseraltzoneuids;
+
     
     maskManager.serialize(json);
     // Save the laser settings

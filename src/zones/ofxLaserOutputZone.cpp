@@ -72,7 +72,15 @@ void OutputZone :: paramChanged(ofAbstractParameter& e) {
 ZoneId OutputZone::getZoneId() const {
     return zoneId;
 };
-
+bool OutputZone::setZoneId(ZoneId& zoneid) {
+    if(zoneId!=zoneid) {
+        zoneId = zoneid;
+        return true;
+    } else {
+        return false;
+    }
+    return false; 
+}
 
 ofxLaser::Point OutputZone::getWarpedPoint(const ofxLaser::Point& p){
     return getZoneTransform().getWarpedPoint(p);
@@ -144,7 +152,7 @@ void OutputZone :: drawPerimeterAsShape() {
 
 
 
-bool OutputZone :: serialize(ofJson& json){
+void OutputZone :: serialize(ofJson& json) const{
    
     // params contain muted, soloed
     ofJson paramsJson;
@@ -157,8 +165,8 @@ bool OutputZone :: serialize(ofJson& json){
     ofJson zoneTransformLineJson;
     zoneTransformLine.serialize(zoneTransformLineJson);
     json["zonetransformline"] = zoneTransformLineJson;
+    zoneId.serialize(json);
 
-    return true;
 }
 
 
@@ -188,7 +196,7 @@ bool OutputZone :: deserialize(ofJson& json){
         ofJson zoneTransformJson = json["zonetransform"];
         zoneTransformQuad.deserialize(zoneTransformJson);
     }
-          
+    zoneId.deserialize(json); 
     return true; 
     
 }

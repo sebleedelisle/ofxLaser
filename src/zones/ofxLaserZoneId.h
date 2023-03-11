@@ -14,44 +14,25 @@ namespace ofxLaser {
 
 class ZoneId {
     public :
-    ZoneId() {
-        type = BEAM;
-        zoneGroup = 0;
-        zoneIndex = 0;
-        label = "";
-    }
+    ZoneId() ;
     
     enum ZoneType {
         BEAM,
         CANVAS
     };
     
-    string getLabel() {
-        if(label=="") {
-            
-            string newlabel = "";
-            
-            if(type==BEAM) newlabel = "BEAM";
-            else newlabel = "CANVAS";
-            newlabel = newlabel +ofToString(zoneIndex);
-            return newlabel;
-                
-        } else {
-            return label;
-        }
-        
-    }
+    string getLabel() ;
+    string getUid() const;
     
-    string getUid() const {
-        string uid = "";
-        if(type==BEAM) uid = "B";
-        else uid = "C";
-        uid = uid+ofToString(zoneGroup)+"_"+ofToString(zoneIndex);
-        return uid;
-    }
-    
+    virtual void serialize(ofJson& json) const;
+    virtual bool deserialize(ofJson& json);
+ 
     bool operator==(const ZoneId & other) const;
     bool operator!=(const ZoneId & other) const;
+    
+    inline bool operator< (const ZoneId& rhs) const {
+        return true;
+    }
     
     ZoneType type;
     int zoneGroup;

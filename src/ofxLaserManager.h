@@ -104,7 +104,7 @@ class Manager : public ManagerBase {
     bool copySettingsWindowOpen;
     bool showDacAssignmentWindow;
     
-    bool togglePreview();
+    //bool togglePreview();
     // TODO I think this functionality is broken
     bool toggleGui();
     void setGuiVisible(bool visible);
@@ -141,10 +141,10 @@ class Manager : public ManagerBase {
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     
-    ofParameter<bool> lockInputZones;
-    ofParameter<bool> showInputZones;
-    ofParameter<bool> showInputPreview;
-    ofParameter<bool> showOutputPreviews;
+//    ofParameter<bool> lockInputZones;
+//    ofParameter<bool> showInputZones;
+//    ofParameter<bool> showInputPreview;
+//    ofParameter<bool> showOutputPreviews;
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize;
         

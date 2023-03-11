@@ -90,6 +90,8 @@ class Laser {
     bool soloZone(ZoneId zoneId);
     bool unSoloZone(ZoneId zoneId);
     bool isLaserZoneActive(OutputZone* outputZone);
+    
+    bool updateZones(map<ZoneId, ZoneId>& changedZones); 
 
     // gets output zones (but not alt zones) in order
     vector<OutputZone*> getSortedOutputZones();

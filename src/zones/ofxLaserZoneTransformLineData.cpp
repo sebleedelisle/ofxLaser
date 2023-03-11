@@ -298,11 +298,11 @@ void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
 
 
 
-bool ZoneTransformLineData::serialize(ofJson&json) {
+void ZoneTransformLineData::serialize(ofJson&json) const {
     ofSerialize(json, transformParams);
     ofJson& nodesjson = json["nodes"];
     for(size_t i= 0; i<nodes.size(); i++) {
-        BezierNode& node = nodes[i];
+        const BezierNode& node = nodes[i];
         
         ofJson nodejson;
         node.serialize(nodejson);
@@ -312,7 +312,6 @@ bool ZoneTransformLineData::serialize(ofJson&json) {
     
     //cout << json.dump(3) << endl;
     
-    return true;
 }
 
 bool ZoneTransformLineData::deserialize(ofJson& jsonGroup) {

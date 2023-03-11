@@ -24,6 +24,31 @@ bool ZoneIdContainer :: addZoneIdObject(ObjectWithZoneId* newZoneIdObject) {
     
 }
 
+bool ZoneIdContainer :: addZoneByJson(ofJson& json) {
+    
+    ObjectWithZoneId* zoneIdObject = new ObjectWithZoneId();
+    if(zoneIdObject->deserialize(json)) {
+        addZoneIdObject(zoneIdObject);
+        return true;
+    } else {
+        delete zoneIdObject;
+        return false;
+    }
+    
+}
+
+map<ZoneId, ZoneId> ZoneIdContainer :: removeZoneById(ZoneId& zoneId) {
+
+    ObjectWithZoneId* zoneIdObject = getObjectForZoneId(zoneId);
+    vector<ObjectWithZoneId*> :: iterator it = find(zoneIdObjects.begin(), zoneIdObjects.end(), zoneIdObject);
+    if(it!=zoneIdObjects.end()) {
+        zoneIdObjects.erase(it);
+        delete zoneIdObject;
+    }
+    return renumberZones();
+    
+    
+}
 
 map<ZoneId, ZoneId> ZoneIdContainer :: renumberZones() {
     
@@ -38,7 +63,7 @@ map<ZoneId, ZoneId> ZoneIdContainer :: renumberZones() {
         zoneId.type = type; // shouldn't change but hopefully OK
         
         if(zoneId!=originalZoneId) {
-            //zonesChanged[originalZoneId] = zoneId;
+            zonesChanged.insert({originalZoneId,zoneId});
         }
         
         
@@ -83,4 +108,59 @@ ObjectWithZoneId* ZoneIdContainer :: getObjectAtIndex(int index) {
 
 int ZoneIdContainer ::getNumZoneIds() const{
     return zoneIdObjects.size();
+}
+
+void ZoneIdContainer :: serialize(ofJson& json) const {
+    
+    ofJson& containerJson = json["zoneidcontainer"];
+    containerJson["grouplabel"] = groupLabel;
+    containerJson["zonetype"] = (int) type;
+    containerJson["zonegroup"] = zoneGroup;
+    
+    ofJson& jsonarray = containerJson["zoneidobjects"];
+    for(ObjectWithZoneId* zoneIdObject : zoneIdObjects) {
+        ofJson zoneIdJson;
+        zoneIdObject->serialize(zoneIdJson);
+        jsonarray.push_back(zoneIdJson);
+    }
+    
+}
+bool ZoneIdContainer :: deserialize(ofJson& json) {
+    
+    if(json.contains("zoneidcontainer")) {
+
+        ofJson& containerJson = json["zoneidcontainer"];
+
+        if(containerJson.contains("grouplabel") && containerJson.contains("zonetype") && containerJson.contains("zonegroup") && containerJson.contains("zoneidobjects")) {
+
+            clearZones();
+            
+            type = containerJson["zonetype"];
+            zoneGroup = containerJson["zonegroup"];
+            groupLabel = containerJson["grouplabel"];
+            
+            bool success = true;
+            
+            ofJson& jsonarray = containerJson["zoneidobjects"];
+            for(int i = 0; i<jsonarray.size(); i++) {
+
+                ofJson& zoneIdJson = jsonarray[i];
+                if(!addZoneByJson(zoneIdJson)) {
+                    success = false;
+                }
+            }
+            
+
+            return success;
+
+        } else {
+            return false;
+        }
+
+
+    } else {
+        return false;
+    }
+    
+    
 }

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxLaserLaser.h"
+#include "ofxLaserManagerBase.h"
 #include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserZoneUiQuad.h"
 #include "ofxLaserZoneUiLine.h"

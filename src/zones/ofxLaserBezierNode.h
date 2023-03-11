@@ -48,8 +48,7 @@ class BezierNode {
     bool updateDrag(glm::vec2 mousePoint);
     bool stopDrag();
     
-    bool serialize(ofJson& json);
-    
+    void serialize(ofJson& json) const;
     bool deserialize(ofJson& jsonGroup);
     
     vector<DragHandle> handles; // 0 is centre, 1 and 2 are controls

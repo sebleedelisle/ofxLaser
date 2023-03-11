@@ -27,9 +27,9 @@ Manager :: Manager() {
         ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
     }
     
-    showInputPreview = true;
-    lockInputZones = false;
-    
+//    showInputPreview = true;
+//    lockInputZones = false;
+//
     initAndLoadSettings();
     
     // if no lasers are loaded make one and add a zone
@@ -127,10 +127,10 @@ void Manager :: initAndLoadSettings() {
     ofxLaser::UI::setupGui();
    
     interfaceParams.setName("Interface");
-    interfaceParams.add(lockInputZones.set("Lock input zones", true));
-    interfaceParams.add(showInputZones.set("Show input zones", true));
-    interfaceParams.add(showInputPreview.set("Show preview", true));
-    interfaceParams.add(showOutputPreviews.set("Show path previews", true));
+//    interfaceParams.add(lockInputZones.set("Lock input zones", true));
+//    interfaceParams.add(showInputZones.set("Show input zones", true));
+//    interfaceParams.add(showInputPreview.set("Show preview", true));
+//    interfaceParams.add(showOutputPreviews.set("Show path previews", true));
     //interfaceParams.add(useBitmapMask.set("Use bitmap mask", false));
     //interfaceParams.add(showBitmapMask.set("Show bitmap mask", false));
     //interfaceParams.add(laserMasks.set("Laser mask shapes", false));
@@ -139,8 +139,8 @@ void Manager :: initAndLoadSettings() {
     customParams.setName("CUSTOM PARAMETERS");
     
     // is this still used ?
-    params.add(zoneEditorShowLaserPath.set("Show path in zone editor", true));
-    params.add(zoneEditorShowLaserPoints.set("Show points in zone editor", false));
+    //params.add(zoneEditorShowLaserPath.set("Show path in zone editor", true));
+    //params.add(zoneEditorShowLaserPoints.set("Show points in zone editor", false));
     params.add(zoneGridSnap.set("Zone snap to grid", true));
     params.add(zoneGridSize.set("Zone grid size", 20,1,50));
     params.add(globalLatency.set("Latency (ms)", 150,0,400));
@@ -156,7 +156,7 @@ void Manager :: initAndLoadSettings() {
     paramChanged(params);
     ofAddListener(params.parameterChangedE(), this, &Manager::paramChanged);
  
-    showInputPreview = true;
+    //showInputPreview = true;
     
     copyParams.add(copyScannerSettings.set("Copy scanner / speed settings", false));
     copyParams.add(copyAdvancedSettings.set("Copy advanced settings", false));
@@ -191,7 +191,7 @@ void Manager :: update() {
         saveSettings();
     }
     canvasViewController.updateUIFromZones(canvasTarget);
-    canvasViewController.setLockedAll(lockInputZones);
+    //canvasViewController.setLockedAll(false);
    
     
     
@@ -412,36 +412,36 @@ void Manager :: drawPreviews() {
         visualiser3D.draw(rect3D, lasers, true);
         
         // this is same as other views - should break it out
-        if(showOutputPreviews) {
-            // int numrows = 1;
-            float outputpreviewscale = 0.375;
-            float outputpreviewsize = 800*outputpreviewscale;
-            
-            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
-            if (spaceatbottom<50) spaceatbottom = 50;
-            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-            
-            // so we have spaceatbottom which is the gap at the bottom
-            // then we have the height and width of the previews
-            // which is outputpreviewsize.
-            // We know this will fit vertically but we don't know if it
-            // fit horizontally
-            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
-            if(outputpreviewsize*lasers.size() > availablespace) {
-                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
-            }
-            
-            for(size_t i= 0; i<lasers.size(); i++) {
-                
-                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-                
-                ofFill();
-                ofSetColor(0);
-                ofDrawRectangle(laserOutputPreviewRect);
-                
-            }
-            
-        }
+//        if(showOutputPreviews) {
+//            // int numrows = 1;
+//            float outputpreviewscale = 0.375;
+//            float outputpreviewsize = 800*outputpreviewscale;
+//
+//            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
+//            if (spaceatbottom<50) spaceatbottom = 50;
+//            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
+//
+//            // so we have spaceatbottom which is the gap at the bottom
+//            // then we have the height and width of the previews
+//            // which is outputpreviewsize.
+//            // We know this will fit vertically but we don't know if it
+//            // fit horizontally
+//            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
+//            if(outputpreviewsize*lasers.size() > availablespace) {
+//                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
+//            }
+//
+//            for(size_t i= 0; i<lasers.size(); i++) {
+//
+//                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
+//
+//                ofFill();
+//                ofSetColor(0);
+//                ofDrawRectangle(laserOutputPreviewRect);
+//
+//            }
+//
+//        }
         
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
@@ -618,11 +618,11 @@ void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettin
         
     }
 }
-
-bool Manager::togglePreview(){
-    showInputPreview = !showInputPreview;
-    return showInputPreview;
-};
+//
+//bool Manager::togglePreview(){
+//    showInputPreview = !showInputPreview;
+//    return showInputPreview;
+//};
 
 glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
     
@@ -981,8 +981,8 @@ void Manager::guiLaserOutputSettings() {
         UI::addCheckbox(laser->hideContentDuringTestPattern);
         UI::toolTip("Disable this if you want to see the laser content at the same time as the test patterns");
         
-        UI::addParameter(zoneEditorShowLaserPath);
-        UI::addParameter(zoneEditorShowLaserPoints);
+        //UI::addParameter(zoneEditorShowLaserPath);
+        //UI::addParameter(zoneEditorShowLaserPoints);
        
         if(laser->paused && ((ofGetElapsedTimeMillis()%600)<300)) UI::startGhosted();
         string label = ofToString(ICON_FK_PLAY ) + ofToString(ICON_FK_PAUSE);
@@ -1322,7 +1322,7 @@ void Manager :: guiLaserOverview() {
         ImGui::SameLine();
         if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
             addCanvasZone(0,0,280,110);
-            lockInputZones = false;
+            //lockInputZones = false;
             saveSettings();
         }
     
@@ -1361,9 +1361,9 @@ void Manager :: guiLaserOverview() {
                 UI::addParameter(guideImageColour);
             }
                 
-            if(UI::addParameter(lockInputZones)) {
-                saveSettings();
-            }
+//            if(UI::addParameter(lockInputZones)) {
+//                saveSettings();
+//            }
         }
     }
     

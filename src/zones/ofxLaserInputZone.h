@@ -28,8 +28,8 @@ namespace ofxLaser {
 		
 		bool update();
         
-        virtual void serialize(ofJson&json) const ;
-        virtual bool deserialize(ofJson&jsonGroup);
+        virtual void serialize(ofJson&json) const override;
+        virtual bool deserialize(ofJson&jsonGroup) override;
         
 	    ofRectangle& getRect() {
             return rect;

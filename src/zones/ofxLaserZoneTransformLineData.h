@@ -33,7 +33,7 @@ class ZoneTransformLineData : public ZoneTransformBase {
     
     bool setFromPoints(const vector<glm::vec2*> points);
     bool  moveHandle(int handleindex, glm::vec2 newpos);
-    virtual bool serialize(ofJson&json) override;
+    virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
  
     void getPerimeterPoints(vector<glm::vec2>& points) override;

@@ -8,6 +8,22 @@
 #include "ofxLaserBeamZoneContainer.h"
 using namespace ofxLaser;
 
+
+
+bool BeamZoneContainer :: addZoneByJson(ofJson& json) {
+    
+    ShapeTargetBeamZone* zoneIdObject = new ShapeTargetBeamZone();
+    if(zoneIdObject->deserialize(json)) {
+        addZoneIdObject(zoneIdObject);
+        return true;
+    } else {
+        delete zoneIdObject;
+        return false;
+    }
+    
+}
+
+
 ZoneId BeamZoneContainer :: addBeamZone(){
    ShapeTargetBeamZone* newbeamzone = new ShapeTargetBeamZone();
    addZoneIdObject(newbeamzone);

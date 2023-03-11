@@ -24,7 +24,10 @@ LaserZoneViewController ::  ~LaserZoneViewController() {
 
 bool LaserZoneViewController :: update() {
 
-    bool wasUpdated = ScrollableView :: update();
+    bool wasUpdated = false; //ScrollableView :: update();
+
+    
+    boundingRect = sourceRect;
     
     for(ZoneUiBase* zoneUi : zoneUis) {
         
@@ -40,7 +43,8 @@ bool LaserZoneViewController :: update() {
                 ofLogError("missing zone ui for output zone! ");
             }
         }
-
+        boundingRect.growToInclude(zoneUi->getBoundingBox());
+        
         wasUpdated|=zoneupdated;
     }
     
@@ -56,6 +60,7 @@ bool LaserZoneViewController :: update() {
             maskUi->updateDataFromUI(mask); 
         }
 
+        boundingRect.growToInclude(maskUi->getBoundingBox());
         wasUpdated|=maskupdated;
     }
     
@@ -67,7 +72,7 @@ bool LaserZoneViewController :: update() {
     if(changed) {
         resetUiElements();
     } 
-
+    checkEdges();
     
     return wasUpdated;
 }
@@ -108,9 +113,7 @@ void LaserZoneViewController :: moveMasksToBack() {
         
         
     }
-    
-    
-    
+
 }
 
 void LaserZoneViewController :: draw() {
@@ -122,11 +125,15 @@ void LaserZoneViewController :: draw() {
     drawEdges();
     drawGrid();
     
-
+    
     drawMoveables();
 
     drawLaserPath();
 
+//    ofNoFill();
+//    ofSetColor(ofColor::red);
+//    ofDrawRectangle(boundingRect);
+    
     endViewPort();
     
 
@@ -505,8 +512,9 @@ void LaserZoneViewController :: drawImGui() {
                     // otherwise remove this and also its alt zone if
                     // it has one
                     ZoneId zoneid = outputZone->getZoneId();
-                    laser->removeZone(zoneid);
-                    laser->removeAltZone(zoneid);
+                    ManagerBase::instance()->deleteBeamZone(zoneid);
+                    //laser->removeZone(zoneid);
+                    //laser->removeAltZone(zoneid);
                     // LATER - TO DO - if this is a laser zone, delete it
                     // if it's a canvas zone, keep it
                     

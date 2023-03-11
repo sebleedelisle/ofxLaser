@@ -14,12 +14,12 @@ class ScrollableView {
     public :
   
     // base class for anything that is a window that can be zoomed and scrolled
-  
-    // TODO add source and target rectangle
     
     ScrollableView() ;
     
     virtual bool update();
+    virtual bool checkEdges();
+
     
     void zoom(glm::vec2 anchor, float zoomMultiplier);
     void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
@@ -61,9 +61,10 @@ class ScrollableView {
     
     glm::vec2 offset;
     float scale;
-
+    
     ofRectangle sourceRect;
     ofRectangle outputRect;
+    ofRectangle boundingRect;
     
     float lastClickTime = 0;
     float doubleClickMaxInterval = 0.2f; 

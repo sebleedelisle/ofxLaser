@@ -10,17 +10,70 @@
 
 using namespace ofxLaser; 
 
-//bool operator== (const ZoneId& c1, const ZoneId& c2)
-//{
-//    return c1.getUid()==c2.getUid();
-//}
-//
-//bool operator!= (const ZoneId& c1, const ZoneId& c2)
-//{
-//    return c1.getUid()!=c2.getUid();
-//}
-//
+ZoneId :: ZoneId(){
+    type = BEAM;
+    zoneGroup = 0;
+    zoneIndex = 0;
+    label = "";
+}
 
+string ZoneId :: getLabel() {
+    if(label=="") {
+        
+        string newlabel = "";
+        
+        if(type==BEAM) newlabel = "BEAM";
+        else newlabel = "CANVAS";
+        newlabel = newlabel +ofToString(zoneIndex);
+        return newlabel;
+            
+    } else {
+        return label;
+    }
+    
+}
+
+string ZoneId :: getUid() const {
+    string uid = "";
+    if(type==BEAM) uid = "B";
+    else uid = "C";
+    uid = uid+ofToString(zoneGroup)+"_"+ofToString(zoneIndex);
+    return uid;
+}
+
+void ZoneId :: serialize(ofJson& json) const{
+    ofJson& zoneIdJson = json["zoneId"];
+    zoneIdJson["type"] = (int)type;
+    zoneIdJson["zonegroup"] = zoneGroup;
+    zoneIdJson["zoneindex"] = zoneIndex;
+    zoneIdJson["label"] = label;
+    //return true;
+}
+bool ZoneId :: deserialize(ofJson& json) {
+    if(json.contains("zoneId")) {
+        
+        ofJson& zoneIdJson = json["zoneId"];
+        
+        if(zoneIdJson.contains("type") && zoneIdJson.contains("zonegroup") && zoneIdJson.contains("zoneindex") && zoneIdJson.contains("label")) {
+            
+            type = zoneIdJson["type"];
+            zoneGroup = zoneIdJson["zonegroup"];
+            zoneIndex = zoneIdJson["zoneindex"];
+            label = zoneIdJson["label"];
+    
+            return true;
+            
+        } else {
+            return false;
+        }
+    
+        
+    } else {
+        return false;
+    }
+    
+    
+}
 bool ZoneId::operator==(const ZoneId & other) const{
     return other.getUid()==getUid();
 }

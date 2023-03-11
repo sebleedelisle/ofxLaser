@@ -20,6 +20,7 @@ class PolygonBase :public vector<glm::vec2> {
     void setRectangle(float x, float y, float w, float h);
     void setFromPoints(const vector<glm::vec2*>& newpoints);
     void setFromPoints(const vector<glm::vec2>& newpoints);
+    ofRectangle getBoundingBox(); 
     
     virtual void serialize(ofJson&json) const;
     virtual bool deserialize(ofJson&jsonGroup);

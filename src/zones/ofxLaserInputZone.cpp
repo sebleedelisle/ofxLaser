@@ -55,9 +55,11 @@ void InputZone:: set(float x, float y, float w, float h) {
 
 void InputZone::serialize(ofJson&json) const{
     
-    // adds json node for the handles, which is an array
-    ofJson& handlesjson = json["canvaszone"];
+    ObjectWithZoneId::serialize(json);
     
+    ofJson& containerJson = json["zoneidobject"];
+    // adds json node for the handles, which is an array
+    ofJson& handlesjson = containerJson["inputzone"];
     handlesjson = {rect.getLeft(), rect.getTop(), rect.getWidth(), rect.getHeight()};
     
 

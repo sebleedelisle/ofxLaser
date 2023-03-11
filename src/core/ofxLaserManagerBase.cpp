@@ -172,13 +172,13 @@ ZoneId ManagerBase :: createNewBeamZone() {
     return beamZoneContainer.addBeamZone();
 }
     
-    
-bool ManagerBase ::  addBeamZoneToLaser(int beamZoneIndex, int laserIndex){
-    // i think all this needs to do
-    // is pass the zoneId to the laser object.
-    // Maybe wanna double check the zone exists first?
-    return true;
-}
+//
+//bool ManagerBase ::  addBeamZoneToLaser(int beamZoneIndex, int laserIndex){
+//    // i think all this needs to do
+//    // is pass the zoneId to the laser object.
+//    // Maybe wanna double check the zone exists first?
+//    return true;
+//}
 
 
 void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
@@ -192,6 +192,24 @@ void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
 //        return;
 //    }
     lasers[lasernum]->addZone(zoneId);
+}
+
+bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
+
+    map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
+
+    bool changed = false;
+        for(Laser* laser : lasers) {
+            changed = laser->removeZone(zoneid) || changed;
+            changed = laser->updateZones(changedZones)|| changed;
+        }
+    if (changed) {
+        saveSettings();
+        return true;
+    } else{
+        return false;
+    }
+    
 }
 
 void ManagerBase::createDefaultCanvasZone() {
@@ -560,6 +578,9 @@ bool ManagerBase::loadSettings() {
 
     }
 
+    
+    beamZoneContainer.deserialize(json["beamZones"]);
+    
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
 
@@ -635,8 +656,8 @@ bool ManagerBase::saveSettings() {
     
     ofJson json;
     ofSerialize(json, params);
-//    json["canvasTarget.getWidth()"] = canvasTarget.getWidth();
-//    json["canvasHeight"] = canvasHeight;
+
+    beamZoneContainer.serialize(json["beamZones"]);
     
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
     

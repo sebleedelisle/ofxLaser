@@ -27,6 +27,7 @@ class OutputZone {
     
     string getLabel();
     ZoneId getZoneId() const;
+    bool setZoneId(ZoneId& zoneid); 
     
     bool getIsAlternate();
     void setIsAlternate(bool v);
@@ -43,7 +44,7 @@ class OutputZone {
     ofRectangle getBounds();
     void drawPerimeterAsShape(); 
     
-    virtual bool serialize(ofJson& json);
+    virtual void serialize(ofJson& json) const;
     virtual bool deserialize(ofJson& json);
     
     //InputZone& zone;
