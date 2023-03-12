@@ -1444,19 +1444,21 @@ bool Laser::loadSettings(){
     // if the json node isn't found then this should do nothing
     for(auto jsonitem : zoneNumJson) {
         //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-        string zoneUid = (string)jsonitem;
+        if(jsonitem.is_string() ) {
+            string zoneUid = (string)jsonitem;
 
-        // if a zone exists with this index then add a LaserZone for it
+            // if a zone exists with this index then add a LaserZone for it
 
-        OutputZone* laserZone = new OutputZone(ZoneId());
-        outputZones.push_back(laserZone);
+            OutputZone* laserZone = new OutputZone(ZoneId());
+            outputZones.push_back(laserZone);
 
-        string filename ="laser"+ ofToString(laserIndex) +"zone" + zoneUid + ".json";
-        ofJson laserZoneJson = ofLoadJson(savePath + filename);
-        if(laserZone->deserialize(laserZoneJson)) {
-            success&=true;
-            laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+            string filename ="laser"+ ofToString(laserIndex) +"zone" + zoneUid + ".json";
+            ofJson laserZoneJson = ofLoadJson(savePath + filename);
+            if(laserZone->deserialize(laserZoneJson)) {
+                success&=true;
+                laserZonesLastSavedMap[filename] = laserZoneJson.dump();
 
+            }
         }
     }
     
@@ -1464,22 +1466,24 @@ bool Laser::loadSettings(){
     
     // if the json node isn't found then this should do nothing
     for(auto jsonitem : altZoneNumJson) {
-        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-        string zoneUid = (string)jsonitem;
-        
-        // if a zone exists with this index then add a LaserZone for it
-        
-        OutputZone* laserZone = new OutputZone(ZoneId());
-        laserZone->setIsAlternate(true);
-        string filename = "laser"+ ofToString(laserIndex) +"zone" + zoneUid + "alt.json";
-        outputZones.push_back(laserZone);
-        ofJson laserZoneJson = ofLoadJson(savePath + filename);
-        
-        //success &= laserZone->deserialize(laserZoneJson);
-        if(laserZone->deserialize(laserZoneJson)) {
-            success&=true;
-            laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+        if(jsonitem.is_string() ) {
+            //cout << "Laser::loadSettings " << (int) jsonitem << endl;
+            string zoneUid = (string)jsonitem;
             
+            // if a zone exists with this index then add a LaserZone for it
+            
+            OutputZone* laserZone = new OutputZone(ZoneId());
+            laserZone->setIsAlternate(true);
+            string filename = "laser"+ ofToString(laserIndex) +"zone" + zoneUid + "alt.json";
+            outputZones.push_back(laserZone);
+            ofJson laserZoneJson = ofLoadJson(savePath + filename);
+            
+            //success &= laserZone->deserialize(laserZoneJson);
+            if(laserZone->deserialize(laserZoneJson)) {
+                success&=true;
+                laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+                
+            }
         }
     }
     

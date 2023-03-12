@@ -105,6 +105,7 @@ void Manager :: createAndAddLaser()  {
     laserZoneViews.back().setOutputRect(getZonePreviewRect());
     laserZoneViews.back().autoFitToOutput();
     laserZoneViews.back().setGrid(zoneGridSnap, zoneGridSize);
+    setSelectedLaserIndex(laserindex);
     
 }
 
@@ -1316,6 +1317,7 @@ void Manager :: guiLaserOverview() {
         if(UI::Button( label, false, false)) {
             // add laser
             laserManager.createAndAddLaser();
+            
             saveSettings(); 
         }
     
