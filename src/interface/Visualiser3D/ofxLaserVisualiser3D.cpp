@@ -345,7 +345,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
 }
 
 void Visualiser3D :: drawGrid() {
-    float groundLevel = 100;
+    float groundLevel = 10;
     if(true) { // grid.size()==0)) {
     
 //        ofRectangle visibleRectangle(camera.getGlobalPosition(), 0,0);

@@ -18,17 +18,10 @@ enum ofxLaserViewMode {
     OFXLASER_VIEW_OUTPUT, // show laser output system
     
 };
-//enum ofxLaserMouseMode {
-//    OFXLASER_MOUSE_DEFAULT,
-//    OFXLASER_MOUSE_DRAG, //
-//    OFXLASER_MOUSE_ZOOM_IN, //
-//    OFXLASER_MOUSE_ZOOM_OUT, //
-//};
+
 
 namespace ofxLaser {
 
-
-//class CanvasViewController; 
 
 class Manager : public ManagerBase {
     
@@ -49,11 +42,9 @@ class Manager : public ManagerBase {
     bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
-//    glm::vec2 getPreviewOffset();
-//    float getPreviewScale();
+
     ofRectangle getPreviewRect();
     ofRectangle getZonePreviewRect();
-   //oid fitPreviewInRect(ofRectangle fitrect);
     
     virtual void setCanvasSize(int width, int height) override; 
     bool setGuideImage(string filename);
@@ -68,7 +59,6 @@ class Manager : public ManagerBase {
     LaserZoneViewController*  getCurrentLaserViewController();
     LaserZoneViewController*  getLaserViewControllerByIndex(int index);
    
-
     void drawUI();
     void drawPreviews();
     
@@ -76,11 +66,9 @@ class Manager : public ManagerBase {
    
     glm::vec2 screenToLaserInput(glm::vec2& pos);
     
-
     void drawLaserGui();
     void startLaserUI() ;
     void finishLaserUI() ;
-    void renderCustomCursors();
     
     void guiMenuBar();
     void guiTopBar(int ypos);
@@ -104,8 +92,6 @@ class Manager : public ManagerBase {
     bool copySettingsWindowOpen;
     bool showDacAssignmentWindow;
     
-    //bool togglePreview();
-    // TODO I think this functionality is broken
     bool toggleGui();
     void setGuiVisible(bool visible);
     bool isGuiVisible();
@@ -122,12 +108,8 @@ class Manager : public ManagerBase {
     bool keyReleased(ofKeyEventArgs &e);
 
     void setDefaultPreviewOffsetAndScale();
-    //void zoomPreviewAroundPoint(glm::vec2 anchor, float zoomMultiplier);
     void setLaserDefaultPreviewOffsetAndScale(int lasernum);
-    
-//    bool draggingPreview;
-//    glm::vec2 dragStartPoint;
-//    
+     
     //----------- DEPRECATED ------------------------
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::nextProjector - use selectNextLaser() ", void nextProjector());
@@ -140,22 +122,14 @@ class Manager : public ManagerBase {
     
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
-    
-//    ofParameter<bool> lockInputZones;
-//    ofParameter<bool> showInputZones;
-//    ofParameter<bool> showInputPreview;
-//    ofParameter<bool> showOutputPreviews;
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize;
         
+    // TODO are these used?
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;
     
     ofParameter<int> globalLatency; 
-    
-    ofParameter<bool> showGuideImage;
-    ofParameter<ofColor> guideImageColour;
-    ofParameter<string> guideImageFilename; 
 
     bool showDacAnalytics;
     ofParameter<float> dacSettingsTimeSlice;
@@ -168,8 +142,7 @@ class Manager : public ManagerBase {
     bool initialised = false;
    
     int selectedLaserIndex;
-    //bool showOutputInterface; // the zone editing interface
-    //ofxLaserMouseMode mouseMode;
+
     
     bool guiIsVisible;
     bool showEditScannerPreset = false;
@@ -182,13 +155,9 @@ class Manager : public ManagerBase {
     ofImage guideImage;
   
     vector<LaserZoneViewController> laserZoneViews;
+    bool showCanvas = false; 
     CanvasViewController canvasViewController;
-    
-//    glm::vec2 previewOffset;
-//    float previewScale;
-//
-
-    
+     
     PresetManager<ScannerSettings> scannerPresetManager;
     PresetManager<ColourSettings> colourPresetManager;
     
@@ -202,7 +171,6 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
     
-   // bool firstUpdate = true;
     
     IconSVGs iconSVGs; 
    

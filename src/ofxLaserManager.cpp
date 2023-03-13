@@ -18,7 +18,6 @@ Manager * Manager::instance() {
     return laserManager;
 }
 
-
 Manager :: Manager() {
     
     if(laserManager == NULL) {
@@ -50,9 +49,9 @@ Manager :: Manager() {
      
     setDefaultPreviewOffsetAndScale();
     
-    params.add(showGuideImage.set("Show guide image", false));
-    params.add(guideImageColour.set("Guide image colour", ofColor::white));
-    params.add(guideImageFilename.set("Guide image filename", ""));
+//    params.add(showGuideImage.set("Show guide image", false));
+//    params.add(guideImageColour.set("Guide image colour", ofColor::white));
+//    params.add(guideImageFilename.set("Guide image filename", ""));
     dacSettingsTimeSlice.set("Magnification", 0.5, 0.1, 20);
     
     // loadedJson is filled on loadSettings. So now check the extras.
@@ -60,11 +59,11 @@ Manager :: Manager() {
         if(loadedJson.contains("Laser")) {
           
             try {
-                ofDeserialize(loadedJson["Laser"], showGuideImage);
-                ofDeserialize(loadedJson["Laser"], guideImageColour);
-                ofDeserialize(loadedJson["Laser"], guideImageFilename);
-                if(guideImageFilename.get()!="") setGuideImage("guideImages/" + guideImageFilename.get());
-               
+//                ofDeserialize(loadedJson["Laser"], showGuideImage);
+//                ofDeserialize(loadedJson["Laser"], guideImageColour);
+//                ofDeserialize(loadedJson["Laser"], guideImageFilename);
+//                if(guideImageFilename.get()!="") setGuideImage("guideImages/" + guideImageFilename.get());
+//
             } catch(...) {
                 //cout << showGuideImage << " " <<loadJson["Laser"]["Show_guide_image"]<< endl;
             }
@@ -108,8 +107,6 @@ void Manager :: createAndAddLaser()  {
     setSelectedLaserIndex(laserindex);
     
 }
-
-
 
 void Manager :: setLaserDefaultPreviewOffsetAndScale(int lasernum) {
     LaserZoneViewController* laserview = getLaserViewControllerByIndex(lasernum);
@@ -178,7 +175,6 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
     saveSettings();
 }
 
-
 void Manager :: update() {
  
     ManagerBase :: update();
@@ -206,9 +202,10 @@ void Manager :: mouseMoved(ofMouseEventArgs &e) {
     canvasViewController.mouseMoved(e);
 }
 
-
 bool Manager :: mousePressed(ofMouseEventArgs &e){
 
+    if(!isGuiVisible()) return false; 
+    
    // ofLogNotice("Manager :: mousePressed"); 
     if (viewMode  == OFXLASER_VIEW_CANVAS) {
         canvasViewController.mousePressed(e);
@@ -261,6 +258,7 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
 }
 
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
+    
     visualiser3D.mouseDragged(e);
     
     for(LaserZoneViewController& zoneView : laserZoneViews) {
@@ -268,7 +266,7 @@ bool Manager :: mouseDragged(ofMouseEventArgs &e){
     }
     canvasViewController.mouseDragged(e);
 
-    return true;
+    return false;
 }
 
 void Manager :: mouseScrolled(ofMouseEventArgs &e){
@@ -356,8 +354,6 @@ Laser* Manager::getSelectedLaser() {
     }
 }
     
-
-
 int Manager::getLaserIndex(Laser* laser) {
     for(int i = 0; i<lasers.size(); i++) {
         if(lasers[i] == laser) {
@@ -372,8 +368,58 @@ int Manager::getLaserIndex(Laser* laser) {
 bool Manager::setGuideImage(string filename){
     return guideImage.load(filename);
 }
+void Manager::setCanvasSize(int width, int height) {
+    ManagerBase::setCanvasSize(width, height);
+    setDefaultPreviewOffsetAndScale();
+}
+
+bool Manager ::toggleGui(){
+    guiIsVisible = !guiIsVisible;
+    return guiIsVisible;
+}
+void Manager ::setGuiVisible(bool visible){
+    guiIsVisible = visible;
+}
+bool Manager::isGuiVisible() {
+    return guiIsVisible;
+}
+
+void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettings){
+    customParams.add(param);
+    if(loadFromSettings){
+        //loadJson.find("custom");
+        if(!loadedJson.empty()) {
+            if(loadedJson.contains("Laser")) {
+                if(loadedJson["Laser"].contains("CUSTOM_PARAMETERS")) {
+                    //     auto value = loadJson["Laser"]["Custom"][param.getName()];
+                    try {
+                        ofDeserialize(loadedJson["Laser"]["CUSTOM_PARAMETERS"], param);
+                    } catch(...) {
+                        
+                    }
+                    
+                }
+            }
+        }
+        //ofDeserialize(loadJson["custom"], param);
+        //ofLogNotice(loadJson.dump(3));
+        //ofLogNotice(loadJson["Laser"].dump(3));
+        //ofLogNotice(loadJson["Laser"]["Custom"].dump(3));
+        //ofLogNotice(loadJson["Laser"]["Custom"][param.getName()].dump(3));
+        
+    }
+}
+
+glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
+    
+    glm::vec2 returnpos= pos ;//
+    return returnpos;
+    
+}
+
 
 void Manager:: drawUI(){
+    
     drawPreviews();
     ofxLaser::UI::startGui();
     drawLaserGui();
@@ -387,14 +433,12 @@ void Manager :: startLaserUI() {
 }
 void Manager :: finishLaserUI() {
     ofxLaser::UI::render();
-    renderCustomCursors();
-}
-
-void Manager :: renderCustomCursors() {
-    
+  //  renderCustomCursors();
 }
 
 void Manager :: drawPreviews() {
+    
+    if(!isGuiVisible()) return;
     
     // update visibility and size on views
     for(LaserZoneViewController& laserZoneView : laserZoneViews) {
@@ -412,45 +456,10 @@ void Manager :: drawPreviews() {
         // Draw 3D visualiser
         visualiser3D.draw(rect3D, lasers, true);
         
-        // this is same as other views - should break it out
-//        if(showOutputPreviews) {
-//            // int numrows = 1;
-//            float outputpreviewscale = 0.375;
-//            float outputpreviewsize = 800*outputpreviewscale;
-//
-//            float spaceatbottom = (ofGetHeight() - getPreviewRect().getBottom() ) -(guiSpacing*2);
-//            if (spaceatbottom<50) spaceatbottom = 50;
-//            if(outputpreviewsize>spaceatbottom) outputpreviewsize = spaceatbottom;
-//
-//            // so we have spaceatbottom which is the gap at the bottom
-//            // then we have the height and width of the previews
-//            // which is outputpreviewsize.
-//            // We know this will fit vertically but we don't know if it
-//            // fit horizontally
-//            float availablespace = ofGetWidth()-guiLaserSettingsPanelWidth- (guiSpacing*2);
-//            if(outputpreviewsize*lasers.size() > availablespace) {
-//                outputpreviewsize = (availablespace/lasers.size())-guiSpacing;
-//            }
-//
-//            for(size_t i= 0; i<lasers.size(); i++) {
-//
-//                ofRectangle laserOutputPreviewRect(guiSpacing+((outputpreviewsize+guiSpacing)*i),ofGetHeight()-guiSpacing-outputpreviewsize,outputpreviewsize,outputpreviewsize);
-//
-//                ofFill();
-//                ofSetColor(0);
-//                ofDrawRectangle(laserOutputPreviewRect);
-//
-//            }
-//
-//        }
-        
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
         
         
-
-       
-         
         canvasViewController.drawFrame();
         canvasViewController.beginViewPort();
         canvasViewController.drawEdges();
@@ -458,40 +467,6 @@ void Manager :: drawPreviews() {
         renderPreview();
         canvasViewController.endViewPort();
     
-
-        //
-//        if(showInputPreview) {
-//
-//            ofPushStyle();
-//            ofFill();
-//            ofSetColor(0);
-//            ofPushMatrix();
-//            ofTranslate(previewOffset);
-//            ofScale(previewScale);
-//            ofDrawRectangle(0,0,canvasTarget.getWidth(), canvasTarget.getHeight());
-//            ofPopMatrix();
-//            ofPopStyle();
-//
-//
-//            if(showInputZones) {
-//                // this renders the input zones in the graphics source space
-//                for(size_t i= 0; i<zones.size(); i++) {
-//                    zones[i]->setOffsetAndScale(previewOffset,previewScale);
-//                    // zones[i]->setEditable(!lockInputZones);
-//                    zones[i]->setVisible(true);
-//                    zones[i]->draw();
-//                }
-//            } else {
-//                // this renders the input zones in the graphics source space
-//                for(size_t i= 0; i<zones.size(); i++) {
-//
-//                    zones[i]->setVisible(false);
-//
-//                }
-//            }
-//
-//            renderPreview();
-//        }
         
     } else if(viewMode == OFXLASER_VIEW_OUTPUT){
         
@@ -567,79 +542,28 @@ void Manager :: renderPreview() {
     mesh.draw();
     
     
-    if(showGuideImage && guideImage.isAllocated()) {
-        ofSetColor(guideImageColour);
-        guideImage.draw(0,0,canvasTarget.getWidth(), guideImage.getHeight() * ((float)canvasTarget.getWidth()/(float)guideImage.getWidth()));
-        
-        
-    }
+//    if(showGuideImage && guideImage.isAllocated()) {
+//        ofSetColor(guideImageColour);
+//        guideImage.draw(0,0,canvasTarget.getWidth(), guideImage.getHeight() * ((float)canvasTarget.getWidth()/(float)guideImage.getWidth()));
+//
+//
+//    }
     ofDisableBlendMode();
 
     ofPopStyle();
 }
 
-void Manager::setCanvasSize(int width, int height) {
-    ManagerBase::setCanvasSize(width, height);
-    setDefaultPreviewOffsetAndScale();
-}
-
-bool Manager ::toggleGui(){
-    guiIsVisible = !guiIsVisible;
-    return guiIsVisible;
-}
-void Manager ::setGuiVisible(bool visible){
-    guiIsVisible = visible;
-}
-bool Manager::isGuiVisible() {
-    return guiIsVisible;
-}
-
-void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettings){
-    customParams.add(param);
-    if(loadFromSettings){
-        //loadJson.find("custom");
-        if(!loadedJson.empty()) {
-            if(loadedJson.contains("Laser")) {
-                if(loadedJson["Laser"].contains("CUSTOM_PARAMETERS")) {
-                    //     auto value = loadJson["Laser"]["Custom"][param.getName()];
-                    try {
-                        ofDeserialize(loadedJson["Laser"]["CUSTOM_PARAMETERS"], param);
-                    } catch(...) {
-                        
-                    }
-                    
-                }
-            }
-        }
-        //ofDeserialize(loadJson["custom"], param);
-        //ofLogNotice(loadJson.dump(3));
-        //ofLogNotice(loadJson["Laser"].dump(3));
-        //ofLogNotice(loadJson["Laser"]["Custom"].dump(3));
-        //ofLogNotice(loadJson["Laser"]["Custom"][param.getName()].dump(3));
-        
-    }
-}
-//
-//bool Manager::togglePreview(){
-//    showInputPreview = !showInputPreview;
-//    return showInputPreview;
-//};
-
-glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
-    
-    glm::vec2 returnpos= pos ;//
-    return returnpos;
-    
-}
-
-
 void Manager::drawLaserGui() {
     
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     
     guiMenuBar();
     guiTopBar(menuBarHeight-1);
+    
     guiLaserOverview();
+    
+    if(!isGuiVisible()) return;
+    
     guiLaserSettings(getSelectedLaser());
     guiCustomParameters();
     
@@ -750,64 +674,12 @@ void Manager::drawLaserGui() {
             }
             UI::stopGhosted();
             UI::addDelayedTooltip("Grid size");
-            //ImGui::PopItemWidth();
+            
             ImGui::PopFont();
             
-//            for(int i = 0; i<0xff; i++) {
-//                string icon = "\xef\x8e";
-//                icon = icon +  (char)i;
-//                //cout << icon;
-//                ImGui::Text("%s%s ", ofToHex(i+0xef8e00-0xee9a40).c_str(), icon.c_str());
-//                ImGui::SameLine();
-//
-//            }
         }
         
-        /*
-        if(ImGui::BeginPopupModal("Add zone", NULL)) {
-            
-            static int type = 0;
-            
-            if(type==0) UI::secondaryColourStart();
-            if(ImGui::Button("QUAD")) {
-                type = 0;
-            }
-            UI::secondaryColourEnd();
-            ImGui::SameLine();
-            if(type==1)  UI::secondaryColourStart();
-            if(ImGui::Button("LINE")) {
-                type = 1;
-            }
-            UI::secondaryColourEnd();
-            
-            ImGui::Separator();
-
-            // TODO add selector to add existing zone
-            // TODO add lable
-            
-            
-            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-               
-            }
-            
-            ImGui::SetItemDefaultFocus();
-            ImGui::SameLine();
-            if (ImGui::Button("OK", ImVec2(120, 0))) {
-                
-                addZone(0,0,200,200);
-                int zonenum = zones.size()-1;
-                int lasernum = getSelectedLaserIndex();
-                addZoneToLaser(zonenum, lasernum);
-             
-                
-                ImGui::CloseCurrentPopup();
-                
-            }
-            
-            
-            ImGui::EndPopup();
-        }*/
+       
         
         UI::endWindow();
         
@@ -1177,6 +1049,7 @@ void Manager :: guiLaserOverview() {
             testPatternGlobalActive = !testPatternGlobalActive;
             updateGlobalTestPattern();
         }
+        UI::addDelayedTooltip("Show test pattern across all zones");
         ImGui::SameLine();
         
         ImGui::PushItemWidth(140);
@@ -1346,22 +1219,22 @@ void Manager :: guiLaserOverview() {
 //            }
                 
             
-            if(UI::Button("LOAD CANVAS GUIDE IMAGE")) {
-                
-                ofFileDialogResult dialogResult = ofSystemLoadDialog();
-                if(dialogResult.bSuccess) {
-                    if(setGuideImage(dialogResult.filePath)){
-                        showGuideImage =true;
-                        guideImage.save("guideimages/"+dialogResult.getName());
-                        guideImageFilename = dialogResult.getName();
-                        saveSettings();
-                    }
-                }
-            }
-            if(guideImage.isAllocated()) {
-                UI::addParameter(showGuideImage);
-                UI::addParameter(guideImageColour);
-            }
+//            if(UI::Button("LOAD CANVAS GUIDE IMAGE")) {
+//
+//                ofFileDialogResult dialogResult = ofSystemLoadDialog();
+//                if(dialogResult.bSuccess) {
+//                    if(setGuideImage(dialogResult.filePath)){
+//                        showGuideImage =true;
+//                        guideImage.save("guideimages/"+dialogResult.getName());
+//                        guideImageFilename = dialogResult.getName();
+//                        saveSettings();
+//                    }
+//                }
+//            }
+//            if(guideImage.isAllocated()) {
+//                UI::addParameter(showGuideImage);
+//                UI::addParameter(guideImageColour);
+//            }
                 
 //            if(UI::addParameter(lockInputZones)) {
 //                saveSettings();
@@ -1638,17 +1511,11 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
     
 }
 
-
 void Manager :: guiTopBar(int ypos) {
 
     ofxLaser::Manager& laserManager = *this;
     
         if(UI::startWindow("Icon bar", ImVec2(0,ypos), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
-
-        //ImGui::Columns(3, "Icon bar columns");
-    //    ImGui::SetColumnWidth(0, 200);
-    //    ImGui::SetColumnWidth(1, 200);
-    //    ImGui::SetColumnWidth(3, 100);
        
         bool useRedButton = areAllLasersArmed();
         if(useRedButton) UI::dangerColourStart();
@@ -1689,20 +1556,23 @@ void Manager :: guiTopBar(int ypos) {
         //ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
         
         
-       
-        
-        if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
-            viewMode = OFXLASER_VIEW_3D;
-        }
-        ImGui::SameLine();
-        if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
-            viewMode = OFXLASER_VIEW_CANVAS;
-        }
-        ImGui::SameLine();
-        if(UI::Button("OUTPUT", false, viewMode==OFXLASER_VIEW_OUTPUT)) {
-            viewMode = OFXLASER_VIEW_OUTPUT;
-        }
-        
+            
+            
+            if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
+                viewMode = OFXLASER_VIEW_3D;
+            }
+            if(showCanvas) {
+                ImGui::SameLine();
+                if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
+                    viewMode = OFXLASER_VIEW_CANVAS;
+                }
+                
+            }
+            ImGui::SameLine();
+            if(UI::Button("OUTPUT", false, viewMode==OFXLASER_VIEW_OUTPUT)) {
+                viewMode = OFXLASER_VIEW_OUTPUT;
+            }
+            
         
 //        ImGui::SameLine();
 //        ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
@@ -2183,35 +2053,35 @@ void Manager :: guiCopyLaserSettings() {
                     vector<OutputZone*> sourcezones = sourceLaser.getSortedOutputZones();
                     vector<OutputZone*> targetzones = targetLaser.getSortedOutputZones();
                     for(int i=0; (i<sourcezones.size()) && (i<targetzones.size()); i++ ){
-//
-//                        OutputZone* sourcezone = sourcezones[i];
-//                        OutputZone* targetzone = targetzones[i];
-//                        int sourcezoneindex = sourcezone->getZoneIndex();
-//                        int targetzoneindex = targetzone->getZoneIndex();
-//
-//                        ofJson zonejson;
-//                        sourcezone->serialize(zonejson);
-//                        targetzone->deserialize(zonejson);
-//
-//
-//                        if(sourceLaser.hasAltZone(sourcezoneindex)) {
-//
-//
-//                            if(!targetLaser.hasAltZone(targetzoneindex)) {
-//                                targetLaser.addAltZone(targetzoneindex);
-//                            }
-//                            OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZoneIndex(sourcezone->getZoneIndex());
-//                            OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZoneIndex(targetzone->getZoneIndex());
-//                            ofJson zonejson;
-//                            sourceAltZone->serialize(zonejson);
-//                            targetAltZone->deserialize(zonejson);
-//
-//
-//                        } else {
-//                            // remove alt zone from target
-//                            targetLaser.removeAltZone(targetzoneindex);
-//                        }
-//
+
+                        OutputZone* sourcezone = sourcezones[i];
+                        OutputZone* targetzone = targetzones[i];
+                        ZoneId sourcezoneid = sourcezone->getZoneId();
+                        ZoneId targetzoneid = targetzone->getZoneId();
+
+                        ofJson zonejson;
+                        sourcezone->serialize(zonejson);
+                        targetzone->deserialize(zonejson);
+
+
+                        if(sourceLaser.hasAltZone(sourcezoneid)) {
+
+
+                            if(!targetLaser.hasAltZone(targetzoneid)) {
+                                targetLaser.addAltZone(targetzoneid);
+                            }
+                            OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZoneId(sourcezone->getZoneId());
+                            OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZoneId(targetzone->getZoneId());
+                            ofJson zonejson;
+                            sourceAltZone->serialize(zonejson);
+                            targetAltZone->deserialize(zonejson);
+
+
+                        } else {
+                            // remove alt zone from target
+                            targetLaser.removeAltZone(targetzoneid);
+                        }
+
                         
                         
                     }
@@ -2290,25 +2160,13 @@ void Manager::guiDacAnalytics() {
     
 }
 
-//glm::vec2 Manager ::getPreviewOffset() {
-//    return previewOffset;
-//}
-//float Manager :: getPreviewScale() {
-//    return previewScale;
-//}
 ofRectangle Manager :: getPreviewRect() {
     return canvasViewController.getOutputRect();
-    // ofRectangle(previewOffset.x, previewOffset.y, canvasTarget.getWidth()*previewScale, canvasTarget.getHeight()*previewScale);
     
 }
 
 ofRectangle Manager :: getZonePreviewRect() {
-//    if(laserZoneViews.size()>0) {
-//        return laserZoneViews[0].getOutputRect();
-//    } else {
-//        return ofRectangle(0,0,0,0);
-//    }
-//
+
     int w = ofGetWidth()*0.6;
     int h = ofGetHeight()*0.6;
     int size = (MIN(w, h));
