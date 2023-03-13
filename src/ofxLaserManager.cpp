@@ -2060,12 +2060,13 @@ void Manager :: guiCopyLaserSettings() {
                         ZoneId targetzoneid = targetzone->getZoneId();
 
                         ofJson zonejson;
+
                         sourcezone->serialize(zonejson);
                         targetzone->deserialize(zonejson);
+                        targetzone->setZoneId(targetzoneid);
 
 
                         if(sourceLaser.hasAltZone(sourcezoneid)) {
-
 
                             if(!targetLaser.hasAltZone(targetzoneid)) {
                                 targetLaser.addAltZone(targetzoneid);
