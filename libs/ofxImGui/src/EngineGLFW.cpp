@@ -368,6 +368,7 @@ namespace ofxImGui
 		if (key < GLFW_KEY_ESCAPE || isNumericalKey)
 		{
 			io.AddInputCharacter((unsigned short)event.codepoint);
+            ofLogNotice("Adding character " ) <<(unsigned short)event.codepoint; 
 		}
 	}
 

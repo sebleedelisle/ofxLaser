@@ -512,9 +512,13 @@ void LaserZoneViewController :: drawImGui() {
                     // otherwise remove this and also its alt zone if
                     // it has one
                     ZoneId zoneid = outputZone->getZoneId();
-                    ManagerBase::instance()->deleteBeamZone(zoneid);
+                    if(zoneUi->inputZoneAlt) {
+                        laser->removeAltZone(zoneid);
+                    } else {
+                        ManagerBase::instance()->deleteBeamZone(zoneid);
+                    }
                     //laser->removeZone(zoneid);
-                    //laser->removeAltZone(zoneid);
+                    //
                     // LATER - TO DO - if this is a laser zone, delete it
                     // if it's a canvas zone, keep it
                     

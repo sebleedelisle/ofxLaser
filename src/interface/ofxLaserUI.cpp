@@ -109,7 +109,7 @@ void UI::startGui() {
     ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    //ImGui::ShowDemoWindow();
+    ImGui::ShowDemoWindow();
     
   
 }

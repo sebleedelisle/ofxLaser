@@ -78,8 +78,8 @@ Manager :: Manager() {
     ofAddListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
-    ofAddListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
-    ofAddListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
+    //ofAddListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
+    //ofAddListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
 
 
 }
@@ -1045,20 +1045,20 @@ void Manager :: guiLaserOverview() {
         
         float buttonwidth = (guiLaserSettingsPanelWidth-(guiSpacing*3))/2;
 
-        if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, testPatternGlobalActive)) {
-            testPatternGlobalActive = !testPatternGlobalActive;
-            updateGlobalTestPattern();
-        }
-        UI::addDelayedTooltip("Show test pattern across all zones");
-        ImGui::SameLine();
-        
-        ImGui::PushItemWidth(140);
-        if(!testPatternGlobalActive) UI::startGhosted();
-        if(UI::addIntSlider("Global Test Pattern", testPatternGlobal, 1, TestPatternGenerator::getNumTestPatterns())) {
-            updateGlobalTestPattern();
-        }
-        UI::stopGhosted();
-        ImGui::PopItemWidth();
+//        if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, testPatternGlobalActive)) {
+//            testPatternGlobalActive = !testPatternGlobalActive;
+//            updateGlobalTestPattern();
+//        }
+//        UI::addDelayedTooltip("Show test pattern across all zones");
+//        ImGui::SameLine();
+//
+//        ImGui::PushItemWidth(140);
+//        if(!testPatternGlobalActive) UI::startGhosted();
+//        if(UI::addIntSlider("Global Test Pattern", testPatternGlobal, 1, TestPatternGenerator::getNumTestPatterns())) {
+//            updateGlobalTestPattern();
+//        }
+//        UI::stopGhosted();
+//        ImGui::PopItemWidth();
 //
 //        if(dontCalculateDisconnected) UI::secondaryColourStart();
 //        string label = "OPTIMSED MODE : ";
@@ -1186,27 +1186,27 @@ void Manager :: guiLaserOverview() {
             
         }
         
-        string label = "ADD LASER";
-        if(UI::Button( label, false, false)) {
-            // add laser
-            laserManager.createAndAddLaser();
-            
-            saveSettings(); 
-        }
-    
-        ImGui::SameLine();
-        if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
-            addCanvasZone(0,0,280,110);
-            //lockInputZones = false;
-            saveSettings();
-        }
-    
-        if(UI::Button("CONTROLLERS", false, false)) {
-            // add laser
-            showDacAssignmentWindow = true;
-            ImGui::SetWindowFocus("Controller Assignment");
-            
-        }
+//        string label = "ADD LASER";
+//        if(UI::Button( label, false, false)) {
+//            // add laser
+//            laserManager.createAndAddLaser();
+//
+//            saveSettings();
+//        }
+//
+//        ImGui::SameLine();
+//        if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
+//            addCanvasZone(0,0,280,110);
+//            //lockInputZones = false;
+//            saveSettings();
+//        }
+//
+//        if(UI::Button("CONTROLLERS", false, false)) {
+//            // add laser
+//            showDacAssignmentWindow = true;
+//            ImGui::SetWindowFocus("Controller Assignment");
+//
+//        }
         UI::addIntSlider(globalLatency);
         
         if(viewMode == OFXLASER_VIEW_CANVAS) {
@@ -1512,11 +1512,11 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
 }
 
 void Manager :: guiTopBar(int ypos) {
-
+    
     ofxLaser::Manager& laserManager = *this;
     
-        if(UI::startWindow("Icon bar", ImVec2(0,ypos), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
-       
+    if(UI::startWindow("Icon bar", ImVec2(0,ypos), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
+        
         bool useRedButton = areAllLasersArmed();
         if(useRedButton) UI::dangerColourStart();
         // change the colour for the arm all button if we're armed
@@ -1552,71 +1552,85 @@ void Manager :: guiTopBar(int ypos) {
             laserManager.globalBrightness.set((float)value/multiplier);
             
         }
+        
+        
         ImGui::SameLine();
-        //ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
+        if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, testPatternGlobalActive)) {
+            testPatternGlobalActive = !testPatternGlobalActive;
+            updateGlobalTestPattern();
+        }
+        UI::addDelayedTooltip("Show test pattern across all zones");
+        ImGui::SameLine();
+        
+        ImGui::PushItemWidth(140);
+        if(!testPatternGlobalActive) UI::startGhosted();
+        if(UI::addIntSlider("##Global Test Pattern", testPatternGlobal, 1, TestPatternGenerator::getNumTestPatterns())) {
+            updateGlobalTestPattern();
+        }
+        UI::stopGhosted();
+        ImGui::PopItemWidth();
         
         
-            
-            
-            if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
-                viewMode = OFXLASER_VIEW_3D;
-            }
-            if(showCanvas) {
-                ImGui::SameLine();
-                if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
-                    viewMode = OFXLASER_VIEW_CANVAS;
-                }
-                
-            }
+        ImGui::SameLine();
+        
+        if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
+            viewMode = OFXLASER_VIEW_3D;
+        }
+        if(showCanvas) {
             ImGui::SameLine();
-            if(UI::Button("OUTPUT", false, viewMode==OFXLASER_VIEW_OUTPUT)) {
-                viewMode = OFXLASER_VIEW_OUTPUT;
+            if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
+                viewMode = OFXLASER_VIEW_CANVAS;
             }
             
+        }
+        ImGui::SameLine();
+        if(UI::Button("OUTPUT", false, viewMode==OFXLASER_VIEW_OUTPUT)) {
+            viewMode = OFXLASER_VIEW_OUTPUT;
+        }
         
-//        ImGui::SameLine();
-//        ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
-//       //ImGui::PushFont(UI::symbolFont);
-//        if(UI::Button(ICON_FK_MOUSE_POINTER, false, mouseMode==OFXLASER_MOUSE_DEFAULT)) {
-//            mouseMode = OFXLASER_MOUSE_DEFAULT;
-//        }
-//        ImGui::SameLine();
-//        if(UI::Button(ICON_FK_HAND_PAPER_O, false, mouseMode==OFXLASER_MOUSE_DRAG)) {
-//            mouseMode = OFXLASER_MOUSE_DRAG;
-//        }ImGui::SameLine();
-//
-//        glm::vec2 centre = glm::vec2(canvasTarget.getWidth()/2, canvasTarget.getHeight()/2);
-//        ofxLaser::Laser& currentLaser = *lasers[getSelectedLaserIndex()];
-//        
-//        if(UI::Button(ICON_FK_PLUS, false, false)) {
-//            if(viewMode == OFXLASER_VIEW_CANVAS) {
-//                zoomPreviewAroundPoint(centre,1.2);
-//            } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-//                //currentLaser.zoomAroundPoint(centre,1.2);
-//       
-//            }
-//        }
-//        ImGui::SameLine();
-//        if(UI::Button(ICON_FK_MINUS, false, false)) {
-//            if(viewMode == OFXLASER_VIEW_CANVAS) {
-//                zoomPreviewAroundPoint(centre,0.8);
-//            } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-//                //currentLaser.zoomAroundPoint(centre,0.8);
-//       
-//            }
-//        }
-//        ImGui::SameLine();
-//        if(UI::Button(ICON_FK_ARROWS_ALT, false, false)) {
-//            // reset display ;// mouseMode = OFXLASER_MOUSE_ZOOM_OUT;
-//            if(viewMode == OFXLASER_VIEW_CANVAS) setDefaultPreviewOffsetAndScale();
-//            else if(viewMode == OFXLASER_VIEW_OUTPUT) {
-//                setLaserDefaultPreviewOffsetAndScale(getSelectedLaserIndex());
-//            }
-//        }
+        //        ImGui::SameLine();
+        //        ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
+        //       //ImGui::PushFont(UI::symbolFont);
+        //        if(UI::Button(ICON_FK_MOUSE_POINTER, false, mouseMode==OFXLASER_MOUSE_DEFAULT)) {
+        //            mouseMode = OFXLASER_MOUSE_DEFAULT;
+        //        }
+        //        ImGui::SameLine();
+        //        if(UI::Button(ICON_FK_HAND_PAPER_O, false, mouseMode==OFXLASER_MOUSE_DRAG)) {
+        //            mouseMode = OFXLASER_MOUSE_DRAG;
+        //        }ImGui::SameLine();
+        //
+        //        glm::vec2 centre = glm::vec2(canvasTarget.getWidth()/2, canvasTarget.getHeight()/2);
+        //        ofxLaser::Laser& currentLaser = *lasers[getSelectedLaserIndex()];
+        //
+        //        if(UI::Button(ICON_FK_PLUS, false, false)) {
+        //            if(viewMode == OFXLASER_VIEW_CANVAS) {
+        //                zoomPreviewAroundPoint(centre,1.2);
+        //            } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
+        //                //currentLaser.zoomAroundPoint(centre,1.2);
+        //
+        //            }
+        //        }
+        //        ImGui::SameLine();
+        //        if(UI::Button(ICON_FK_MINUS, false, false)) {
+        //            if(viewMode == OFXLASER_VIEW_CANVAS) {
+        //                zoomPreviewAroundPoint(centre,0.8);
+        //            } else if(viewMode == OFXLASER_VIEW_OUTPUT) {
+        //                //currentLaser.zoomAroundPoint(centre,0.8);
+        //
+        //            }
+        //        }
+        //        ImGui::SameLine();
+        //        if(UI::Button(ICON_FK_ARROWS_ALT, false, false)) {
+        //            // reset display ;// mouseMode = OFXLASER_MOUSE_ZOOM_OUT;
+        //            if(viewMode == OFXLASER_VIEW_CANVAS) setDefaultPreviewOffsetAndScale();
+        //            else if(viewMode == OFXLASER_VIEW_OUTPUT) {
+        //                setLaserDefaultPreviewOffsetAndScale(getSelectedLaserIndex());
+        //            }
+        //        }
         
         ImGui::SameLine();
         ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
-       
+        
         ImGui::Text("%s",ofToString(ofToString(round(ofGetFrameRate()))).c_str());
         //ImGui::PopFont();
         
@@ -2074,8 +2088,11 @@ void Manager :: guiCopyLaserSettings() {
                             OutputZone* sourceAltZone = sourceLaser.getLaserAltZoneForZoneId(sourcezone->getZoneId());
                             OutputZone* targetAltZone = targetLaser.getLaserAltZoneForZoneId(targetzone->getZoneId());
                             ofJson zonejson;
+                            
+                            targetzoneid = targetAltZone->getZoneId();
                             sourceAltZone->serialize(zonejson);
                             targetAltZone->deserialize(zonejson);
+                            targetAltZone->setZoneId(targetzoneid);
 
 
                         } else {
