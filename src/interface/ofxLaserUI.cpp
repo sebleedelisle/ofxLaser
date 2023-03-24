@@ -10,20 +10,25 @@
 
 using namespace ofxLaser;
 
-ofxImGui::Gui ofxLaser::UI::imGui;
+ofxImGui::Gui ofxLaser::UI::imGuiOfx;
 ImFont* ofxLaser::UI::font;
 ImFont* ofxLaser::UI::mediumFont;
 ImFont* ofxLaser::UI::largeFont;
 ImFont* ofxLaser::UI::symbolFont;
 
-bool ofxLaser::UI::initialised = false;
-bool ofxLaser::UI::ghosted = false;
-bool ofxLaser::UI::disabled = false;
-bool ofxLaser::UI:: secondaryColourActive = false;
-bool ofxLaser::UI:: dangerColourActive = false;
-bool ofxLaser::UI:: largeItemActive = false;
+bool ofxLaser :: UI :: initialised = false;
+bool ofxLaser :: UI :: ghosted = false;
+bool ofxLaser :: UI :: disabled = false;
+bool ofxLaser :: UI :: secondaryColourActive = false;
+bool ofxLaser :: UI :: dangerColourActive = false;
+bool ofxLaser :: UI :: customColourActive = false;
+bool ofxLaser :: UI :: largeItemActive = false;
+
+string ofxLaser :: UI :: imguiSavePath;
+
 void UI::render() {
-    ImGui::Render();
+   // ImGui::Render();
+    imGuiOfx.end();
 }
 
 
@@ -35,60 +40,61 @@ void UI::setupGui() {
        
     }
     
+    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_None, true );
+//
     ImGuiIO& io = ImGui::GetIO();
-    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
     
+    imguiSavePath = ofToDataPath("imgui.ini");
+    io.IniFilename = imguiSavePath.c_str();
+    //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
+    
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
+    imGuiOfx.setDefaultFont(font);
+
+
     //symbolFont->
     ImFontConfig config;
     config.MergeMode = true;
     config.GlyphMinAdvanceX = 13;
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
-    
 
-    
     mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,16, &config, icon_ranges);
     largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,18, &config, icon_ranges);
-    
-   
-    //    largeFont = io.Fonts->AddFontFromFileTTF(ofToDataPath("Roboto/Roboto-Bold.ttf").c_str(), 24);
-//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("verdana.ttf", true).c_str(),13);
-//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("DroidSans.ttf", true).c_str(),13);
-//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Karla-Regular.ttf", true).c_str(),13);
-//    font  = io.Fonts->AddFontFromFileTTF(ofToDataPath("Cousine-Regular.ttf", true).c_str(),13);
-//    io.Fonts->Build();
+
     ImGui::StyleColorsDark();
-   
+
     ImGui::GetStyle().WindowRounding = 1.0f;
+    ImGui::GetStyle().WindowBorderSize = 1.0f;
     ImGui::GetStyle().IndentSpacing = 0.0f;
     ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f,0.0f,0.4f);
    // ImGui::GetStyle().Colors[ImGuiCol_ModalWindowDarkening]
     ImGui::GetStyle().ItemSpacing = ImVec2(8.0f,5.0f);
     ImGui::GetStyle().ItemInnerSpacing = ImVec2(6.0f,6.0f);
+    ImGui::GetStyle().WindowMinSize = ImVec2(10.0f,10.0f);
     
     ImGui::CreateContext();
-    
+
     io.DisplaySize = ImVec2((float)ofGetWidth(), (float)ofGetHeight());
     io.MouseDrawCursor = false;
-    
-    bool autoDraw = true;
-    imGui.engine.setup(autoDraw);
-    
+
     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    ImGui::GetIO().ConfigDockingWithShift = true; 
-    
-    
+    ImGui::GetIO().ConfigDockingWithShift = true;
+
     ImGui::GetIO().MouseDrawCursor = false;
     
-    // TODO remove on close down ? 
-    ofEvents().mouseMoved.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
-    ofEvents().mouseDragged.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
-    ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
-    ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
-    ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
-    ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
+    io.Fonts->Build();
+    imGuiOfx.engine.updateFontsTexture();
+//
+//    // TODO remove on close down ?
+//    ofEvents().mouseMoved.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
+//    ofEvents().mouseDragged.add(&UI::updateMouse, OF_EVENT_ORDER_BEFORE_APP);
+//    ofEvents().mousePressed.add(&UI::mousePressed,OF_EVENT_ORDER_BEFORE_APP);
+//    ofEvents().mouseReleased.add(&UI::mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
+//    ofEvents().keyPressed.add(&UI::keyPressed,OF_EVENT_ORDER_BEFORE_APP);
+//    ofEvents().keyReleased.add(&UI::keyReleased,OF_EVENT_ORDER_BEFORE_APP);
 }
 
 void UI::updateGui() {
@@ -106,13 +112,26 @@ void UI::updateGui() {
 
 void UI::startGui() {
     
-    ImGui::NewFrame();
+    imGuiOfx.begin();
+//    ImGui::NewFrame();
     
     //ImGui::ShowStyleEditor() ;
-    ImGui::ShowDemoWindow();
+    //ImGui::ShowDemoWindow();
     
   
 }
+
+//
+//void UI::endGui() {
+//
+//    imGuiOfx.end();
+////    ImGui::NewFrame();
+//
+//    //ImGui::ShowStyleEditor() ;
+//   // ImGui::ShowDemoWindow();
+//
+//
+//}
 
 template <typename T>
 bool UI::resetButton(T& param, T& resetParam){
@@ -153,16 +172,16 @@ bool UI::resetButton(T& param, T2 resetValue){
 bool UI::addIntSlider(string label, int& target, int min, int max){
     return ImGui::SliderInt(label.c_str(), (int*)&target, min, max, "%d");;
 }
-bool UI::addFloatSlider(string label, float& target, float min, float max, const char* format, float power) {
-    return ImGui::SliderFloat(label.c_str(), &target, min, max, format, power);
+bool UI::addFloatSlider(string label, float& target, float min, float max, const char* format, ImGuiSliderFlags flags) {
+    return ImGui::SliderFloat(label.c_str(), &target, min, max, format, flags);
 }
-bool UI::addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format, float power){
-    return ImGui::SliderFloat2(label.c_str(), glm::value_ptr(target), min.x, max.x, format, power);
+bool UI::addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format, ImGuiSliderFlags flags){
+    return ImGui::SliderFloat2(label.c_str(), glm::value_ptr(target), min.x, max.x, format, flags);
     
 }
-bool UI::addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format, float power){
+bool UI::addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format, ImGuiSliderFlags flags){
     //float speed = (max.x-min.x)/100;
-    return ImGui::SliderFloat3(label.c_str(), glm::value_ptr(target), min.x, max.x, format, power);
+    return ImGui::SliderFloat3(label.c_str(), glm::value_ptr(target), min.x, max.x, format, flags);
 }
 bool UI::addDragSlider(string label, float& target, float speed, float min, float max, const char* format) {
     return ImGui::DragFloat(label.c_str(), &target, speed, min, max, format);
@@ -173,9 +192,9 @@ bool UI::addFloat2Drag(string label, glm::vec2& target, float speed, glm::vec2 m
 bool UI::addFloat3Drag(string label, glm::vec3& target, float speed, glm::vec3 min, glm::vec3 max, const char* format) {
     return ImGui::DragFloat3(label.c_str(), glm::value_ptr(target), speed, min.x, max.x, format);
 }
-bool UI::addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip, const char* format, float power){
+bool UI::addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip, const char* format, ImGuiSliderFlags flags){
     
-    bool returnvalue = UI::addFloatSlider(label, target, min, max, format, power);
+    bool returnvalue = UI::addFloatSlider(label, target, min, max, format,  flags);
     if(tooltip!="") UI::toolTip(tooltip);
 
     if(target!=resetValue) {
@@ -227,19 +246,19 @@ bool UI::addIntSlider(ofParameter<int>& param, string labelSuffix) {
         return false;
     }
 }
-bool UI::addFloatSlider(ofParameter<float>& param, const char* format, float power, string labelSuffix) {
+bool UI::addFloatSlider(ofParameter<float>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
     string label = param.getName()+labelSuffix;
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
     float value =param.get();
-    if(addFloatSlider(label, value, param.getMin(), param.getMax(), format, power)){
+    if(addFloatSlider(label, value, param.getMin(), param.getMax(), format, flags)){
         param.set(ofClamp(value, param.getMin(), param.getMax()));
         return true;
     } else {
         return false;
     }
 }
-bool UI::addFloat2Slider(ofParameter<glm::vec2>& param, const char* format, float power, string labelSuffix) {
+bool UI::addFloat2Slider(ofParameter<glm::vec2>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
     
     
     string label = param.getName()+labelSuffix;
@@ -248,21 +267,21 @@ bool UI::addFloat2Slider(ofParameter<glm::vec2>& param, const char* format, floa
     
     auto tmpRef = param.get();
    
-    if (ImGui::SliderFloat2(label.c_str(), glm::value_ptr(tmpRef), param.getMin().x, param.getMax().x, format, power)) {
+    if (ImGui::SliderFloat2(label.c_str(), glm::value_ptr(tmpRef), param.getMin().x, param.getMax().x, format, flags)) {
     //if (ImGui::InputFloat2(parameter.getName().c_str(), glm::value_ptr(tmpRef), format)) {
         param.set(tmpRef);
         return true;
     }
     return false;
 }
-bool UI::addFloat3Slider(ofParameter<glm::vec3>& param, const char* format, float power, string labelSuffix) {
+bool UI::addFloat3Slider(ofParameter<glm::vec3>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
     
     string label = param.getName()+labelSuffix;
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
     
     glm::vec3 tmp = param.get();
-    if(addFloat3Slider(label, tmp, param.getMin(), param.getMax(), format, power)){
+    if(addFloat3Slider(label, tmp, param.getMin(), param.getMax(), format, flags)){
     //if (ImGui::SliderFloat3(label.c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
         param.set(tmp);
         return true;
@@ -284,7 +303,31 @@ bool UI::addFloatDrag(ofParameter<float>&param, float speed, const char* format,
     }
     
 }
-
+bool UI::addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float speed, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    float value =param.get();
+    bool shiftpressed =ofGetKeyPressed(OF_KEY_SHIFT);
+    bool showfloat = shiftpressed;
+    if(floor(value)!=value) showfloat = true;
+  
+    if(addDragSlider(label, value, shiftpressed? 0.01f : speed, param.getMin(), param.getMax(), showfloat? "%.2f" : "%.0f")){
+        
+        if(shiftpressed) {
+        } else {
+            value = roundf(value);
+        }
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
+        
+        return true;
+    } else {
+        return false;
+    }
+    
+}
 bool UI::addFloat2Drag(ofParameter<glm::vec2>&param, float speed, const char* format, string labelSuffix) {
 
     string label = param.getName()+labelSuffix;
@@ -393,9 +436,9 @@ bool UI::addResettableIntSlider(ofParameter<int>& param, int resetParam, string 
 
 
 
-bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip, const char* format, float power, string labelSuffix){
+bool UI::addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip, const char* format, ImGuiSliderFlags flags, string labelSuffix){
     
-    bool returnvalue = UI::addFloatSlider(param, format, power, labelSuffix);
+    bool returnvalue = UI::addFloatSlider(param, format, flags, labelSuffix);
     if(tooltip!="") UI::toolTip(tooltip);
    
     return resetButton(param, resetParam) || returnvalue;
@@ -624,7 +667,10 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
     if(large) ImGui::PushFont(largeFont);
     const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
     ImVec2 textArea   = ImGui::CalcTextSize(numString.c_str());
-    RenderText(check_bb.GetCenter() - (textArea*0.5f), numString.c_str());
+    textArea.x*=0.5f;
+    textArea.y*=0.5f;
+    
+    RenderText(check_bb.GetCenter() - (textArea), numString.c_str());
     if(large) ImGui::PopFont();
     
     if (g.LogEnabled)
@@ -885,7 +931,6 @@ void UI::secondaryColourStart() {
         secondaryColourActive = true;
     }
 }
-
 void UI::secondaryColourEnd() {
     if(secondaryColourActive) {
         ImGui::PopStyleColor(7);
@@ -908,6 +953,38 @@ void UI::dangerColourStart() {
     }
 }
 
+void UI::customColourStart(ofColor colour) {
+    if(!customColourActive) {
+        ofColor darkcol = colour*0.5;
+        ofColor lightcolour = colour*1.2;
+        
+        
+        ImColor dark(darkcol.r, darkcol.g, darkcol.b);
+        ImColor mid(colour.r, colour.g, colour.b);
+        ImColor light(lightcolour.r, lightcolour.g, lightcolour.b);
+                    
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)light);
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
+
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)light);
+        customColourActive = true;
+    }
+}
+
+
+
+void UI::customColourEnd() {
+    if(customColourActive) {
+        ImGui::PopStyleColor(7);
+        customColourActive = false;
+    }
+}
 void UI::dangerColourEnd() {
     if(dangerColourActive) {
         ImGui::PopStyleColor(7);

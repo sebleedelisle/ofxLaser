@@ -145,7 +145,7 @@ void Manager :: initAndLoadSettings() {
 
    // params.add(showDacAssignmentWindow.set("showDacAssignmentWindow", false));
     params.add(showCustomParametersWindow.set("showCustomParametersWindow", true));
-    params.add(showLaserManagementWindow.set("showLaserManagementWindow", true));
+    params.add(showLaserOverviewWindow.set("showLaserManagementWindow", true));
     params.add(showLaserOutputSettingsWindow.set("showLaserOutputSettingsWindow", true));
 
     loadSettings();
@@ -190,9 +190,6 @@ void Manager :: update() {
     canvasViewController.updateUIFromZones(canvasTarget);
     //canvasViewController.setLockedAll(false);
    
-    
-    
-    
 }
 
 void Manager :: mouseMoved(ofMouseEventArgs &e) {
@@ -204,6 +201,7 @@ void Manager :: mouseMoved(ofMouseEventArgs &e) {
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
 
+    if(ImGui::GetIO().WantCaptureMouse) return false;
     if(!isGuiVisible()) return false; 
     
    // ofLogNotice("Manager :: mousePressed"); 
@@ -433,6 +431,7 @@ void Manager :: startLaserUI() {
 }
 void Manager :: finishLaserUI() {
     ofxLaser::UI::render();
+    //ofxLaser::UI::endGui(); 
   //  renderCustomCursors();
 }
 
@@ -999,8 +998,8 @@ void Manager::guiMenuBar() {
 //        }
         if(ImGui::BeginMenu("View") ) {
             if(ImGui::BeginMenu("Set up") ) {
-                if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserManagementWindow)) {
-                    showLaserManagementWindow = !showLaserManagementWindow;
+                if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserOverviewWindow)) {
+                    showLaserOverviewWindow = !showLaserOverviewWindow;
                 }
                 if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
                     showLaserOutputSettingsWindow = !showLaserOutputSettingsWindow;
@@ -1035,13 +1034,13 @@ void Manager::guiMenuBar() {
 
 void Manager :: guiLaserOverview() {
     
-    if(!showLaserManagementWindow) return;
+    if(!showLaserOverviewWindow) return;
     ofxLaser::Manager& laserManager = *this;
     
     // calculate x position of main window
     int x = ofGetWidth() - guiLaserSettingsPanelWidth - guiSpacing;
 
-    if(UI::startWindow("Laser overview", ImVec2(x, guiSpacing+menuBarHeight), ImVec2(guiLaserSettingsPanelWidth, 0),0,false, (bool*)&showLaserManagementWindow.get())){
+    if(UI::startWindow("Laser overview", ImVec2(x, guiSpacing+menuBarHeight), ImVec2(guiLaserSettingsPanelWidth, 0),0,false, (bool*)&showLaserOverviewWindow.get())){
         
         float buttonwidth = (guiLaserSettingsPanelWidth-(guiSpacing*3))/2;
 
@@ -1085,11 +1084,11 @@ void Manager :: guiLaserOverview() {
            
             // LASER BUTTONS
             if(ImGui::Button(laserNumberString.c_str(), ImVec2(20,0))) {
-                if((viewMode == OFXLASER_VIEW_CANVAS) || (selectedLaserIndex!=i)) {
+                if((viewMode == OFXLASER_VIEW_3D) || (selectedLaserIndex!=i)) {
                     selectedLaserIndex = i;
                     viewMode = OFXLASER_VIEW_OUTPUT;
                 } else {
-                    viewMode = OFXLASER_VIEW_CANVAS;
+                    viewMode = OFXLASER_VIEW_3D;
                 }
             }
             ImGui::SameLine();
@@ -1108,39 +1107,40 @@ void Manager :: guiLaserOverview() {
             ImGui::SameLine();
             
             // LASER SETTINGS BUTTONS
-            label = ofToString(ICON_FK_SLIDERS)+"##"+ofToString(i);
-            if(ImGui::Button(label.c_str())) {
-                showLaserOutputSettingsWindow = true;
-                selectedLaserIndex = i;
-            }
-            
-            ImGui::SameLine();
+//            label = ofToString(ICON_FK_SLIDERS)+"##"+ofToString(i);
+//            if(ImGui::Button(label.c_str())) {
+//                showLaserOutputSettingsWindow = true;
+//                selectedLaserIndex = i;
+//            }
+//
+//            ImGui::SameLine();
             
             // ZONE ADJUST BUTTONS
             label = ofToString(ICON_FK_PENCIL_SQUARE_O)+"##"+ofToString(i);
             
             if(ImGui::Button(label.c_str())) {
-                if((viewMode == OFXLASER_VIEW_CANVAS) || (selectedLaserIndex!=i)) {
+                if((viewMode == OFXLASER_VIEW_3D) || (selectedLaserIndex!=i)) {
                     selectedLaserIndex = i;
                     viewMode = OFXLASER_VIEW_OUTPUT;
+                    showLaserOutputSettingsWindow = true;
                 } else {
-                    viewMode = OFXLASER_VIEW_CANVAS;
+                    viewMode = OFXLASER_VIEW_3D;
                 }
             }
             ImGui::SameLine();
              
-            if(laserobject->paused && (((ofGetElapsedTimeMillis()-(i*15))%600)<300)) UI::startGhosted();
-            label = ofToString(ICON_FK_PAUSE)+"##"+ofToString(i);
-            if(UI::Button( label, false, laserobject->paused)) {
-                laserobject->paused = !laserobject->paused;
-            }
-            UI::stopGhosted();
+//            if(laserobject->paused && (((ofGetElapsedTimeMillis()-(i*15))%600)<300)) UI::startGhosted();
+//            label = ofToString(ICON_FK_PAUSE)+"##"+ofToString(i);
+//            if(UI::Button( label, false, laserobject->paused)) {
+//                laserobject->paused = !laserobject->paused;
+//            }
+//            UI::stopGhosted();
             
             // FRAME RATES
             
             ImGui::SameLine();
             label = "##framerate"+laserNumberString;
-            ImGui::PushItemWidth(60);
+            ImGui::PushItemWidth(120);
             ImGui::PlotHistogram(label.c_str(), laserobject->frameTimeHistory, laserobject->frameTimeHistorySize, laserobject->frameTimeHistoryOffset, "", 0, 0.1f);
             ImGui::PopItemWidth();
             
@@ -1263,7 +1263,7 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
         if(laser->getSaveStatus() && (ofGetElapsedTimeMillis()%300)<150) {
             ImDrawList*   draw_list = ImGui::GetWindowDrawList();
             ImVec2 p = ImGui::GetWindowPos();
-            p.x+=ImGui::GetContentRegionAvailWidth();
+            p.x+=ImGui::GetContentRegionAvail().x;
             p.y+=30;// + ImGui::GetScrollY();
             // if(ImGui::GetScrollY()>0) p.x-=14;
             //ImGui::GetContentRegionAvailWidth()
@@ -1409,7 +1409,7 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
                 ImGui::SameLine();
                 scannerPresetManager.drawSaveButtons(laser->scannerSettings);
                 
-                UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", 3.0f);
+                UI::addResettableFloatSlider(laser->scannerSettings.moveSpeed, currentPreset.moveSpeed,"How quickly the mirrors move between shapes", "%.1f", ImGuiSliderFlags_Logarithmic);
                 
                 ImGui::Columns(2);
                 UI::addResettableIntSlider(laser->scannerSettings.shapePreBlank, currentPreset.shapePreBlank, "The length of time that the laser is switched off and held at the beginning of a shape");
@@ -1441,8 +1441,8 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
                     RenderProfile& resetProfile = currentPreset.renderProfiles.at(name);
                     
                     ImGui::Text("%s", name.c_str());
-                    UI::addResettableFloatSlider(profile.speed,resetProfile.speed, "",  "%.1f", 3.0f);
-                    UI::addResettableFloatSlider(profile.acceleration,resetProfile.acceleration, "",  "%.2f", 3.0f);
+                    UI::addResettableFloatSlider(profile.speed,resetProfile.speed, "",  "%.1f", ImGuiSliderFlags_Logarithmic);
+                    UI::addResettableFloatSlider(profile.acceleration,resetProfile.acceleration, "",  "%.2f", ImGuiSliderFlags_Logarithmic);
                     UI::addResettableIntSlider(profile.dotMaxPoints, resetProfile.dotMaxPoints);
                     UI::addResettableFloatSlider(profile.cornerThreshold, resetProfile.cornerThreshold);
                     
@@ -1503,11 +1503,7 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
     }
     
     
-    
     UI::endWindow();
-    
-            
-    
     
 }
 

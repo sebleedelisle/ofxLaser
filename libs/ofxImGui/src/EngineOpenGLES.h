@@ -1,7 +1,18 @@
 #pragma once
 
 #include "ofConstants.h"
-#if defined(TARGET_OPENGLES) && (!defined (OF_TARGET_API_VULKAN) )
+
+// Note : this implementation is broken, the file is kept for reference, if ported.
+
+// Note: USE_GLFW_WINDOW is for ofxRPI4Window
+#if defined(TARGET_OPENGLES) && !defined(TARGET_GLFW_WINDOW)// && defined(USE_GLFW_WINDOW) //&& !defined(TARGET_RASPBERRY_PI_LEGACY)
+
+#pragma GCC error "The OpenGLES implementation has not been updated yet ! (needs to be implemented)"
+
+#ifdef TARGET_RASPBERRY_PI
+#pragma GCC error "On oF 0.11 you should use a GLFW Window which supports GLES 1 2 and 3."
+#pragma GCC error "On oF 0.10 and below, you should check out an older ofxImGui version. (below 1.80)"
+#endif
 
 #include "BaseEngine.h"
 
@@ -21,17 +32,14 @@ namespace ofxImGui
 		}
 
 		// BaseEngine required
-		void setup(bool autoDraw) override;
-		void exit() override;
-		bool createDeviceObjects() override;
-		void invalidateDeviceObjects() override;
-
-		void draw() override;
-
-		void onKeyReleased(ofKeyEventArgs& event) override;
-
-		// Custom 
-		static void rendererDrawData(ImDrawData * draw_data);
+		virtual void setup(bool autoDraw) override;
+		virtual void exit() override;
+		
+		virtual void render() override;
+		virtual void newFrame() override{};
+		virtual void endFrame() override{};
+		
+		virtual bool updateFontsTexture() override{ return false; };
 
 		static ofShader g_Shader;
 	};

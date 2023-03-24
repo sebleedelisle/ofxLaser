@@ -21,7 +21,7 @@ class UI {
     
     public :
     
-    static ofxImGui::Gui imGui;
+    static ofxImGui::Gui imGuiOfx;
     static ImFont* font;
     static ImFont* mediumFont; 
     static ImFont* largeFont;
@@ -32,11 +32,13 @@ class UI {
     static bool disabled;
     static bool secondaryColourActive;
     static bool dangerColourActive;
+    static bool customColourActive;
     static bool largeItemActive; 
     
     static void setupGui();
     static void updateGui();
     static void startGui();
+    //static void endGui();
     
     static bool resetButton(string label);
     template <typename T>
@@ -47,16 +49,16 @@ class UI {
     
      
     static bool addIntSlider(string label, int& target, int min, int max);
-    static bool addFloatSlider(string label, float& target, float min, float max, const char* format="%.2f", float power = 1.0f) ;
-    static bool addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format="%.2f", float power = 1.0f) ;
-    static bool addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format="%.2f", float power = 1.0f);
-    static bool addDragSlider(string label, float& target, float speed, float min, float max, const char* format);
+    static bool addFloatSlider(string label, float& target, float min, float max, const char* format="%.2f", ImGuiSliderFlags flags = 0) ;
+    static bool addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format="%.2f", ImGuiSliderFlags flags = 0) ;
+    static bool addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format="%.2f", ImGuiSliderFlags flags = 0);
+    static bool addDragSlider(string label, float& target, float speed, float min, float max, const char* format="%.2f");
     static bool addFloat2Drag(string label, glm::vec2& target, float speed, glm::vec2 min, glm::vec2 max, const char* format="%.2f") ;
     static bool addFloat3Drag(string label, glm::vec3& target, float speed, glm::vec3 min, glm::vec3 max, const char* format="%.2f") ;
   
     
     static bool addFloatAsIntPercentage(string label, float& target, float min = 0, float max = 1);
-    static bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip="", const char* format="%.2f", float power = 1.0f);
+    static bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip="", const char* format="%.2f", ImGuiSliderFlags flags = 0);
     static bool addResettableFloatAsIntPercentage(string label, float& target, float resetValue, float min = 0, float max = 1);
     static bool addNumberedCheckBox(int number, const char* label, bool* v, bool large, bool dangerColour = false);
     static bool addNumberedCheckBox(int number, const string& label, bool* v, bool large = true, bool dangerColour = false);
@@ -70,10 +72,12 @@ class UI {
     static bool addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle = true);
     
     static bool addIntSlider(ofParameter<int>& param, string labelSuffix = "");
-    static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", float power = 1.0f, string labelSuffix = "") ;
-    static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", float power = 1.0f, string labelSuffix = "") ;
-    static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", float power = 1.0f, string labelSuffix = "");
+    static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
+    static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
+    static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "");
     static bool addFloatDrag(ofParameter<float>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
+    static bool addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float speed=1, string labelSuffix="");
+    
     static bool addFloat2Drag(ofParameter<glm::vec2>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
     static bool addFloat3Drag(ofParameter<glm::vec3>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
     
@@ -84,7 +88,7 @@ class UI {
     static bool addFloatAsIntPercentage(ofParameter<float>& param, string labelSuffix = "");
     
     static bool addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetParam, string labelSuffix = "");
-    static bool addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip="", const char* format="%.2f", float power = 1.0f, string labelSuffix = "");
+    static bool addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip="", const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "");
     static bool addResettableFloatDrag(ofParameter<float>& param, float resetParam, float speed = 1, string tooltip="", const char* format="%.2f", string labelSuffix = "");
     static bool addResettableFloat2Drag(ofParameter<glm::vec2>& param, ofParameter<glm::vec2>& resetParam, float speed = 1, string tooltip="", const char* format="%.2f", string labelSuffix = "");
     static bool addResettableFloat3Drag(ofParameter<glm::vec3>& param, ofParameter<glm::vec3>& resetParam, float speed = 1, string tooltip="", const char* format="%.2f", string labelSuffix = "");
@@ -119,7 +123,9 @@ class UI {
     static void secondaryColourEnd();
     static void dangerColourStart();
     static void dangerColourEnd() ;
- 
+    static void customColourStart(ofColor colour);
+    static void customColourEnd();
+
     static void largeItemStart();
     static void largeItemEnd() ;
     static void extraLargeItemStart();
@@ -147,7 +153,7 @@ class UI {
     
     static glm::vec3 getScaleFromMatrix(const glm::mat4& m);
     
-    
+    static string imguiSavePath; 
     
 };
 

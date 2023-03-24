@@ -437,7 +437,7 @@ void LaserZoneViewController :: drawImGui() {
                 if(ztl!=nullptr) {
                     //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
                     
-                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", 3);
+                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", ImGuiSliderFlags_Logarithmic);
                     UI::addCheckbox(ztl->locked);
 //
 //                    vector<BezierNode>& nodes = ztl->getNodes();
@@ -556,7 +556,8 @@ void LaserZoneViewController :: drawImGui() {
             ImGui::Text("MASK SETTINGS");
             int level = maskUi->maskLevel;
             ImGui::PushItemWidth(60);
-            if (ImGui::DragInt("",&level,1,0,100,"%d%%")) {
+            string label = "##"+ofToString(i);
+            if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) { // ****
                 maskUi->maskLevel = level;
                 maskUi->setDirty();
             }

@@ -25,7 +25,6 @@ class Visualiser3D {
         gridDirty = true;
     }
     
-    
     bool mouseMoved(ofMouseEventArgs &e);
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);

@@ -6,6 +6,7 @@
 #include "ofTexture.h"
 #include "ofGLBaseTypes.h"
 #include "imgui.h"
+#include <stack> // Needed for Arch Linux
 
 static const int kImGuiMargin = 10;
 
@@ -51,7 +52,7 @@ namespace ofxImGui
 
 	void SetNextWindow(Settings& settings);
 	bool BeginWindow(ofParameter<bool>& parameter, Settings& settings, bool collapse = true);
-	bool BeginWindow(const std::string& name, Settings& settings, bool collapse = true, bool * open = nullptr);
+	bool BeginWindow(const std::string& name, Settings& settings, bool collapsible = true, bool * open = nullptr);
 	bool BeginWindow(const std::string& name, Settings& settings, ImGuiWindowFlags flags, bool * open = nullptr);
 	void EndWindow(Settings& settings);
 
@@ -74,7 +75,7 @@ namespace ofxImGui
 	bool AddParameter(ofParameter<ofVec2f>& parameter);
 	bool AddParameter(ofParameter<ofVec3f>& parameter);
 	bool AddParameter(ofParameter<ofVec4f>& parameter);
-
+	bool AddParameter(ofParameter<ofColor>& parameter, bool alpha = true);
 	bool AddParameter(ofParameter<ofFloatColor>& parameter, bool alpha = true);
 
 	bool AddParameter(ofParameter<std::string>& parameter, size_t maxChars = 255, bool multiline = false);
@@ -91,7 +92,7 @@ namespace ofxImGui
 	bool AddCombo(ofParameter<int>& parameter, std::vector<std::string> labels);
 	bool AddStepper(ofParameter<int>& parameter, int step = 1, int stepFast = 100);
 
-	bool AddSlider(ofParameter<float>& parameter, const char* format = "%.3f", float power = 1.0f);
+	bool AddSlider(ofParameter<float>& parameter, const char* format = "%.3f", bool logarithmic = false);
 
 	bool AddRange(const std::string& name, ofParameter<int>& parameterMin, ofParameter<int>& parameterMax, int speed = 1);
 	bool AddRange(const std::string& name, ofParameter<float>& parameterMin, ofParameter<float>& parameterMax, float speed = 0.01f);

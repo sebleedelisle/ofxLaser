@@ -87,7 +87,7 @@ class Manager : public ManagerBase {
     void guiEditDacAliasButtonAndPopup(string daclabel);
 
     ofParameter<bool> showCustomParametersWindow;
-    ofParameter<bool> showLaserManagementWindow;
+    ofParameter<bool> showLaserOverviewWindow;
     ofParameter<bool> showLaserOutputSettingsWindow;
     bool copySettingsWindowOpen;
     bool showDacAssignmentWindow;
