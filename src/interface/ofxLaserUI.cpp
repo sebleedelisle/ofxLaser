@@ -44,7 +44,7 @@ void UI::setupGui() {
 //
     ImGuiIO& io = ImGui::GetIO();
     
-    imguiSavePath = ofToDataPath("imgui.ini");
+    imguiSavePath = ofToDataPath("resources/imgui.ini");
     io.IniFilename = imguiSavePath.c_str();
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
@@ -648,7 +648,7 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
     RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
 
 
-    ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
+    //ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
 //    if (window->DC.ItemFlags & ImGuiItemFlags_MixedValue)
 //    {
 //        // Undocumented tristate/mixed/indeterminate checkbox (#2644)
@@ -665,7 +665,7 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
     // BIG NUMBER IN CHECK BOX
     string numString = ofToString(number).c_str();
     if(large) ImGui::PushFont(largeFont);
-    const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
+    //const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
     ImVec2 textArea   = ImGui::CalcTextSize(numString.c_str());
     textArea.x*=0.5f;
     textArea.y*=0.5f;

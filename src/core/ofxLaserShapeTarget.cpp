@@ -21,9 +21,14 @@ void ShapeTarget :: deleteShapes(){
         shapes.clear();
     
 }
-void ShapeTarget :: addShape(Shape* shapetoadd){
+bool ShapeTarget :: addShape(Shape* shapetoadd){
     if(shapetoadd->intersectsRect(boundsRect)) {
         shapes.push_back(shapetoadd);
+        return true;
+    } else {
+        // bit nasty
+        delete shapetoadd;
+        return false;
     }
     
 }

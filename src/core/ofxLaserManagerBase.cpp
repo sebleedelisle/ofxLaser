@@ -107,7 +107,7 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     dacAssigner.disconnectDacFromLaser(*laser);
     
     vector<Laser*> :: iterator it = find(lasers.begin(), lasers.end(), laser);
-    int index = it-lasers.begin();
+    //int index = it-lasers.begin();
     // hopefully should renumber current laser OK
     
     // remove laser from laser array
@@ -115,7 +115,16 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     
     // TODO delete zones that are only assigned to this laser *************************
     if(deleteZones) {
-        
+        vector<OutputZone*> zones = laser->getSortedOutputZones();
+        vector<OutputZone*>  altzones = laser->getSortedOutputAltZones();
+        zones.insert(zones.end(), altzones.begin(), altzones.end());
+
+        for(OutputZone* zone : zones) {
+            ZoneId zoneid = zone->getZoneId();
+            if(zoneid.type == ZoneId::BEAM) {
+                deleteBeamZone(zoneid);
+            }
+        }
         
     }
     
@@ -199,10 +208,10 @@ bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
     map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
 
     bool changed = false;
-        for(Laser* laser : lasers) {
-            changed = laser->removeZone(zoneid) || changed;
-            changed = laser->updateZones(changedZones)|| changed;
-        }
+    for(Laser* laser : lasers) {
+        changed = laser->removeZone(zoneid) || changed;
+        changed = laser->updateZones(changedZones)|| changed;
+    }
     if (changed) {
         saveSettings();
         return true;

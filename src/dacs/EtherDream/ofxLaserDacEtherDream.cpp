@@ -151,7 +151,8 @@ void DacEtherDream :: threadedFunction(){
             
             // clear the socket of data
             try {
-                int n = socket.receiveBytes(inBuffer, 1000);
+                //int n =
+                socket.receiveBytes(inBuffer, 1000);
             } catch(...) {
                 // doesn't matter
             }

@@ -111,12 +111,18 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
     // inside of style tags!
     ofXml::Search styleElements = xml.find("//*[@style]");
     if(!styleElements.empty()) {
-        
-        for(ofXml & element: styleElements){
+        //cout << styleElements.size() << endl;
+        //cout << xmlstring<< endl;
+        for(int i = 0; i<styleElements.size(); i++) {
+            ofXml element = styleElements[i];
             //cout << element.toString() << endl;
+        //for(ofXml element: styleElements){
+  
+            //ofXml::Attribute att = element.getAttribute("style");
+            //if(att.)
             string style = element.getAttribute("style").getValue();
            
-           // cout << style << endl;
+            //cout << style << endl;
             size_t startpos = style.find("stroke-width");
             if(startpos!=string::npos) {
                 

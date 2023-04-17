@@ -16,6 +16,8 @@ ScrollableView :: ScrollableView() {
     outputRect.set(0,0,800,800);
     sourceRect.set(0,0,800,800);
     boundingRect.set(0,0,800,800);
+    isVisible = true;
+    isDragging = false;
 }
 
 void ScrollableView :: drawFrame() {
@@ -232,7 +234,7 @@ void ScrollableView::mouseScrolled(ofMouseEventArgs &e){
     if(!getIsVisible()) return ;
     
     if(hitTest(e)) {
-        zoom(e, 1+(e.scrollY*zoomSpeed));
+        zoom(e-outputRect.getTopLeft(), 1+(e.scrollY*zoomSpeed));
     }
 };
 

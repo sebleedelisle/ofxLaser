@@ -39,7 +39,7 @@ namespace ofxLaser {
         virtual void reset()  override  {};
         virtual void close() override {};
 
-        int framerate = 30;
+        int framerate = 60;
         float lastUpdate = 0;
         bool dontCalculate = false;
     protected :

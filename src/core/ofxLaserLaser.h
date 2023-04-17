@@ -200,7 +200,7 @@ class Laser {
     float lastSaveTime = 0; 
     float smoothedFrameRate = 0;
     int frameTimeHistorySize = 200;
-    float frameTimeHistory[200];
+    float frameTimeHistory[201] ={0};
     int frameTimeHistoryOffset = 0;
     bool ignoreParamChange = false;
   

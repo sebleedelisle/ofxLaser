@@ -98,6 +98,9 @@ class Manager : public ManagerBase {
     
     void drawBigNumber(int number); 
     
+    void mouseEntered(ofMouseEventArgs &e);
+    void mouseExited(ofMouseEventArgs &e);
+    
     void mouseMoved(ofMouseEventArgs &e);
     bool mousePressed(ofMouseEventArgs &e);
     bool mouseReleased(ofMouseEventArgs &e);
@@ -140,6 +143,7 @@ class Manager : public ManagerBase {
     
      
     bool initialised = false;
+    bool windowActive = true; 
    
     int selectedLaserIndex;
 

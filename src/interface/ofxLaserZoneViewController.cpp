@@ -7,18 +7,24 @@
 #include "ofxLaserZoneViewController.h"
 
 using namespace ofxLaser;
+int LaserZoneViewController :: objectCount = 0;
 
 LaserZoneViewController :: LaserZoneViewController(){
+    objectCount++;
+    ofLogNotice("LaserZoneViewController() ") << objectCount;
     laser = nullptr;
     setSourceRect(ofRectangle(0,0,800,800));
     setOutputRect(ofRectangle(0,0,800,800));
 }
 LaserZoneViewController :: LaserZoneViewController(Laser* newlaser){
+    objectCount++;
+    ofLogNotice("LaserZoneViewController() ") << objectCount;
     laser = newlaser;
 }
 
 LaserZoneViewController ::  ~LaserZoneViewController() {
 
+    ofLogNotice("~LaserZoneViewController() ") ;
 }
 
 
@@ -515,6 +521,7 @@ void LaserZoneViewController :: drawImGui() {
                     if(zoneUi->inputZoneAlt) {
                         laser->removeAltZone(zoneid);
                     } else {
+                        laser->removeAltZone(zoneid);
                         ManagerBase::instance()->deleteBeamZone(zoneid);
                     }
                     //laser->removeZone(zoneid);

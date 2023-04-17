@@ -26,6 +26,9 @@ Laser::Laser(int _index) {
     pauseStateRecorded = false;
     
     lastSaveTime = 0;
+    
+    //frameTimeHistory
+    
 };
 
 Laser::~Laser() {
@@ -961,7 +964,7 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
     }
     
     
-    int targetNumPoints;
+    int targetNumPoints = 0;
     
     // TODO add system to speed up if too much stuff to draw
     if (syncToTargetFramerate) {
@@ -1052,7 +1055,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
             ((!laserZone->getIsAlternate()) && (hasAltZone(laserZone->getZoneId()))))) continue;
         
         if(!hasZoneContentForId(laserZone->getZoneId(), zonesContent)) {
-            ofLogError("missing zone content for zone!");
+            //ofLogError("missing zone content for zone!");
             continue;
         }
         int idindex = findZoneContentIndexForId(laserZone->getZoneId(), zonesContent);

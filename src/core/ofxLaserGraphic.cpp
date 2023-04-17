@@ -464,7 +464,7 @@ void Graphic ::  connectLineSegments() {
 			
 		}
 		if(closestIndex>=0) {
-			ofPolyline* poly2 = polylines[closestIndex];
+			//ofPolyline* poly2 = polylines[closestIndex];
 			//ofLog(OF_LOG_NOTICE, "found touching lines");
 			//ofLog(OF_LOG_NOTICE, ofToString(ofRadToDeg(comparePolylines(poly1, poly2))));
 			if(joinPolylines(*poly1, *polylines[closestIndex])){

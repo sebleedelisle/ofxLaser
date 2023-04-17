@@ -19,6 +19,7 @@ Manager * Manager::instance() {
 }
 
 Manager :: Manager() {
+    laserZoneViews.reserve(200);
     
     if(laserManager == NULL) {
         laserManager = this;
@@ -71,20 +72,23 @@ Manager :: Manager() {
     }
     
     params.add(customParams);
+    ofAddListener(ofEvents().mouseEntered, this, &Manager::mouseEntered, OF_EVENT_ORDER_BEFORE_APP);
+    ofAddListener(ofEvents().mouseExited, this, &Manager::mouseExited, OF_EVENT_ORDER_BEFORE_APP);
     
     ofAddListener(ofEvents().mouseMoved, this, &Manager::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mousePressed, this, &Manager::mousePressed, OF_EVENT_ORDER_BEFORE_APP);
-
     ofAddListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
-    //ofAddListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
-    //ofAddListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
-
+    copySettingsWindowOpen = showDacAssignmentWindow = false;
 
 }
 
 Manager::~Manager() {
+    
+    ofRemoveListener(ofEvents().mouseEntered, this, &Manager::mouseEntered, OF_EVENT_ORDER_BEFORE_APP);
+    ofRemoveListener(ofEvents().mouseExited, this, &Manager::mouseExited, OF_EVENT_ORDER_BEFORE_APP);
+
     ofRemoveListener(ofEvents().mouseMoved, this, &Manager::mouseMoved, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
 
@@ -92,8 +96,7 @@ Manager::~Manager() {
     ofRemoveListener(ofEvents().mouseReleased, this, &Manager::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     ofRemoveListener(params.parameterChangedE(), this, &Manager::paramChanged);
-    ofRemoveListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
-    ofRemoveListener(ofEvents().keyReleased, this, &Manager::keyReleased, OF_EVENT_ORDER_BEFORE_APP);
+
 }
 
 void Manager :: createAndAddLaser()  {
@@ -192,39 +195,6 @@ void Manager :: update() {
    
 }
 
-void Manager :: mouseMoved(ofMouseEventArgs &e) {
-    for(LaserZoneViewController& zoneView : laserZoneViews) {
-        zoneView.mouseMoved(e);
-    }
-    canvasViewController.mouseMoved(e);
-}
-
-bool Manager :: mousePressed(ofMouseEventArgs &e){
-
-    if(ImGui::GetIO().WantCaptureMouse) return false;
-    if(!isGuiVisible()) return false; 
-    
-   // ofLogNotice("Manager :: mousePressed"); 
-    if (viewMode  == OFXLASER_VIEW_CANVAS) {
-        canvasViewController.mousePressed(e);
-
-    } else if (viewMode  == OFXLASER_VIEW_OUTPUT) {
-       
-        
-        LaserZoneViewController* currentLaserView = getCurrentLaserViewController();
-        if(currentLaserView!=nullptr) {
-            currentLaserView->mousePressed(e);
-        } else {
-            ofLogError("ERROR - missing view for laser");
-        }
-        
-    } else if(viewMode == OFXLASER_VIEW_3D) {
-        visualiser3D.mousePressed(e);
-        
-    }
-    
-    return false;
-}
 LaserZoneViewController*  Manager ::getCurrentLaserViewController() {
     
     return getLaserViewControllerByIndex(selectedLaserIndex);
@@ -245,8 +215,38 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
     
 }
 
-bool Manager :: mouseReleased(ofMouseEventArgs &e){
+bool Manager :: mousePressed(ofMouseEventArgs &e){
+    if(!windowActive) {
+        windowActive = true;
+        return;
+    }
+    if(ImGui::GetIO().WantCaptureMouse) return false;
+    if(!isGuiVisible()) return false;
+    
+    //ofLogNotice("Manager :: mousePressed") << e.x << " " << e.y;
+    if (viewMode  == OFXLASER_VIEW_CANVAS) {
+        canvasViewController.mousePressed(e);
 
+    } else if (viewMode  == OFXLASER_VIEW_OUTPUT) {
+       
+        LaserZoneViewController* currentLaserView = getCurrentLaserViewController();
+        if(currentLaserView!=nullptr) {
+            currentLaserView->mousePressed(e);
+        } else {
+            ofLogError("ERROR - missing view for laser");
+        }
+        
+    } else if(viewMode == OFXLASER_VIEW_3D) {
+        visualiser3D.mousePressed(e);
+        
+    }
+    
+    return false;
+}
+
+bool Manager :: mouseReleased(ofMouseEventArgs &e){
+    if(!windowActive) return false;
+    //ofLogNotice("Manager :: mouseReleased") << e.x << " " << e.y;
     for(LaserZoneViewController& zoneView : laserZoneViews) {
         zoneView.mouseReleased(e);
     }
@@ -255,9 +255,24 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
     return false;
 }
 
+
+void Manager :: mouseMoved(ofMouseEventArgs &e) {
+    if(!windowActive) return;
+    //ofLogNotice("Manager :: mouseMoved : ") << e.x << " " << e.y;
+    for(LaserZoneViewController& zoneView : laserZoneViews) {
+        zoneView.mouseMoved(e);
+    }
+    canvasViewController.mouseMoved(e);
+    visualiser3D.mouseMoved(e);
+}
+
+
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
-    
-    visualiser3D.mouseDragged(e);
+    if(!windowActive) return false;
+    //ofLogNotice("Manager :: mouseDragged : ") << e.x << " " << e.y;
+    if(viewMode == OFXLASER_VIEW_3D) {
+        visualiser3D.mouseDragged(e);
+    }
     
     for(LaserZoneViewController& zoneView : laserZoneViews) {
         zoneView.mouseDragged(e);
@@ -268,8 +283,11 @@ bool Manager :: mouseDragged(ofMouseEventArgs &e){
 }
 
 void Manager :: mouseScrolled(ofMouseEventArgs &e){
+    if(!windowActive) return;
     //visualiser3D.mouseDragged(e);
-    
+    if(viewMode == OFXLASER_VIEW_3D) {
+        visualiser3D.mouseScrolled(e);
+    }
     for(LaserZoneViewController& zoneView : laserZoneViews) {
         zoneView.mouseScrolled(e);
     }
@@ -277,6 +295,20 @@ void Manager :: mouseScrolled(ofMouseEventArgs &e){
    // return false;
     
 }
+
+
+void Manager :: mouseEntered(ofMouseEventArgs &e) {
+    
+    windowActive = true;
+    
+}
+void Manager :: mouseExited(ofMouseEventArgs &e) {
+    windowActive = false;
+}
+                                                  
+                                                  
+                                                  
+
 
 bool Manager :: keyPressed(ofKeyEventArgs &e) {
     // false means we keep the event bubbling
@@ -437,7 +469,7 @@ void Manager :: finishLaserUI() {
 
 void Manager :: drawPreviews() {
     
-    if(!isGuiVisible()) return;
+    //if(!isGuiVisible()) return;
     
     // update visibility and size on views
     for(LaserZoneViewController& laserZoneView : laserZoneViews) {
@@ -458,24 +490,26 @@ void Manager :: drawPreviews() {
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
         
-        
-        canvasViewController.drawFrame();
-        canvasViewController.beginViewPort();
-        canvasViewController.drawEdges();
-        canvasViewController.drawMoveables();
-        renderPreview();
-        canvasViewController.endViewPort();
+        if(isGuiVisible()) {
+            canvasViewController.drawFrame();
+            canvasViewController.beginViewPort();
+            canvasViewController.drawEdges();
+            canvasViewController.drawMoveables();
+            renderPreview();
+            canvasViewController.endViewPort();
+        }
     
         
     } else if(viewMode == OFXLASER_VIEW_OUTPUT){
         
         // make the selected laser visible
-        for(LaserZoneViewController& laserZoneView : laserZoneViews) {
-            laserZoneView.update();
-            laserZoneView.draw();
-            if(laserZoneView.getIsVisible()) drawBigNumber(laserZoneView.getLaserIndex());
+        if(isGuiVisible()) {
+            for(LaserZoneViewController& laserZoneView : laserZoneViews) {
+                laserZoneView.update();
+                laserZoneView.draw();
+                if(laserZoneView.getIsVisible()) drawBigNumber(laserZoneView.getLaserIndex());
+            }
         }
-        
     }
     
     
@@ -578,6 +612,10 @@ void Manager::drawLaserGui() {
             
             if(ImGui::Button(ICON_FK_PLUS, ImVec2(0,22))) {
                 createAndAddLaser();
+                ZoneId zoneId = createNewBeamZone();
+                //int zonenum = canvasTarget.zones.size()-1;
+                int lasernum = getSelectedLaserIndex();
+                addZoneToLaser(zoneId, lasernum);
                 saveSettings();
             }
             ImGui::SameLine();
@@ -639,7 +677,6 @@ void Manager::drawLaserGui() {
             UI::addDelayedTooltip("Show test pattern");
             
             if(!currentLaser->testPatternActive) {
-                
                 UI::startGhosted();
             }
             ImGui::PushItemWidth(21);
@@ -1042,7 +1079,7 @@ void Manager :: guiLaserOverview() {
 
     if(UI::startWindow("Laser overview", ImVec2(x, guiSpacing+menuBarHeight), ImVec2(guiLaserSettingsPanelWidth, 0),0,false, (bool*)&showLaserOverviewWindow.get())){
         
-        float buttonwidth = (guiLaserSettingsPanelWidth-(guiSpacing*3))/2;
+        //float buttonwidth = (guiLaserSettingsPanelWidth-(guiSpacing*3))/2;
 
 //        if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, testPatternGlobalActive)) {
 //            testPatternGlobalActive = !testPatternGlobalActive;
@@ -1255,8 +1292,8 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
     
     if(UI::startWindow("Laser output", ImVec2(x,200), ImVec2(guiLaserSettingsPanelWidth,0), ImGuiWindowFlags_None, false, (bool*)&showLaserOutputSettingsWindow.get())) {
         
-        int laserIndexToShow = selectedLaserIndex;
-        if(laserIndexToShow ==-1) laserIndexToShow = 0;
+        //int laserIndexToShow = selectedLaserIndex;
+        //if(laserIndexToShow ==-1) laserIndexToShow = 0;
         // drawUIPanelScannerSettings(&getLaser(laserIndexToShow), laserpanelwidth, spacing, 0);
         
         // draw a flashing dot during saving
@@ -1304,11 +1341,11 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
         {
             selected[i] = (i==laser->mountOrientation);
             
-            if(i!=laser->mountOrientation) UI::startGhosted();
+            if(i==laser->mountOrientation) UI::secondaryColourStart();
             if (UI::Button(icon[i].c_str())){
                 laser->mountOrientation = i;
             }
-            UI::stopGhosted();
+            UI::secondaryColourEnd();
             ImGui::SameLine();
         }
         ImGui::Text("Orientation");
@@ -1430,7 +1467,7 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
                 ImGui::Columns(3);
                 ImGui::SetColumnWidth(0, 250);
                 ImGui::SetColumnWidth(1, 250);
-                ImGui::SetColumnWidth(1, 250);
+                ImGui::SetColumnWidth(2, 250);
                 
                 
                 for (auto & renderProfilePair : laser->scannerSettings.renderProfiles) {
@@ -1723,7 +1760,7 @@ void Manager :: guiDacAssignment() {
                 ImVec2 size = ImVec2(19,19); // ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
                 
                 ImVec2 p = ImGui::GetCursorScreenPos();
-                int state = laser->getDacConnectedState();
+                //int state = laser->getDacConnectedState();
                 
                 ImU32 col = ImGui::GetColorU32({0.3,0.3,0.3,1});
                 if(laser->hasDac()) col = UI::getColourForState(laser->getDacConnectedState());

@@ -142,7 +142,9 @@ bool ZoneIdContainer :: deserialize(ofJson& json) {
             bool success = true;
             
             ofJson& jsonarray = containerJson["zoneidobjects"];
-            for(int i = 0; i<jsonarray.size(); i++) {
+           // cout << jsonarray.dump(3) << endl;
+            int numzones = jsonarray.size();
+            for(int i = 0; i<numzones; i++) {
 
                 ofJson& zoneIdJson = jsonarray[i];
                 if(!addZoneByJson(zoneIdJson)) {

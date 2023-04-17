@@ -190,7 +190,7 @@ void LaserdockDevice::print() const
 
 
 bool LaserdockDevice::get_output(bool *enabled) {
-    uint8_t enabled8;
+    uint8_t enabled8 =0;
     bool success =  guint8(d->devh_ctl, 0x81, &enabled8);
     *enabled = (enabled8 == 1)? true : false;
     return success;

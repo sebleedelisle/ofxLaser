@@ -55,6 +55,8 @@ class LaserZoneViewController : public ViewWithMoveables {
     
     vector<MaskUiQuad*> maskUis;
     vector<MaskUiQuad*> maskUisSorted;
+    
+    static int objectCount; 
  
 };
 }
