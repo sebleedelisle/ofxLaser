@@ -152,7 +152,6 @@ bool ZoneIdContainer :: deserialize(ofJson& json) {
                 }
             }
             
-
             return success;
 
         } else {

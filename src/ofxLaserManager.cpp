@@ -218,7 +218,7 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
 bool Manager :: mousePressed(ofMouseEventArgs &e){
     if(!windowActive) {
         windowActive = true;
-        return;
+        return false;
     }
     if(ImGui::GetIO().WantCaptureMouse) return false;
     if(!isGuiVisible()) return false;
