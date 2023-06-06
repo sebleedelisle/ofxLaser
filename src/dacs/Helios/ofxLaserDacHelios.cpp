@@ -388,9 +388,20 @@ void DacHelios :: setConnected(bool state) {
 // object pooling system
 DacHeliosFrame* DacHelios :: getFrame() {
 	DacHeliosFrame* returnframe;
-	
-	if(spareFrames.tryReceive(returnframe)) {
-		//ofLogNotice("DacHelios :: getFrame() - removed frame from channel");
+    while(spareFramesChannel.tryReceive(returnframe)) {
+        spareFrames.push_back(returnframe);
+    }
+    
+    while(spareFrames.size()>10) {
+        DacHeliosFrame* frame  = spareFrames.back();
+        spareFrames.pop_back();
+        delete frame;
+    }
+    
+	if(spareFrames.size()>0) {
+		//ofLogNotice("DacHelios :: getFrame() - removed frame spares ") <<spareFrames.size();
+        returnframe = spareFrames.back();
+        spareFrames.pop_back();
 		returnframe->reset();
 		return returnframe;
 	} else {
@@ -403,7 +414,7 @@ DacHeliosFrame* DacHelios :: getFrame() {
 DacHeliosFrame* DacHelios :: deleteFrame(DacHeliosFrame* frame){
 	//delete frame;
 	//
-	spareFrames.send(frame);
+	spareFramesChannel.send(frame);
 	//ofLogNotice("DacHelios :: releaseFrame() - added frame to channel "+ofToString(frame->numSamples));
 	return nullptr;
 }

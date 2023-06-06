@@ -133,6 +133,13 @@ void Visualiser3D :: update() {
     
     if(smoothedCameraOrbit != settings.cameraOrbit.get()) {
         smoothedCameraOrbit += ((settings.cameraOrbit.get()-smoothedCameraOrbit)*0.4);
+        
+        if(glm::distance(smoothedCameraOrbit, settings.cameraOrbit.get()) < 0.0001){
+            smoothedCameraOrbit =settings.cameraOrbit.get();
+        }
+            
+       // ofLogNotice() << smoothedCameraOrbit << " " << settings.cameraOrbit.get();
+        
         gridDirty = true; 
 
     }
@@ -165,8 +172,10 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
         
     }
     
-    if((!visFbo.isAllocated()) || (visFbo.getWidth()!=rect.getWidth()) || (visFbo.getHeight()!=rect.getHeight())) {
-        visFbo.allocate(rect.getWidth(), rect.getHeight(), GL_RGBA, 4);
+    if((!visFbo.isAllocated()) || (visFbo.getWidth()!=round(rect.getWidth())) || (visFbo.getHeight()!=round(rect.getHeight()))) {
+        ofLogNotice("Visualiser3D :: draw  - fbo.allocated");
+        visFbo.clear();
+        visFbo.allocate(round(rect.getWidth()), round(rect.getHeight()), GL_RGBA, 4);
     }
     
     visFbo.begin();

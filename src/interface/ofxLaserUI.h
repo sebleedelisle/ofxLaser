@@ -52,7 +52,9 @@ class UI {
     static bool addFloatSlider(string label, float& target, float min, float max, const char* format="%.2f", ImGuiSliderFlags flags = 0) ;
     static bool addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format="%.2f", ImGuiSliderFlags flags = 0) ;
     static bool addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format="%.2f", ImGuiSliderFlags flags = 0);
-    static bool addDragSlider(string label, float& target, float speed, float min, float max, const char* format="%.2f");
+    static bool addFloatDrag(string label, float& target, float speed, float min, float max, const char* format="%.2f");
+    static bool addIntDrag(string label, int& target, float speed, float min, float max, const char* format="%d");
+    static bool addIntDragSmall(string label, int& target, float speed, float min, float max, const char* format="%d");
     static bool addFloat2Drag(string label, glm::vec2& target, float speed, glm::vec2 min, glm::vec2 max, const char* format="%.2f") ;
     static bool addFloat3Drag(string label, glm::vec3& target, float speed, glm::vec3 min, glm::vec3 max, const char* format="%.2f") ;
   
@@ -67,15 +69,23 @@ class UI {
     // ofParameters
     
     static bool addParameter(ofAbstractParameter& param);
-    static bool addParameter(shared_ptr<ofAbstractParameter>& param);
+    //static bool addParameter(shared_ptr<ofAbstractParameter>& param);
+//    static bool addParameter(ofParameter<bool>& param) {
+//        return UI::addCheckbox(*parameterBoolPtr);
+//    }
+    
     
     static bool addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle = true);
+    
+    
+    
     
     static bool addIntSlider(ofParameter<int>& param, string labelSuffix = "");
     static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
     static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
     static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "");
     static bool addFloatDrag(ofParameter<float>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
+    static bool addIntDrag(ofParameter<int>&param, float speed=1, const char* format="%d", string labelSuffix = "");
     static bool addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float speed=1, string labelSuffix="");
     
     static bool addFloat2Drag(ofParameter<glm::vec2>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
@@ -141,6 +151,7 @@ class UI {
   
     static void toolTip(const char* desc);
     static void addHover(string& str);
+    static void addDelayedHover(string str);
     static void addHover(const char* desc);
     static void addDelayedTooltip(const char* desc);
     

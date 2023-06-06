@@ -151,7 +151,7 @@ ofPoint ZoneTransformLineData::getWarpedPoint(const ofPoint& p){
     if(index >= poly.size()-2) index = poly.size()-3;
     glm::vec3 normal = poly.getNormalAtIndexInterpolated(index);
     if(glm::length(normal)==0) {
-        cout << " " ;
+        //cout << " " ;
         
     }
     

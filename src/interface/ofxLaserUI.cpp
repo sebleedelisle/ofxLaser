@@ -40,12 +40,17 @@ void UI::setupGui() {
        
     }
     
-    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_None, true );
+    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange, true );
 //
     ImGuiIO& io = ImGui::GetIO();
     
     imguiSavePath = ofToDataPath("resources/imgui.ini");
-    io.IniFilename = imguiSavePath.c_str();
+   
+    const std::string::size_type size = imguiSavePath.size();
+    char *buffer = new char[size + 1];   //we need extra char for NUL
+    // bit nasty but hey
+    memcpy(buffer, imguiSavePath.c_str(), size + 1);
+    io.IniFilename = buffer;
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
     font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
@@ -183,9 +188,21 @@ bool UI::addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::ve
     //float speed = (max.x-min.x)/100;
     return ImGui::SliderFloat3(label.c_str(), glm::value_ptr(target), min.x, max.x, format, flags);
 }
-bool UI::addDragSlider(string label, float& target, float speed, float min, float max, const char* format) {
+bool UI::addFloatDrag(string label, float& target, float speed, float min, float max, const char* format) {
     return ImGui::DragFloat(label.c_str(), &target, speed, min, max, format);
 }
+bool UI::addIntDrag(string label, int& target, float speed, float min, float max, const char* format) {
+    return ImGui::DragInt(label.c_str(), &target, speed, min, max, format);
+}
+
+bool UI::addIntDragSmall(string label, int& target, float speed, float min, float max, const char* format) {
+    string templabel = "##" + label;
+    //ImGui::SetNextItemWidth(40);
+    bool returnvalue = ImGui::DragInt(templabel.c_str(), &target, speed, min, max, format);
+    addDelayedHover(ofSplitString(label, "##")[0]);
+    return returnvalue;
+}
+
 bool UI::addFloat2Drag(string label, glm::vec2& target, float speed, glm::vec2 min, glm::vec2 max, const char* format) {
     return ImGui::DragFloat2(label.c_str(), glm::value_ptr(target), speed, min.x, max.x, format);
 }
@@ -295,7 +312,7 @@ bool UI::addFloatDrag(ofParameter<float>&param, float speed, const char* format,
     if(parent) label = label+"##"+parent.getName();
     
     float value =param.get();
-    if(addDragSlider(label, value, speed, param.getMin(), param.getMax(), format)){
+    if(ImGui::DragFloat(label.c_str(), &value, speed, param.getMin(), param.getMax(), format)){
         param.set(ofClamp(value, param.getMin(), param.getMax()));
         return true;
     } else {
@@ -303,6 +320,26 @@ bool UI::addFloatDrag(ofParameter<float>&param, float speed, const char* format,
     }
     
 }
+
+bool addIntDrag(ofParameter<int>&param, float speed, const char* format, string labelSuffix) {
+                                                                                               
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    int value =param.get();
+    if(ImGui::DragInt(label.c_str(), &value, speed, param.getMin(), param.getMax(), format)){
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+                                                                                               
+                                                                                               
+}
+
+
+
 bool UI::addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float speed, string labelSuffix) {
     
     string label = param.getName()+labelSuffix;
@@ -314,7 +351,7 @@ bool UI::addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float spe
     bool showfloat = shiftpressed;
     if(floor(value)!=value) showfloat = true;
   
-    if(addDragSlider(label, value, shiftpressed? 0.01f : speed, param.getMin(), param.getMax(), showfloat? "%.2f" : "%.0f")){
+    if(addFloatDrag(label, value, shiftpressed? 0.01f : speed, param.getMin(), param.getMax(), showfloat? "%.2f" : "%.0f")){
         
         if(shiftpressed) {
         } else {
@@ -687,57 +724,65 @@ bool UI::addNumberedCheckBox(int number, const char* label, bool* v, bool large,
 }
 
 
+//bool UI::addParameter(ofAbstractParameter& param) {
+//    //return false;
+//    shared_ptr<ofAbstractParameter> ref = param.newReference();
+//    return addParameter(ref);
+//}
 bool UI::addParameter(ofAbstractParameter& param) {
-    shared_ptr<ofAbstractParameter> ref = param.newReference();
-    return addParameter(ref);
-}
-bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
     
-    auto parameterGroupPtr = std::dynamic_pointer_cast<ofParameterGroup>(param);
+    ofAbstractParameter* paramPtr = &param;
+    
+    ofParameterGroup* parameterGroupPtr = dynamic_cast<ofParameterGroup*>(paramPtr);
+    
     if(parameterGroupPtr) {
         for(auto& param : *parameterGroupPtr) {
-            addParameter(param);
+            addParameter(*param);
         }
     }
-    
-    auto parameterBoolPtr = std::dynamic_pointer_cast<ofParameter<bool>>(param);
+
+    ofParameter<bool>* parameterBoolPtr = dynamic_cast<ofParameter<bool>*>(paramPtr);
     if(parameterBoolPtr) {
         return UI::addCheckbox(*parameterBoolPtr);
     }
-    
-    auto parameterFloat = std::dynamic_pointer_cast<ofParameter<float>>(param);
+
+    ofParameter<float>* parameterFloat = dynamic_cast<ofParameter<float>*>(paramPtr);
     if(parameterFloat) {
         return UI::addFloatSlider(*parameterFloat);
     }
-    
-    auto parameterInt = std::dynamic_pointer_cast<ofParameter<int>>(param);
+
+    ofParameter<int>* parameterInt = dynamic_cast<ofParameter<int>*>(paramPtr);
     if(parameterInt) {
         return UI::addIntSlider(*parameterInt);
     }
-    
-    auto parameterVec2 = std::dynamic_pointer_cast<ofParameter<glm::vec2>>(param);
+
+    ofParameter<glm::vec2>* parameterVec2 = dynamic_cast<ofParameter<glm::vec2>*>(paramPtr);
     if(parameterVec2) {
         return UI::addFloat2Drag(*parameterVec2);
     }
-    auto parameterVec3 = std::dynamic_pointer_cast<ofParameter<glm::vec3>>(param);
+    
+    ofParameter<glm::vec3>* parameterVec3 = dynamic_cast<ofParameter<glm::vec3>*>(paramPtr);
     if(parameterVec3) {
         return UI::addFloat3Drag(*parameterVec3);
     }
-    
-    auto parameterFloatColour = std::dynamic_pointer_cast<ofParameter<ofFloatColor>>(param);
+
+    ofParameter<ofFloatColor>* parameterFloatColour = dynamic_cast<ofParameter<ofFloatColor>*>(paramPtr);
     if (parameterFloatColour){
         return UI::addColour(*parameterFloatColour);
     }
-    
-    auto parameterColour = std::dynamic_pointer_cast<ofParameter<ofColor>>(param);
+
+    ofParameter<ofColor>* parameterColour = dynamic_cast<ofParameter<ofColor>*>(paramPtr);
     if (parameterColour){
         return UI::addColour(*parameterColour);
     }
-    auto parameterRect = std::dynamic_pointer_cast<ofParameter<ofRectangle>>(param);
+    
+    
+    ofParameter<ofRectangle>* parameterRect = dynamic_cast<ofParameter<ofRectangle>*>(paramPtr);
     if (parameterRect){
         return UI::addRectDrag(*parameterRect);
     }
-    auto parameterString = std::dynamic_pointer_cast<ofParameter<string>>(param);
+    
+    ofParameter<string>* parameterString = dynamic_cast<ofParameter<string>*>(paramPtr);
     if (parameterString){
        // if(parameterString->getName()=="") {
             vector<string> lines = ofSplitString(parameterString->get(), "\n");
@@ -749,12 +794,12 @@ bool UI::addParameter(shared_ptr<ofAbstractParameter>& param) {
             //if(lines.size>1) {
             //char *buf = *parameterString.get().c_str();
            // char* str = parameterString->get().c_str();
-            
+
             //string inputtext = parameterString->get();
             //ImGui::InputTextMultiline("Text", &inputtext);
-            
+
         //}
-        
+
         return true;
     }
     // throw error here?
@@ -1083,6 +1128,9 @@ void UI::addHover(string& str) {
     addHover(str.c_str());
 }
 
+void UI::addDelayedHover(string str) {
+    addDelayedTooltip(str.c_str());
+}
 void UI::toolTip(const char* desc)
 {
     ImGui::SameLine(0,3);

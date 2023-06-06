@@ -27,19 +27,27 @@ class PresetManager {
     const vector<string>& getPresetNames();
     
     // UI stuff
-    bool drawComboBox(T& currentPreset, int idnum = 0);
-    void drawSaveButtons(T& currentPreset);
+    bool drawComboBox(T& currentPreset, int idnum = 0, bool showLabel = true);
+    bool drawSaveButtons(T& currentPreset);
     
-    map<string, T> presetMap;
+    static map<string, T> presetMap;
     vector<string> presetNames;
     
     string filepath;
     
+    //static map<string, T>  test;
+    
     
 };
+
+
 }
  
-using namespace ofxLaser; 
+using namespace ofxLaser;
+
+template <typename T>
+map<string, T>  PresetManager<T> :: presetMap;
+
 
 template <typename T>
 PresetManager<T> :: PresetManager() {
@@ -148,7 +156,7 @@ const vector<string>& PresetManager<T> ::getPresetNames() {
 }
 
 template <typename T>
-bool PresetManager<T> :: drawComboBox(T& settings, int idnum) {
+bool PresetManager<T> :: drawComboBox(T& settings, int idnum, bool showLabel) {
     
     bool changed = false;
     const vector<string>& presets = getPresetNames();
@@ -161,10 +169,12 @@ bool PresetManager<T> :: drawComboBox(T& settings, int idnum) {
     }
   
     string comboname = T::getTypeName() + " presets##"+ofToString(idnum);
+    if(!showLabel) comboname = "##"+comboname;
     if (ImGui::BeginCombo(comboname.c_str(), label.c_str())) { // The second parameter is the label previewed before opening the combo.
         
         for(const string& presetName : presets) {
             string presetlabel =presetName+"##"+ofToString(idnum);
+           
             if (ImGui::Selectable(presetlabel.c_str(), presetName == settings.getLabel())) {
                 //get the preset and make a copy of it
                 // uses operator overloading to create a clone
@@ -180,8 +190,8 @@ bool PresetManager<T> :: drawComboBox(T& settings, int idnum) {
 }
 
 template <typename T>
-void PresetManager<T> :: drawSaveButtons(T& settings) {
-    
+bool PresetManager<T> :: drawSaveButtons(T& settings) {
+    bool changed = false;
     const vector<string>& presets = getPresetNames();
     string label =settings.getLabel();
     T& currentPreset = *getPreset(label);
@@ -206,6 +216,7 @@ void PresetManager<T> :: drawSaveButtons(T& settings) {
         
         if (ImGui::Button("OK", ImVec2(120, 0))) {
             addPreset(presetlabel, settings);
+            changed = true;
             ImGui::CloseCurrentPopup();
             
         }
@@ -246,6 +257,7 @@ void PresetManager<T> :: drawSaveButtons(T& settings) {
             // TODO CHECK PRESET EXISTS AND ADD POP UP
             addPreset(presetlabel, settings);
             ImGui::CloseCurrentPopup();
+            changed = true;
             
         }
         ImGui::SetItemDefaultFocus();
@@ -259,6 +271,7 @@ void PresetManager<T> :: drawSaveButtons(T& settings) {
         
         
     }
+    return changed; 
     
 }
     

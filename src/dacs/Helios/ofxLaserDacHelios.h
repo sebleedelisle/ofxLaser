@@ -77,7 +77,8 @@ class DacHelios : public DacBase, ofThread{
     
 	DacHeliosFrame* getFrame();
 	DacHeliosFrame* deleteFrame(DacHeliosFrame* frame);
-	ofThreadChannel<DacHeliosFrame*> spareFrames;
+	ofThreadChannel<DacHeliosFrame*> spareFramesChannel;
+    vector<DacHeliosFrame*>spareFrames; 
     DacHeliosFrame blankFrame; 
 	
 	//string getLabel(){return "Helios";};

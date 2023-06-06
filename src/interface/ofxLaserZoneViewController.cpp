@@ -564,7 +564,7 @@ void LaserZoneViewController :: drawImGui() {
             int level = maskUi->maskLevel;
             ImGui::PushItemWidth(60);
             string label = "##"+ofToString(i);
-            if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) { // ****
+            if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) { 
                 maskUi->maskLevel = level;
                 maskUi->setDirty();
             }
