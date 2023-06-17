@@ -62,6 +62,7 @@ class ManagerBase {
     
     bool loadSettings();
     bool saveSettings();
+    bool scheduleSaveSettings();
     
     void send();
     void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);
@@ -183,7 +184,9 @@ class ManagerBase {
     ofPolyline tmpPoly;
     vector<glm::vec3> tmpPoints;
   
-    ofSoundPlayer beepSound; 
+    ofSoundPlayer beepSound;
+    bool settingsNeedSave = false;
+    float lastSaveTime = 0; 
    
     private:
 };

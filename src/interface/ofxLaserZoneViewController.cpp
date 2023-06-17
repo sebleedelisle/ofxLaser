@@ -11,20 +11,20 @@ int LaserZoneViewController :: objectCount = 0;
 
 LaserZoneViewController :: LaserZoneViewController(){
     objectCount++;
-    ofLogNotice("LaserZoneViewController() ") << objectCount;
+    //ofLogNotice("LaserZoneViewController() ") << objectCount;
     laser = nullptr;
     setSourceRect(ofRectangle(0,0,800,800));
     setOutputRect(ofRectangle(0,0,800,800));
 }
 LaserZoneViewController :: LaserZoneViewController(Laser* newlaser){
     objectCount++;
-    ofLogNotice("LaserZoneViewController() ") << objectCount;
+    //ofLogNotice("LaserZoneViewController() ") << objectCount;
     laser = newlaser;
 }
 
 LaserZoneViewController ::  ~LaserZoneViewController() {
 
-    ofLogNotice("~LaserZoneViewController() ") ;
+   // ofLogNotice("~LaserZoneViewController() ") ;
 }
 
 

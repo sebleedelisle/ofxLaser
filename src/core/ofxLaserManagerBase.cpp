@@ -213,7 +213,7 @@ bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
         changed = laser->updateZones(changedZones)|| changed;
     }
     if (changed) {
-        saveSettings();
+        scheduleSaveSettings();
         return true;
     } else{
         return false;
@@ -400,14 +400,19 @@ void ManagerBase:: update(){
         }
     }
     if(dacDisconnected)  {
-        if(!beepSound.isPlaying()) {
-            beepSound.play();
-        }
+//        if(!beepSound.isPlaying()) {
+//            beepSound.play();
+//        }
     }
      
     if(useAltZones && (!hasAnyAltZones())) {
         useAltZones.set(false);
     }
+    
+    if(settingsNeedSave && (ofGetElapsedTimef()-lastSaveTime>1)) {
+        saveSettings();
+    }
+    
     
 }
 
@@ -657,6 +662,15 @@ bool ManagerBase::loadSettings() {
     
 }
 
+bool ManagerBase::scheduleSaveSettings() {
+    if(!settingsNeedSave) {
+        settingsNeedSave = true;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 bool ManagerBase::saveSettings() {
     
     // update the number of lasers for the laserNum param
@@ -687,7 +701,7 @@ bool ManagerBase::saveSettings() {
 //    }
 //
     ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
-    
+    lastSaveTime = ofGetElapsedTimef();
     
     return savesuccess;
     

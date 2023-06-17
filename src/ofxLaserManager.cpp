@@ -174,8 +174,8 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
         laserview.setGrid(zoneGridSnap, zoneGridSize);
         
     }
-   ofLogNotice() << "paramChanged " << e.getName();
-    saveSettings();
+   //ofLogNotice() << "paramChanged " << e.getName();
+    scheduleSaveSettings();
 }
 
 void Manager :: update() {
@@ -188,7 +188,7 @@ void Manager :: update() {
     canvasViewController.setOutputRect(ofRectangle(10,10,canvasTarget.getWidth(), canvasTarget.getHeight()));
     if(canvasViewController.update()) {
         canvasViewController.updateZonesFromUI(canvasTarget);
-        saveSettings();
+        scheduleSaveSettings();
     }
     canvasViewController.updateUIFromZones(canvasTarget);
     //canvasViewController.setLockedAll(false);
@@ -616,7 +616,7 @@ void Manager::drawLaserGui() {
                 //int zonenum = canvasTarget.zones.size()-1;
                 int lasernum = getSelectedLaserIndex();
                 addZoneToLaser(zoneId, lasernum);
-                saveSettings();
+                scheduleSaveSettings();
             }
             ImGui::SameLine();
 

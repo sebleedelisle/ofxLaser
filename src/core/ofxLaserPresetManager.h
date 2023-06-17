@@ -20,8 +20,8 @@ class PresetManager {
     PresetManager();
     
     bool loadPresets();
-    void addPreset(string, T& preset) ;
-    void addPreset(T& preset) ;
+    void addPreset(string, T& preset, bool save = true) ;
+    void addPreset(T& preset, bool save = true) ;
     void savePreset(string, T& preset);
     T* getPreset(string name);
     const vector<string>& getPresetNames();
@@ -74,9 +74,10 @@ bool PresetManager<T> :: loadPresets() {
         
         for(auto file : allFiles) {
             T settings;
+            //ofLogNotice("found file") << filepath << "/" << file.getFileName();
             ofJson json = ofLoadJson(filepath+"/"+file.getFileName());
             settings.deserialize(json);
-            addPreset(settings);
+            addPreset(settings, false);
             
         }
     }
@@ -85,7 +86,7 @@ bool PresetManager<T> :: loadPresets() {
     // if no presets loaded make a default preset
     if(presetMap.size()==0) {
         T defaultSettings;
-        addPreset("Default", defaultSettings);
+        addPreset("Default", defaultSettings, true); // save
         //addPreset("Fast Scanners", defaultSettings);
         
     }
@@ -94,18 +95,20 @@ bool PresetManager<T> :: loadPresets() {
 }
 
 template <typename T>
-void PresetManager<T>::addPreset(string name, T& settings) {
+void PresetManager<T>::addPreset(string name, T& settings, bool save) {
     settings.setLabel(name);
-    addPreset(settings);
+    ofLogNotice("add preset name : ") << name << " " << settings.getLabel();
+    addPreset(settings, save);
     
 }
 
 template <typename T>
-void PresetManager<T> :: addPreset(T& settings) {
+void PresetManager<T> :: addPreset(T& settings, bool save) {
     // check if we have one already?
     //settings.label = name; // needs rethink
     string name = settings.getLabel();
     
+   
     if(presetMap.count(name)>0) {
         // we already have one
         // output warning?
@@ -114,7 +117,11 @@ void PresetManager<T> :: addPreset(T& settings) {
     presetMap[name] = settings;
     
     // save
-    savePreset(name, settings);
+    if(save) {
+        savePreset(name, settings);
+       
+        
+    }
     
 }
 
@@ -124,6 +131,8 @@ void PresetManager<T> :: savePreset(string label, T& settings){
     ofJson presetJson;
     settings.serialize(presetJson);
     // save json
+    ofLogNotice("Saving preset : " ) << label;
+    ofLogNotice("filename : " ) << filepath+"/"+label+".json";
     ofSavePrettyJson(filepath+"/"+label+".json", presetJson);
     
 }

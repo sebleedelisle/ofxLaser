@@ -736,9 +736,12 @@ bool UI::addParameter(ofAbstractParameter& param) {
     ofParameterGroup* parameterGroupPtr = dynamic_cast<ofParameterGroup*>(paramPtr);
     
     if(parameterGroupPtr) {
+        
+        bool changed = false;
         for(auto& param : *parameterGroupPtr) {
-            addParameter(*param);
+            if(addParameter(*param)) changed = true;
         }
+        return changed;
     }
 
     ofParameter<bool>* parameterBoolPtr = dynamic_cast<ofParameter<bool>*>(paramPtr);
