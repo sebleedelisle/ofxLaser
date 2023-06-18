@@ -702,6 +702,7 @@ bool ManagerBase::saveSettings() {
 //
     ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
     lastSaveTime = ofGetElapsedTimef();
+    settingsNeedSave = false; 
     
     return savesuccess;
     

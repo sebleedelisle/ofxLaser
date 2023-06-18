@@ -483,9 +483,9 @@ void Manager :: drawPreviews() {
     if(viewMode == OFXLASER_VIEW_3D) {
         
         float previewheight = (ofGetHeight()/2)-menuBarHeight-iconBarHeight;
-        ofRectangle rect3D(10,menuBarHeight+iconBarHeight,previewheight/9*16, previewheight); // 16/9 ratio
+        visualiser3DRect.set(10,menuBarHeight+iconBarHeight,previewheight/9*16, previewheight); // 16/9 ratio
         // Draw 3D visualiser
-        visualiser3D.draw(rect3D, lasers, true);
+        visualiser3D.draw(visualiser3DRect, lasers, true);
         
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
@@ -1035,7 +1035,7 @@ void Manager::guiMenuBar() {
 //        }
         if(ImGui::BeginMenu("View") ) {
             if(ImGui::BeginMenu("Set up") ) {
-                if (ImGui::MenuItem("Laser overview", "CMD+L", showLaserOverviewWindow)) {
+                if (ImGui::MenuItem("Laser overview", "", showLaserOverviewWindow)) {
                     showLaserOverviewWindow = !showLaserOverviewWindow;
                 }
                 if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
@@ -1045,11 +1045,11 @@ void Manager::guiMenuBar() {
     //                showScannerSettingsWindow = !showScannerSettingsWindow;
     //                //ImGui::SetWindowFocus("Laser Settings");
     //            }
-                if (ImGui::MenuItem("Controller assignment", "CMD+D",showDacAssignmentWindow )) {
+                if (ImGui::MenuItem("Controller assignment", "",showDacAssignmentWindow )) {
                     showDacAssignmentWindow= !showDacAssignmentWindow;
                    //ImGui::SetWindowFocus("Controller Assignment");
                 }
-                if (ImGui::MenuItem("3D Visualiser settings", "CMD+D", visualiser3D.showSettingsWindow)) {
+                if (ImGui::MenuItem("3D Visualiser settings", "", visualiser3D.showSettingsWindow)) {
                     visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
                 }
                 if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
@@ -2226,6 +2226,10 @@ ofRectangle Manager :: getZonePreviewRect() {
     
 }
 
+ofRectangle Manager :: getVisualiserPreviewRect() {
+    return visualiser3DRect;
+    
+}
 
 
 void Manager :: drawBigNumber(int number) {

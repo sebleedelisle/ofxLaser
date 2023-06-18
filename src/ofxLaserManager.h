@@ -45,6 +45,7 @@ class Manager : public ManagerBase {
 
     ofRectangle getPreviewRect();
     ofRectangle getZonePreviewRect();
+    ofRectangle getVisualiserPreviewRect(); 
     
     virtual void setCanvasSize(int width, int height) override; 
     bool setGuideImage(string filename);
@@ -151,7 +152,8 @@ class Manager : public ManagerBase {
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
-    Visualiser3D visualiser3D; 
+    Visualiser3D visualiser3D;
+    ofRectangle visualiser3DRect; 
     
     DacData dacToAssign;
     ofxLaser::Laser* laserToAssign = nullptr;
