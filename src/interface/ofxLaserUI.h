@@ -118,7 +118,8 @@ class UI {
 
     static bool startWindow(string name, ImVec2 pos, ImVec2 size = ImVec2(0,0), ImGuiWindowFlags flags = 0, bool resetPosition = false, bool* openstate = nullptr) ;
     static void drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled = false, bool fromCentre=false, float thickness = 2.0f) ;
-    
+    static void drawRectangle(ofColor colour, bool filled = true) ;
+   
     
     
     static ImU32 ofColorToImU32 (ofColor col) ;

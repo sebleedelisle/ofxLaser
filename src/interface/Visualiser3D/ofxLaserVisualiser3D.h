@@ -37,7 +37,8 @@ class Visualiser3D {
     
     void load();
     void save();
-    
+    void serialize(ofJson& json);
+    bool deserialize(ofJson& json);
     void update();
     void draw(const ofRectangle& rect, const vector<Laser*>& lasers, bool isdragactive);
     void drawGrid();

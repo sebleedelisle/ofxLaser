@@ -42,6 +42,10 @@ class Manager : public ManagerBase {
     bool deleteLaser(Laser* laser) override;
     
     void addCustomParameter(ofAbstractParameter& param, bool loadFromSettings = true);
+    
+    virtual void serialize(ofJson& json) override;
+    virtual bool deserialize(ofJson& json) override;
+    
 
     ofRectangle getPreviewRect();
     ofRectangle getZonePreviewRect();
@@ -139,6 +143,10 @@ class Manager : public ManagerBase {
     ofParameter<float> dacSettingsTimeSlice;
 
     ofxLaserViewMode viewMode;
+   
+    //ofEvent<int> armEvent;
+    ofEvent<bool> armEvent;
+
    
     protected :
     

@@ -53,6 +53,9 @@ class Laser {
     bool saveSettings();
     bool getSaveStatus();
     
+    void serialize(ofJson& json);
+    bool deserialize(ofJson& json);
+    
     void update();
     void send(const vector<ZoneContent>& zonesContent, float masterIntensity = 1, ofPixels* pixelmask = NULL);
     

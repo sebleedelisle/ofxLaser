@@ -1511,7 +1511,6 @@ bool Laser::saveSettings(){
     ofJson json;
     ofSerialize(json, params);
     
-
     // save the list of zones so we know which zone files to load
     vector<string>laserzoneuids;
     vector<string>laseraltzoneuids;
@@ -1537,6 +1536,7 @@ bool Laser::saveSettings(){
         
         string filename = "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneId().getUid()) + (laserZone->getIsAlternate()?"alt.json" : ".json");
         
+        // somewhat fiddly check to see if zone needs saving, TODO : probably needs looking at
         bool needssave = true;
         if(laserZonesLastSavedMap.find(filename)!=laserZonesLastSavedMap.end()) {
             if(laserZonesLastSavedMap[filename]==laserzonejson.dump()) {
@@ -1556,6 +1556,85 @@ bool Laser::saveSettings(){
     return success;
     
 }
+
+void Laser :: serialize(ofJson& json) {
+    
+    string name =ofToString(laserIndex);
+    if(params.getName()!= name) params.setName(name);
+    
+    ofSerialize(json, params);
+    
+//    // save the list of zones so we know which zone files to load
+//    vector<string>laserzoneuids;
+//    vector<string>laseraltzoneuids;
+//    for(OutputZone* laserZone : outputZones) {
+//        if(laserZone->getIsAlternate()) {
+//            laseraltzoneuids.push_back(laserZone->getZoneId().getUid());
+//        } else {
+//            laserzoneuids.push_back(laserZone->getZoneId().getUid());
+//        }
+//
+//    }
+//    json["laserzones"] = laserzoneuids;
+//    json["laseraltzones"] = laseraltzoneuids;
+
+    
+    maskManager.serialize(json);
+    
+    ofJson& zonejson = json["outputzones"];
+    for(OutputZone* laserZone : outputZones) {
+        ofJson laserzonejson;
+        laserZone->serialize(laserzonejson);
+        zonejson.push_back(laserzonejson);
+        
+    }
+    
+    
+}
+
+bool Laser :: deserialize(ofJson& json) {
+    ignoreParamChange = true;
+    
+    //cout << json.dump(3) << endl;
+    
+    ofDeserialize(json, params);
+    //ofDeserialize(json, visual3DParams);
+    bool success = maskManager.deserialize(json);
+    
+    clearOutputZones();
+    
+    ofJson zonjson = json["outputzones"];
+    
+    // if the json node isn't found then this should do nothing
+    for(auto jsonitem : zonjson) {
+    
+        // if a zone exists with this index then add a LaserZone for it
+
+        OutputZone* laserZone = new OutputZone(ZoneId());
+        outputZones.push_back(laserZone);
+
+        if(laserZone->deserialize(jsonitem)) {
+            success&=true;
+           
+
+        }
+        
+    }
+    
+    paused = false;
+    
+    ignoreParamChange = false;
+    
+    if(json.empty() || (!success)) {
+        return false;
+    } else {
+        return true;
+    }
+    
+    
+}
+
+
 
 bool Laser :: getSaveStatus(){
     return (ofGetElapsedTimef()-lastSaveTime<1);

@@ -581,19 +581,23 @@ void ManagerBase::useAltZonesChanged(bool& state) {
 }
 
 bool ManagerBase::loadSettings() {
+    
     ofJson& json = loadedJson;
     string filename ="ofxLaser/laserSettings.json";
     if(ofFile(filename).exists()) {
-        json = ofLoadJson("ofxLaser/laserSettings.json");
+        json = ofLoadJson(filename);
     }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
-    if((json.contains("canvasWidth")) && (json.contains("canvasHeight"))){
+    if((json.contains("canvaswidth")) && (json.contains("canvasheight"))){
 
     }
 
     
-    beamZoneContainer.deserialize(json["beamZones"]);
+    if(!beamZoneContainer.deserialize(json["beamzones"])) {
+        // try old format
+        beamZoneContainer.deserialize(json["beamZones"]);
+    }
     
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
@@ -655,6 +659,9 @@ bool ManagerBase::loadSettings() {
 //        renumberCanvasZones();
 //    }
 //
+//    json.clear();
+//    serialize(json);
+//    deserialize(json);
     
     return true;
     
@@ -680,7 +687,7 @@ bool ManagerBase::saveSettings() {
     ofJson json;
     ofSerialize(json, params);
 
-    beamZoneContainer.serialize(json["beamZones"]);
+    beamZoneContainer.serialize(json["beamzones"]);
     
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
     
@@ -691,7 +698,7 @@ bool ManagerBase::saveSettings() {
     //savesuccess &= laserMask.saveSettings();
     
     // Save zones :
-    ofJson zoneJson;
+//    ofJson zoneJson;
     //TODO REPLACE THIS WITH canvasTarget.serialize
 //
 //    for(int i = 0; i<canvasTarget.zones.size(); i++) {
@@ -700,13 +707,85 @@ bool ManagerBase::saveSettings() {
 //        zoneJson.push_back(jsonGroup);
 //    }
 //
-    ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
+//    ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
+    
     lastSaveTime = ofGetElapsedTimef();
     settingsNeedSave = false; 
     
     return savesuccess;
     
 }
+void ManagerBase :: serialize(ofJson& json) {
+
+    ofJson& jsonLaserSettings = json; // ["managersettings"];
+    ofSerialize(jsonLaserSettings, params);
+
+    beamZoneContainer.serialize(jsonLaserSettings["beamzones"]);
+
+    ofJson& jsonLasers = json["lasers"];
+    for(size_t i= 0; i<lasers.size(); i++) {
+        lasers[i]->serialize(jsonLasers[i]);
+    }
+    
+}
+
+
+
+bool ManagerBase::deserialize(ofJson& json) {
+    
+    //cout << json.dump(3) << endl;
+    
+    ofDeserialize(json, params);
+    if((json.contains("canvaswidth")) && (json.contains("canvasheight"))){
+
+    }
+
+    if(!beamZoneContainer.deserialize(json["beamzones"])) {
+        // try old format
+        beamZoneContainer.deserialize(json["beamZones"]);
+    }
+ 
+    
+    
+    ofJson& jsonLasers = json["lasers"];
+    
+    // numLasers was saved in the json
+    for(int i = 0; i<numLasers; i++) {
+        
+        // if we don't have a laser object already make one
+        if(lasers.size()<i+1) {
+            createAndAddLaser();
+        } else {
+            // if we already have a laser then make sure no dac is connected
+            dacAssigner.disconnectDacFromLaser(*lasers[i]);
+        }
+        Laser* laser = lasers[i];
+        laser->deserialize(jsonLasers[i]);
+        
+        // if the laser has a dac id saved in the settings,
+        // tell the dacAssigner about it
+        // if the dac isn't available, it'll make the data and store it
+        // ready for when it loads
+        if(!laser->dacLabel->empty()) {
+            dacAssigner.assignToLaser(laser->dacLabel, *laser);
+        }
+        
+    }
+    // if we had more lasers to start with than we needed, then resize
+    // the vector (shouldn't be needed but it doesn't hurt)
+    lasers.resize(numLasers);
+    
+    // shouldn't be needed but hey
+    disarmAllLasers();
+    
+    
+    return true;
+    
+    
+    
+}
+
+
 
 // converts openGL coords to screen coords //
 ofPoint ManagerBase::convert3DTo2D(ofPoint p) {

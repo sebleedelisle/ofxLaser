@@ -165,6 +165,31 @@ void Manager :: initAndLoadSettings() {
     copyParams.add(copyZonePositions.set("Copy output zone positions", false));
 
 }
+
+bool Manager :: deserialize(ofJson& json) {
+    bool success = ManagerBase::deserialize(json);
+    //cout << json.dump(3) << endl; 
+    
+    if(json.contains("visualiser3D")) {
+        visualiser3D.deserialize(json["visualiser3D"]);
+    } else {
+        success = false;
+    }
+    
+    if(selectedLaserIndex>=lasers.size()) {
+        selectedLaserIndex = lasers.size()-1;
+    }
+    return success;
+    
+}
+
+void Manager :: serialize(ofJson& json) {
+    ManagerBase::serialize(json);
+    
+    visualiser3D.serialize(json["visualiser3D"]);
+    
+}
+
 void Manager :: paramChanged(ofAbstractParameter& e) {
     for(Laser* laser : lasers) {
         //laser->setGrid(zoneGridSnap, zoneGridSize);
@@ -1033,32 +1058,70 @@ void Manager::guiMenuBar() {
 ////            if (ImGui::MenuItem("Paste", "CTRL+V")) {}
 //            ImGui::EndMenu();
 //        }
-        if(ImGui::BeginMenu("View") ) {
-            if(ImGui::BeginMenu("Set up") ) {
-                if (ImGui::MenuItem("Laser overview", "", showLaserOverviewWindow)) {
-                    showLaserOverviewWindow = !showLaserOverviewWindow;
+        
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::BeginMenu("Import"))
+            {
+                //
+                if(ImGui::MenuItem("Import Laser Settings")) {
+                    // TODO set range
+                    ofFileDialogResult result = ofSystemLoadDialog("Choose laser settings file (ofxl) to import");
+                    if(result.bSuccess) {
+                        ofJson importjson = ofLoadJson(result.filePath);
+                        deserialize(importjson);
+                    }
                 }
-                if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
-                    showLaserOutputSettingsWindow = !showLaserOutputSettingsWindow;
-                }
-    //            if (ImGui::MenuItem("Scanner settings", "CMD+L", showScannerSettingsWindow)) {
-    //                showScannerSettingsWindow = !showScannerSettingsWindow;
-    //                //ImGui::SetWindowFocus("Laser Settings");
-    //            }
-                if (ImGui::MenuItem("Controller assignment", "",showDacAssignmentWindow )) {
-                    showDacAssignmentWindow= !showDacAssignmentWindow;
-                   //ImGui::SetWindowFocus("Controller Assignment");
-                }
-                if (ImGui::MenuItem("3D Visualiser settings", "", visualiser3D.showSettingsWindow)) {
-                    visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
-                }
-                if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
-                    showCustomParametersWindow = !showCustomParametersWindow;
-                }
+                
                 ImGui::EndMenu();
             }
-
+            
+            if (ImGui::BeginMenu("Export"))
+            {
+                //
+                if(ImGui::MenuItem("Export Laser Settings")) {
+                    // TODO set range
+                    ofFileDialogResult result = ofSystemSaveDialog("lasersettings.ofxl", "Save Laser Settings file");
+                    if(result.bSuccess) {
+                        ofJson exportjson;
+                        serialize(exportjson);
+                        ofSavePrettyJson(result.filePath, exportjson);
+                    }
+                }
+                
+                ImGui::EndMenu();
+            }
+            
             ImGui::EndMenu();
+            
+            
+        }
+        
+        
+        
+        
+        if(ImGui::BeginMenu("Window") ) {
+            //if(ImGui::BeginMenu("Set up") ) {
+            if (ImGui::MenuItem("Laser overview", "", showLaserOverviewWindow)) {
+                showLaserOverviewWindow = !showLaserOverviewWindow;
+            }
+            if (ImGui::MenuItem("Laser output settings", "", showLaserOutputSettingsWindow)) {
+                showLaserOutputSettingsWindow = !showLaserOutputSettingsWindow;
+            }
+            if (ImGui::MenuItem("Controller assignment", "",showDacAssignmentWindow )) {
+                showDacAssignmentWindow= !showDacAssignmentWindow;
+                //ImGui::SetWindowFocus("Controller Assignment");
+            }
+            if (ImGui::MenuItem("3D Visualiser settings", "", visualiser3D.showSettingsWindow)) {
+                visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
+            }
+            if ((customParams.size()>0) && (ImGui::MenuItem("Custom parameters", "", showCustomParametersWindow))) {
+                showCustomParametersWindow = !showCustomParametersWindow;
+            }
+            ImGui::EndMenu();
+            //}
+            
+            //ImGui::EndMenu();
         }
         menuBarHeight = ImGui::GetWindowHeight();
         ImGui::EndMainMenuBar();
@@ -1556,12 +1619,17 @@ void Manager :: guiTopBar(int ypos) {
         int buttonwidth = 80;
         if(ImGui::Button(useRedButton ? "ALL ARMED" : "ARM ALL", ImVec2(buttonwidth, 0.0f) )) {
             armAllLasers();
+            bool state = true;
+            ofNotifyEvent(armEvent, state);
         }
+        
         if(useRedButton) UI::dangerColourEnd();
         
         ImGui::SameLine();
         if(ImGui::Button("DISARM ALL",  ImVec2(buttonwidth, 0.0f))) {
             disarmAllLasers();
+            bool state = false;
+            ofNotifyEvent(armEvent, state);
         }
         if(hasAnyAltZones()) {
             ImGui::SameLine();

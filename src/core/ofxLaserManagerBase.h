@@ -64,6 +64,9 @@ class ManagerBase {
     bool saveSettings();
     bool scheduleSaveSettings();
     
+    virtual void serialize(ofJson& json);
+    virtual bool deserialize(ofJson& json);
+    
     void send();
     void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);
     

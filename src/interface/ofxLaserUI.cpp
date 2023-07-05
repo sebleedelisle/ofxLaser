@@ -921,6 +921,27 @@ void UI::drawRectangle(float x, float y, float w, float h, ofColor colour, bool 
     }
 }
 
+void UI::drawRectangle( ofColor colour, bool filled) {
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 size = ImVec2(15,15);
+    
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    p.x+=0;
+    p.y+=2;
+
+    ImU32 col = ofColorToImU32(colour);
+    
+    //draw_list->AddCircleFilled(p,radius, col);
+    //ImGui::InvisibleButton("##invisible", ImVec2(radius*2, radius*2) - ImVec2(2,2));
+    if(filled) {
+        draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
+    } else {
+        draw_list->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), col);
+    }
+    ImGui::InvisibleButton("##gradient2", size - ImVec2(0,2));
+    
+}
 
 
 ImU32 UI::ofColorToImU32 (ofColor col) {

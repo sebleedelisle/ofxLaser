@@ -437,17 +437,6 @@ void Visualiser3D ::load() {
     
         lasersettings.deserialize(json2);
     }
-//
-//    ofDeserialize(json, settings.params);
-//    ofJson& laser3DsJson = json["laser3Ds"];
-//
-//    while(settings.laserObjects.size()<laser3DsJson.size())
-//        settings.laserObjects.emplace_back();
-//
-//    for(int i = 0; i<settings.laserObjects.size(); i++) {
-//        ofDeserialize(laser3DsJson[i], settings.laserObjects[i].visual3DParams);
-//    }
-    
 }
 void Visualiser3D ::save() {
     
@@ -463,8 +452,33 @@ void Visualiser3D ::save() {
     lasersettings.serialize(json2);
     ofSavePrettyJson("ofxLaser/Visualiser3DLasers.json",json2);
     
-    //ofLogNotice("Visualiser3D json : " ) << json.dump(3);
 }
+
+
+void Visualiser3D :: serialize(ofJson& json) {
+    ofSerialize(json["params"], params);
+    settings.serialize(json["settings"]);
+    lasersettings.serialize(json["lasersettings"]);
+    
+}
+bool Visualiser3D ::deserialize(ofJson& json) {
+    bool success = true;
+    
+    ofDeserialize(json["params"], params);
+    
+    if(json.contains("settings")) {
+        settings.deserialize(json["settings"]);
+    } else {
+        success = false;
+    }
+    if(json.contains("lasersettings")) {
+        lasersettings.deserialize(json["lasersettings"]);
+    } else {
+        success = false;
+    }
+    return success;
+}
+
 
 void Visualiser3D ::drawUI(){
     
