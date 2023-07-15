@@ -148,15 +148,15 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     return true;
 }
 
-void ManagerBase::addCanvasZone(const ofRectangle& rect) {
-    addCanvasZone(rect.x, rect.y, rect.width, rect.height);
+ZoneId ManagerBase::addCanvasZone(const ofRectangle& rect) {
+    return addCanvasZone(rect.x, rect.y, rect.width, rect.height);
     
 }
 
-void ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
+ZoneId  ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
     if(w<=0) w = canvasTarget.getWidth();
     if(h<=0) h = canvasTarget.getHeight();
-    canvasTarget.addInputZone(x, y, w, h);
+    return canvasTarget.addInputZone(x, y, w, h);
 }
 //
 //bool ManagerBase :: deleteCanvasZone(InputZone* zone) {
@@ -598,6 +598,7 @@ bool ManagerBase::loadSettings() {
         // try old format
         beamZoneContainer.deserialize(json["beamZones"]);
     }
+    canvasTarget.deserialize(json["canvastarget"]);
     
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
@@ -611,13 +612,13 @@ bool ManagerBase::loadSettings() {
     }
 
     // REPLACE THIS WITH canvasTarget.deserialise
-    canvasTarget.clearZones();
-    for(ofJson& zoneJson : zonesJson) {
-
-        canvasTarget.addInputZone(0,0,100,100);
-//        canvasTarget.zones.back()->deserialize(zoneJson);
-        
-    }
+//    canvasTarget.clearZones();
+//    for(ofJson& zoneJson : zonesJson) {
+//
+//        canvasTarget.addInputZone(0,0,100,100);
+////        canvasTarget.zones.back()->deserialize(zoneJson);
+//        
+//    }
     
     // NOW load the lasers
     
@@ -688,6 +689,7 @@ bool ManagerBase::saveSettings() {
     ofSerialize(json, params);
 
     beamZoneContainer.serialize(json["beamzones"]);
+    canvasTarget.serialize(json["canvastarget"]);
     
     bool savesuccess = ofSavePrettyJson("ofxLaser/laserSettings.json", json);
     

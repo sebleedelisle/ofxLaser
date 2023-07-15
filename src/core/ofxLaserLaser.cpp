@@ -247,8 +247,9 @@ void Laser::addAltZone(ZoneId zoneId){
 }
 
 bool Laser :: hasZone(ZoneId zoneId){
-    
+   
     for(OutputZone* laserZone : outputZones) {
+       
         if((!laserZone->getIsAlternate()) && (zoneId == laserZone->getZoneId())) return true;
     }
     return false;
@@ -357,6 +358,11 @@ const int Laser::findZoneContentIndexForId(ZoneId zoneId, const vector<ZoneConte
     return -1;
     
 }
+
+
+
+
+
 bool Laser::hasZoneContentForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent ){
     
     for(const ZoneContent& zoneContent: zonesContent) {

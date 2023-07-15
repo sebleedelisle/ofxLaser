@@ -78,63 +78,27 @@ void CanvasViewController :: drawImGui() {
     
     for(int i = 0; i<uiElements.size(); i++) {
         ImGui::PushID(uiElements[i]->getLabel().c_str());
+        //ofLogNotice(uiElements[i]->getLabel()) << " " << i;
         MoveablePoly& uiElement = *uiElements[i];
         // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-        
+        string label ="CANVAS ZONE SETTINGS " + ofToString(i+1);
+        //if(ImGui::BeginPopup(label.c_str())) {
         if(uiElement.getRightClickPressed()) {
-            ImGui::OpenPopup("CANVAS ZONE SETTINGS");
+            ImGui::OpenPopup(label.c_str());
+            ofLogNotice("Opening pop up : ") << label;
         }
-        if(ImGui::BeginPopup("CANVAS ZONE SETTINGS")) {
-            
-            //OutputZone* laserZone : zoneUi->
-            ImGui::Text("CANVAS ZONE");
-            if(find(uiElementsSorted.begin(), uiElementsSorted.end(), &uiElement) == uiElementsSorted.begin()) {
-                UI::startDisabled();
-            }
+        if(ImGui::BeginPopup(label.c_str())) {
+            ImGui::Text("CANVAS ZONE %s", label.c_str());
+            //ImGui::Text("CANVAS ZONE %s", uiElements[i]->getLabel().c_str());
+//            if(find(uiElementsSorted.begin(), uiElementsSorted.end(), &uiElement) == uiElementsSorted.begin()) {
+//                UI::startDisabled();
+//            }
             if(UI::Button("Move to back")) {
                 uiElementsToMoveBack.push_back(&uiElement);
                 ImGui::CloseCurrentPopup();
             }
-            UI::stopDisabled();
-            
-            string buttonlabel = "DELETE ZONE";
-            
-            if(UI::DangerButton(buttonlabel.c_str())) {
-                ImGui::OpenPopup("DELETE ZONE");
-            }
-            
-            if(ImGui::BeginPopupModal("DELETE ZONE")) {
-                
-                ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
-                ImGui::Separator();
-                
-                UI::dangerColourStart();
-                if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
-                    
-                    // if this is an alt zone, just remove this
-                    // otherwise remove this and also its alt zone if
-                    // it has one
-                    //int zoneindex = i;//outputZone->getZoneIndex();
-                    //laser->removeZone(outputZone);
-                    //laser->removeAltZone(zoneindex);
-                    // LATER - TO DO - if this is a laser zone, delete it
-                    // if it's a canvas zone, keep it
-                    
-                    deselectAll();
-                    
-                }
-                
-                UI::dangerColourEnd();
-                
-                ImGui::SetItemDefaultFocus();
-                ImGui::SameLine();
-                if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-            
+            //UI::stopDisabled();
+
             ImGui::EndPopup();
         }
         ImGui::PopID();

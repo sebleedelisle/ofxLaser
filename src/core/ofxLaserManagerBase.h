@@ -48,8 +48,8 @@ class ManagerBase {
     //bool addBeamZoneToLaser(int beamZoneIndex, int laserIndex);
     bool deleteBeamZone(ZoneId& zoneid);
     
-    void addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
-    void addCanvasZone(const ofRectangle& zoneRect);
+    ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
+    ZoneId addCanvasZone(const ofRectangle& zoneRect);
     bool deleteCanvasZone(InputZone* zone);
     
     bool hasAnyAltZones();

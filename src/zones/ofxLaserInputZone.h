@@ -45,7 +45,7 @@ namespace ofxLaser {
         ofRectangle rect;
 
         bool isDirty = true;
-        ZoneId zoneId;
+        
 		
 	};
 }

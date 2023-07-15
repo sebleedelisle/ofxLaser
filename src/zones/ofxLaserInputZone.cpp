@@ -12,6 +12,8 @@ using namespace ofxLaser;
 
 InputZone::InputZone(float x, float y, float w, float h) {
     //setIndex(0);
+    zoneId.type = ZoneId::CANVAS;
+    zoneId.zoneGroup = 0; 
 	set(x, y, w,h);
 
 }
@@ -64,8 +66,12 @@ void InputZone::serialize(ofJson&json) const{
     
 
 }
-bool InputZone::deserialize(ofJson&jsonGroup) {
+bool InputZone::deserialize(ofJson&json) {
     
+    ObjectWithZoneId::deserialize(json);
+    
+    ofJson& jsonGroup = json["zoneidobject"];
+    cout << jsonGroup.dump(3) << endl;
     // OLD API - can delete at some point
     if(jsonGroup.contains("quadguihandles") && (jsonGroup["quadguihandles"].size()>=4)) {
         ofJson& handlejson = jsonGroup["quadguihandles"];
@@ -75,9 +81,9 @@ bool InputZone::deserialize(ofJson&jsonGroup) {
         rect.set(topleft, botright);
         return true;
         
-    } else if(jsonGroup.contains("canvaszone") && (jsonGroup["canvaszone"].size()==4)) {
+    } else if(jsonGroup.contains("inputzone") && (jsonGroup["inputzone"].size()==4)) {
 
-        ofJson& rectjson = jsonGroup["canvaszone"];
+        ofJson& rectjson = jsonGroup["inputzone"];
         rect.set(rectjson[0],rectjson[1],rectjson[2],rectjson[3]);
         return true;
         

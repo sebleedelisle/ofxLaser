@@ -371,7 +371,7 @@ int LaserZoneViewController :: getLaserIndex() {
 
 
 void LaserZoneViewController :: drawImGui() {
-    
+    if(!isVisible) return; 
     for(ZoneUiBase* zoneUi : zoneUis) {
         ImGui::PushID(zoneUi->getLabel().c_str());
         
@@ -380,14 +380,14 @@ void LaserZoneViewController :: drawImGui() {
         if(zoneUi->getRightClickPressed()) {
            
             ImGui::OpenPopup("ZONE SETTINGS");
-            
+            ofLogNotice(zoneUi->getLabel().c_str());
             
         }
         if(ImGui::BeginPopup("ZONE SETTINGS")) {
             
             //OutputZone* laserZone : zoneUi->
             ImGui::Text("ZONE SETTINGS");
-            
+            ImGui::Text(zoneUi->getLabel().c_str()); 
 //            if(ImGui::Checkbox("mute", &zoneUi->muted)) {
 //                outputZone->muted = zoneUi->muted;
 //            }

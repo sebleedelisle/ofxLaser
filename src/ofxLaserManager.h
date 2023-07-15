@@ -31,7 +31,7 @@ class Manager : public ManagerBase {
     static Manager * instance();
     static Manager * laserManager;
     
-    Manager();
+    Manager(bool hidecanvas = false);
     ~Manager();
     
     virtual void initAndLoadSettings();
@@ -147,16 +147,13 @@ class Manager : public ManagerBase {
     //ofEvent<int> armEvent;
     ofEvent<bool> armEvent;
 
-   
     protected :
     
-     
     bool initialised = false;
     bool windowActive = true; 
    
     int selectedLaserIndex;
 
-    
     bool guiIsVisible;
     bool showEditScannerPreset = false;
     
@@ -169,7 +166,7 @@ class Manager : public ManagerBase {
     ofImage guideImage;
   
     vector<LaserZoneViewController> laserZoneViews;
-    bool showCanvas = false; 
+    bool showCanvas = true;
     CanvasViewController canvasViewController;
      
     PresetManager<ScannerSettings> scannerPresetManager;

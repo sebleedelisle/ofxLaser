@@ -15,8 +15,14 @@ namespace ofxLaser {
 class ShapeTargetCanvas : public ShapeTarget, public ZoneIdContainer {
     public :
     
+    ShapeTargetCanvas(); 
+    
     //void clearZones();
-    void addInputZone(float x, float y, float w, float h);
+    ZoneId addInputZone(float x, float y, float w, float h);
+    
+    virtual bool addZoneByJson(ofJson& json) override;
+   
+    
 //    bool deleteInputZone(InputZone* zone);
 //    bool deleteInputZone(int zoneindex);
 //    void renumberZones(); 

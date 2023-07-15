@@ -5,7 +5,7 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-    // NOTE that you no longer need to set up anything at all in ofxLaser!
+    // NOTE that you no longer need to set up anything at all in code!
     // If you want to change the size of the laser area, use
     // laser.setCanvasSize(int width, int height) - default is 800 x 800.
     ofSetVerticalSync(false); 

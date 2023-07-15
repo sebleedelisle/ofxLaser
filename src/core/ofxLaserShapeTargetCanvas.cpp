@@ -9,7 +9,10 @@
 
 using namespace ofxLaser;
 
-
+ShapeTargetCanvas :: ShapeTargetCanvas() {
+    zoneGroup = 0;
+    type = ZoneId::CANVAS;
+} 
 //void ShapeTargetCanvas :: clearZones() {
 //    for(InputZone* zone : zones) {
 //        delete zone;
@@ -17,11 +20,27 @@ using namespace ofxLaser;
 //    zones.clear(); 
 //}
 //
-void ShapeTargetCanvas :: addInputZone(float x, float y, float w, float h){
-    InputZone* newzone = new InputZone( x, y, w, h);
-    addZoneIdObject(newzone);
+ZoneId ShapeTargetCanvas :: addInputZone(float x, float y, float w, float h){
+    InputZone* newcanvaszone = new InputZone( x, y, w, h);
+    addZoneIdObject(newcanvaszone);
+    return newcanvaszone->getZoneId();
+}
+
+
+
+bool ShapeTargetCanvas :: addZoneByJson(ofJson& json) {
+    cout << json.dump(3) << endl;
+    InputZone* zoneIdObject = new InputZone();
+    if(zoneIdObject->deserialize(json)) {
+        addZoneIdObject(zoneIdObject);
+        return true;
+    } else {
+        delete zoneIdObject;
+        return false;
+    }
     
 }
+
 
 //bool ShapeTargetCanvas :: deleteInputZone(InputZone* zone){
 //    vector<InputZone*>::iterator it = std::find(zones.begin(), zones.end(), zone);
