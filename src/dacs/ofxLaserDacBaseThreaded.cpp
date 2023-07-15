@@ -55,7 +55,7 @@ bool DacBaseThreaded:: sendPoints(const vector<Point>& points){
   
 }
 
-int DacBaseThreaded :: calculateBufferSizeByTimeSent() {
+int DacBaseThreaded :: calculateBufferFullnessByTimeSent() {
     
     
     int elapsedMicros = ofGetElapsedTimeMicros() - lastDataSentTime;
@@ -65,19 +65,19 @@ int DacBaseThreaded :: calculateBufferSizeByTimeSent() {
     
 }
 
-int DacBaseThreaded :: calculateBufferSizeByTimeAcked() {
+int DacBaseThreaded :: calculateBufferFullnessByTimeAcked() {
    
    
     int elapsedMicros = ofGetElapsedTimeMicros() - lastAckTime;
     // figure out the current buffer
-    return MAX(0, lastReportedBufferSize - (((float)elapsedMicros/1000000.0f) * pps));
+    return MAX(0, lastReportedBufferFullness - (((float)elapsedMicros/1000000.0f) * pps));
    
     
 }
 
 void DacBaseThreaded :: waitUntilReadyToSend(int maxPointsToFillBuffer){
 
-    int bufferFullness = calculateBufferSizeByTimeSent();
+    int bufferFullness = calculateBufferFullnessByTimeSent();
     int pointsUntilEmpty = MAX(0, bufferFullness - maxPointsToFillBuffer);
     int microsToWait = pointsUntilEmpty * (1000000.0f/pps);
     
@@ -123,7 +123,7 @@ void DacBaseThreaded ::  updateFrameQueue(int minPointsToQueue){
     }
     deque<DacFrame*> queuedFrames;
    
-    int dacBufferFullness = calculateBufferSizeByTimeSent();
+    int dacBufferFullness = calculateBufferFullnessByTimeSent();
 
     // go through the buffered frames and add them into the buffer until we have enough points
     // or we run out of frames
@@ -206,7 +206,7 @@ int DacBaseThreaded :: getNumPointsInFrames(deque<DacFrame*>& frames) {
 
 int DacBaseThreaded :: getNumPointsInAllBuffers() {
     // if not in thread then needs lock!
-      return calculateBufferSizeByTimeSent() + bufferedPoints.size() + getNumPointsInBufferedFrames();
+      return calculateBufferFullnessByTimeSent() + bufferedPoints.size() + getNumPointsInBufferedFrames();
     
 }
 

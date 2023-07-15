@@ -17,17 +17,11 @@ class LaserDockNetDacPoint {
     LaserDockNetDacPoint();
     ~LaserDockNetDacPoint();
     void clear();
-    uint16_t control = 0;
     int16_t x = 0;
     int16_t y = 0;
     uint16_t r = 0;
     uint16_t g = 0;
-    uint16_t b = 0;
-    uint16_t i = 0;
-    uint16_t u1 = 0;
-    uint16_t u2 = 0;
-
- 
+    uint16_t b = 0; 
     
 };
 //

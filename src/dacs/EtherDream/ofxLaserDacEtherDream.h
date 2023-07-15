@@ -53,9 +53,9 @@ public:
    
     int getMaxPointBufferSize() override;
     // estimate the current dac buffer fullness based on the last time points were sent
-    virtual int calculateBufferSizeByTimeSent() override;
+    virtual int calculateBufferFullnessByTimeSent() override;
     // estimate the current dac buffer fullness based on the last time points were acknowledged
-    virtual int calculateBufferSizeByTimeAcked() override;
+    virtual int calculateBufferFullnessByTimeAcked() override;
    
     //output the data that we just sent to the console - for debugging
     void logData();

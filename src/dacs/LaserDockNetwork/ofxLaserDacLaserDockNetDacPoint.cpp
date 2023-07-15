@@ -21,13 +21,9 @@ LaserDockNetDacPoint :: ~LaserDockNetDacPoint() {
 }
 
 void LaserDockNetDacPoint :: clear() {
-    control = 0;
     x = 0;
     y = 0;
     r = 0;
     g = 0;
     b = 0;
-    i = 0;
-    u1 = 0;
-    u2 = 0;
 }

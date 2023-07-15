@@ -9,7 +9,6 @@
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacBase.h"
 #include "ofxLaserDacLaserDockNet.h"
-#include "ofxLaserDacLaserDockNetData.h"
 #include "ofxNetwork.h"
 #include "ofThread.h"
 
@@ -37,9 +36,13 @@ class DacManagerLaserDockNet : public DacManagerBase, ofThread{
     protected :
     
     bool connected = false;
-    ofxUDPManager udpConnection;
+    //ofxUDPManager udpConnection;
+    Poco::Net::DatagramSocket commandUdpSocket;
+ 
 
-    map<string, LaserDockNetData> LaserDockNetDataByMacAddress;
+    
+
+    map<string, DacLaserDockNetStatus> dacStatusById;
     float lastCheckTime = 0; 
     
 };

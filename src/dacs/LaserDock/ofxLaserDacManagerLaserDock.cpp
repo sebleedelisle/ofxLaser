@@ -5,11 +5,11 @@
 //  Created by Seb Lee-Delisle on 29/03/2021.
 //
 
-#include "ofxLaserDacManagerLaserdock.h"
+#include "ofxLaserDacManagerLaserDock.h"
 
 using namespace ofxLaser;
 
-DacManagerLaserdock :: DacManagerLaserdock()  {
+DacManagerLaserDock :: DacManagerLaserDock()  {
     int rc;
     rc = libusb_init(NULL);
     if (rc < 0)
@@ -19,14 +19,14 @@ DacManagerLaserdock :: DacManagerLaserdock()  {
     }
     
 }
-DacManagerLaserdock :: ~DacManagerLaserdock()  {
+DacManagerLaserDock :: ~DacManagerLaserDock()  {
 
     // TODO wait for all DACs threads to stop
     
     libusb_exit(NULL);
 }
 
-vector<DacData> DacManagerLaserdock :: updateDacList(){
+vector<DacData> DacManagerLaserDock :: updateDacList(){
     
     vector<DacData> daclist;
   
@@ -66,11 +66,11 @@ vector<DacData> DacManagerLaserdock :: updateDacList(){
 }
 
 
-DacBase* DacManagerLaserdock :: getAndConnectToDac(const string& id){
+DacBase* DacManagerLaserDock :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
     
-    DacLaserdock* dac = (DacLaserdock*) getDacById(id);
+    DacLaserDock* dac = (DacLaserDock*) getDacById(id);
     
     if(dac!=nullptr) {
         ofLogNotice("DacManagerLaserdock :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
@@ -92,7 +92,7 @@ DacBase* DacManagerLaserdock :: getAndConnectToDac(const string& id){
         
         if (getLaserdockSerialNumber(libusb_device) == id) {
             // check serial number, if it matches, then make a dac with it!
-            dac = new DacLaserdock();
+            dac = new DacLaserDock();
             if(!dac->setup(libusb_device)){
                 delete dac;
                 dac = nullptr;
@@ -112,13 +112,13 @@ DacBase* DacManagerLaserdock :: getAndConnectToDac(const string& id){
     return dac;
 }
 
-bool DacManagerLaserdock :: disconnectAndDeleteDac(const string& id){
+bool DacManagerLaserDock :: disconnectAndDeleteDac(const string& id){
     
     if ( dacsById.count(id) == 0 ) {
         ofLogError("DacManagerLaserdock::disconnectAndDeleteDac("+id+") - dac not found");
         return false;
     }
-    DacLaserdock* dac = (DacLaserdock*) dacsById.at(id);
+    DacLaserDock* dac = (DacLaserDock*) dacsById.at(id);
     dac->close();
     auto it=dacsById.find(id);
     dacsById.erase(it);
@@ -127,7 +127,7 @@ bool DacManagerLaserdock :: disconnectAndDeleteDac(const string& id){
 }
 
 
-string DacManagerLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice) {
+string DacManagerLaserDock :: getLaserdockSerialNumber(libusb_device* usbdevice) {
     // make a descriptor object to store the data in
     struct libusb_device_descriptor devicedescriptor;
     // get the descriptor
@@ -179,6 +179,6 @@ string DacManagerLaserdock :: getLaserdockSerialNumber(libusb_device* usbdevice)
     
 }
 
-void DacManagerLaserdock :: exit() {
+void DacManagerLaserDock :: exit() {
     
 }

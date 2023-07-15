@@ -10,11 +10,53 @@
 using namespace ofxLaser;
 
 DacManagerLaserDockNet :: DacManagerLaserDockNet()  {
-    ofxUDPSettings settings;
-    settings.bindPort = 7654;
-    settings.blocking = false;
 
-    udpConnection.Setup(settings);
+
+    
+    try {
+
+       // auto ip = address.get<Poco::Net::NetworkInterface::BROADCAST_ADDRESS>();
+        //commandUdpSocket.bind(
+        Poco::Net::SocketAddress sa("255.255.255.255", DacLaserDockNetConsts::ALIVE_PORT);
+        Poco::Net::SocketAddress la("10.0.1.188", DacLaserDockNetConsts::ALIVE_PORT);
+        //commandUdpSocket.bind(la);
+        
+        //commandUdpSocket = Poco::Net::DatagramSocket(sa);
+        //commandUdpSocket.setBlocking(false);
+       //commandUdpSocket.setBroadcast(true);
+        commandUdpSocket.bind(la);
+        commandUdpSocket.connect(sa);
+        commandUdpSocket.setBroadcast(true);
+        commandUdpSocket.setBlocking(false);
+
+        
+        ofLogNotice() << commandUdpSocket.address().toString();
+        //ofLogNotice() << commandUdpSocket.
+
+        connected = true;
+    } catch (Poco::Exception& exc) {
+        //Handle your network errors.
+        ofLog(OF_LOG_ERROR,  "DacLaserDockNet setup failed - Network error: " + exc.displayText());
+        connected = false;
+
+    }catch (Poco::Net::HostNotFoundException& exc) {
+        //Handle your network errors.
+        ofLog(OF_LOG_ERROR,  "DacLaserDockNet setup failed - host not found: " + exc.displayText());
+        connected = false;
+        
+    }catch (Poco::TimeoutException& exc) {
+        //Handle your network errors.
+        ofLog(OF_LOG_ERROR,  "DacLaserDockNet setup failed - Timeout error: " + exc.displayText());
+        connected = false;
+        
+    }
+    catch(...){
+        ofLog(OF_LOG_ERROR, "DacLaserDockNet setup failed - unknown error");
+        //std::rethrow_exception(current_exception);
+        connected = false;
+    }
+    
+   // udpConnection.Setup(settings);
     startThread();
 }
 
@@ -22,12 +64,12 @@ DacManagerLaserDockNet :: ~DacManagerLaserDockNet()  {
     stopThread();
     waitForThread();
     // TODO wait for all DACs threads to stop
-    udpConnection.Close();
+    commandUdpSocket.close();
 }
 
 void DacManagerLaserDockNet :: threadedFunction() {
     
-    const int packetSize = 50;
+    const int packetSize = 80; // should only need 64
     char udpMessage[packetSize];
     
     auto & thread = getNativeThread();
@@ -46,104 +88,104 @@ void DacManagerLaserDockNet :: threadedFunction() {
 #endif
     
     while(isThreadRunning()) {
+        int numBytesSent = 0;
+        
+        char cmd[] = {DacLaserDockNetConsts::CMD_GET_ALIVE, 0};
+        
+        try {
+            //Poco::Net::SocketAddress sa("10.0.1.255", DacLaserDockNetConsts::ALIVE_PORT);
+            //commandUdpSocket.sendTo(cmd, 1, sa);
+            commandUdpSocket.sendBytes(cmd, 1);
+        }
+        catch (Poco::Exception& exc) {
+            //Handle your network errors.
+            cerr << "sendBytes : Network error: " << exc.displayText() << endl;
+            //networkerror = true;
+            //failed = true;
+            ofLogNotice() << commandUdpSocket.address().toString();
+        }
+        catch (Poco::TimeoutException& exc) {
+            //Handle your network errors.
+            cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
+            //    isOpen = false;
+            //failed = true;
+        } catch (...) {
+            
+            cerr << "sendBytes : unspecified error " << endl;
+        }
+        
+        
         
         // LET'S ASSUME FOR NOW...
         // that every packet is a complete message from a single dac.
         
+        float sendTime = ofGetElapsedTimef();
+        
         int numBytesReceived = 0;
         do {
             memset(udpMessage,0,sizeof(udpMessage));
-            numBytesReceived = udpConnection.Receive(udpMessage,packetSize); //returns number of bytes received
-            
-            // ofLogNotice("Received "+ ofToString(numBytesReceived) + " bytes from UDP connection");
-            if(numBytesReceived >=36)  {
-                string address;
-                int port;
-                // Honestly I'm not sure what happens with multiple LaserDockNets...
-                udpConnection.GetRemoteAddr(address, port);
-                //            std::cout << "----------------------------------------------------------------------"<< std::endl;
-                //            std::cout << "ip: " << address << " " << port << std::endl;
-                //            std::cout << "Packet Size: " << numBytesReceived << std::endl;
-                //            std::cout << "UDP Packet: " << std::endl;
-                //
-                uint64_t macAddress=0;
-                int i = 0;
-                for(i = 0; i < 6 ; i++) {
-                    macAddress = macAddress<<8;
-                    macAddress|=(unsigned char)udpMessage[i];
-                    //printf("addingbyte : %llx\n", (unsigned char)udpMessage[i]);
-                    //printf("Mac Address : %llx\n", macAddress);
+            Poco::Net::SocketAddress socketAddress;
+            //numBytesReceived = commandUdpSocket.receiveFrom(udpMessage,packetSize, socketAddress); //returns number of bytes received
+            numBytesReceived = commandUdpSocket.receiveFrom(udpMessage,packetSize, socketAddress);
+            if(numBytesReceived >=1)  {
+                
+               // ofLogNotice("Received "+ ofToString(numBytesReceived) + " bytes from UDP connection ") << ;
+                
+                
+                
+                string address = socketAddress.toString();
+                int port = socketAddress.port();
+                
+                
+                std::cout << "----------------------------------------------------------------------"<< std::endl;
+                            std::cout << "ip: " << address << " " << port << std::endl;
+                            std::cout << "Packet Size: " << numBytesReceived << std::endl;
+                            std::cout << "UDP Packet: " << std::endl;
+                
+                
+                if(numBytesReceived>=64) {
+                    DacLaserDockNetStatus status;
+                    status.deserialize((unsigned char*)(&udpMessage));
+                    cout << status.toString() << endl;
+                    
+                    string id = status.serial_number;
+                    
+    //                // if we haven't already got this LaserDockNet, then add it
+                   if(dacStatusById.find(id) == dacStatusById.end()) {
+    
+                       if(lock()) {
+                            dacStatusById[id] = status;
+                            dacsChanged = true;
+                            unlock();
+                        }
+                    } else {
+    
+                        if(lock()) {
+                            dacStatusById[id] = status;
+                            dacStatusById[id].lastUpdateTime = ofGetElapsedTimef();
+                            unlock();
+                        }
+                    }
                     
                 }
-                //cout << endl;
-                //printf("Mac Address : %llx\n", macAddress);
-                uint16_t hardwareRevision, softwareRevision, bufferCapacity;
-                uint32_t maxPointRate;
-                unsigned char* byteaddress = (unsigned char*)&udpMessage[i];
-                hardwareRevision = ByteStreamUtils::bytesToUInt16(byteaddress);
-                byteaddress+=2;
-                softwareRevision = ByteStreamUtils::bytesToUInt16(byteaddress);
-                byteaddress+=2;
-                bufferCapacity = ByteStreamUtils::bytesToUInt16(byteaddress);
-                byteaddress+=2;
-                maxPointRate = ByteStreamUtils::bytesToUInt32(byteaddress);
-                byteaddress+=4;
-                
-                
-                //unsigned char* buffer = byteaddress-2;
-                DacLaserDockNetStatus status;
-                status.deserialize(byteaddress);
-                
-                //            cout << "Hardware version :" << hardwareRevision << endl;
-                //            cout << "Software version :" << softwareRevision << endl;
-                //            cout << "Buffer capacity  :" << bufferCapacity << endl;
-                //            cout << "Max point rate   :" << maxPointRate << endl;
-                //            cout << "Buffer           :" << status.buffer_fullness << endl;
-                //            cout << "Point count      :" << status.point_count << endl;
-                //
-                char idchar[100];
-                int part0 = macAddress & 0xffff;
-                int part1 = (macAddress>>16) & 0xffff;
-                int part2 = (macAddress>>32) & 0xffff;
-                
-                sprintf(idchar, "%04X%04X%04X", part2, part1, part0);
-                //sprintf(idchar, "%llX", macAddress);
-                string id(idchar);
-                
-                // if we haven't already got this LaserDockNet, then add it
-                if(LaserDockNetDataByMacAddress.find(id) == LaserDockNetDataByMacAddress.end()) {
-                    LaserDockNetData ed = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, ofGetElapsedTimef()};
-                    ofLogNotice("Adding LaserDockNet "+ id)<< " " << hardwareRevision << " " << softwareRevision << " " << id;
-                    //ofLogNotice(status.toString());
-                    if(lock()) {
-                        LaserDockNetDataByMacAddress[id] = ed;
-                        dacsChanged = true;
-                        unlock();
-                    }
-                } else {
-                    
-                    if(lock()) {
-                        LaserDockNetDataByMacAddress[id].lastUpdateTime = ofGetElapsedTimef();
-                        unlock();
-                    }
-                }
-                
             }
             sleep(10); 
-        } while (numBytesReceived>0);
+        } while ((ofGetElapsedTimef()-sendTime)<1);
         
 //        if(ofGetElapsedTimef()-lastCheckTime > 2) {
 //
 //        }
 //
+        
+        // delete devices we haven't seen for a while
         if(lock()) {
-            
-            for (auto it = LaserDockNetDataByMacAddress.cbegin(); it != LaserDockNetDataByMacAddress.cend() /* not hoisted */; /* no increment */)  {
-                const LaserDockNetData& ed = it->second;
-                if ((ofGetElapsedTimef() - ed.lastUpdateTime)>2){
-                    LaserDockNetDataByMacAddress.erase(it++);    // or "it = m.erase(it)" since C++11
+
+            for (auto it = dacStatusById.cbegin(); it != dacStatusById.cend() /* not hoisted */; /* no increment */)  {
+                const DacLaserDockNetStatus& status = it->second;
+                if ((ofGetElapsedTimef() - status.lastUpdateTime)>2){
+                    dacStatusById.erase(it++);    // or "it = m.erase(it)" since C++11
                     dacsChanged = true;
-                    
+
                 } else {
                     ++it;
                 }
@@ -162,13 +204,13 @@ void DacManagerLaserDockNet :: threadedFunction() {
 vector<DacData> DacManagerLaserDockNet :: updateDacList(){
     
     vector<DacData> daclist;
-    
-    for(auto LaserDockNetpair : LaserDockNetDataByMacAddress) {
-        LaserDockNetData& ed = LaserDockNetpair.second;
+
+    for(auto LaserDockNetpair : dacStatusById) {
+        DacLaserDockNetStatus& status = LaserDockNetpair.second;
        // ofLogNotice(ed.macAddress);
-        
-        string id = ed.macAddress;
-        daclist.emplace_back(getType(), id, ed.ipAddress);
+
+        string id = status.serial_number;
+        daclist.emplace_back(getType(), id, status.ip_address);
 
     }
     return daclist;
@@ -178,18 +220,18 @@ vector<DacData> DacManagerLaserDockNet :: updateDacList(){
 DacBase* DacManagerLaserDockNet :: getAndConnectToDac(const string& id){
     
     // returns a dac - if failed returns nullptr.
-    
+
     DacLaserDockNet* dac = (DacLaserDockNet*) getDacById(id);
     if(dac!=nullptr) {
         ofLogNotice("DacManagerLaserDockNet :: getAndConnectToDac(...) - Already a dac made with id "+ofToString(id));
         return dac;
     }
-    // todo check it exists!
-    if(LaserDockNetDataByMacAddress.find(id)!=LaserDockNetDataByMacAddress.end()) {
-        LaserDockNetData& ed = LaserDockNetDataByMacAddress.at(id);
+    // check it exists!
+    if(dacStatusById.find(id)!=dacStatusById.end()) {
+        DacLaserDockNetStatus& status = dacStatusById.at(id);
         // MAKE DAC
         dac = new DacLaserDockNet();
-        dac->setup(id, ed.ipAddress, ed);
+        dac->setup(id, status.ip_address, status);
         dacsById[id] = dac;
         return dac;
     } else {

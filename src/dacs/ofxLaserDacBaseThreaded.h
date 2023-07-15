@@ -39,8 +39,8 @@ class DacBaseThreaded : public DacBase, public ofThread {
     //ofThread
     void threadedFunction() override = 0;
     
-    virtual int calculateBufferSizeByTimeSent();
-    virtual int calculateBufferSizeByTimeAcked();
+    virtual int calculateBufferFullnessByTimeSent();
+    virtual int calculateBufferFullnessByTimeAcked();
     
     // These two objects are for diagnostics...
     // stateRecorder periodically records the current buffer,
@@ -88,7 +88,7 @@ class DacBaseThreaded : public DacBase, public ofThread {
     
     uint32_t pps, newPPS;
     
-    int lastReportedBufferSize =0 ;
+    int lastReportedBufferFullness =0 ;
     bool dacIsRunning = false;
     
     // last time any command was acknowleged

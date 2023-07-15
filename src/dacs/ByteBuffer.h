@@ -13,7 +13,7 @@ class ByteBuffer {
     ByteBuffer();
     
     void appendChar(char n);
-   
+    void appendUInt8(uint8_t n);
     void appendUInt16(uint16_t n);
     void appendInt16(int16_t& n);
     void appendUInt32(uint32_t& n);

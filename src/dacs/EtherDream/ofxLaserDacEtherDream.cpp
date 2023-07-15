@@ -270,8 +270,8 @@ void DacEtherDream :: threadedFunction(){
        
 
         // if state is prepared and we have sent enough points and we haven't already, send begin
-        if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PREPARED) && (lastReportedBufferSize >= maxPointsToFillBuffer)) {
-            logNotice( "Send begin, buffer_fullness : " +ofToString(lastReportedBufferSize) + " pointBufferMin : " + ofToString(maxPointsToFillBuffer));
+        if(connected && (response.status.playback_state==ETHERDREAM_PLAYBACK_PREPARED) && (lastReportedBufferFullness >= maxPointsToFillBuffer)) {
+            logNotice( "Send begin, buffer_fullness : " +ofToString(lastReportedBufferFullness) + " pointBufferMin : " + ofToString(maxPointsToFillBuffer));
             sendBegin();
             beginSent = waitForAck('b');
             if(beginSent)  {
@@ -293,19 +293,19 @@ void DacEtherDream :: threadedFunction(){
     }
 }
 
-int DacEtherDream :: calculateBufferSizeByTimeSent() {
+int DacEtherDream :: calculateBufferFullnessByTimeSent() {
     
-    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferSize;
+    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferFullness;
     
-    return DacBaseThreaded::calculateBufferSizeByTimeSent();
+    return DacBaseThreaded::calculateBufferFullnessByTimeSent();
    
     
 }
 
-int DacEtherDream :: calculateBufferSizeByTimeAcked() {
+int DacEtherDream :: calculateBufferFullnessByTimeAcked() {
    
-    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferSize;
-    return DacBaseThreaded::calculateBufferSizeByTimeAcked();
+    if(response.status.playback_state != ETHERDREAM_PLAYBACK_PLAYING) return lastReportedBufferFullness;
+    return DacBaseThreaded::calculateBufferFullnessByTimeAcked();
 
     
 }
@@ -338,7 +338,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
     
     
     // get current buffer
-    int minDacBufferSize = calculateBufferSizeByTimeAcked();// + calculateBufferSizeByTimeSent()) /2;
+    int minDacBufferSize = calculateBufferFullnessByTimeAcked();// + calculateBufferSizeByTimeSent()) /2;
     int bufferSize =  bufferedPoints.size();
     
     // get min buffer size
@@ -354,7 +354,7 @@ inline bool DacEtherDream :: sendPointsToDac(){
     }
         
     int minPointsToQueue = MAX(0, minBufferSize - minDacBufferSize - bufferSize);
-    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferSizeByTimeAcked());// - 256);
+    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferFullnessByTimeAcked());// - 256);
     
     int numpointstosend = 0;
     
@@ -544,7 +544,7 @@ inline bool DacEtherDream::waitForAck(char command) {
 	// TODO - handle incomplete data
 	
 	//cout << "received " << n << "bytes" <<endl;
-    int previousStateBufferFullness = lastReportedBufferSize;
+    int previousStateBufferFullness = lastReportedBufferFullness;
     
 	if(n==22) {
         
@@ -552,11 +552,11 @@ inline bool DacEtherDream::waitForAck(char command) {
         int roundTripTimeMicros  = lastAckTime - lastCommandSendTime;
 		connected = true;
         response.deserialize(inBuffer);
-        lastReportedBufferSize = response.status._buffer_fullness;
+        lastReportedBufferFullness = response.status._buffer_fullness;
         if(command == 'd') {
             int numbytes = dacCommand.size()+22;
            
-            stateRecorder.recordStateThreadSafe(lastDataSentTime, response.status.playback_state, lastReportedBufferSize, roundTripTimeMicros, dacCommand.numPoints, response.status.point_rate, numbytes);
+            stateRecorder.recordStateThreadSafe(lastDataSentTime, response.status.playback_state, lastReportedBufferFullness, roundTripTimeMicros, dacCommand.numPoints, response.status.point_rate, numbytes);
           
         }
 
@@ -575,14 +575,14 @@ inline bool DacEtherDream::waitForAck(char command) {
         
         
 		
-        if(verbose || (response.response!='a') || (response.status.playback_flags & 0b010) || (lastReportedBufferSize > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
+        if(verbose || (response.response!='a') || (response.status.playback_flags & 0b010) || (lastReportedBufferFullness > pointBufferCapacity)) {// || (command=='p')|| (command=='?')|| (command=='b')) {
             if(response.response!='a') {
                 logNotice("INVALID COMMAND -------------------");
             }
             if(response.status.playback_flags & 0b010) {
                 logNotice("BUFFER UNDERFLOW -------------------");
             }
-            if(lastReportedBufferSize > pointBufferCapacity) {
+            if(lastReportedBufferFullness > pointBufferCapacity) {
                 
                 logNotice("BUFFER OVERFLOW -------------------");
             }
@@ -592,9 +592,9 @@ inline bool DacEtherDream::waitForAck(char command) {
                 logNotice("num points sent : " + ofToString(dacCommand.numPoints));
                 logNotice("previousStateBufferFullness : " + ofToString(previousStateBufferFullness));
                 //logNotice("time between ack and send : " + ofToString(lastDataSentTime  - previousLastAckTime));
-                logNotice("lastReportedBufferSize : "+ofToString(lastReportedBufferSize));
-                logNotice("calculateBufferSizeByTimeSent() : "+ofToString(calculateBufferSizeByTimeSent()));
-                logNotice("calculateBufferSizeByTimeAcked() : "+ofToString(calculateBufferSizeByTimeAcked()));
+                logNotice("lastReportedBufferSize : "+ofToString(lastReportedBufferFullness));
+                logNotice("calculateBufferSizeByTimeSent() : "+ofToString(calculateBufferFullnessByTimeSent()));
+                logNotice("calculateBufferSizeByTimeAcked() : "+ofToString(calculateBufferFullnessByTimeAcked()));
 
                // dacCommand.logData();
             }

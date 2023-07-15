@@ -8,6 +8,7 @@
 #pragma once
 #include "ByteBuffer.h"
 #include "ofxLaserDacLaserDockNetDacPoint.h"
+#include "ofxLaserDacLaserDockNetConsts.h"
 
 namespace ofxLaser {
 class DacLaserDockNetCommand : public ByteBuffer {
@@ -16,14 +17,16 @@ class DacLaserDockNetCommand : public ByteBuffer {
     
     void clear() override ;
     void setCommand(char command);
-    void setDataCommand (uint16_t numpoints) ;
+    void setDataCommand (uint8_t messagenum) ;
+    void setPointRateCommand (uint32_t newrate); 
     void addPoint(LaserDockNetDacPoint& p);
-    void setBeginCommand(uint32_t pointRate);
-    void setPointRateCommand(uint32_t pointRate);
+ 
     void logData();
     
-    int numPointsExpected = 0;
     int numPoints = 0;
+    
+  //  const uint8_t CMD_SAMPLE_DATA = 0xa9;
+    
     
 } ;
 

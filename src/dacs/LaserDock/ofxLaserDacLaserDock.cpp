@@ -5,19 +5,19 @@
 //
 //
 
-#include "ofxLaserDacLaserdock.h"
+#include "ofxLaserDacLaserDock.h"
 
 typedef bool (LaserdockDevice::*ReadMethodPtr)(uint32_t *);
 
 
 using namespace ofxLaser;
 
-DacLaserdock:: ~DacLaserdock() {
+DacLaserDock:: ~DacLaserDock() {
     // close() stops the thread and deletes the dac device
     close();
     cleanUpFramesAndPoints();
 }
-void DacLaserdock :: close() {
+void DacLaserDock :: close() {
     if(isThreadRunning()) {
         
         if(connected) {
@@ -37,7 +37,7 @@ void DacLaserdock :: close() {
 }
 
 
-bool DacLaserdock::setup(libusb_device* usbdevice){
+bool DacLaserDock::setup(libusb_device* usbdevice){
     // should only ever be called once. If we need to connect to a different usb device
     // we should delete and start over
     
@@ -116,7 +116,7 @@ bool DacLaserdock::setup(libusb_device* usbdevice){
     return true;
 }
 
-bool DacLaserdock::setPointsPerSecond(uint32_t newpps) {
+bool DacLaserDock::setPointsPerSecond(uint32_t newpps) {
 	ofLog(OF_LOG_NOTICE, "setPointsPerSecond " + ofToString(newpps));
 	while(!lock());
 	newPPS = newpps;
@@ -125,7 +125,7 @@ bool DacLaserdock::setPointsPerSecond(uint32_t newpps) {
 };
 
 
-void DacLaserdock :: reset() {
+void DacLaserDock :: reset() {
     if(lock()) {
         resetFlag = true;
         unlock();
@@ -133,7 +133,7 @@ void DacLaserdock :: reset() {
 }
 
 
-void DacLaserdock :: threadedFunction(){
+void DacLaserDock :: threadedFunction(){
     
     int _index = 0;
     
@@ -177,9 +177,9 @@ void DacLaserdock :: threadedFunction(){
     
 }
 
-inline bool DacLaserdock::sendPointsToDac() {
+inline bool DacLaserDock::sendPointsToDac() {
     
-    int minDacBufferSize = calculateBufferSizeByTimeSent();
+    int minDacBufferSize = calculateBufferFullnessByTimeSent();
     int bufferSize =  bufferedPoints.size();
     
     // get min buffer size
@@ -188,7 +188,7 @@ inline bool DacLaserdock::sendPointsToDac() {
     int pointBufferCapacity = getMaxPointBufferSize();
     
     int minPointsToQueue = MAX(0, minBufferSize - minDacBufferSize - bufferSize);
-    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferSizeByTimeAcked());
+    int maxPointsToSend = MAX(0, pointBufferCapacity - calculateBufferFullnessByTimeAcked());
     
     int numpointstosend = 0;
     
@@ -256,8 +256,8 @@ inline bool DacLaserdock::sendPointsToDac() {
     if(success) {
         lastDataSentTime = sendTime;
         lastAckTime = ofGetElapsedTimeMicros();
-        lastReportedBufferSize = dacCommand.numPoints;
-        stateRecorder.recordStateThreadSafe(lastDataSentTime, 1, lastReportedBufferSize, lastAckTime-lastDataSentTime, dacCommand.numPoints, pps, dacCommand.size());
+        lastReportedBufferFullness = dacCommand.numPoints;
+        stateRecorder.recordStateThreadSafe(lastDataSentTime, 1, lastReportedBufferFullness, lastAckTime-lastDataSentTime, dacCommand.numPoints, pps, dacCommand.size());
     } else {
         connected = false; 
         ofLogError("Laserdock send failed"); 
@@ -269,7 +269,7 @@ inline bool DacLaserdock::sendPointsToDac() {
     
 }
 
-void DacLaserdock :: setConnected(bool state) {
+void DacLaserDock :: setConnected(bool state) {
 	if(connected!=state) {
 		
 		while(!lock()){};

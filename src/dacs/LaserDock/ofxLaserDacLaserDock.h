@@ -36,13 +36,13 @@ class DacLaserdockByteStream : public ByteBuffer {
 } ;
 
 
-class DacLaserdock : public DacBaseThreaded{
+class DacLaserDock : public DacBaseThreaded{
 	public:
 	
-    DacLaserdock(){
+    DacLaserDock(){
         colourShiftImplemented = true; // eventually we can get rid of this
     };
-    ~DacLaserdock();
+    ~DacLaserDock();
 
     bool setup(libusb_device* usbdevice);
     OF_DEPRECATED_MSG("DACs are no longer set up in code, do it within the app instead",  bool setup());

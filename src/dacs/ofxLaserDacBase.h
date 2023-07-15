@@ -70,6 +70,7 @@ namespace ofxLaser {
         int calculationTimeMS = 10;
         // minimum buffer to send at once
         int minPacketDataSize = 256;
+        int maxPointRate = 60000; 
         
         bool colourShiftImplemented = false;
 		

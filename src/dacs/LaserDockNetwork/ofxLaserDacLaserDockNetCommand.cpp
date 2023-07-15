@@ -18,41 +18,32 @@ void DacLaserDockNetCommand :: setCommand(char command) {
     clear();
     appendChar(command);
 }
-
-void DacLaserDockNetCommand :: setDataCommand (uint16_t numpoints) {
+void DacLaserDockNetCommand :: setPointRateCommand (uint32_t newrate){
     clear();
-    appendChar('d');
-    appendUInt16(numpoints);
-    numPointsExpected = numpoints;
+    appendUInt8(DacLaserDockNetConsts :: CMD_SET_ILDA_RATE);
+    appendUInt32(newrate);
     
 }
+
+
+
+void DacLaserDockNetCommand :: setDataCommand (uint8_t messagenum) {
+    clear();
+    appendUInt8(DacLaserDockNetConsts :: CMD_SAMPLE_DATA);
+    appendUInt8(0x00);
+    appendUInt8(messagenum);
+    appendUInt8(0x01);  // frame number, not currently used
+}
 void DacLaserDockNetCommand :: addPoint(LaserDockNetDacPoint& p) {
-    appendUInt16(p.control);
-    appendInt16(p.x);
-    appendInt16(p.y);
+   
+    appendUInt16(p.x);
+    appendUInt16(p.y);
     appendUInt16(p.r);
     appendUInt16(p.g);
     appendUInt16(p.b);
-    appendUInt16(p.i);
-    appendUInt16(p.u1);
-    appendUInt16(p.u2);
     numPoints++;
 }
 
-
-void DacLaserDockNetCommand :: setBeginCommand(uint32_t pointRate) {
-    clear();
-    appendChar('b');
-    appendUInt16(0);
-    appendUInt32(pointRate);
-    
-}
-void DacLaserDockNetCommand :: setPointRateCommand(uint32_t pointRate) {
-    clear();
-    appendChar('q');
-    appendUInt32(pointRate);
-    
-}
 
 void DacLaserDockNetCommand :: logData() {
     resetReadIndex();

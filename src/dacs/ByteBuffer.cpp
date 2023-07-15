@@ -15,7 +15,9 @@ void ByteBuffer :: appendChar(char n) {
     buffer[index++] = n;
     
 }
-
+void ByteBuffer :: appendUInt8(uint8_t n){
+    buffer[index++] = n;
+}
 void ByteBuffer :: appendUInt16(uint16_t n){
     buffer[index++] = n&0xff;
     buffer[index++] = n>>8;
