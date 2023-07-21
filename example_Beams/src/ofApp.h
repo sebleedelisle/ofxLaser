@@ -7,6 +7,11 @@
 class ofApp : public ofBaseApp{
 	
 public:
+    
+    // passing true into the constructor disables canvas functionality
+    
+    ofApp() : laser(true) {};
+    
 	void setup();
 	void update();
 	void draw();

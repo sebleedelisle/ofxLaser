@@ -82,8 +82,9 @@ void ofApp::draw() {
         ofSetLineWidth(2);
         mesh.setMode(OF_PRIMITIVE_LINE_STRIP);
         ofPushMatrix();
-        ofTranslate(laserManager.getPreviewOffset());
-        ofScale(laserManager.getPreviewScale());
+        //laserManager.getPreviewRect()
+        ofTranslate(laserManager.getPreviewRect().getTopLeft()); // getPreviewOffset());
+        //ofScale(laserManager.canvasViewController.offset.scale);
         
         mesh.draw();
         ofPopMatrix();
@@ -93,13 +94,15 @@ void ofApp::draw() {
 
 void ofApp :: showLaserEffect(int effectnum) {
     
+    float laserwidth =laserManager.getPreviewRect().getWidth();
+    float laserheight = laserManager.getPreviewRect().getHeight();
     
-	float left = laserManager.width*0.1;
-	float top = laserManager.height*0.1;
-	float right = laserManager.width*0.9;
-	float bottom = laserManager.height*0.9;
-	float width = laserManager.width*0.8;
-	float height = laserManager.height*0.8;
+	float left = laserwidth*0.1;
+	float top = laserheight*0.1;
+	float right = laserwidth*0.9;
+	float bottom = laserheight*0.9;
+	float width = laserwidth*0.8;
+	float height = laserheight*0.8;
 	
 	switch (currentLaserEffect) {
 			

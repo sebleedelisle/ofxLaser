@@ -160,3 +160,4 @@ example_HelloLaser/bin/data/*..json
 *.ofxlg
 *.obj
 bin
+/example_RollingShutter/of.entitlements
