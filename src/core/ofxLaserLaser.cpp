@@ -398,9 +398,10 @@ bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
         //for (auto const& [key, val] : symbolTable)
         const ZoneId oldid = outputZone->getZoneId();
         ZoneId newid;
-        for(auto const& [key, val] : changedZones) {
-            if(key == oldid) {
-                newid = val;
+        for (const auto& kv : changedZones) {
+        //for(auto const& [key, val] : changedZones) {
+            if(kv.first == oldid) {
+                newid = kv.second;
                 outputZone->setZoneId(newid);
                 changed = true;
                 break;
@@ -1454,7 +1455,9 @@ bool Laser::loadSettings(){
     for(auto jsonitem : zoneNumJson) {
         //cout << "Laser::loadSettings " << (int) jsonitem << endl;
         if(jsonitem.is_string() ) {
-            string zoneUid = (string)jsonitem;
+            string zoneUid; 
+            jsonitem.get_to(zoneUid); // = (std::string)jsonitem;
+            //string zoneUid = jsonitem.to_string();
 
             // if a zone exists with this index then add a LaserZone for it
 
@@ -1477,8 +1480,8 @@ bool Laser::loadSettings(){
     for(auto jsonitem : altZoneNumJson) {
         if(jsonitem.is_string() ) {
             //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-            string zoneUid = (string)jsonitem;
-            
+            string zoneUid; // = (std::string)jsonitem;
+            jsonitem.get_to(zoneUid);
             // if a zone exists with this index then add a LaserZone for it
             
             OutputZone* laserZone = new OutputZone(ZoneId());
