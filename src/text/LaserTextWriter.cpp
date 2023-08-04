@@ -13,10 +13,10 @@ vector<ofPolyline*> LaserTextWriter::getGlyphPolylines(Letter &letter, ofRectang
     
     
     vector<ofPolyline*> polylines;
-    ofPolyline* poly = ofxLaser::Factory::getPolyline();
-    polylines.push_back(poly);
+    ofPolyline* poly = nullptr; // ofxLaser::Factory::getPolyline();
+    //polylines.push_back(poly);
     
-    ofVec3f lastpoint(-10000,100000); // make sure it's no where near
+    ofVec3f lastpoint = letter.points.at(0);
     
     for( int i = 0; i < letter.points.size(); i+=2 ) {
         
@@ -24,7 +24,8 @@ vector<ofPolyline*> LaserTextWriter::getGlyphPolylines(Letter &letter, ofRectang
         v1 = letter.points[i];
         v2 = letter.points[i+1];
         
-        if(v1.squareDistance(lastpoint)>0.1) {
+        if((poly==nullptr) || (v1.squareDistance(lastpoint)>0.1)) {
+            
             // if were not connected, make a new polyline
             poly = ofxLaser::Factory::getPolyline();
             polylines.push_back(poly);
@@ -35,6 +36,7 @@ vector<ofPolyline*> LaserTextWriter::getGlyphPolylines(Letter &letter, ofRectang
         lastpoint = v2;
 
     }
+    
     return polylines;
     
 }

@@ -136,6 +136,48 @@ class UI {
     static void dangerColourEnd() ;
     static void customColourStart(ofColor colour);
     static void customColourEnd();
+    
+    template<typename... Args>
+    static void TextCentered(std::string text, Args... args) {
+
+        string format = text;
+        
+        // wow this bullshit just to format the string with the arguments
+        int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
+        if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+        auto size = static_cast<size_t>( size_s );
+        std::unique_ptr<char[]> buf( new char[ size ] );
+        std::snprintf( buf.get(), size, format.c_str(), args ... );
+        text =  std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+    
+
+        auto windowWidth = ImGui::GetWindowSize().x;
+        auto textWidth   = ImGui::CalcTextSize(text.c_str()).x;
+
+        ImGui::SetCursorPosX((windowWidth - textWidth) * 0.5f);
+        ImGui::Text(text.c_str());
+        
+       // va_end(args);
+//        float win_width = ImGui::GetWindowSize().x;
+//        float text_width = ImGui::CalcTextSize(text.c_str()).x;
+//
+//        // calculate the indentation that centers the text on one line, relative
+//        // to window left, regardless of the `ImGuiStyleVar_WindowPadding` value
+//        float text_indentation = (win_width - text_width) * 0.5f;
+//
+//        // if text is too long to be drawn on one line, `text_indentation` can
+//        // become too small or even negative, so we check a minimum indentation
+//        float min_indentation = 20.0f;
+//        if (text_indentation <= min_indentation) {
+//            text_indentation = min_indentation;
+//        }
+//
+//        ImGui::SameLine(text_indentation);
+//        ImGui::PushTextWrapPos(win_width - text_indentation);
+//        ImGui::TextWrapped(text.c_str());
+//        ImGui::PopTextWrapPos();
+    }
+    
 
     static void largeItemStart();
     static void largeItemEnd() ;
