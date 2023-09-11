@@ -140,6 +140,15 @@ class UI {
     template<typename... Args>
     static void TextCentered(std::string text, Args... args) {
 
+        vector<string> lines = ofSplitString(text, "\n");
+        if(lines.size()>1) {
+            for(string& line : lines) {
+                TextCentered(line, args...); 
+            }
+            return;
+        }
+            
+        
         string format = text;
         
         // wow this bullshit just to format the string with the arguments

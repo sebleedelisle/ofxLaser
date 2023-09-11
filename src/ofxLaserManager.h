@@ -144,7 +144,6 @@ class Manager : public ManagerBase {
 
     ofxLaserViewMode viewMode;
    
-    //ofEvent<int> armEvent;
     ofEvent<bool> armEvent;
 
     protected :

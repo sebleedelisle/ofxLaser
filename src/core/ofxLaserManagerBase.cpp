@@ -558,7 +558,7 @@ void ManagerBase::armAllLasers() {
     
     for(size_t i= 0; i<lasers.size(); i++) {
         lasers[i]->armed = true;
-    }
+    } 
    
 }
 void ManagerBase::disarmAllLasers(){

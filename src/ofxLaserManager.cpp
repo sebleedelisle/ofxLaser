@@ -1763,22 +1763,24 @@ void Manager :: guiTopBar(int ypos) {
     
     if(UI::startWindow("Icon bar", ImVec2(0,ypos), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, true, nullptr )) {
         
-        bool useRedButton = areAllLasersArmed();
-        if(useRedButton) UI::dangerColourStart();
+        bool allLasersArmed = areAllLasersArmed();
+        if(allLasersArmed) UI::dangerColourStart();
         // change the colour for the arm all button if we're armed
         int buttonwidth = 80;
-        if(ImGui::Button(useRedButton ? "ALL ARMED" : "ARM ALL", ImVec2(buttonwidth, 0.0f) )) {
-            armAllLasers();
-            bool state = true;
+        if(ImGui::Button(allLasersArmed ? "ALL ARMED" : "ARM ALL", ImVec2(buttonwidth, 0.0f) )) {
+            if(!allLasersArmed) armAllLasers();
+            else disarmAllLasers();
+            bool state = !allLasersArmed;
             ofNotifyEvent(armEvent, state);
         }
         
-        if(useRedButton) UI::dangerColourEnd();
+        if(allLasersArmed) UI::dangerColourEnd();
         
         ImGui::SameLine();
         if(ImGui::Button("DISARM ALL",  ImVec2(buttonwidth, 0.0f))) {
             disarmAllLasers();
             bool state = false;
+            // for broadcasting arm events for DMX to pick up
             ofNotifyEvent(armEvent, state);
         }
         if(hasAnyAltZones()) {
