@@ -99,19 +99,19 @@ void DacManagerLaserDockNet :: threadedFunction() {
         }
         catch (Poco::Exception& exc) {
             //Handle your network errors.
-            cerr << "sendBytes : Network error: " << exc.displayText() << endl;
+            std::cerr << "sendBytes : Network error: " << exc.displayText() << endl;
             //networkerror = true;
             //failed = true;
             ofLogNotice() << commandUdpSocket.address().toString();
         }
         catch (Poco::TimeoutException& exc) {
             //Handle your network errors.
-            cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
+            std::cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
             //    isOpen = false;
             //failed = true;
         } catch (...) {
             
-            cerr << "sendBytes : unspecified error " << endl;
+            std::cerr << "sendBytes : unspecified error " << endl;
         }
         
         

@@ -788,27 +788,27 @@ bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(
 	}
 	catch (Poco::Exception& exc) {
 		//Handle your network errors.
-		cerr << "sendBytes : Network error: " << exc.displayText() << endl;
+		std::cerr << "sendBytes : Network error: " << exc.displayText() << endl;
 		networkerror = true;
 		failed = true;
     
     }
 	catch (Poco::TimeoutException& exc) {
 		//Handle your network errors.
-		cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
+        std::cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
 		//	isOpen = false;
 		failed = true;
     } catch (...) {
         
-        cerr << "sendBytes : unspecified error " << endl;
+        std::cerr << "sendBytes : unspecified error " << endl;
     }
 	if(numBytesSent!=length) {
 		//do something!
-		cerr << "send fail, fewer bytes sent than expected : "<< numBytesSent << endl;
+        std::cerr << "send fail, fewer bytes sent than expected : "<< numBytesSent << endl;
 		failed = true;
 	} else if (numBytesSent<0) {
 		//do something!
-		cerr << "send fail, sendBytes returned : "<< numBytesSent << endl;
+        std::cerr << "send fail, sendBytes returned : "<< numBytesSent << endl;
 		failed = true;
 	}
 	
