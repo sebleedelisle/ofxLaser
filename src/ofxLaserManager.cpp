@@ -515,7 +515,9 @@ void Manager :: drawPreviews() {
     if(viewMode == OFXLASER_VIEW_3D) {
         
         float previewheight = (ofGetHeight()/2)-menuBarHeight-iconBarHeight;
-        visualiser3DRect.set(10,menuBarHeight+iconBarHeight,previewheight/9*16, previewheight); // 16/9 ratio
+        int scale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+       
+        visualiser3DRect.set(10*scale,(menuBarHeight+iconBarHeight)*scale,previewheight/9*16, previewheight); // 16/9 ratio
         // Draw 3D visualiser
         visualiser3D.draw(visualiser3DRect, lasers, true);
         
@@ -2441,8 +2443,9 @@ ofRectangle Manager :: getZonePreviewRect() {
     int w = ofGetWidth()*0.6;
     int h = ofGetHeight()*0.6;
     int size = (MIN(w, h));
-    
-    return ofRectangle(54,100, size, size);
+    int scale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+   
+    return ofRectangle(54*scale,100*scale, size, size);
     
 }
 
@@ -2462,6 +2465,8 @@ void Manager :: drawBigNumber(int number) {
     ofEnableBlendMode(OF_BLENDMODE_ADD);
     ofSetColor(30);
     ofTranslate(getZonePreviewRect().getTopLeft());
+    int scale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+    ofScale(scale, scale);
     ofTranslate(20,170);
     ofScale(0.1,-0.1);
     if((number+1)>9) {
