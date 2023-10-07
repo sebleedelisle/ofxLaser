@@ -27,6 +27,7 @@ class ViewWithMoveables : public ScrollableView  {
     virtual void deselectAll(); 
 
     virtual void setGrid(bool snaptogrid, int gridsize);
+    virtual void updateGrid();
     
     virtual void mouseMoved(ofMouseEventArgs &e) override;
     virtual bool mousePressed(ofMouseEventArgs &e) override;
@@ -35,7 +36,10 @@ class ViewWithMoveables : public ScrollableView  {
     
     virtual void setLockedAll(bool lockstate);
     
-    vector<MoveablePoly*> uiElements;
+    virtual MoveablePoly* getUiElementByUid(string _uid); 
+    
+   // vector<MoveablePoly*> uiElements;
+    // This is used for the visual order of the elements.
     vector<MoveablePoly*> uiElementsSorted;
     
     protected :

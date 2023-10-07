@@ -24,11 +24,12 @@ class ZoneIdContainer {
     map<ZoneId, ZoneId> removeZoneById(ZoneId& zoneId);
     map<ZoneId, ZoneId> renumberZones();
     ObjectWithZoneId* getObjectForZoneId(ZoneId& zoneid);
+    ObjectWithZoneId* getObjectForZoneIdUid(string& uid);
     ObjectWithZoneId* getObjectAtIndex(int index);
     int getNumZoneIds() const; 
 
     
-    virtual void serialize(ofJson& json) const;
+    virtual void serialize(ofJson& json);
     virtual bool deserialize(ofJson& json);
     
     protected :

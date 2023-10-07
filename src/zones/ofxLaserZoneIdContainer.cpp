@@ -98,6 +98,14 @@ ObjectWithZoneId* ZoneIdContainer :: getObjectForZoneId(ZoneId& zoneid) {
     
 }
 
+ObjectWithZoneId* ZoneIdContainer :: getObjectForZoneIdUid(string& uid) {
+    for(ObjectWithZoneId* zoneidobj : zoneIdObjects) {
+        if(zoneidobj->zoneId.getUid() == uid) return zoneidobj;
+    }
+    return nullptr;
+    
+}
+
 ObjectWithZoneId* ZoneIdContainer :: getObjectAtIndex(int index) {
     
     if((index>=0) && (index<zoneIdObjects.size())) return zoneIdObjects[index];
@@ -109,7 +117,7 @@ int ZoneIdContainer ::getNumZoneIds() const{
     return zoneIdObjects.size();
 }
 
-void ZoneIdContainer :: serialize(ofJson& json) const {
+void ZoneIdContainer :: serialize(ofJson& json) {
     
     ofJson& containerJson = json["zoneidcontainer"];
     containerJson["grouplabel"] = groupLabel;

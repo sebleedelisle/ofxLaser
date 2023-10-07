@@ -208,10 +208,7 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
     }
     
     OutputZone* outputzone = new OutputZone(zoneId);
-    
-    //outputzone->setGrid(snapToGrid, gridSize);
-    outputZones.push_back(outputzone);
-    
+        
     ofJson laserZoneJson;
     string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + (isAlternate?"alt.json" : ".json");
     
@@ -229,10 +226,14 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
         //outputzone->zoneMask = inputzone->rect;
     }
     outputzone->setIsAlternate(isAlternate);
+
+    outputZones.push_back(outputzone);
+    
     // sort the zones... oh a fancy lambda check me out
     std::sort(outputZones.begin(), outputZones.end(), [](const OutputZone* a, const OutputZone* b) -> bool {
         return (a->getZoneId().getUid()<b->getZoneId().getUid());
     });
+    
     saveSettings();
     
 }
@@ -1049,28 +1050,28 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
     vector<Point> shapePointBuffer;
     
     // go through each zone
-    for(OutputZone* laserZone : outputZones) {
+    for(OutputZone* outputZone : outputZones) {
         
-        if(!isLaserZoneActive(laserZone)) continue;
+        if(!isLaserZoneActive(outputZone)) continue;
         
         // if we're not using the alternate zones and this is an alternate zone then skip it
-        if((!useAlternate) && (laserZone->getIsAlternate())) continue;
+        if((!useAlternate) && (outputZone->getIsAlternate())) continue;
         
         // if we are using alternate zones, this is not an alternate zone, and we have an alternate zone, skip it!
         if((useAlternate) &&
            ((muteOnAlternate) ||
-            ((!laserZone->getIsAlternate()) && (hasAltZone(laserZone->getZoneId()))))) continue;
+            ((!outputZone->getIsAlternate()) && (hasAltZone(outputZone->getZoneId()))))) continue;
         
-        if(!hasZoneContentForId(laserZone->getZoneId(), zonesContent)) {
+        if(!hasZoneContentForId(outputZone->getZoneId(), zonesContent)) {
             //ofLogError("missing zone content for zone!");
             continue;
         }
-        int idindex = findZoneContentIndexForId(laserZone->getZoneId(), zonesContent);
+        int idindex = findZoneContentIndexForId(outputZone->getZoneId(), zonesContent);
         if(idindex<0) continue;
 
         const ZoneContent& zoneContent = zonesContent[idindex];
         
-        const vector<Shape*>* zoneshapes = (paused ? &pauseShapesByZoneUid[laserZone->getZoneId().getUid()] : &zoneContent.shapes);
+        const vector<Shape*>* zoneshapes = (paused ? &pauseShapesByZoneUid[outputZone->getZoneId().getUid()] : &zoneContent.shapes);
         
         ofRectangle maskRectangle = zoneContent.sourceRectangle;
         
@@ -1221,7 +1222,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
                     p.b*=brightness;
                 }
                 Point& p = segmentpoints[k];
-                p = laserZone->getWarpedPoint(p);
+                p = outputZone->getWarpedPoint(p);
                 
                 // check if it's in any of the masks!
                 for(QuadMask* mask : maskManager.quads){

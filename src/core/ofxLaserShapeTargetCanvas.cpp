@@ -101,14 +101,57 @@ InputZone* ShapeTargetCanvas :: getInputZoneForZoneId(ZoneId& zoneid) {
      
 }
 
+InputZone* ShapeTargetCanvas :: getInputZoneForZoneIdUid(string& uid) {
+    ObjectWithZoneId* zoneobject = getObjectForZoneIdUid(uid);
+    return dynamic_cast<InputZone*>(zoneobject);
+     
+}
+
 InputZone* ShapeTargetCanvas :: getInputZoneForZoneIndex(int index) {
     ObjectWithZoneId* zoneobject = getObjectAtIndex(index);
     return dynamic_cast<InputZone*>(zoneobject);
      
 }
 
-//vector<InputZone*>& ShapeTargetCanvas :: getInputZones() {
-//    return dynamic_cast<vector<InputZone*>>(zoneIdObjects);
-//}
+vector<InputZone*> ShapeTargetCanvas :: getInputZones() {
+    // these seems... substandard haha
+    vector<InputZone*> inputZones;
+    for(ObjectWithZoneId* zoneobject : zoneIdObjects) {
+        inputZones.push_back(dynamic_cast<InputZone*>(zoneobject));
+    }
+    return inputZones;
+}
     
     
+
+void ShapeTargetCanvas :: serialize(ofJson& json)  {
+    ZoneIdContainer ::serialize(json);
+    ofJson& containerJson = json["zoneidcontainer"];
+    containerJson["canvas_width"] = getBounds().getWidth();
+    containerJson["canvas_height"] = getBounds().getHeight();
+    
+    
+    
+    
+}
+bool ShapeTargetCanvas :: deserialize(ofJson& json) {
+    
+    if(ZoneIdContainer :: deserialize(json) ) {
+       // it has to contain this otherwise the parent deserialize would return false
+        ofJson& containerJson = json["zoneidcontainer"];
+        if(containerJson.contains("canvas_width") && containerJson.contains("canvas_height")) {
+         
+            setBounds(0,0,containerJson["canvas_width"].get<int>(), containerJson["canvas_height"].get<int>());
+            
+            return true;
+        } else {
+            return false;
+        }
+        
+    } else {
+        return false;
+    }
+    
+  
+    
+}

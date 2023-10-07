@@ -29,11 +29,11 @@ void ofApp::draw() {
         //textGraphic.alignment =  StringGraphic::ALIGN_CENTRE;
         textGraphic.setString(ofToString(i), ofColor::white);
         textGraphic.autoCentre();
-        ofPushMatrix();
-        ofTranslate(400,400);
-        ofScale(20,20);
+        laser.pushMatrix();
+        laser.translate(400,400);
+        laser.scale(20,20);
         laser.drawLaserGraphic(textGraphic);
-        ofPopMatrix();
+        laser.popMatrix();
         //laser.drawDot(400, 400, ofColor::red);
     }
         

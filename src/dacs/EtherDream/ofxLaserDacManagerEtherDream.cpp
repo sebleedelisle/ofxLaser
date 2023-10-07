@@ -155,8 +155,6 @@ void DacManagerEtherDream :: threadedFunction() {
         sleep(1000);
             
     }
-            
-     
 }
     
 vector<DacData> DacManagerEtherDream :: updateDacList(){

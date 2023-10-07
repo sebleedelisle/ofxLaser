@@ -83,16 +83,16 @@ bool LaserZoneViewController :: update() {
     return wasUpdated;
 }
 void LaserZoneViewController :: resetUiElements() {
-    uiElements.clear();
+    uiElementsSorted.clear();
     
     for(ZoneUiBase* zoneUi: zoneUisSorted) {
-        uiElements.push_back(zoneUi);
+        uiElementsSorted.push_back(zoneUi);
     }
     
     for(MaskUiQuad* maskUi: maskUisSorted) {
-        uiElements.push_back(maskUi);
+        uiElementsSorted.push_back(maskUi);
     }
-    uiElementsSorted = uiElements;
+    //uiElementsSorted = uiElements;
 }
 
 void LaserZoneViewController :: moveMasksToBack() {
@@ -377,6 +377,7 @@ void LaserZoneViewController :: drawImGui() {
         
         OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
         
+        // RIGHT CLIP MENU -----------------------------
         if(zoneUi->getRightClickPressed()) {
            
             ImGui::OpenPopup("ZONE SETTINGS");
@@ -387,7 +388,7 @@ void LaserZoneViewController :: drawImGui() {
             
             //OutputZone* laserZone : zoneUi->
             ImGui::Text("ZONE SETTINGS");
-            ImGui::Text(zoneUi->getLabel().c_str()); 
+            ImGui::Text("%s", zoneUi->getLabel().c_str());
 //            if(ImGui::Checkbox("mute", &zoneUi->muted)) {
 //                outputZone->muted = zoneUi->muted;
 //            }
@@ -549,6 +550,8 @@ void LaserZoneViewController :: drawImGui() {
 
     }
     
+    
+    // MASK GUI --------------------------------------------------------------------
     for(size_t i = 0; i< maskUis.size(); i++) {
         
         MaskUiQuad* maskUi = maskUis[i];

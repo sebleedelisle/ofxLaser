@@ -10,7 +10,7 @@
 
 using namespace ofxLaser;
 
-MoveablePoly :: MoveablePoly() {
+MoveablePoly :: MoveablePoly(string _uid) {
     selected = false;
     snapToGrid = false;
     gridSize = 10;
@@ -19,6 +19,7 @@ MoveablePoly :: MoveablePoly() {
     resetColours();
     
     label = "";
+    uid = _uid; 
     
 }
 
@@ -290,6 +291,7 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
         
     
     bool hit = hitTest(mousePos);
+    ofLogNotice("MoveablePoly hitTest : ") << hit;
     if(hit) {
         if((!getSelected()) &&(!getDisabled())) {
             setSelected(true);

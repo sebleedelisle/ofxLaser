@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxLaserTransformationManager.h"
 #include "ofxLaserConstants.h"
 #include "ofxLaserDacAssigner.h"
 #include "ofxLaserInputZone.h"
@@ -29,7 +30,7 @@
 namespace ofxLaser {
 class UI;
 
-class ManagerBase {
+class ManagerBase : public TransformationManager {
     
     public :
     
@@ -50,7 +51,7 @@ class ManagerBase {
     
     ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     ZoneId addCanvasZone(const ofRectangle& zoneRect);
-    bool deleteCanvasZone(InputZone* zone);
+    virtual bool deleteCanvasZone(InputZone* zone);
     
     bool hasAnyAltZones();
     void setAllAltZones();
@@ -113,9 +114,6 @@ class ManagerBase {
     bool setTargetBeamZone(int index);
     bool setTargetCanvas(int canvasIndex = 0);
     
-    //bool setTargetZone(unsigned int zone);
-    //int getTargetZone();
-    //bool setZoneMode(ofxLaserZoneMode newmode);
     
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();

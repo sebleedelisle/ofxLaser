@@ -154,12 +154,9 @@ ofRectangle ScrollableView::getOutputRect() {
     return outputRect;
 }
 void ScrollableView::autoFitToOutput(){
-    
     offset = {0, 0};
     scale =  MIN(outputRect.getWidth() / boundingRect.getWidth(), outputRect.getHeight() / boundingRect.getHeight());
-    
 }
-
 
 void ScrollableView::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     offset = newoffset;

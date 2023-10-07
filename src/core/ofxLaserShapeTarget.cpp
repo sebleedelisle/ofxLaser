@@ -48,6 +48,10 @@ bool ShapeTarget :: setBounds(ofRectangle& boundsrect){
     
 }
 
+ofRectangle ShapeTarget :: getBounds() {
+    return boundsRect;
+}
+
 float ShapeTarget :: getWidth() {
     return boundsRect.getWidth();
 }

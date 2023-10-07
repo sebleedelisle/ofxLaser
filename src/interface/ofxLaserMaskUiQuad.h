@@ -33,6 +33,7 @@ class MaskUiQuad : public MoveablePoly {
         
         
     }
+    
     bool updateFromData(QuadMask* mask){
         bool changed = false;
         

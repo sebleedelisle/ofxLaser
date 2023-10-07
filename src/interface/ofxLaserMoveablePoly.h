@@ -18,7 +18,7 @@ class MoveablePoly {
     
     public :
     
-    MoveablePoly();
+    MoveablePoly(string _label = "");
     
     virtual bool update();
     virtual void draw();
@@ -67,6 +67,9 @@ class MoveablePoly {
     string& getLabel() {
         return label;
     }
+    string& getUid() {
+        return uid;
+    }
     
     bool isQuad();
     
@@ -109,7 +112,10 @@ class MoveablePoly {
     
     bool selected;
 
-    string label; 
+    string label;
+    string uid; // unique identifier to associate it with data objects
+    
+    string type = "default"; // a way to differentiate between different types of elements
     
      
     // only used to change the size of handles, all

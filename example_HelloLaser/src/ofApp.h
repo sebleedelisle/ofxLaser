@@ -5,7 +5,6 @@
 #include "ofxLaserManager.h"
 
 
-
 class ofApp : public ofBaseApp{
 	
 public:

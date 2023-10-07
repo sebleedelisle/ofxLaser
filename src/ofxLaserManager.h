@@ -12,6 +12,8 @@
 #include "ofxLaserCanvasViewController.h"
 #include "ofxLaserIconSVGs.h"
 
+#define OFX_LASER_HIDE_CANVAS true
+
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
     OFXLASER_VIEW_CANVAS, // show default canvas view
@@ -49,17 +51,24 @@ class Manager : public ManagerBase {
 
     ofRectangle getPreviewRect();
     ofRectangle getZonePreviewRect();
-    ofRectangle getVisualiserPreviewRect(); 
+    ofRectangle getVisualiserPreviewRect();
     
-    virtual void setCanvasSize(int width, int height) override; 
-    bool setGuideImage(string filename);
+    bool updateDisplayRectangle(); 
+    bool setDisplayRectangle(int x, int y, int w, int h);
+
+    virtual void setCanvasSize(int width, int height) override;
+    virtual bool deleteCanvasZone(InputZone* inputZone) override;
+   
+   // bool setGuideImage(string filename);
 
     void selectNextLaser();
     void selectPreviousLaser();
     int getLaserIndex(Laser* laser); 
     int getSelectedLaserIndex();
     void setSelectedLaserIndex(int i);
-    Laser* getSelectedLaser(); 
+    Laser* getSelectedLaser();
+    
+
     
     LaserZoneViewController*  getCurrentLaserViewController();
     LaserZoneViewController*  getLaserViewControllerByIndex(int index);
@@ -94,7 +103,8 @@ class Manager : public ManagerBase {
     ofParameter<bool> showCustomParametersWindow;
     ofParameter<bool> showLaserOverviewWindow;
     ofParameter<bool> showLaserOutputSettingsWindow;
-    bool copySettingsWindowOpen;
+    bool showCanvasSettingsWindow;
+    bool showCopySettingsWindow;
     bool showDacAssignmentWindow;
     
     bool toggleGui();
@@ -126,12 +136,17 @@ class Manager : public ManagerBase {
     int guiLaserSettingsPanelWidth;
     int guiSpacing;
     int menuBarHeight = 20;
-    int iconBarHeight = 44;
+    int iconBarHeight = 32;
+    bool showCanvas = true;
+    
     
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize;
+    
+    ofParameter<bool> canvasGridSnap;
+    ofParameter<int> canvasGridSize;
         
     // TODO are these used?
     ofParameter<bool> zoneEditorShowLaserPath;
@@ -145,7 +160,9 @@ class Manager : public ManagerBase {
     ofxLaserViewMode viewMode;
    
     ofEvent<bool> armEvent;
-
+    
+    bool autoSizeToScreen = true;
+  
     protected :
     
     bool initialised = false;
@@ -162,10 +179,9 @@ class Manager : public ManagerBase {
     DacData dacToAssign;
     ofxLaser::Laser* laserToAssign = nullptr;
     
-    ofImage guideImage;
+    //ofImage guideImage;
   
     vector<LaserZoneViewController> laserZoneViews;
-    bool showCanvas = true;
     CanvasViewController canvasViewController;
      
     PresetManager<ScannerSettings> scannerPresetManager;
@@ -180,6 +196,8 @@ class Manager : public ManagerBase {
     ofParameter<bool> copyAdvancedSettings;
     ofParameter<bool> copyColourSettings;
     ofParameter<bool> copyZonePositions;
+    
+    ofRectangle displayRectangle;
     
     
     IconSVGs iconSVGs; 

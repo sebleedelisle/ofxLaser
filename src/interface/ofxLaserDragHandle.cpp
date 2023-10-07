@@ -211,7 +211,7 @@ bool DragHandle::hitTest(glm::vec2 hitpoint, float scale) {
             return (glm::distance( (glm::vec2) *this, hitpoint ) < size/2/scale );
         } else {
             ofRectangle rect;
-            rect.setFromCenter(*this, size/scale, size/scale );
+            rect.setFromCenter(*this, size/scale+1, size/scale+1 );
             return rect.inside(hitpoint);
         }
     } else {

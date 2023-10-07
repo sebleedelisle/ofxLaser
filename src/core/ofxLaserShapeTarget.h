@@ -18,6 +18,7 @@ class ShapeTarget {
     virtual bool addShape(Shape* shapetoadd);
     virtual bool setBounds(ofRectangle& boundsrect);
     virtual bool setBounds(float x, float y, float w, float h);
+    virtual ofRectangle getBounds();
     float getWidth();
     float getHeight();
     

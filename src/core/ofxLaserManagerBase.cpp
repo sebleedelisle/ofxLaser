@@ -158,13 +158,7 @@ ZoneId  ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
     if(h<=0) h = canvasTarget.getHeight();
     return canvasTarget.addInputZone(x, y, w, h);
 }
-//
-//bool ManagerBase :: deleteCanvasZone(InputZone* zone) {
-//    // TODO need to renumber references in lasers!
-//
-//    return canvasTarget.deleteInputZone(zone);
-//
-//}
+
 
 ZoneId ManagerBase :: createNewBeamZone() {
     // create new zone and add it to the array
@@ -181,6 +175,21 @@ ZoneId ManagerBase :: createNewBeamZone() {
     return beamZoneContainer.addBeamZone();
 }
     
+
+
+bool ManagerBase :: deleteCanvasZone(InputZone* inputZone) {
+    if(inputZone==nullptr) return false;
+    
+    map<ZoneId, ZoneId>  changedzones = canvasTarget.removeZoneById(inputZone->getZoneId());
+    for(Laser* laser : lasers) {
+        laser->updateZones(changedzones);
+        laser->removeZone(inputZone->getZoneId());
+    }
+    return true;
+    
+    
+}
+
 //
 //bool ManagerBase ::  addBeamZoneToLaser(int beamZoneIndex, int laserIndex){
 //    // i think all this needs to do
@@ -263,6 +272,9 @@ void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensit
 
 void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
     
+
+   
+    
     // quick error check to make sure our line has any data!
     // (useful for dynamically generated lines, or empty lines
     // that are often found in poorly compiled SVG files)
@@ -279,6 +291,8 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
     Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
    // p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
     currentShapeTarget->addShape(p);
+    
+    
     
 }
 
@@ -362,6 +376,8 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 }
 
 void ManagerBase:: update(){
+    // resets transformations
+    reset();
     
     dacAssigner.update();
     
@@ -510,9 +526,9 @@ void ManagerBase::send(){
     // terms of brightness distribution.
     for(size_t i= 0; i<lasers.size(); i++) {
         
-        Laser& p = *lasers[i];
+        Laser& laser = *lasers[i];
         
-        p.send(zonesContent, globalBrightness, NULL);// useBitmapMask?laserMask.getPixels():NULL);
+        laser.send(zonesContent, globalBrightness, NULL);// useBitmapMask?laserMask.getPixels():NULL);
         
         std::this_thread::yield();
         
@@ -791,8 +807,23 @@ bool ManagerBase::deserialize(ofJson& json) {
 
 // converts openGL coords to screen coords //
 ofPoint ManagerBase::convert3DTo2D(ofPoint p) {
-    return convert3DTo2D(p.x, p.y, p.z);
     
+    glm::vec3 p1 = getTransformed(p);// glm::vec3(p.x, p.y, p.z));
+
+    if(p1.z==0) return p1;
+
+    float fov = 550;
+    ofRectangle viewportrect = currentShapeTarget->getBounds();
+    //ofRectangle viewportrect = ofGetCurrentViewport();
+
+    float scale = fov/(p1.z+fov);
+    p1.z = 0;
+    p1-=viewportrect.getCenter();
+    p1*=scale;
+    p1+=viewportrect.getCenter();
+
+    return p1;
+ 
 }
 
 ofPoint ManagerBase::convert3DTo2D( float x, float y, float z ) {

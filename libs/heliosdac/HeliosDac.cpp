@@ -83,9 +83,7 @@ HeliosDacDevice::HeliosDacDevice(libusb_device_handle* handle)
 
 	closed = false;
 	
-	nameStr = GetName(); 
-
-
+	nameStr = GetName();
 }
 
 HeliosDacDevice::~HeliosDacDevice()
@@ -119,7 +117,7 @@ int HeliosDacDevice::SendFrame(unsigned int pps, std::uint8_t flags, HeliosPoint
 	unsigned int numOfPointsActual = numOfPoints;
 	if ((((int)numOfPoints-45) % 64) == 0)
 	{
-		cout << "HelioDacDevice horrific hack engaged! " << endl; 
+		//cout << "HelioDacDevice horrific hack engaged! " << endl; 
 		numOfPointsActual--;
 		//adjust pps to keep the same frame duration even with one less point
 		ppsActual = (unsigned int)((pps * (double)numOfPointsActual / (double)numOfPoints) + 0.5); 

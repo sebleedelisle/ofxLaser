@@ -14,7 +14,7 @@ using namespace ofxLaser;
 
 ZoneTransformQuadData::ZoneTransformQuadData() {
    
-    
+    //ofLogNotice("ZoneTransformQuadData::ZoneTransformQuadData()");
     dstPoints.resize(4);
     srcPoints.resize(4);
     
@@ -53,7 +53,7 @@ void ZoneTransformQuadData::init() {
 
 bool ZoneTransformQuadData::update(){
     if(isDirty) {
-        //ofLogNotice("ZoneTransform::update() - isDirty");
+        ofLogNotice("ZoneTransform::update() - isDirty");
         updateQuads();
         //updateHandleColours();
         updateConvex();
@@ -129,8 +129,10 @@ void ZoneTransformQuadData::updateSrc(const ofRectangle& rect) {
         srcPoints[1] = srcRect.getTopRight();
         srcPoints[2] = srcRect.getBottomLeft();
         srcPoints[3] = srcRect.getBottomRight();
+        updateQuads();
+        updateConvex();
 
-        isDirty = true;
+        //isDirty = true;
     }
 }
 void ZoneTransformQuadData::setDst(const ofRectangle& rect) {

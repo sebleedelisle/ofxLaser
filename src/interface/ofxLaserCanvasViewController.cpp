@@ -11,12 +11,13 @@ using namespace ofxLaser;
 
 bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
     //return false;
-    for(int i = 0; i<uiElements.size(); i++) {
+    for(int i = 0; i<uiElementsSorted.size(); i++) {
         
-        InputZone* zonepointer = canvasTarget.getInputZoneForZoneIndex(i);
+        MoveablePoly& poly = *uiElementsSorted[i];
+        
+        InputZone* zonepointer = canvasTarget.getInputZoneForZoneIdUid(poly.getUid());
         if(zonepointer!=nullptr) {
             
-            MoveablePoly& poly = *uiElements[i];
             vector<glm::vec2*> points = poly.getPoints();
             
             // TODO better way to get MoveablePoly as rect
@@ -29,45 +30,69 @@ bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
         }
         
     }
-    
+    if(sourceRect!=canvasTarget.getBounds()) {
+        canvasTarget.setBounds(sourceRect);
+    }
     return true;
 }
+
 void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget) {
     
-    for(int i = 0; i<canvasTarget.getNumZoneIds(); i++) {
-        MoveablePoly* poly;
-        if(uiElements.size()<=i) {
-            poly = new MoveablePoly();
-            uiElements.push_back(poly);
-            uiElementsSorted.push_back(poly);
-            poly->setHue(220); 
-            
-        } else {
-            poly = uiElements[i];
-        
-        }
-        vector<glm::vec2> points;
-//        for(int j = 0; j<4; j++) {
-//            int index = j;
-//            if(index>1) index = 3 - (index%2);
-//            points.push_back(zones[i]->handles[index]);
-//
-//        }
-        InputZone* inputzone =canvasTarget.getInputZoneForZoneIndex(i);
-        poly->setFromRect(inputzone->getRect());
-        poly->setLabel(ofToString(i+1));
-        poly->setGrid(true, 1); 
-        
-            
+    if(sourceRect!=canvasTarget.getBounds()) {
+        setSourceRect(canvasTarget.getBounds());
+        setOutputRect(canvasTarget.getBounds());
+        updateGrid();
     }
-    // delete extra elements from the end, and remove them from the sorted array
-    for(int i = canvasTarget.getNumZoneIds(); i<uiElements.size(); i++) {
-       
-        uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uiElements[i]), uiElementsSorted.end());
-        delete uiElements[i];
-    }
-    uiElements.resize(canvasTarget.getNumZoneIds());
+    // REALLY this whole system needs to be abstracted out so that it can better handle different
+    // types of interface elements but
     
+    // make interface elements for anything we're missing
+    vector<InputZone*> inputZones = canvasTarget.getInputZones();
+    for(InputZone* inputZone : inputZones) {
+        // if the input zone doesn't have a ui element, then make one
+        MoveablePoly* uiElement = getUiElementByUid(inputZone->getZoneId().getUid());
+        if(uiElement==nullptr) {
+            uiElement = new MoveablePoly(inputZone->getZoneId().getUid());
+            uiElementsSorted.push_back(uiElement);
+            uiElement->setHue(220);
+            uiElement->setLabel(inputZone->getZoneId().getUid()+ ":" + inputZone->getZoneId().getLabel());
+        }
+    }
+    
+    vector<MoveablePoly*> elementsToDelete;
+    
+    // remove interface elements for things we no longer need
+    // and update the other interface elemnts with their counterparts
+    
+    for(MoveablePoly* uiElement : uiElementsSorted) {
+       
+        InputZone* targetInputZone = nullptr;
+        
+        for(InputZone* inputZone : inputZones) {
+            if(inputZone->getZoneId().getUid() == uiElement->getUid()) {
+                targetInputZone =inputZone;
+                break;
+            }
+        }
+        // if the uiElement doesn't have an input zone then delete it
+        if(targetInputZone == nullptr) {
+            elementsToDelete.push_back(uiElement);
+        } else {
+            // otherwise update it
+            uiElement->setFromRect(targetInputZone->getRect());
+            uiElement->setGrid(snapToGrid, gridSize);
+        }
+    }
+    
+    while(elementsToDelete.size()>0) {
+        MoveablePoly* elementToDelete = elementsToDelete.back();
+        elementsToDelete.pop_back();
+
+        uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), elementToDelete), uiElementsSorted.end());
+        delete elementToDelete;
+
+    }
+
     
     
 }
@@ -76,12 +101,12 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
 void CanvasViewController :: drawImGui() {
     vector<MoveablePoly*> uiElementsToMoveBack;
     
-    for(int i = 0; i<uiElements.size(); i++) {
-        ImGui::PushID(uiElements[i]->getLabel().c_str());
+    for(int i = 0; i<uiElementsSorted.size(); i++) {
+        ImGui::PushID(uiElementsSorted[i]->getLabel().c_str());
         //ofLogNotice(uiElements[i]->getLabel()) << " " << i;
-        MoveablePoly& uiElement = *uiElements[i];
+        MoveablePoly& uiElement = *uiElementsSorted[i];
         // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-        string label ="CANVAS ZONE SETTINGS " + ofToString(i+1);
+        string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
         //if(ImGui::BeginPopup(label.c_str())) {
         if(uiElement.getRightClickPressed()) {
             ImGui::OpenPopup(label.c_str());

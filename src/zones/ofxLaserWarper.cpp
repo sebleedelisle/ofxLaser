@@ -15,6 +15,8 @@ using namespace ofxLaser;
 
 void Warper::updateHomography(glm::vec2 src1, glm::vec2 src2, glm::vec2 src3, glm::vec2 src4, glm::vec2 dst1, glm::vec2 dst2, glm::vec2 dst3, glm::vec2 dst4) {
 	
+    //ofLogNotice("Warper::updateHomography") << ofGetFrameNum() << " Src : (" << src1 << "), (" << src2 <<  "), ("  << src3 <<  "), ("  << src4 <<  ") Dst :  ("  << dst1 <<  "), ("  << dst2 <<  "), ("  << dst3 <<  "), ("  << dst4 <<")";
+    
 	// the source points are the zone points in screen space
 	// the dest points are points in the output space
 	

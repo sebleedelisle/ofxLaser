@@ -10,19 +10,13 @@
 using namespace ofxLaser;
 ViewWithMoveables :: ViewWithMoveables() {
     uiElementsEnabled = true;
-
-    
-    
 }
 bool ViewWithMoveables :: update() {
     
-    //ScrollableView :: update();
-   
     bool wasUpdated = false;
     
-
     boundingRect = sourceRect;
-    for(MoveablePoly* uiElement : uiElements) {
+    for(MoveablePoly* uiElement : uiElementsSorted) {
         
         uiElement->setScale(scale);
         bool elementupdated =uiElement->update();
@@ -88,35 +82,43 @@ void ViewWithMoveables :: setGrid(bool snaptogrid, int gridsize){
         snapToGrid = snaptogrid;
         gridSize = gridsize;
         
-        for(MoveablePoly* uiElement: uiElementsSorted) {
-            uiElement->setGrid(snaptogrid, gridsize);
-        }
-            
-        // update the grid mesh
-        gridMesh.clear();
-        int spacing = gridSize;
-        while(spacing<5) spacing *=2;
-        for(int x = 0; x<=800; x+=spacing) {
-            for(int y = 0; y<=800; y+=spacing) {
-                gridMesh.addVertex(ofPoint(MIN(800,x),MIN(800,y)));
-            }
-        }
-        gridMesh.setMode(OF_PRIMITIVE_POINTS);
+        updateGrid();
+     
     }
 }
 
+void ViewWithMoveables :: updateGrid() {
+    for(MoveablePoly* uiElement: uiElementsSorted) {
+        uiElement->setGrid(snapToGrid, gridSize);
+    }
+        
+    // update the grid mesh
+    gridMesh.clear();
+    int spacing = gridSize;
+    while(spacing<5) spacing *=2;
+    for(int x = 0; x<=sourceRect.getWidth(); x+=spacing) {
+        for(int y = 0; y<=sourceRect.getHeight(); y+=spacing) {
+            gridMesh.addVertex(ofPoint(MIN(sourceRect.getWidth(),x),MIN(sourceRect.getHeight(),y)));
+        }
+    }
+    gridMesh.setMode(OF_PRIMITIVE_POINTS);
+}
 
-void ViewWithMoveables :: deselectAllButThis(MoveablePoly* uielement) {
+
+void ViewWithMoveables :: deselectAllButThis(MoveablePoly* uiElementToKeepSelected) {
     
     // deselect all but the one we want
-    for(MoveablePoly* uiElement2: uiElements) {
-        if(uielement!=uiElement2) uiElement2->setSelected(false);
+    for(MoveablePoly* uielement: uiElementsSorted) {
+        if(uiElementToKeepSelected!=uielement) uielement->setSelected(false);
     }
     
     // move selected to back of array
-    if(uielement!=nullptr) {
-        uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uielement), uiElementsSorted.end());
-        uiElementsSorted.push_back(uielement);
+    if(uiElementToKeepSelected!=nullptr) {
+        //uiElementsSorted.erase(std::remove(uiElementsSorted.begin(), uiElementsSorted.end(), uiElementToKeepSelected), uiElementsSorted.end());
+        //uiElementsSorted.push_back(uiElementToKeepSelected);
+        
+        auto it = find(uiElementsSorted.begin(), uiElementsSorted.end(), uiElementToKeepSelected);
+        std::rotate(it, it + 1, uiElementsSorted.end());
     }
 
 }
@@ -124,7 +126,7 @@ void ViewWithMoveables :: deselectAllButThis(MoveablePoly* uielement) {
 void ViewWithMoveables :: deselectAll() {
     
     // deselect all but the one we want
-    for(MoveablePoly* uiElement: uiElements) {
+    for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->setSelected(false);
     }
     
@@ -134,7 +136,7 @@ void ViewWithMoveables :: mouseMoved(ofMouseEventArgs &e){
     ScrollableView :: mouseMoved(e);
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
-    for(MoveablePoly* uiElement: uiElements) {
+    for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->mouseMoved(mouseEvent);
     }
     
@@ -159,8 +161,9 @@ bool ViewWithMoveables :: mousePressed(ofMouseEventArgs &e){
                 MoveablePoly* uiElement = uiElementsSorted[i];
                 
                 propagate &= uiElement->mousePressed(mouseEvent);
-                
+                ofLogNotice(" ") << i  << " " << uiElement->getLabel() << " " << uiElement->getSelected();
                 if(uiElement->getSelected() ) {
+                    
                     // deselect all but the one we want
                     deselectAllButThis(uiElement);
                     break;
@@ -202,7 +205,7 @@ void ViewWithMoveables :: mouseDragged(ofMouseEventArgs &e){
     if(uiElementsEnabled) {
         ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
        
-        for(MoveablePoly* uiElement: uiElements) {
+        for(MoveablePoly* uiElement: uiElementsSorted) {
             uiElement->mouseDragged(mouseEvent);
         }
     }
@@ -213,7 +216,7 @@ void ViewWithMoveables :: mouseReleased(ofMouseEventArgs &e) {
     
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
     
-    for(MoveablePoly* uiElement: uiElements) {
+    for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->mouseReleased(mouseEvent);
     }
 }
@@ -231,8 +234,22 @@ bool ViewWithMoveables :: setUiElementsEnabled(bool enabled) {
 
 
 void ViewWithMoveables :: setLockedAll(bool lockstate) {
-    for(MoveablePoly* uiElement: uiElements) {
+    for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->setDisabled(lockstate);
     }
+    
+}
+
+
+
+MoveablePoly* ViewWithMoveables :: getUiElementByUid(string _uid) {
+    for(MoveablePoly* uiElement : uiElementsSorted) {
+        if(uiElement->getUid() == _uid) {
+            return uiElement;
+        }
+    }
+    return nullptr;
+    
+    
     
 }

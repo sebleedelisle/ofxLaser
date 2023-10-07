@@ -13,14 +13,24 @@
 
 namespace ofxLaser {
 
+class CanvasInputZoneQuad : public MoveablePoly  {
+    
+    public :
+    
+    CanvasInputZoneQuad() {
+        setHue(0);
+        setBrightness(180);
+        
+    }
+    
+};
+
 class CanvasViewController : public ViewWithMoveables {
     
     public :
     void drawImGui();
     bool updateZonesFromUI(ShapeTargetCanvas& canvasTarget);
     void updateUIFromZones(ShapeTargetCanvas& canvasTarget);
-    
-    
     
 };
 }

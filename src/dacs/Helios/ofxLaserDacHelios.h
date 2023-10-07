@@ -33,7 +33,7 @@ class DacHeliosFrame {
 	
 	bool addPoint(const ofxLaser::Point& p) {
 		// TODO check size
-        if(numSamples==maxSamples) return false;
+        if(numSamples>=maxSamples) return false;
 		HeliosPoint& s = samples[numSamples];
 		numSamples++;
 		s.x = ofMap(p.x,0,800, HELIOS_MIN, HELIOS_MAX);
@@ -48,7 +48,7 @@ class DacHeliosFrame {
 	
 	HeliosPoint * samples;
 	int numSamples = 0;
-	const int maxSamples = 100000;
+	const int maxSamples = HELIOS_MAX_POINTS;
 	
 };
 

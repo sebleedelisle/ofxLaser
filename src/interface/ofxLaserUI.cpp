@@ -54,8 +54,10 @@ void UI::setupGui() {
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
     font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
+    
     imGuiOfx.setDefaultFont(font);
-
+    //io.FontGlobalScale  = 0.5f;
+    
 
     //symbolFont->
     ImFontConfig config;
@@ -898,7 +900,9 @@ bool UI::startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flag
     //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
    
     // set the main window size and position
-    ImGui::SetNextWindowSize(size, ImGuiCond_Once);
+    //ImGui::SetNextWindowSize(size, ImGuiCond_Once);
+
+    if(resetPosition) ImGui::SetNextWindowSize(size, ImGuiCond_Always );
     ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
     
     // start the main window!
@@ -909,8 +913,9 @@ bool UI::startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flag
 void UI::drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled , bool fromCentre, float thickness ) {
     
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    ofRectangle rect(x, y, w, h);
-    if(fromCentre) rect.setFromCenter(x, y, w, h);
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ofRectangle rect(x+p.x, y+p.y, w, h);
+    if(fromCentre) rect.setFromCenter(x+p.x, y+p.y, w, h);
     
     ImU32 imCol = ofColorToImU32(colour);
     
@@ -1195,7 +1200,124 @@ void UI::addDelayedTooltip(const char* desc) {
     
 }
 
+const char ColorMarkerStart = '{';
+const char ColorMarkerEnd = '}';
 
+
+bool UI::ProcessInlineHexColor( const char* start, const char* end, ImVec4& color )
+{
+    const int hexCount = ( int )( end - start );
+    if( hexCount == 6 || hexCount == 8 )
+    {
+        char hex[9];
+        strncpy( hex, start, hexCount );
+        hex[hexCount] = 0;
+
+        unsigned int hexColor = 0;
+        if( sscanf( hex, "%x", &hexColor ) > 0 )
+        {
+            color.x = static_cast< float >( ( hexColor & 0x00FF0000 ) >> 16 ) / 255.0f;
+            color.y = static_cast< float >( ( hexColor & 0x0000FF00 ) >> 8  ) / 255.0f;
+            color.z = static_cast< float >( ( hexColor & 0x000000FF )       ) / 255.0f;
+            color.w = 1.0f;
+
+            if( hexCount == 8 )
+            {
+                color.w = static_cast< float >( ( hexColor & 0xFF000000 ) >> 24 ) / 255.0f;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+//const float colPos = 220.0f;
+//ImGui::TextWithColors( "{77ff77}(A)" ); ImGui::SameLine( colPos ); ImGui::Text( "Press buttons, toggle items" );
+//ImGui::TextWithColors( "{77ff77}(A){} + DPad Left/Right" ); ImGui::SameLine( colPos ); ImGui::Text( "Manipulate items" );
+//ImGui::TextWithColors( "{ff7777}(B)" ); ImGui::SameLine( colPos ); ImGui::Text( "Close popups, go to parent, clear focus" );
+//ImGui::TextWithColors( "{7777ff}(X)" ); ImGui::SameLine( colPos ); ImGui::Text( "Access menus" );
+
+void UI::TextWithColors( const char* fmt, ... )
+{
+    char tempStr[4096];
+
+    va_list argPtr;
+    va_start( argPtr, fmt );
+    
+    std::vsnprintf( tempStr, sizeof( tempStr ), fmt, argPtr );
+    
+    va_end( argPtr );
+    tempStr[sizeof( tempStr ) - 1] = '\0';
+
+    bool pushedColorStyle = false;
+    const char* textStart = tempStr;
+    const char* textCur = tempStr;
+    
+    float ypos = ImGui::GetCursorPosY();
+    while( textCur < ( tempStr + sizeof( tempStr ) ) && *textCur != '\0' )
+    {
+        if( *textCur == ColorMarkerStart )
+        {
+            // Print accumulated text
+            if( textCur != textStart )
+            {
+                ImGui::SetCursorPosY(ypos);
+                ImGui::TextUnformatted( textStart, textCur );
+                ImGui::SameLine( 0.0f, 0.0f );
+            }
+
+            // Process color code
+            const char* colorStart = textCur + 1;
+            do
+            {
+                ++textCur;
+            }
+            while( *textCur != '\0' && *textCur != ColorMarkerEnd );
+
+            // Change color
+            if( pushedColorStyle )
+            {
+                ImGui::PopStyleColor();
+                pushedColorStyle = false;
+            }
+
+            ImVec4 textColor;
+            if( ProcessInlineHexColor( colorStart, textCur, textColor ) )
+            {
+                ImGui::PushStyleColor( ImGuiCol_Text, textColor );
+                pushedColorStyle = true;
+            }
+
+            textStart = textCur + 1;
+        }
+        else if( *textCur == '\n' )
+        {
+            ImGui::SetCursorPosY(ypos);
+            // Print accumulated text an go to next line
+            ImGui::TextUnformatted( textStart, textCur );
+            textStart = textCur + 1;
+        }
+
+        ++textCur;
+    }
+
+    if( textCur != textStart )
+    {
+        ImGui::SetCursorPosY(ypos); 
+        ImGui::TextUnformatted( textStart, textCur );
+    }
+    else
+    {
+        ImGui::NewLine();
+    }
+
+    if( pushedColorStyle )
+    {
+        ImGui::PopStyleColor();
+    }
+}
 
 ImU32 UI::getColourForState(int state) {
     const ImVec4 stateCols[] = {{0,1,0,1}, {1,0.5,0,1}, {1,0,0,1}, {0.3,0.3,0.3,1}};
@@ -1217,3 +1339,5 @@ glm::vec3 UI::getScaleFromMatrix(const glm::mat4& m) {
     rot = glm::quat_cast(rotMtx);
     return scale;
 }
+
+

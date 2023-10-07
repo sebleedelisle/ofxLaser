@@ -28,46 +28,45 @@ void ofApp::draw() {
     // Drawing a laser line, provide the start point, end point and colour.
     // (you can also use glm::vec3). The final parameter is the render profile.
     // Three profiles are provided, default, fast and detail.
-    ofPushMatrix();
+
     //if(testscale) ofScale(0,0,0);
     laser.drawLine(200, 200, 600, 200, ofColor::white, OFXLASER_PROFILE_FAST);
-    
+
     // Draw dots. Note that if you leave out the render profile, it
     // will use the default profile. If there is haze in the room, this is
     // how you make laser beams
-    
+
     int numDots = 6;
     for(int x = 0; x<numDots; x++) {
         // intensity is a unit value (0 - 1) that determines how long the laser lingers
-        // to make the dot. It defaults to 1. 
+        // to make the dot. It defaults to 1.
         float intensity = (float)(x+1)/numDots;
         float xposition = ofMap(x, 0,numDots-1,200,600);
         laser.drawDot(xposition, 600, ofColor::red, intensity, OFXLASER_PROFILE_FAST);
     }
     
     // note that matrix transformations work as well, even in 3D!
-    ofPushMatrix();
-    ofTranslate(500,400);
+    laser.pushMatrix();
+    laser.translate(500,400);
     
     // 3D rotation around the y axis
-    ofRotateYRad(ofGetElapsedTimef());
+    laser.rotateYRad(ofGetElapsedTimef());
     laser.drawPoly(starPoly, ofColor::magenta, OFXLASER_PROFILE_DEFAULT);
-    ofPopMatrix();
+    laser.popMatrix();
     
     laser.drawCircle(275, 400, 80, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
-    
+
     glm::vec2 mousepos(ofGetMouseX(), ofGetMouseY());
     mousepos = laser.screenToLaserInput(mousepos);
     laser.drawCircle(mousepos, 5, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
-    
-    ofPopMatrix();
+
     
     // sends points to the DAC
     laser.send();
+    
     // draw the laser UI elements
     laser.drawUI();
-    //ofSetColor(255);
-    //ofDrawBitmapString(ofToString(ofGetFrameRate()), 10, 20);
+    
 }
 
 

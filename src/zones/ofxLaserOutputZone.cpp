@@ -10,9 +10,11 @@ using namespace ofxLaser;
 
 OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
     
+    //ofLogNotice("OutputZone :: OutputZone()");
+    
     // init params?
     soloed = false;
-    
+
 //    sourceRect =sourcerect;
     zoneTransformQuad.init();
     zoneTransformLine.init();

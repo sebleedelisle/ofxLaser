@@ -137,13 +137,14 @@ class UI {
     static void customColourStart(ofColor colour);
     static void customColourEnd();
     
+    // Variadic functions have to be defined in the header, apparently! 
     template<typename... Args>
     static void TextCentered(std::string text, Args... args) {
 
         vector<string> lines = ofSplitString(text, "\n");
         if(lines.size()>1) {
             for(string& line : lines) {
-                TextCentered(line, args...); 
+                TextCentered(line, args...);
             }
             return;
         }
@@ -186,7 +187,8 @@ class UI {
 //        ImGui::TextWrapped(text.c_str());
 //        ImGui::PopTextWrapPos();
     }
-    
+    static void TextWithColors( const char* fmt, ... );
+    static bool ProcessInlineHexColor( const char* start, const char* end, ImVec4& color );
 
     static void largeItemStart();
     static void largeItemEnd() ;
