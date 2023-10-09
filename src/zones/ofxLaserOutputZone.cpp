@@ -18,6 +18,7 @@ OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
 //    sourceRect =sourcerect;
     zoneTransformQuad.init();
     zoneTransformLine.init();
+    zoneTransformQuadComplex.init();
     zoneId = zoneid;
     
     zoneParams.setName("OutputZone");

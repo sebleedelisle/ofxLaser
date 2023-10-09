@@ -89,7 +89,7 @@ class Manager : public ManagerBase {
     void guiDacAssignment();
     void guiLaserOverview();
     void guiLaserSettings(ofxLaser::Laser* laser);
-    void guiLaserOutputSettings(); 
+    //void guiLaserOutputSettings();
 
     void guiCopyLaserSettings();
     void guiDacAnalytics();

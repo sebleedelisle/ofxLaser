@@ -872,6 +872,13 @@ bool ManagerBase::setTargetBeamZone(int index) {
     
 }
 
+bool ManagerBase::setTargetCanvas(int index) {
+    // NB index for future use
+    currentShapeTarget = &canvasTarget; 
+    return true; 
+}
+
+
 bool ManagerBase::isLaserArmed(unsigned int i){
     if((i<0) || (i>=lasers.size())){
         return false;

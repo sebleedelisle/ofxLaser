@@ -290,6 +290,8 @@ ZoneUiBase* LaserZoneViewController ::  getZoneInterfaceForOutputZone(OutputZone
                 return zoneUi;
             } else if((dynamic_cast<ZoneUiLine*>(zoneUi)!=nullptr) && (outputZone->transformType==1)) {
                 return zoneUi;
+            } else if((dynamic_cast<ZoneUiQuadComplex*>(zoneUi)!=nullptr) && (outputZone->transformType==2)) {
+                return zoneUi;
             } else {
                 //NB assumes no doubles
                 return nullptr;
@@ -371,11 +373,20 @@ int LaserZoneViewController :: getLaserIndex() {
 
 
 void LaserZoneViewController :: drawImGui() {
-    if(!isVisible) return; 
+    if(!isVisible) return;
+    
     for(ZoneUiBase* zoneUi : zoneUis) {
+        
         ImGui::PushID(zoneUi->getLabel().c_str());
         
         OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
+        
+        ZoneTransformBase* zoneTransform = &outputZone->getZoneTransform();
+        
+        ZoneTransformQuadData* zoneTransformQuad = dynamic_cast<ZoneTransformQuadData*>(zoneTransform);
+        ZoneTransformLineData* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(zoneTransform);
+        ZoneTransformQuadComplexData* zoneTransformQuadComplex = dynamic_cast<ZoneTransformQuadComplexData*>(zoneTransform);
+       
         
         // RIGHT CLIP MENU -----------------------------
         if(zoneUi->getRightClickPressed()) {
@@ -400,61 +411,91 @@ void LaserZoneViewController :: drawImGui() {
                 zoneUi->updateDataFromUi(outputZone);
             }
             
-            bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
+            //bool quadZone = dynamic_cast<ZoneUiQuad*>(zoneUi)!=nullptr;
             
-            if(quadZone) UI::secondaryColourStart();
+            if(zoneTransformQuad) UI::secondaryColourStart();
             if(ImGui::Button("QUAD")) {
                 outputZone->transformType = 0;
                 zoneUi->setSelected(true);
             }
             
             UI::secondaryColourEnd();
+           
+            
             ImGui::SameLine();
-            if(!quadZone)  UI::secondaryColourStart();
+            if(zoneTransformLine)  UI::secondaryColourStart();
             if(ImGui::Button("LINE")) {
                 outputZone->transformType = 1;
                 zoneUi->setSelected(true);
             }
             UI::secondaryColourEnd();
             
-            if(quadZone) {
-                ZoneTransformQuadData* ztq = dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
-                if(ztq!=nullptr) {
-                    if(ztq->isAxisAligned()) {
-                        UI::startDisabled();
-                    }
-                    if(UI::Button("Reset to square")) {
-                        ztq->resetToSquare();
-
-                    }
-                    UI::stopDisabled();
-                    UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                    ImGui::SameLine();
-                    if(UI::Button(ICON_FK_SQUARE_O))  {
-                        ztq->setDst(ofRectangle(200,240,400,200));
-                    }
-                    UI::toolTip("Reset zone to default");
-
-                    UI::addParameterGroup(ztq->transformParams, false);
-                    
-                }
-            } else {
+            
+            ImGui::SameLine();
+            if(zoneTransformQuadComplex)  UI::secondaryColourStart();
+            if(ImGui::Button("SEGMENTED")) {
+                outputZone->transformType = 2;
+                zoneUi->setSelected(true);
+            }
+            UI::secondaryColourEnd();
+            
+            
+            if(zoneTransformQuad) {
+                ZoneTransformQuadData* ztq = zoneTransformQuad;  //dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
                 
-                ZoneTransformLineData* ztl = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());
-                if(ztl!=nullptr) {
-                    //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                
+                if(ztq->isAxisAligned()) {
+                    UI::startDisabled();
+                }
+                
+                if(UI::Button("Reset to square")) {
+                    ztq->resetToSquare();
+                }
+                
+                UI::stopDisabled();
+                
+                UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+                ImGui::SameLine();
+                if(UI::Button(ICON_FK_SQUARE_O))  {
+                    ztq->setDst(ofRectangle(200,240,400,200));
+                }
+                UI::toolTip("Reset zone to default");
+
+                UI::addParameterGroup(ztq->transformParams, false);
+                
+                
+            } else if(zoneTransformLine){
+                
+                ZoneTransformLineData* ztl = zoneTransformLine;
+            
+           
+                //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
+                
+                UI::addFloatSlider(ztl->zoneWidth, "%.2f", ImGuiSliderFlags_Logarithmic);
+                
+                
+                if(ztl->autoSmooth)  UI::secondaryColourStart();
+                if(ImGui::Button("AUTO SMOOTH")) {
+                    ztl->autoSmooth = !ztl->autoSmooth;
+                    ztl->setDirty(true);
+                }
+                UI::secondaryColourEnd();
+                if(!ztl->autoSmooth) UI::startDisabled();
+                if(ImGui::SliderFloat("Smooth level", &ztl->smoothLevel, 0, 0.5, "%.2f")) {
+                    ztl->setDirty(true);
+                }
+                UI::stopDisabled();
+                
+                UI::addCheckbox(ztl->locked);
+
+                vector<BezierNode>& nodes = ztl->getNodes();
+                for(int i = 0; i<nodes.size(); i++) {
+                    ImGui::PushID(i);
+                    BezierNode& node = nodes[i];
+                    int mode = node.mode;
+                    ImGui::Text("%d", i+1);
+                    ImGui::SameLine();
                     
-                    UI::addFloatSlider(ztl->zoneWidth, "%.2f", ImGuiSliderFlags_Logarithmic);
-                    UI::addCheckbox(ztl->locked);
-//
-//                    vector<BezierNode>& nodes = ztl->getNodes();
-//                    for(int i = 0; i<nodes.size(); i++) {
-//                        ImGui::PushID(i);
-//                        BezierNode& node = nodes[i];
-//                        int mode = node.mode;
-//                        ImGui::Text("%d", i+1);
-//                        ImGui::SameLine();
-//                        //ofxLaser::UI::addCheckbox(synchroniser->useMidi);
 //                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
 //                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
 //                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
@@ -463,26 +504,49 @@ void LaserZoneViewController :: drawImGui() {
 //                            node.mode = mode;
 //                            ztl->setDirty(true);
 //                        }
-//                        if(nodes.size()>2) {
-//                            ImGui::SameLine();
-//
-//                            string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
-//                            if (UI::DangerButton(label, false)) {
-//                                ztl->deleteNode(i);
-//
-//                            }
-//                        }
-//
-//                        ImGui::PopID();
-//
-//                    }
-//
-//                    string label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
-//                    if (UI::Button(label, false)) {
-//                        ztl->addNode();
-//
-//                    }
+                    if(nodes.size()>2) {
+                        ImGui::SameLine();
+
+                        string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
+                        if (UI::DangerButton(label, false)) {
+                            ztl->deleteNode(i);
+
+                        }
+                    }
+
+                    ImGui::PopID();
+
                 }
+
+                string label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
+                if (UI::Button(label, false)) {
+                    ztl->addNode();
+
+                }
+            
+                
+            } if(zoneTransformQuadComplex) {
+                
+                ZoneTransformQuadComplexData* ztq = zoneTransformQuadComplex;
+                
+                if(ztq->isAxisAligned()) {
+                    UI::startDisabled();
+                }
+                if(UI::Button("Reset to square")) {
+                    ztq->resetToSquare();
+                }
+                UI::stopDisabled();
+
+                UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
+                ImGui::SameLine();
+                
+                if(UI::Button(ICON_FK_SQUARE_O))  {
+                    ztq->setDst(ofRectangle(200,240,400,200));
+                }
+                UI::toolTip("Reset zone to default");
+
+                UI::addParameterGroup(ztq->transformParams, false);
+                
                 
             }
             

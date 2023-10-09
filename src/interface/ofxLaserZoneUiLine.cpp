@@ -65,11 +65,22 @@ void ZoneUiLine :: draw() {
     if(selected) {
         ofBeginShape();
         ofVertex(handles[0]);
-        for(int i = 0; i<handles.size(); i++) {
-            //ofBezierVertex(handles[i-1], handles[i+1], handles[i]);
-            ofVertex(handles[i]);
+        for(int i = 3; i<handles.size(); i+=3) {
+            ofBezierVertex(handles[i-1], handles[i+1], handles[i]);
+            //ofVertex(handles[i]);
         }
         ofEndShape();
+        
+        if(!autoSmooth) {
+                
+            for(int i = 0; i<handles.size(); i+=3) {
+                if(i>0) ofDrawLine(handles[i+1], handles[i]);
+                if(i<handles.size()-3) ofDrawLine(handles[i+2], handles[i]);
+
+            }
+        }
+        
+        
     }
     // outline of shape
     ofSetLineWidth(1);
@@ -78,8 +89,6 @@ void ZoneUiLine :: draw() {
         ofVertex(p);
     }
     ofEndShape(true);
-    
-    
     
     drawHandlesIfSelectedAndNotDisabled();
     //drawLabel();
@@ -95,23 +104,46 @@ bool ZoneUiLine :: updateFromData(OutputZone* outputZone) {
     bool changed = ZoneUiBase::updateFromData(outputZone);
     
     ZoneTransformLineData* zonelinedata = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform());
+    autoSmooth = zonelinedata->autoSmooth;
     
     if(zonelinedata!=nullptr) {
         
         vector<BezierNode>& nodes = zonelinedata->getNodes();
         
-        if(handles.size()!=nodes.size()) handles.resize(nodes.size());
+        if(handles.size()!=nodes.size()*3) handles.resize(nodes.size()*3);
+        //if(controlPoints.size()!=nodes.size()*2) controlPoints.resize(nodes.size()*2);
         
         for(int i = 0; i<nodes.size(); i++) {
             BezierNode& node = nodes[i];
-            //int handleindex = i*3;
-            handles[i].set(node.getPosition());
-            handles[i].isCircular = false;
-//            handles[handleindex+1].set(node.getControlPoint1());
-//            handles[handleindex+1].isCircular = true;
-//            handles[handleindex+2].set(node.getControlPoint2());
-//            handles[handleindex+2].isCircular = true;
+            
+            int handleindex = i*3;
+            handles[handleindex].set(node.getPosition());
+            handles[handleindex].isCircular = false;
+            
+            
+            // control points
+            handles[handleindex+1].set(node.getControlPoint1());
+            handles[handleindex+1].isCircular = true;
+            handles[handleindex+2].set(node.getControlPoint2());
+            handles[handleindex+2].isCircular = true;
+            if(zonelinedata->autoSmooth) {
+                handles[handleindex+1].active = false;
+                handles[handleindex+2].active = false;
+            } else {
+                handles[handleindex+1].active = true;
+                handles[handleindex+2].active = true;
+            }
+            // hide unused control points at the ends
+            if(i==0) {
+                handles[handleindex+1].active = false;
+            } else if(i == nodes.size()-1) {
+                handles[handleindex+2].active = false;
+            }
+            
         }
+        
+        
+        
         vector<glm::vec2> points;
         zonelinedata->getPerimeterPoints(points);
         poly.setFromPoints(points);
@@ -139,4 +171,24 @@ void ZoneUiLine :: updatePoly() {
     }
     centre/=handles.size();
 
+}
+
+bool ZoneUiLine :: mousePressed(ofMouseEventArgs &e) {
+    
+    bool propagate = MoveablePoly::mousePressed(e);
+//    if(mainDragHandleIndex>=0) {
+//
+//        int pointtype = mainDragHandleIndex%3;
+//        if(pointtype==0) {
+//            // main anchor, so also drag control points
+//            handles[mainDragHandleIndex+1].startDrag(mousePos,handles[mainDragHandleIndex]);
+//            handles[mainDragHandleIndex+2].startDrag(mousePos,handles[mainDragHandleIndex]);
+//
+//        } else if(pointtype ==1) {
+//            if(mode==2) handles[2].startDragSymmetrical(mousePos, handles[0], handles[1], false);
+//        } else if(pointtype ==2) {
+//
+//        }
+//    }
+    return propagate;
 }

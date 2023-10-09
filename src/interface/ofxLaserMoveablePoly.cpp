@@ -25,12 +25,11 @@ MoveablePoly :: MoveablePoly(string _uid) {
 
 
 bool MoveablePoly :: update() {
+    
     if(isDirty) {
         updatePoly();
          
     }
-    
-    
     
     bool wasDirty = isDirty;
     isDirty = false;

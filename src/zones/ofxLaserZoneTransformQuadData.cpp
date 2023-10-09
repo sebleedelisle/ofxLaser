@@ -73,6 +73,7 @@ glm::vec2 ZoneTransformQuadData::getCentre() {
     return glm::vec2(centre.x, centre.y);
 }
 
+
 void ZoneTransformQuadData :: resetToSquare() {
     if(locked) return;
     vector<glm::vec2*> cornerhandles = getCornerPoints();

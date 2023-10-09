@@ -28,8 +28,6 @@ class ZoneUiBase : public MoveablePoly {
     virtual bool updateFromData(OutputZone* outputZone);
     void updateLabel(); 
 
-   
-
     ZoneId zoneId;
     bool inputZoneAlt = false;
     bool muted = false; 

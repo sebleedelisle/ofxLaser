@@ -20,10 +20,15 @@ class ZoneUiLine : public ZoneUiBase {
     bool updateDataFromUi(OutputZone* outputZone) override;
     bool updateFromData(OutputZone* outputZone) override;
     
+    bool mousePressed(ofMouseEventArgs &e) override;
+    
     void draw() override;
     
     void updatePoly() override;
+    bool autoSmooth = true; 
     
-    
+   //vector<DragHandle*> anchorPoints; // bezier anchor points
+   // vector<DragHandle*> controlPoints; // bezier control points
+   
 };
 }

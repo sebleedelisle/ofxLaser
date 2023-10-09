@@ -51,32 +51,87 @@ void ZoneTransformLineData::init() {
 bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {
 
     bool changed = false;
-    if(points.size()!=nodes.size()) {
-        nodes.resize(points.size());
+    
+    int numAnchors = points.size()/3;
+    
+    if(nodes.size()!=numAnchors) {
+        nodes.resize(numAnchors);
         changed = true;
     }
     
-    for(size_t i = 0; i<points.size(); i++) {
-        BezierNode& node = nodes[i];
+    for(size_t i = 0; i<points.size(); i+=3) {
+        BezierNode& node = nodes[i/3];
         const glm::vec2& point = *points[i];
-        node.reset(point.x, point.y);
-        changed = true;
+        changed = node.setFromAnchorAndControlPoints(*points[i], *points[i+1], *points[i+2]) || changed;
     }
     
+    if(autoSmooth && changed) {
+        updateCurves();
+    }
     isDirty|=changed;
     return changed;
     
 }
 bool ZoneTransformLineData :: moveHandle(int handleindex, glm::vec2 newpos) {
+    int nodenum = floor(handleindex/3);
+    int pointnum = handleindex%3;
+    BezierNode& node = nodes[nodenum];
+    glm::vec2& handleToMove = node.handles[pointnum];
+    glm::vec2 diff = newpos - handleToMove;
     
-    BezierNode& node = nodes[handleindex];
-    if(node.getPosition()!=newpos) {
-        node.handles[0] = newpos;
+    if(handleToMove!=newpos) {
+
+        handleToMove+=diff;
+
+        if(autoSmooth ) {
+            updateCurves();
+        } else {
+            if(pointnum==0) {
+                node.handles[1]+=diff;
+                node.handles[2]+=diff;
+            } else {
+                int oppositeNodeHandleIndex = (1- (pointnum-1)) +1; // switches 1 to 2 and 2 to 1
+                node.handles[oppositeNodeHandleIndex] = node.handles[0] - (node.handles[pointnum] - node.handles[0]);
+                
+            }
+        }
+        
         isDirty = true;
         return true;
     }
     
     return false;
+}
+
+void ZoneTransformLineData :: updateCurves () {
+    
+    // Cardinal spline algorithm.
+    float scale = smoothLevel /3;
+    
+    for(int i = 0; i<nodes.size(); i++)  {
+        
+        BezierNode& node = nodes[i];
+        glm::vec2 previous;
+        if(i > 0) {
+            previous = nodes[i-1].getPosition();
+        } else {
+            previous = node.getPosition() - (nodes[i+1].getPosition() - node.getPosition());
+        }
+        glm::vec2 next;
+        if(i<nodes.size()-1) {
+            next = nodes[i+1].getPosition();
+        } else {
+            next = node.getPosition() + ( node.getPosition() - nodes[i-1].getPosition());
+        }
+            
+        glm::vec2 velocity = (next-previous) * scale;
+        
+        node.setControlPoints(node.getPosition() - velocity, node.getPosition() + velocity );
+        
+    }
+    
+    
+    
 }
 
 
@@ -94,11 +149,12 @@ void ZoneTransformLineData::resetNodes() {
 bool ZoneTransformLineData::update(){
     if(isDirty) {
         
-       
+        if(autoSmooth) updateCurves();
+        
         updateNodes();
         updatePolyline();
         updatePerimeter();
-        
+       
         isDirty = false;
         
         return true;
@@ -240,6 +296,7 @@ void ZoneTransformLineData::updateNodes() {
         node.end = (i==nodes.size()-1);
     }
 }
+
 bool ZoneTransformLineData::deleteNode(int i){
     
     if(nodes.size()<=2) return false;
@@ -258,7 +315,7 @@ void ZoneTransformLineData :: addNode() {
     glm::vec3 endpos = glm::vec3(nodes.back().getPosition(),0);
     int mode = nodes.back().mode;
     glm::vec3 tangent = poly.getTangentAtIndexInterpolated(poly.getIndexAtPercent(0.99));
-    tangent*=10;
+    tangent*=100;
     endpos+=tangent;
     
     nodes.resize(nodes.size()+1);
@@ -269,7 +326,6 @@ void ZoneTransformLineData :: addNode() {
     isDirty = true;
     
 }
-
 
 void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
     
@@ -282,21 +338,8 @@ void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
     for(auto&  vertex : vertices) {
         points.push_back(vertex);
     }
-//    glm::vec3 tangent1 = handles[1]-handles[0];
-//    tangent1 = glm::normalize(tangent1);
-//    tangent1.x *=-1;
-//    tangent1.z = tangent1.x;
-//    tangent1.x = tangent1.y;
-//    tangent1.y = tangent1.z;
-//    tangent1.z = 0;
-//    points.push_back(handles[0]-(tangent1*zoneWidth.get()));
-//    points.push_back(handles[0]+(tangent1*zoneWidth.get()));
-//    points.push_back(handles[1]+(tangent1*zoneWidth.get()));
-//    points.push_back(handles[1]-(tangent1*zoneWidth.get()));
+
 }
-
-
-
 
 void ZoneTransformLineData::serialize(ofJson&json) const {
     ofSerialize(json, transformParams);
@@ -309,6 +352,8 @@ void ZoneTransformLineData::serialize(ofJson&json) const {
         nodesjson.push_back(nodejson);
 
     }
+    json["smoothlevel"] = smoothLevel;
+    json["autosmooth"] = autoSmooth;
     
     //cout << json.dump(3) << endl;
     
@@ -330,6 +375,12 @@ bool ZoneTransformLineData::deserialize(ofJson& jsonGroup) {
             nodes[i].deserialize(nodejson);
             
         }
+    }
+    if(jsonGroup.contains("smoothlevel") ) {
+        smoothLevel = jsonGroup["smoothlevel"].get<float>();
+    }
+    if(jsonGroup.contains("autosmooth") ) {
+        autoSmooth = jsonGroup["autosmooth"].get<bool>();
     }
 
 //    dstHandles.resize(numhandles);

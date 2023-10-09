@@ -8,6 +8,7 @@
 #include "ofMain.h"
 #include "ofxLaserZoneTransformQuadData.h"
 #include "ofxLaserZoneTransformLineData.h"
+#include "ofxLaserZoneTransformQuadComplexData.h"
 #include "ofxLaserZoneId.h"
 
 namespace ofxLaser {
@@ -51,6 +52,7 @@ class OutputZone {
     ZoneTransformBase& getZoneTransform();
     ZoneTransformQuadData zoneTransformQuad;
     ZoneTransformLineData zoneTransformLine;
+    ZoneTransformQuadComplexData zoneTransformQuadComplex;
 
     ofParameterGroup zoneParams;
     

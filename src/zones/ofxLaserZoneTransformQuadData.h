@@ -75,8 +75,6 @@ class ZoneTransformQuadData : public ZoneTransformBase {
   
     void updateQuads();
     
-    void divisionsChanged(int& e);
-    
     float getRight() ;
     float getLeft() ;
     float getTop() ;

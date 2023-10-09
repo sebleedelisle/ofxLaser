@@ -37,6 +37,7 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserZoneUiQuad.h"
+#include "ofxLaserZoneUiQuadComplex.h"
 #include "ofxLaserZoneUiLine.h"
 #include "ofxLaserMaskUiQuad.h"
 
