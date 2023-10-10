@@ -17,7 +17,7 @@ void BezierNode :: reset(float x, float y){
     handles[1] = glm::vec2(x-20,y);
     handles[2] = glm::vec2(x+20,y);
     
-    mode = 0;
+   // mode = 0;
     start = end = false;
     
 }
@@ -38,7 +38,7 @@ bool BezierNode :: setFromAnchorAndControlPoints(glm::vec2 anchor, glm::vec2 cp1
 
 bool BezierNode :: setControlPoints( glm::vec2 cp1, glm::vec2 cp2) {
 
-    bool changed = (handles[1]!=cp1) ||(handles[2]!=cp1);
+    bool changed = (handles[1]!=cp1) ||(handles[2]!=cp2);
     if(changed) {
         handles[1] = cp1;
         handles[2] = cp2;
@@ -93,18 +93,18 @@ glm::vec2 BezierNode :: getPosition() {
     return handles[0];
 }
 glm::vec2 BezierNode :: getControlPoint1() {
-    if(mode==0) {
-        return getPosition();
-    } else {
+    //if(mode==0) {
+   //     return getPosition();
+   // } else {
         return handles[1];
-    }
+    //}
 }
 glm::vec2 BezierNode :: getControlPoint2() {
-    if(mode==0) {
-        return getPosition();
-    } else {
+   // if(mode==0) {
+   //     return getPosition();
+   // } else {
         return handles[2];
-    }
+   // }
 }
 //
 //void BezierNode :: setGrid(bool snaptogrid, int gridsize) {
@@ -145,7 +145,7 @@ glm::vec2 BezierNode :: getControlPoint2() {
 void BezierNode :: serialize(ofJson& json) const{
     
     json["node"] = {
-        {"mode", mode},
+        //{"mode", mode},
         {"start", start},
         {"end", end},
         {"handles", {
@@ -162,7 +162,7 @@ void BezierNode :: serialize(ofJson& json) const{
 bool BezierNode :: deserialize(ofJson& jsonGroup) {
     //cout << jsonGroup.dump(3) << endl;
     ofJson& json = jsonGroup["node"];
-    mode = json["mode"];
+    //mode = json["mode"];
     start = json["start"];
     end = json["end"];
     handles.resize(3);

@@ -42,8 +42,6 @@ class ZoneTransformQuadData : public ZoneTransformBase {
 
     void updateSrc(const ofRectangle& rect) override;
     
-    bool isWindingClockwise(); 
- 
     // resets to perpendicular corners
     void resetToSquare() ;
     bool isAxisAligned() ;

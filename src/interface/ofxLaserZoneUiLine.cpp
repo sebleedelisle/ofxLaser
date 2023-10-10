@@ -110,7 +110,7 @@ bool ZoneUiLine :: updateFromData(OutputZone* outputZone) {
         
         vector<BezierNode>& nodes = zonelinedata->getNodes();
         
-        if(handles.size()!=nodes.size()*3) handles.resize(nodes.size()*3);
+        if(handles.size()!=nodes.size()*3) setNumHandles(nodes.size()*3);
         //if(controlPoints.size()!=nodes.size()*2) controlPoints.resize(nodes.size()*2);
         
         for(int i = 0; i<nodes.size(); i++) {

@@ -55,7 +55,6 @@ bool ZoneTransformQuadData::update(){
     if(isDirty) {
         ofLogNotice("ZoneTransform::update() - isDirty");
         updateQuads();
-        //updateHandleColours();
         updateConvex();
         isDirty = false;
         return true;

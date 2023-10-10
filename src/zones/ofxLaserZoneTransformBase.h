@@ -26,7 +26,8 @@ class ZoneTransformBase {
     virtual void updateSrc(const ofRectangle& rect) ;
 
     virtual void getPerimeterPoints(vector<glm::vec2>& points) = 0;
-	
+    virtual vector<glm::vec2> getPerimeterPoints();
+    
 	virtual void serialize(ofJson&json) const = 0;
 	virtual bool deserialize(ofJson&jsonGroup) = 0;
 	

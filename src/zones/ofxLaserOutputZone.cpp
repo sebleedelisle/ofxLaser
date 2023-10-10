@@ -111,6 +111,7 @@ bool OutputZone ::setSourceRect(const ofRectangle & rect) {
     if(zoneTransformQuad.srcRect!=rect) {
         //sourceRect = rect;
         zoneTransformQuad.updateSrc(rect);
+        zoneTransformQuadComplex.updateSrc(rect);
         zoneTransformLine.updateSrc(rect);
         return true;
     } else {
@@ -169,6 +170,11 @@ void OutputZone :: serialize(ofJson& json) const{
     zoneTransformLine.serialize(zoneTransformLineJson);
     json["zonetransformline"] = zoneTransformLineJson;
     zoneId.serialize(json);
+    
+    ofJson zoneTransformQuadComplexJson;
+    zoneTransformQuadComplex.serialize(zoneTransformQuadComplexJson);
+    json["zonetransformquadcomplex"] = zoneTransformQuadComplexJson;
+
 
 }
 
@@ -189,16 +195,20 @@ bool OutputZone :: deserialize(ofJson& json){
         ofJson zoneTransformQuadJson = json["zonetransformquad"];
         zoneTransformQuad.deserialize(zoneTransformQuadJson);
     }
+    if(json.contains("zonetransformquadcomplex")) {
+        ofJson zoneTransformQuadComplexJson = json["zonetransformquadcomplex"];
+        zoneTransformQuadComplex.deserialize(zoneTransformQuadComplexJson);
+    }
     if(json.contains("zonetransformline")) {
         ofJson zoneTransformLineJson = json["zonetransformline"];
         zoneTransformLine.deserialize(zoneTransformLineJson);
     }
     
     // deprecated, can delete eventually
-    if(json.contains("zonetransform")) {
-        ofJson zoneTransformJson = json["zonetransform"];
-        zoneTransformQuad.deserialize(zoneTransformJson);
-    }
+//    if(json.contains("zonetransform")) {
+//        ofJson zoneTransformJson = json["zonetransform"];
+//        zoneTransformQuad.deserialize(zoneTransformJson);
+//    }
     zoneId.deserialize(json); 
     return true; 
     
@@ -207,6 +217,8 @@ bool OutputZone :: deserialize(ofJson& json){
 ZoneTransformBase& OutputZone :: getZoneTransform(){
     if(transformType==1) {
         return zoneTransformLine;
+    } else if(transformType==2) {
+        return zoneTransformQuadComplex;
     } else {
         return zoneTransformQuad;
     }

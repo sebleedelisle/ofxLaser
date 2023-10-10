@@ -16,10 +16,23 @@ class ZoneUiQuadComplex : public ZoneUiBase {
     public :
     ZoneUiQuadComplex();
     
+    void draw() override;
+    
     bool updateDataFromUi(OutputZone* outputZone) override;
     bool updateFromData(OutputZone* outputZone) override;
     
     bool setCorners(const vector<glm::vec2*>& points);
+    
+    glm::vec2 getPointAtPosition(int x, int y) ;
+    
+   //ofPolyline perimeterPolyline;
+    
+    protected :
+    
+    
+    int subdivisionsX, subdivisionsY;
+   //virtual void drawShape() override;
+    
     
 };
 }

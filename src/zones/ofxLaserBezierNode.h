@@ -53,7 +53,7 @@ class BezierNode {
     bool deserialize(ofJson& jsonGroup);
     
     vector<glm::vec2> handles; // 0 is centre, 1 and 2 are controls
-    int mode = 0; // 0 corner, 1 curve corner, 2 mirrored
+   //int mode = 0; // 0 corner, 1 curve corner, 2 mirrored
     
     bool start, end; // denotes whether node is at the start or end of the spline
     

@@ -102,13 +102,17 @@ class MoveablePoly {
     
     protected :
     
-    void drawShape(); 
+    virtual void drawShape();
+    void setNumHandles(int numhandles); 
     
     glm::vec2 centre;
     
     PolygonBase poly;
 
     glm::vec2 mousePos;
+    glm::vec2 dragOffset;
+    
+    float handleSize = 10; 
     
     bool selected;
 

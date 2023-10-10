@@ -11,7 +11,7 @@ using namespace ofxLaser;
 
 
 ZoneUiQuad :: ZoneUiQuad() {
-    handles.resize(4);
+    setNumHandles(4);
 }
 
 

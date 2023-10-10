@@ -49,3 +49,9 @@ void ZoneTransformBase :: setDirty(bool state) {
     isDirty = state;
     
 };
+
+vector<glm::vec2> ZoneTransformBase::getPerimeterPoints() {
+    vector<glm::vec2> points;
+    getPerimeterPoints(points);
+    return points;
+}

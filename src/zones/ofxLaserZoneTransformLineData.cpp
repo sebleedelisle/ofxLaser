@@ -65,7 +65,7 @@ bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {
         changed = node.setFromAnchorAndControlPoints(*points[i], *points[i+1], *points[i+2]) || changed;
     }
     
-    if(autoSmooth && changed) {
+    if(autoSmooth) { //  && changed) {
         updateCurves();
     }
     isDirty|=changed;
@@ -125,7 +125,7 @@ void ZoneTransformLineData :: updateCurves () {
         }
             
         glm::vec2 velocity = (next-previous) * scale;
-        
+        ofLogNotice()<< velocity;
         node.setControlPoints(node.getPosition() - velocity, node.getPosition() + velocity );
         
     }
@@ -313,7 +313,7 @@ bool ZoneTransformLineData::deleteNode(int i){
 void ZoneTransformLineData :: addNode() {
 
     glm::vec3 endpos = glm::vec3(nodes.back().getPosition(),0);
-    int mode = nodes.back().mode;
+    //int mode = nodes.back().mode;
     glm::vec3 tangent = poly.getTangentAtIndexInterpolated(poly.getIndexAtPercent(0.99));
     tangent*=100;
     endpos+=tangent;
@@ -321,7 +321,7 @@ void ZoneTransformLineData :: addNode() {
     nodes.resize(nodes.size()+1);
     BezierNode& node = nodes.back();
     node.reset(endpos.x, endpos.y);
-    node.mode = mode;
+   // node.mode = mode;
     
     isDirty = true;
     

@@ -311,6 +311,8 @@ OutputZone* LaserZoneViewController ::  getOutputZoneForZoneUI(ZoneUiBase* zoneU
         zoneType = 0;
     } else if(dynamic_cast<ZoneUiLine*>(zoneUi)) {
         zoneType = 1;
+    } else if(dynamic_cast<ZoneUiQuadComplex*>(zoneUi)) {
+        zoneType = 2;
     }
     
     for(OutputZone* outputZone : laser->outputZones) {
@@ -349,6 +351,13 @@ bool LaserZoneViewController :: createZoneUiForOutputZone(OutputZone* outputZone
     } else if(outputZone->transformType == 1 )  {
         
         zoneUi = new ZoneUiLine();
+        
+        zoneUi->updateFromData(outputZone);
+        zoneUi->setGrid(snapToGrid, gridSize);
+        
+    }  else if(outputZone->transformType == 2 )  {
+        
+        zoneUi = new ZoneUiQuadComplex();
         
         zoneUi->updateFromData(outputZone);
         zoneUi->setGrid(snapToGrid, gridSize);
@@ -492,7 +501,7 @@ void LaserZoneViewController :: drawImGui() {
                 for(int i = 0; i<nodes.size(); i++) {
                     ImGui::PushID(i);
                     BezierNode& node = nodes[i];
-                    int mode = node.mode;
+                    //nt mode = node.mode;
                     ImGui::Text("%d", i+1);
                     ImGui::SameLine();
                     
@@ -525,23 +534,30 @@ void LaserZoneViewController :: drawImGui() {
                 }
             
                 
-            } if(zoneTransformQuadComplex) {
+            } else if(zoneTransformQuadComplex) {
                 
                 ZoneTransformQuadComplexData* ztq = zoneTransformQuadComplex;
                 
-                if(ztq->isAxisAligned()) {
-                    UI::startDisabled();
+                if(UI::Button("+")) {
+                    ztq->incSubdivisionLevel();
                 }
-                if(UI::Button("Reset to square")) {
-                    ztq->resetToSquare();
+                if(UI::Button("-")) {
+                    ztq->decSubdivisionLevel();
                 }
-                UI::stopDisabled();
+
+//                if(ztq->isAxisAligned()) {
+//                    UI::startDisabled();
+//                }
+//                if(UI::Button("Reset to square")) {
+//                    ztq->resetToSquare();
+//                }
+//                UI::stopDisabled();
 
                 UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
                 ImGui::SameLine();
                 
                 if(UI::Button(ICON_FK_SQUARE_O))  {
-                    ztq->setDst(ofRectangle(200,240,400,200));
+                    ztq->resetDst(ofRectangle(200,240,400,200));
                 }
                 UI::toolTip("Reset zone to default");
 

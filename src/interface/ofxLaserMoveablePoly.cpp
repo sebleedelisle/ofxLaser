@@ -67,7 +67,7 @@ void MoveablePoly :: setScale(float _scale) {
     if(scale!=_scale) {
         scale = _scale;
         for(DragHandle& handle : handles) {
-            handle.setSize(10/scale);
+            handle.setSize(handleSize/scale);
         }
     }
 }
@@ -93,7 +93,7 @@ void MoveablePoly :: drawLabel() {
         ofSetColor(strokeColour);
     }
     
-    ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofDrawBitmapString(getLabel()+ " " + ofToString(mainDragHandleIndex), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     
     ofPopStyle();
     
@@ -216,6 +216,7 @@ void MoveablePoly::setSaturationFloat(float saturationmultiplier) {
 void MoveablePoly ::updateHandleColours() {
     for(DragHandle& handle : handles) {
         handle.setColour(handleColour, handleColourOver);
+        //handle.setSize(handleSize);
     }
 }
 
@@ -324,6 +325,7 @@ void MoveablePoly ::startDraggingHandleByIndex(int index) {
 void MoveablePoly :: mouseDragged(ofMouseEventArgs &e){
     
     if(isDisabled) return;
+    dragOffset = e - mousePos;
     mousePos = e;
 
     int dragCount = 0;
@@ -369,7 +371,7 @@ void MoveablePoly :: updatePoly() {
     for(DragHandle& handle : handles) {
         centre+=glm::vec2(handle);
     }
-    centre/=4;
+    centre/=handles.size();
     poly.setFromPoints(getPoints());
     poly.update();
 }
@@ -430,17 +432,15 @@ ofRectangle MoveablePoly :: getBoundingBox() {
     
 }
 void MoveablePoly :: drawShape() {
-    
+   
     ofBeginShape();
-    for(DragHandle& handle : handles) {
-        ofVertex(handle);
+    for(glm::vec2& point : poly) {
+        ofVertex(point);
     }
     
     ofEndShape(true);
-    
-    
-    
 }
+
 bool MoveablePoly :: isQuad() {
     return handles.size()==4;
     
@@ -459,3 +459,11 @@ void MoveablePoly :: setRightClickPressed(bool value) {
 void MoveablePoly :: setLabel(string newlabel) {
     label = newlabel;
 } 
+
+void MoveablePoly :: setNumHandles(int newnum) {
+    int originalsize = handles.size();
+    handles.resize(newnum);
+    for(int i = originalsize; i<newnum; i++) {
+        handles[i].setSize(handleSize/scale);
+    }
+}
