@@ -93,7 +93,7 @@ void MoveablePoly :: drawLabel() {
         ofSetColor(strokeColour);
     }
     
-    ofDrawBitmapString(getLabel()+ " " + ofToString(mainDragHandleIndex), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     
     ofPopStyle();
     

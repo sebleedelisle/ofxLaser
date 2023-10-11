@@ -42,10 +42,8 @@ ZoneTransformLineData::~ZoneTransformLineData() {
 
 void ZoneTransformLineData::init() {
 
-    //updateSrc(srcRect);
     resetNodes();
 
-    
 }
 
 bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {

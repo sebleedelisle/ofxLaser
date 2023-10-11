@@ -147,7 +147,7 @@ void ZoneUiQuadComplex :: draw() {
     ofPopStyle();
     
     drawHandlesIfSelectedAndNotDisabled();
-    drawLabel();
+   // drawLabel();
     
     
    

@@ -23,7 +23,7 @@ string ZoneId :: getLabel() {
         string newlabel = "";
         
         if(type==BEAM) newlabel = "BEAM ";
-        else newlabel = "CANVAS";
+        else newlabel = "CANVAS ";
         newlabel = newlabel +ofToString(zoneIndex+1);
         return newlabel;
             

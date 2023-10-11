@@ -868,7 +868,11 @@ bool ManagerBase::setTargetBeamZone(int index) {
     } else {
         return false;
     }
-    
+}
+
+
+ShapeTargetBeamZone* ManagerBase::getBeamZoneByIndex(int index) {
+    return beamZoneContainer.getBeamZoneAtIndex(index);
     
 }
 

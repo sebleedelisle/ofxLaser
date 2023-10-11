@@ -46,8 +46,8 @@ class ManagerBase : public TransformationManager {
     virtual bool deleteLaser(Laser* laser);
     
     ZoneId createNewBeamZone();
-    //bool addBeamZoneToLaser(int beamZoneIndex, int laserIndex);
     bool deleteBeamZone(ZoneId& zoneid);
+    ShapeTargetBeamZone* getBeamZoneByIndex(int index); 
     
     ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     ZoneId addCanvasZone(const ofRectangle& zoneRect);

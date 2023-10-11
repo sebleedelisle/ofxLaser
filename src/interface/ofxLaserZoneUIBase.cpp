@@ -9,16 +9,6 @@
 #include "ofxLaserZoneUiBase.h"
 using namespace ofxLaser;
 
-//
-//string ZoneUiBase::getLabel(){
-//    string label = ofToString(inputZoneIndex+1);
-//    if(inputZoneAlt) {
-//        label = label + " ALT";
-//    }
-//    return label;
-//
-//}
-
 
 bool ZoneUiBase::updateDataFromUi(OutputZone* outputZone) {
     bool changed = false;
