@@ -22,11 +22,12 @@ class TransformationManager {
         currentMatrix = glm::mat4(1.0f); // identity matrix;
         matrixStack.clear();
     }
-     
-    glm::vec3 getTransformed(glm::vec3 point) {
+    // templated so it'll work on any type of point object
+    template<typename T>
+    T getTransformed(T point) {
         glm::vec4 p4(point.x, point.y, point.z, 1);
         glm::vec4 transformed = currentMatrix * p4;
-        return (glm::vec3(transformed.x, transformed.y, transformed.z));
+        return T(transformed.x, transformed.y, transformed.z);
     }
     
     void pushMatrix() {

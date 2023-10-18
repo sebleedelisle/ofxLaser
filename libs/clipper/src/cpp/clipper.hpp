@@ -41,7 +41,7 @@
 //#define use_int32
 
 //use_xyz: adds a Z member to IntPoint. Adds a minor cost to perfomance.
-//#define use_xyz
+#define use_xyz
 
 //use_lines: Enables line clipping. Adds a very minor cost to performance.
 #define use_lines
@@ -79,12 +79,18 @@ typedef unsigned long long cUInt;
 struct IntPoint {
   cInt X;
   cInt Y;
+//    int16_t R = -1;
+//    int16_t G = -1;
+//    int16_t B = -1;
+    
 #ifdef use_xyz
   cInt Z;
-  IntPoint(cInt x = 0, cInt y = 0, cInt z = 0): X(x), Y(y), Z(z) {};
+  IntPoint(cInt x = 0, cInt y = 0, cInt z = 0x666666): X(x), Y(y), Z(z) {};
 #else
   IntPoint(cInt x = 0, cInt y = 0): X(x), Y(y) {};
+  //IntPoint(cInt x, cInt y, uint16_t r, uint16_t g, uint16_t b ): X(x), Y(y) , R(r), G(g), B(b){};
 #endif
+    
 
   friend inline bool operator== (const IntPoint& a, const IntPoint& b)
   {

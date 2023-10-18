@@ -81,9 +81,9 @@ class ManagerBase : public TransformationManager {
     void useAltZonesChanged(bool& state); 
     bool areAllLasersUsingAlternateZones();
 
-    void drawPoly(const ofPolyline &poly, const ofColor& col,  string profileName = OFXLASER_PROFILE_DEFAULT, float brightness = 1);
-    void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
-    void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    void drawPoly(const ofPolyline &poly, const ofColor& col, bool filled = true, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness = 1);
+    void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, bool filled = true, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool filled = true, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
    
     void drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
@@ -93,9 +93,9 @@ class ManagerBase : public TransformationManager {
     void drawDot(const glm::vec2& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
     void drawDot(float x, float y, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
     
-    void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
-    void drawCircle(const glm::vec3& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
-    void drawCircle(const glm::vec2& centre, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, bool filled = true, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec3& centre, const float& radius, const ofColor& col, bool filled = true, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec2& centre, const float& radius, const ofColor& col, bool filled = true, string profileName= OFXLASER_PROFILE_DEFAULT);
    
     void drawLaserGraphic(Graphic& graphic, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
     
@@ -162,8 +162,15 @@ class ManagerBase : public TransformationManager {
     
     protected :
     
-    ofPoint convert3DTo2D(ofPoint p);
-    ofPoint convert3DTo2D( float ax, float ay, float az );
+    template<typename T>
+    T convert3DTo2D(T p);
+   
+    template<typename T>
+    T convert3DTo2D(T p, ofRectangle viewportrect, float fov = 550);
+    
+//    template<typename T>
+//    T convert3DTo2D(float x, float y, float z ); 
+//    //ofPoint convert3DTo2D( float ax, float ay, float az );
     
     virtual void createAndAddLaser();
     

@@ -83,43 +83,43 @@ std::vector<ofPolyline> Clipper::getClipped(ClipperLib::ClipType clipType,
     return results;
 }
 
-	
+
 std::vector<ofPolyline> Clipper::getClippedPolyTree(ClipperLib::ClipType clipType,
-												ofPolyWindingMode subFillType,
-												ofPolyWindingMode clipFillType,
-												ClipperLib::cInt scale)
-	{
-		std::vector<ofPolyline> results;
-		
-		bool success = false;
-		
-		try
-		{
-			ClipperLib::PolyTree out;
-			
-			bool success = Execute(clipType,
-								   out,
-								   toClipper(subFillType),
-								   toClipper(clipFillType));
-			
-			
-			
-			if (!success)
-			{
-				ofLogError("Clipper::getClipped") << "Failed to create clipped paths.";
-			} else {
-				ClipperLib:: Paths paths;
-				OpenPathsFromPolyTree(out, paths);
-				results = toOf(paths, false, scale);
-			}
-		}
-		catch (const std::exception& exc)
-		{
-			ofLogError("Clipper::getClipped") << exc.what();
-		}
-		
-		return results;
-	}
+                                                    ofPolyWindingMode subFillType,
+                                                    ofPolyWindingMode clipFillType,
+                                                    ClipperLib::cInt scale)
+{
+    std::vector<ofPolyline> results;
+    
+    bool success = false;
+    
+    try
+    {
+        ClipperLib::PolyTree out;
+        
+        bool success = Execute(clipType,
+                               out,
+                               toClipper(subFillType),
+                               toClipper(clipFillType));
+        
+        
+        
+        if (!success)
+        {
+            ofLogError("Clipper::getClipped") << "Failed to create clipped paths.";
+        } else {
+            ClipperLib:: Paths paths;
+            OpenPathsFromPolyTree(out, paths);
+            results = toOf(paths, false, scale);
+        }
+    }
+    catch (const std::exception& exc)
+    {
+        ofLogError("Clipper::getClipped") << exc.what();
+    }
+    
+    return results;
+}
 	
 
 bool Clipper::addRectangle(const ofRectangle& rectangle,

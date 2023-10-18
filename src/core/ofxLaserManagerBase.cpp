@@ -190,13 +190,6 @@ bool ManagerBase :: deleteCanvasZone(InputZone* inputZone) {
     
 }
 
-//
-//bool ManagerBase ::  addBeamZoneToLaser(int beamZoneIndex, int laserIndex){
-//    // i think all this needs to do
-//    // is pass the zoneId to the laser object.
-//    // Maybe wanna double check the zone exists first?
-//    return true;
-//}
 
 
 void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
@@ -205,10 +198,6 @@ void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
         return;
     }
     // Todo - check zone exists
-//    if(canvasTarget.zones.size()<=zonenum) {
-//        ofLog(OF_LOG_ERROR, "Invalid zone number passed to addZoneToLaser(...)");
-//        return;
-//    }
     lasers[lasernum]->addZone(zoneId);
 }
 
@@ -234,7 +223,6 @@ void ManagerBase::createDefaultCanvasZone() {
     // check there aren't any zones yet?
     // create a zone equal to the width and height of the total output space
     addCanvasZone(0,0,canvasTarget.getWidth(),canvasTarget.getHeight());
-    //return (int)canvasTarget.zones.size()-1;
     
 }
 void ManagerBase::drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName){
@@ -247,13 +235,10 @@ void ManagerBase::drawLine(const glm::vec2& start, const glm::vec2& end, const o
 }
 void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileLabel) {
     
-    
-    //Line l = new Line(gLProject(start), gLProject(end), ofFloatColor(col), 1, 1);
     Line* l = new Line(convert3DTo2D(start), convert3DTo2D(end), col, profileLabel);
-    //l->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    
     currentShapeTarget->addShape(l);
-    
-    
+
 }
 
 
@@ -271,9 +256,7 @@ void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensit
 }
 
 void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
-    
 
-   
     
     // quick error check to make sure our line has any data!
     // (useful for dynamically generated lines, or empty lines
@@ -806,17 +789,14 @@ bool ManagerBase::deserialize(ofJson& json) {
 
 
 // converts openGL coords to screen coords //
-ofPoint ManagerBase::convert3DTo2D(ofPoint p) {
+template<typename T>
+T ManagerBase::convert3DTo2D(T p, ofRectangle viewportrect, float fov ) {
     
-    glm::vec3 p1 = getTransformed(p);// glm::vec3(p.x, p.y, p.z));
+    T p1 = getTransformed(p);
 
     if(p1.z==0) return p1;
-
-    float fov = 550;
-    ofRectangle viewportrect = currentShapeTarget->getBounds();
-    //ofRectangle viewportrect = ofGetCurrentViewport();
-
-    float scale = fov/(p1.z+fov);
+  
+    float scale = fov/(-p1.z+fov);
     p1.z = 0;
     p1-=viewportrect.getCenter();
     p1*=scale;
@@ -825,29 +805,9 @@ ofPoint ManagerBase::convert3DTo2D(ofPoint p) {
     return p1;
  
 }
-
-ofPoint ManagerBase::convert3DTo2D( float x, float y, float z ) {
-
-    ofRectangle rViewport = ofGetCurrentViewport();
-    
-    glm::mat4 modelview, projection;
-    glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelview));
-    glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(projection));
-    glm::mat4 mat = ofGetCurrentOrientationMatrix();
-    mat = glm::inverse(mat);
-    mat *=projection * modelview;
-    glm::vec4 dScreen4 = mat * glm::vec4(x,y,z,1.0);
-    glm::vec3 dScreen = glm::vec3(dScreen4) / dScreen4.w;
-    dScreen += glm::vec3(1.0) ;
-    dScreen *= 0.5;
-    
-    dScreen.x *= rViewport.width;
-    dScreen.x += rViewport.x;
-    
-    dScreen.y *= rViewport.height;
-    dScreen.y += rViewport.y;
-
-    return ofPoint(dScreen.x, dScreen.y, 0.0f);// - offset;
+template<typename T>
+T ManagerBase::convert3DTo2D(T p) {
+    return convert3DTo2D(p, currentShapeTarget->getBounds());
     
 }
 

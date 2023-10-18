@@ -111,6 +111,9 @@ class Manager : public ManagerBase {
     void setGuiVisible(bool visible);
     bool isGuiVisible();
     
+    bool isGuiMouseDisabled();
+    void setGuiMouseDisabled(bool state);
+    
     void drawBigNumber(int number); 
     
     void mouseEntered(ofMouseEventArgs &e);
@@ -171,6 +174,7 @@ class Manager : public ManagerBase {
     int selectedLaserIndex;
 
     bool guiIsVisible;
+    bool guiIsMouseDisabled;
     bool showEditScannerPreset = false;
     
     Visualiser3D visualiser3D;

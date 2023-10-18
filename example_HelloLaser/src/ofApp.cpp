@@ -47,7 +47,7 @@ void ofApp::draw() {
     
     // note that matrix transformations work as well, even in 3D!
     laser.pushMatrix();
-    laser.translate(500,400);
+    laser.translate(400,400, ofGetMouseX() - 500);
     
     // 3D rotation around the y axis
     laser.rotateYRad(ofGetElapsedTimef());

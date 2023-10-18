@@ -38,10 +38,14 @@ void ofxSVGExtra::load(std::string path){
 		return;
 	}
 
-	ofBuffer buffer = ofBufferFromFile(path);
-	
-	loadFromString(buffer.getText(), path);
-	
+    ofFile svgFile(path);
+    if(!svgFile.exists()) {
+        ofLogError("Missing SVG file : ") << path;
+    } else {
+        ofBuffer buffer = ofBufferFromFile(path, false);
+        
+        loadFromString(buffer.getText(), path);
+    }
 }
 
 void ofxSVGExtra::loadFromString(std::string stringdata, std::string urlstring){

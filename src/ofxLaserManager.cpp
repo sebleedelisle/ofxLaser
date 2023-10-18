@@ -54,6 +54,7 @@ Manager :: Manager(bool hidecanvas) {
     viewMode  = showCanvas ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
 
     guiIsVisible = true;
+    guiIsMouseDisabled = false; 
     guiLaserSettingsPanelWidth = 320;
     guiSpacing = 8;
      
@@ -259,13 +260,15 @@ void Manager :: setDefaultPreviewOffsetAndScale(){
 }
 
 bool Manager :: mousePressed(ofMouseEventArgs &e){
+    
     if(!windowActive) {
         windowActive = true;
         return false;
     }
+    
     if(ImGui::GetIO().WantCaptureMouse) return false;
     if(!isGuiVisible()) return false;
-    
+    if(isGuiMouseDisabled()) return false;
     //ofLogNotice("Manager :: mousePressed") << e.x << " " << e.y;
     if (viewMode  == OFXLASER_VIEW_CANVAS) {
         canvasViewController.mousePressed(e);
@@ -468,6 +471,13 @@ void Manager ::setGuiVisible(bool visible){
 }
 bool Manager::isGuiVisible() {
     return guiIsVisible;
+}
+
+bool Manager::isGuiMouseDisabled() {
+    return guiIsMouseDisabled;
+}
+void Manager ::setGuiMouseDisabled(bool state){
+    guiIsMouseDisabled = state;
 }
 
 void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettings){
