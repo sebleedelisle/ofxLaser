@@ -26,6 +26,7 @@
 #include "ofxLaserShapeTargetCanvas.h"
 #include "ofxLaserShapeTargetBeamZone.h"
 #include "ofxLaserBeamZoneContainer.h"
+#include "ClipperUtils.h"
 
 namespace ofxLaser {
 class UI;

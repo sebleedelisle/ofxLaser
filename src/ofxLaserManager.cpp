@@ -1466,12 +1466,12 @@ void Manager :: guiLaserOverview() {
             }
             ImGui::SameLine();
              
-//            if(laserobject->paused && (((ofGetElapsedTimeMillis()-(i*15))%600)<300)) UI::startGhosted();
-//            label = ofToString(ICON_FK_PAUSE)+"##"+ofToString(i);
-//            if(UI::Button( label, false, laserobject->paused)) {
-//                laserobject->paused = !laserobject->paused;
-//            }
-//            UI::stopGhosted();
+            if(laserobject->paused && (((ofGetElapsedTimeMillis()-(i*15))%600)<300)) UI::startGhosted();
+            label = ofToString(ICON_FK_PAUSE)+"##"+ofToString(i);
+            if(UI::Button( label, false, laserobject->paused)) {
+                laserobject->paused = !laserobject->paused;
+            }
+            UI::stopGhosted();
             
             // FRAME RATES
             

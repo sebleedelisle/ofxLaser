@@ -60,6 +60,8 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     //beepSound.load("Beep1.wav");
     currentShapeTarget = &canvasTarget;
     
+    ClipperUtils::initialise();
+    
 }
 
 ManagerBase :: ~ManagerBase() {
@@ -255,6 +257,8 @@ void ManagerBase::drawCircle(const glm::vec2& pos, const float& radius, const of
 void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col, bool filled, string profileName){
     ofxLaser::Circle* c = new ofxLaser::Circle(centre, radius, col, profileName);
  
+    c->setFilled(filled);
+    
     vector<glm::vec3>& points = c->getPoints();
     for(glm::vec3& v : points) {
         v = getTransformed(v);
@@ -268,53 +272,15 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
 
 void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, bool filled, string profileName, float brightness){
     
-    // quick error check to make sure our line has any data!
-    // (useful for dynamically generated lines, or empty lines
-    // that are often found in poorly compiled SVG files)
-    
-    if((poly.size()==0)||(poly.getPerimeter()<0.1)) return;
-    
-    
-    ofPolyline& polyline = tmpPoly;
-    polyline = poly;
-    
-    for(glm::vec3& v : polyline.getVertices()) {
-        v = getTransformed(v);
-    }
-    if(brightness<1) {
-        for(ofColor & c : colours) {
-            c*=brightness;
-            
-        }
-    }
-    ofxLaser::Polyline* p =new ofxLaser::Polyline(polyline, colours, profileName);
-    //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    currentShapeTarget->addShape(p);
+    drawPolyFromPoints(poly.getVertices(), colours, filled, poly.isClosed(), profileName, brightness);
     
 }
 
 
 
 void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, bool filled, string profileName, float brightness){
-
-    
-    // quick error check to make sure our line has any data!
-    // (useful for dynamically generated lines, or empty lines
-    // that are often found in poorly compiled SVG files)
-    
-    if((poly.size()==0)||(poly.getPerimeter()<0.01)) return;
-    
-    ofPolyline& polyline = tmpPoly;
-    polyline = poly;
-    
-    for(glm::vec3& v : polyline.getVertices()) {
-        v = getTransformed(v);
-    }
-    
-    Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
-   // p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    currentShapeTarget->addShape(p);
-    
+    std::vector<ofColor> colours = {col};
+    drawPoly(poly, colours, filled, profileName, brightness);
     
     
 }
@@ -328,6 +294,8 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     }
 
     ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
+    p->setFilled(filled);
+    p->setClosed(closed);
     
     if(p->getLength()>0.1) {
         //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
@@ -431,6 +399,21 @@ void ManagerBase::send(){
 //    cliprect.height-=100;
     // TODO this should all be moved to the targets i think
     vector<ofxLaser::Shape*> emptyShapes;
+    
+    bool anyShapesFilled = false;
+    for(ofxLaser::Shape* shape : shapes) {
+        if(shape->isFilled()) {
+            anyShapesFilled = true;
+            break;
+        }
+    }
+    
+    if(anyShapesFilled) {
+        std::sort(shapes.begin(), shapes.end(), [](const ofxLaser::Shape* a, const ofxLaser::Shape* b) -> bool {
+            return (a->getMedianZDepth()<b->getMedianZDepth());
+        });
+    }
+    
     for(Shape* shape : shapes) {
         
         // clip to near plane
@@ -445,22 +428,52 @@ void ManagerBase::send(){
         
         shape->clipToRectangle(cliprect);
         
-//        if(shape->isEmpty()) {
-//            emptyShapes.push_back(shape);
-//        }
+        if(shape->isEmpty()) {
+            emptyShapes.push_back(shape);
+        }
         
     }
     
-//    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
-//        [](Shape* const& s) {
-//            return s->isEmpty(); // put your condition here
-//        }), shapes.end());
+    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
+        [](Shape* const& s) {
+            return s->isEmpty(); // put your condition here
+        }), shapes.end());
     
-    
+    for(Shape* shape : emptyShapes) {
+        delete shape;
+        
+    }
     
     // subtract shapes that are filled
     
-    
+    if(anyShapesFilled) {
+        
+//        vector<Shape*> deletedShapes;
+        vector<Shape*> newShapes;
+        ClipperLib::Paths clipperMaskPaths;
+        
+        // go from front to back
+        for(int i = shapes.size()-1; i>=0; i--) {
+            Shape* shape = shapes[i];
+        
+            
+            // clip the shape to the current mask, if we have one
+            vector<Shape*> clippedShapes = ClipperUtils::clipShapeToMask(shape, clipperMaskPaths);
+            // get the clipped shapes returned and add it to the newshapes
+            newShapes.insert(newShapes.begin(), clippedShapes.begin(), clippedShapes.end());
+            // if this shape is filled, add it to the mask
+            if(shape->isFilled()) {
+                ClipperUtils::addShapeToMasks(shape, clipperMaskPaths);
+            }
+        
+        
+        }
+        
+        canvasTarget.deleteShapes();
+        canvasTarget.addShapes(newShapes);
+        
+        
+    }
     
     
     

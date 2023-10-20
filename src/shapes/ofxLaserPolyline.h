@@ -30,8 +30,9 @@ namespace ofxLaser {
 		~Polyline();
 		
         virtual Shape* clone() const override {
-            // todo check for nullptr
-            return new Polyline(points, closed, colours, profileLabel);
+            Polyline* p = new Polyline(points, closed, colours, profileLabel);
+            p->setFilled(filled);
+            return p;
             
         }
         

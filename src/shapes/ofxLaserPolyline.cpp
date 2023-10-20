@@ -235,6 +235,7 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, c
 			endpoint++;
 		} while ((endpoint< (int)points.size()-1) && abs(getAngleAtIndexDegrees(endpoint)) < cornerThresholdAngle);
 
+        //ofLogNotice("angle : ") << getAngleAtIndexDegrees(endpoint);
         //endpoint = numVertices;
         
 		float startdistance = getLengthAtIndex(startpoint);

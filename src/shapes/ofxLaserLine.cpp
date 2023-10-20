@@ -14,6 +14,7 @@ Line::Line(glm::vec3 startpos, glm::vec3 endpos, ofColor col, string profilelabe
 
     reversable = true;
     colours = {col};
+    fillable = false;
     
     points = {startpos, endpos};
     

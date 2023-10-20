@@ -18,7 +18,15 @@ namespace ofxLaser {
 		Circle(const glm::vec3& _centre, const float _radius, const ofColor& col, string profilelabel);
 		
         virtual Shape* clone() const override {
-            return new Circle(centre, radius, getColour(), profileLabel);
+            Circle* circle =  new Circle();
+            circle->setPoints(points);
+            circle->setColours(colours);
+            //circle->centre = centre;
+            //circle->radius = radius;
+            circle->setFilled(isFilled());
+            circle->setClosed(true); 
+            circle->profileLabel = profileLabel ;
+            return (Shape*)circle;
         }
         
 //        void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
@@ -31,8 +39,8 @@ namespace ofxLaser {
   
 		protected:
 		
-	    float radius;
-        glm::vec3 centre;
+	    //float radius;       //
+        //glm::vec3 centre;   // do we still need these? I don't think so
 		
 		private:
 

@@ -16,6 +16,8 @@ class ShapeTarget {
     
     virtual void deleteShapes();
     virtual bool addShape(Shape* shapetoadd);
+    bool addShapes(vector<Shape*> shapestoadd);
+
     virtual bool setBounds(ofRectangle& boundsrect);
     virtual bool setBounds(float x, float y, float w, float h);
     virtual ofRectangle getBounds();

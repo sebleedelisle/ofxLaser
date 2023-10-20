@@ -1126,7 +1126,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
             
             bool offScreen = true;
             PointsForShape segmentPoints;
-            segmentPoints.reversable = shape.reversable;
+            segmentPoints.reversable = shape.getReversable();
             
             //iterate through the points
             for(int k = 0; k<shapePointBuffer.size(); k++) {

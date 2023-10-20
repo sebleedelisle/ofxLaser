@@ -16,6 +16,7 @@ Dot::Dot(const glm::vec3& dotPosition, const ofColor& dotColour, float dotIntens
     intensity = dotIntensity;
     tested = false;
     profileLabel = profilelabel;
+    fillable = false; 
     
 }
 

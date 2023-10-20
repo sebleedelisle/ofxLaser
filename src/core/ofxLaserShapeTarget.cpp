@@ -32,7 +32,16 @@ bool ShapeTarget :: addShape(Shape* shapetoadd){
     }
     
 }
-
+bool ShapeTarget :: addShapes(vector<Shape*> shapestoadd){
+    
+    bool changed = false;
+    for(Shape* shape : shapestoadd) {
+        if(addShape(shape)) changed = true;
+    }
+    return changed; 
+    
+    
+}
 bool ShapeTarget :: setBounds(float x, float y, float w, float h){
     ofRectangle rect(x, y, w,h);
     return setBounds(rect);

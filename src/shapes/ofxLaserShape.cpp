@@ -94,6 +94,7 @@ glm::vec3 Shape :: getEndPos() const{
         ofLogError("Shape::getEndPos - shape is empty");
         glm::vec3(0,0,0);
     }
+    if(closed) return getStartPos();
     if(reversed && reversable) return points.front();
     else return points.back();
 };
@@ -101,7 +102,7 @@ glm::vec3 Shape :: getEndPos() const{
 ofFloatColor Shape :: getColour() const{
     
     if(colours.size()>0) {
-        return colours[0];
+        return colours.at(0);
     } else {
         ofLogError("ofxLaser :: Shape :: getColour - no colours available! This shouldn't happen. ");
         return ofColor::white;
@@ -114,13 +115,13 @@ ofFloatColor Shape :: getColour() const{
          ofLogError("Shape :: getColourAtPoint - no colours in this shape!!!");
          return ofColor ::white;
      }
-     if(colours.size()==1) return colours[0];
-     if(i<0) return colours[0];
+     if(colours.size()==1) return colours.at(0);
+     if(i<0) return colours.at(0);
      
      int numPoints = closed ? points.size()+1 : points.size();
      i = ofClamp(i, 0, numPoints-1);
      
-     return colours[i%colours.size()];
+     return colours.at(i%colours.size());
      
 }
 
@@ -135,10 +136,10 @@ ofFloatColor Shape ::getColourAtFloatIndex(float i){
     int index1 = floor(i);
     int index2 = ceil(i);
     
-    if(index1 == index2) return colours[index1];
+    if(index1 == index2) return colours.at(index1%colours.size());
     
-    ofFloatColor c1 = colours[index1];
-    ofFloatColor c2 = colours[index2];
+    ofFloatColor c1 = colours.at(index1%colours.size());
+    ofFloatColor c2 = colours.at(index2%colours.size());
     c1.lerp(c2, fmod(i,1));
     return c1;
 }
@@ -148,6 +149,10 @@ ofFloatColor Shape ::getColourAtDistance(float distance) {
         return ofColor ::white;
     }
     float floatindex = getFloatIndexAtDistance(distance);
+    if(floatindex>points.size()) {
+        ofLogNotice("getColourAtDistance past end of points") << floatindex;
+    }
+    
     return getColourAtFloatIndex(floatindex);
     
 }
@@ -184,7 +189,10 @@ void Shape :: setColours(const vector<ofFloatColor>& newcolours, float brightnes
         c*=brightness;
     }
 }
+void Shape :: setColour(const ofFloatColor colour, float brightness){
+    colours = {colour * brightness};
 
+}
 void Shape :: appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) {
     
 };
@@ -245,7 +253,7 @@ glm::vec3 Shape :: getPointAtDistance(float distance) {
         ofLogError("Shape :: getPointAtDistance - no points in this shape!!!");
         return glm::vec3(0,0,0);
     }
-    updateLengths();
+    //updateLengths();
     
     return getPointAtFloatIndex(getFloatIndexAtDistance(distance));
     
@@ -257,15 +265,15 @@ glm::vec3 Shape ::getPointAtFloatIndex(float floatIndex) {
         ofLogError("Shape :: getPointAtFloatIndex - no points in this shape!!!");
         return glm::vec3(0,0,0);
     }
-    if(floatIndex <=0) return points[0];
+    if(floatIndex <=0) return points.at(0);
     
     int lastPointIndex = closed? points.size() : points.size()-1;
     
-    if(floatIndex>=lastPointIndex) return points[lastPointIndex%points.size()];
+    if(floatIndex>=lastPointIndex) return points.at(lastPointIndex%points.size());
 
     int roundedIndex = floor(floatIndex);
-    glm::vec3& p1 = points[roundedIndex];
-    glm::vec3& p2 = points[(roundedIndex+1)%points.size()];
+    glm::vec3& p1 = points.at(roundedIndex);
+    glm::vec3& p2 = points.at((roundedIndex+1)%points.size());
     return glm::mix(p1, p2, fmod(floatIndex, 1));
  
 }
@@ -283,20 +291,24 @@ float Shape :: getFloatIndexAtDistance(float distance) {
     
 //    int lastPointIndex = closed? points.size() : points.size()-1;
     
-    float segmentStartLength = 0;
-    float segmentEndLength = 0;
     
     int i = 0;
     // lengths should automatically contain enough lengths whether the line
     // is open or closed
     
-    while((segmentEndLength<distance) && (i<lengths.size())) {
-        segmentStartLength = segmentEndLength;
-        segmentEndLength=lengths[i];
-        i++;
-    }
+    while(lengths.at(i)<distance && i<lengths.size()) i++;
     
-    return (i-2) + ofMap(distance, segmentStartLength, segmentEndLength, 0, 1);
+//    while((segmentEndLength<distance) && (i<lengths.size())) {
+//        segmentStartLength = segmentEndLength;
+//        segmentEndLength=lengths[i];
+//        i++;
+//    }
+//
+    float segmentEndLength = lengths.at(i);
+    float segmentStartLength = lengths.at(i-1);
+
+    
+    return i-1 + ofMap(distance, segmentStartLength, segmentEndLength, 0, 1);
     
 }
 
@@ -355,14 +367,16 @@ float Shape :: getAngleAtIndexDegrees( int index) {
     if(index <=0) return 0;
     else if(index>=points.size()-1) return 0;
     
-    glm::vec3 p1 = points[index-1];
-    glm::vec3 p2 = points[index];
-    glm::vec3 p3 = points[index+1];
-    
-    if((p1==p2) || (p2==p3) ) return 0;
+    glm::vec3 p1 = points.at(index-1);
+    glm::vec3 p2 = points.at(index);
+    glm::vec3 p3 = points.at(index+1);
+   // glm::vec3 epsilon(0.001,0.001,0.001);
+    float epsilon = 0.001f;
+    if((glm::distance2(p1, p2)<epsilon) || glm::distance2(p2, p3)<epsilon)  return 0;
     
     glm::vec3 v1 = glm::normalize(p2-p1);
     glm::vec3 v2 = glm::normalize(p2-p3);
+//    if((glm::length2(v1)==0) || (glm::length2(v2)==0)) return 0;
         
     float angle = glm::pi<float>() - acosf( ofClamp( glm::dot( v1, v2 ), -1.f, 1.f ) );
     return ofRadToDeg(angle);
@@ -549,4 +563,43 @@ bool Shape :: pointInsideRect(glm::vec3& p, ofRectangle& rect) {
 
     return p.x >= rect.getMinX() && p.y >= rect.getMinY() &&
            p.x <= rect.getMaxX() && p.y <= rect.getMaxY();
+}
+
+
+
+bool Shape :: isFilled() const {
+    return filled;
+}
+
+void Shape :: setFilled(bool state) {
+    if(fillable && state) {
+        filled = true;
+    } else {
+        filled = false;
+    }
+}
+
+void Shape :: setClosed(bool closestate) {
+    if(closestate!=closed) {
+        closed = closestate;
+        lengthsDirty = true; // bounding box not dirty
+    }
+    
+}
+bool Shape :: isClosed() {
+    return closed;
+} 
+
+float Shape ::getMedianZDepth() const {
+    if(isEmpty()) return 0;
+    if(points.size()==1) return points[0].z;
+    float minZ = std::numeric_limits<float>::max();
+    float maxZ = std::numeric_limits<float>::min();
+    for(const glm::vec3&p : points) {
+        if(p.z<minZ) minZ = p.z;
+        if(p.z>maxZ) maxZ = p.z;
+    }
+    
+    return ofMap(0.5,0,1,minZ, maxZ);
+    
 }
