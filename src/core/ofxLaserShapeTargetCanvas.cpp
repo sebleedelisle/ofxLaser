@@ -84,7 +84,7 @@ vector<Shape*> ShapeTargetCanvas :: getShapesForZoneId(ZoneId& zoneid){
         for(Shape* shape : shapes) { //size_t i= 0; i<shapes.size(); i++) {
             
             // if (zone should have shape) then
-            if(shape->intersectsRect(inputZone->getRect())) {
+            if((!shape->isEmpty()) && shape->intersectsRect(inputZone->getRect())) {
                 newshapes.push_back(shape);
             }
         }

@@ -15,17 +15,21 @@ class Line : public Shape{
 	
 	public :
 	
-    Line(const ofPoint& startpos, const ofPoint& endpos, const ofColor& col, string profilelabel);
+    Line(glm::vec3 startpos, glm::vec3 endpos, ofColor col, string profilelabel);
 	
     virtual Shape* clone() const override {
-        return new Line(startPos, endPos, colour, profileLabel);
+        glm::vec3 start = points.front();
+        glm::vec3 end = points.front();
+        ofColor c = colours.front();
+        return new Line(start, end, c, profileLabel);
     }
     
-	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
+	void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;
 	
     void addPreviewToMesh(ofMesh& mesh) override;
 	
-    virtual bool intersectsRect(ofRectangle & rect) override;
+    virtual bool clipNearPlane(float nearPlaneZ) override;
+    //virtual bool intersectsRect(ofRectangle & rect) override;
 
 		
 };

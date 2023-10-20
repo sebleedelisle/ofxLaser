@@ -19,37 +19,41 @@ namespace ofxLaser {
 		
         Polyline(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness = 1);
         Polyline(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel, float brightness = 1);
-        Polyline(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profilelabel, float brightness = 1);
-		void init(const ofPolyline& poly, const ofColor& col, string profilelabel, float brightness);
-        void init(const ofPolyline& poly, const vector<ofColor>& colours, string profilelabel, float brightness);
-        void init(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profilelabel, float brightness);
-    
+        Polyline(const vector<glm::vec3>& points, bool _closed, const vector<ofColor>& colours, string profilelabel, float brightness = 1);
+        
+        Polyline(const ofPolyline& poly, const vector<ofFloatColor>& colours, string profilelabel, float brightness = 1);
+        Polyline(const vector<glm::vec3>& points, bool _closed, const vector<ofFloatColor>& colours, string profilelabel,  float brightness = 1);
+       
+        void reset(); 
+
 		
 		~Polyline();
 		
         virtual Shape* clone() const override {
-            // todo check for nullptr 
-            if(multicoloured)
-                return new Polyline(*polylinePointer, colours, profileLabel);
-            else
-                return new Polyline(*polylinePointer, colour, profileLabel);
+            // todo check for nullptr
+            return new Polyline(points, closed, colours, profileLabel);
+            
         }
         
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
+		void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;
 		
-		void addPreviewToMesh(ofMesh& mesh) override;
-		virtual bool intersectsRect(ofRectangle & rect) override;
+        void addPreviewToMesh(ofMesh& mesh) override;
         
-        ofPolyline* polylinePointer = nullptr;
+        virtual bool clipNearPlane(float nearPlaneZ) override;
+        
+       //ofFloatColor& getColourAt(int index);
+
+        //ofPolyline* polylinePointer = nullptr;
 
 		protected :
-        void initPoly(const ofPolyline& poly);
-        void initPoly(const vector<glm::vec3> verticesToCopy);
         
-		const RenderProfile* cachedProfile;
-		std::vector<ofxLaser::Point> cachedPoints;
-		std::vector<ofColor> colours;
-		bool multicoloured;
-		ofRectangle boundingBox; 
+//      void initPoly(const ofPolyline& poly);
+//      void initPoly(const vector<glm::vec3> verticesToCopy);
+        
+//		const RenderProfile* cachedProfile;
+//		std::vector<ofxLaser::Point> cachedPoints;
+
+		
+        
 	};
 }

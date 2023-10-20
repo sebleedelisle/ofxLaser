@@ -1150,12 +1150,13 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
                         // for the shape that is on the edge of the mask
                         if(k>0) {
                             
-                            Point lastpoint = p;
+                            Point pointOnEdge = p;
                             
                             // TODO better point on edge rather than just clamp
-                            lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-                            lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-                            segmentPoints.push_back(lastpoint);
+                            pointOnEdge.x = ofClamp(pointOnEdge.x, maskRectangle.getLeft(), maskRectangle.getRight());
+                            pointOnEdge.y = ofClamp(pointOnEdge.y, maskRectangle.getTop(), maskRectangle.getBottom());
+                            
+                            segmentPoints.push_back(pointOnEdge);
                             
                             // add this bunch to the collection for this zone
                             zonePointsForShapes.push_back(segmentPoints); // should copy
@@ -1165,10 +1166,12 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
                             
                         }
                     }
+                    
                     // otherwise if we are already off screen we don't need
                     // to do anything except ignore this point
                     
                     // else if we are inside the mask rectangle
+                    
                 } else {
                     
                     // and we're currently off screen

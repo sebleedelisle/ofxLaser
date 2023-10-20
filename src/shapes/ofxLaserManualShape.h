@@ -14,19 +14,12 @@ class ManualShape : public Shape{
 	
 	public :
 	
-	ManualShape(const vector<ofPoint> allpoints, const vector<ofColor> pointcolours, bool usecalibration, string profilelabel){
+	ManualShape(const vector<glm::vec3> allpoints, const vector<ofColor> pointcolours, bool usecalibration, string profilelabel){
 		
 		useCalibration = usecalibration;
 		
-		startPos.set(allpoints.front());
-		endPos.set(allpoints.back());
-		
 		points = allpoints; // hopefully copies
 		colours = pointcolours;
-		
-		while(colours.size()<points.size()) {
-			colours.push_back(colours.back());
-		}
 		
 		tested = false;
 		profileLabel = profilelabel;
@@ -52,13 +45,12 @@ class ManualShape : public Shape{
 			
 		}
 	}
-
-    bool intersectsRect(ofRectangle & rect) override {
-        // TODO fix
-        return true;
+    
+    bool clipNearPlane(float nearPlaneZ) override {
+        return false;
     }
     
-	vector<ofPoint> points;
+	vector<glm::vec3> points;
 	vector<ofColor> colours;
 	bool useCalibration;
 		

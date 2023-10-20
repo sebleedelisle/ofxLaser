@@ -48,11 +48,6 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.setName("Laser");
     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
 
-    //params.add(canvasTarget.getWidth().set("Canvas width", 800,0,5000));
-    //params.add(canvasHeight.set("Canvas height", 800,0,5000));
-    //canvasTarget.getWidth().addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
-    //canvasHeight.addListener(this, &ofxLaser::ManagerBase::canvasSizeChanged);
-  
     //useBitmapMask = showBitmapMask = laserCanvasMaskOutlines = false;
     params.add(numLasers.set("numLasers", 0));
     params.add(useAltZones.set("Use alternative zones", false));
@@ -68,13 +63,11 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
 }
 
 ManagerBase :: ~ManagerBase() {
-    //ofLog(OF_LOG_NOTICE, "ofxLaser::Manager destructor");
+
     saveSettings();
     
 }
-//void ManagerBase::canvasSizeChanged(int &size){
-//    laserMask.init(canvasTarget.getWidth(), canvasHeight);
-//}
+
 
 void ManagerBase :: setCanvasSize(int w, int h){
     canvasTarget.setBounds(0,0,w,h);
@@ -161,17 +154,7 @@ ZoneId  ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
 
 
 ZoneId ManagerBase :: createNewBeamZone() {
-    // create new zone and add it to the array
-    //ShapeTargetBeamZone newzone;
-    //zones.push_back(newzone);
-   // ShapeContainerBeamZone& zone = zones.back();
-    //
-    // zones.push_back()
-    // update zone's id
-    // return ID
-    
-    
-    
+   
     return beamZoneContainer.addBeamZone();
 }
     
@@ -225,21 +208,6 @@ void ManagerBase::createDefaultCanvasZone() {
     addCanvasZone(0,0,canvasTarget.getWidth(),canvasTarget.getHeight());
     
 }
-void ManagerBase::drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName){
-    drawLine( glm::vec3(x1,y1,0), glm::vec3(x2,y2,0), col, profileName);
-    
-}
-void ManagerBase::drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName){
-    drawLine( glm::vec3(start.x, start.y, 0), glm::vec3(end.x, end.y, 0), col, profileName);
-    
-}
-void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileLabel) {
-    
-    Line* l = new Line(convert3DTo2D(start), convert3DTo2D(end), col, profileLabel);
-    
-    currentShapeTarget->addShape(l);
-
-}
 
 
 void ManagerBase::drawDot( float x,  float y, const ofColor& col, float intensity, string profileLabel) {
@@ -248,38 +216,57 @@ void ManagerBase::drawDot( float x,  float y, const ofColor& col, float intensit
 void ManagerBase::drawDot( const glm::vec2& p, const ofColor& col, float intensity, string profileLabel) {
     drawDot(glm::vec3(p.x, p.y, 0), col, intensity, profileLabel);
 }
+
+
 void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensity, string profileLabel) {
     
-    Dot* d = new Dot(convert3DTo2D(p), col, intensity, profileLabel);
-   // d->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    Dot* d = new Dot(getTransformed(p), col, intensity, profileLabel);
     currentShapeTarget->addShape(d);
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
 
+
+void ManagerBase::drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName){
+    drawLine( glm::vec3(x1,y1,0), glm::vec3(x2,y2,0), col, profileName);
+}
+
+void ManagerBase::drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName){
+    drawLine( glm::vec3(start.x, start.y, 0), glm::vec3(end.x, end.y, 0), col, profileName);
+}
+
+void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileLabel) {
     
-    // quick error check to make sure our line has any data!
-    // (useful for dynamically generated lines, or empty lines
-    // that are often found in poorly compiled SVG files)
+    Line* l = new Line(getTransformed(start), getTransformed(end), col, profileLabel);
     
-    if((poly.size()==0)||(poly.getPerimeter()<0.01)) return;
-    
-    ofPolyline& polyline = tmpPoly;
-    polyline = poly;
-    
-    for(glm::vec3& v : polyline.getVertices()) {
-        v = convert3DTo2D(v);
+    currentShapeTarget->addShape(l);
+
+}
+
+
+
+
+
+void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col, bool filled, string profileName){
+    drawCircle(glm::vec3(x, y, 0), radius, col, filled, profileName);
+}
+void ManagerBase::drawCircle(const glm::vec2& pos, const float& radius, const ofColor& col, bool filled, string profileName){
+    drawCircle(glm::vec3(pos.x, pos.y, 0), radius, col, filled, profileName);
+}
+void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col, bool filled, string profileName){
+    ofxLaser::Circle* c = new ofxLaser::Circle(centre, radius, col, profileName);
+ 
+    vector<glm::vec3>& points = c->getPoints();
+    for(glm::vec3& v : points) {
+        v = getTransformed(v);
     }
+    c->update();
     
-    Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
-   // p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    currentShapeTarget->addShape(p);
-    
-    
+    currentShapeTarget->addShape(c);
     
 }
 
-void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName, float brightness){
+
+void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, bool filled, string profileName, float brightness){
     
     // quick error check to make sure our line has any data!
     // (useful for dynamically generated lines, or empty lines
@@ -292,7 +279,7 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
     polyline = poly;
     
     for(glm::vec3& v : polyline.getVertices()) {
-        v = convert3DTo2D(v);
+        v = getTransformed(v);
     }
     if(brightness<1) {
         for(ofColor & c : colours) {
@@ -306,17 +293,43 @@ void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colour
     
 }
 
-void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, string profileName, float brightness){
+
+
+void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, bool filled, string profileName, float brightness){
+
+    
+    // quick error check to make sure our line has any data!
+    // (useful for dynamically generated lines, or empty lines
+    // that are often found in poorly compiled SVG files)
+    
+    if((poly.size()==0)||(poly.getPerimeter()<0.01)) return;
+    
+    ofPolyline& polyline = tmpPoly;
+    polyline = poly;
+    
+    for(glm::vec3& v : polyline.getVertices()) {
+        v = getTransformed(v);
+    }
+    
+    Polyline* p =new ofxLaser::Polyline(polyline, col*brightness, profileName);
+   // p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+    currentShapeTarget->addShape(p);
+    
+    
+    
+}
+
+void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool filled, bool closed, string profileName, float brightness){
     
     if(points.size()==0) return;
     tmpPoints = points;
     for(glm::vec3& v : tmpPoints) {
-        v = convert3DTo2D(v);
+        v = getTransformed(v);
     }
 
     ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
     
-    if(p->polylinePointer->getPerimeter()>0.1) {
+    if(p->getLength()>0.1) {
         //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
         currentShapeTarget->addShape(p);
     } else {
@@ -325,23 +338,6 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
 }
 
 
-void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col,string profileName){
-    drawCircle(glm::vec3(x, y, 0), radius, col, profileName);
-}
-void ManagerBase::drawCircle(const glm::vec2& pos, const float& radius, const ofColor& col,string profileName){
-    drawCircle(glm::vec3(pos.x, pos.y, 0), radius, col, profileName);
-}
-void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col,string profileName){
-    ofxLaser::Circle* c = new ofxLaser::Circle(centre,radius, col, profileName);
-   // c->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-    ofPolyline& polyline = c->polyline;
-    
-    for(glm::vec3& v : polyline.getVertices()) {
-        v = convert3DTo2D(v);
-    }
-    currentShapeTarget->addShape(c);
-    
-}
 
 
 void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string renderProfile) {
@@ -352,13 +348,18 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
     for(size_t i= 0; i<polylines.size(); i++) {
         ofColor col = colours[i];
         col*=brightness;
-        drawPoly(*polylines[i],col, renderProfile);
+        drawPoly(*polylines[i],col, false, renderProfile);
         
     }
     
 }
 
 void ManagerBase:: update(){
+    // bit of a hack to check dacs that may take a little while to appear
+    if(ofGetFrameNum()==1000) {
+        dacAssigner.updateDacList();
+    }
+    
     // resets transformations
     reset();
     
@@ -417,26 +418,50 @@ void ManagerBase:: update(){
 
 void ManagerBase::send(){
     
-    // for when we reinstate canvas masks, we'll need to rework this
-//    if(laserCanvasMaskOutlines) {
-//        vector<ofPolyline*> polylines = laserMask.getLaserMaskShapes();
-//        for(ofPolyline* poly : polylines) {
-//            ofPoint centre= poly->getCentroid2D();
-//            poly->translate(-centre);
-//            poly->scale(1.01,1.01);
-//            poly->translate(centre);
+
+    vector <ofxLaser::Shape*>& shapes = canvasTarget.shapes;
+    
+    // sort shapes based on average z position
+    float fov = 550;
+    
+    ofRectangle cliprect = canvasTarget.getBounds();
+//    cliprect.x+=50;
+//    cliprect.y+=50;
+//    cliprect.width-=100;
+//    cliprect.height-=100;
+    // TODO this should all be moved to the targets i think
+    vector<ofxLaser::Shape*> emptyShapes;
+    for(Shape* shape : shapes) {
+        
+        // clip to near plane
+        shape->clipNearPlane(fov-10);
+        // convert 3D to 2D
+        
+        vector<glm::vec3>& points = shape->getPoints();
+        for(glm::vec3& p : points) {
+            p = convert3DTo2D(p);
+        }
+        shape->setDirty();
+        
+        shape->clipToRectangle(cliprect);
+        
+//        if(shape->isEmpty()) {
+//            emptyShapes.push_back(shape);
 //        }
-//        for(size_t i= 0; (i<zones.size()) && ((zoneMode==OFXLASER_ZONE_MANUAL) || (i<1));i++) {
-//            setTargetZone((int)i);
-//            for(ofPolyline* poly:polylines) {
-//
-//                drawPoly(*poly, ofColor::cyan);
-//            }
-//
-//        }
-//
-//        for(ofPolyline* poly : polylines)  ofxLaser::Factory::releasePolyline(poly);
-//    }
+        
+    }
+    
+//    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
+//        [](Shape* const& s) {
+//            return s->isEmpty(); // put your condition here
+//        }), shapes.end());
+    
+    
+    
+    // subtract shapes that are filled
+    
+    
+    
     
     
     // here's where the magic happens.

@@ -507,7 +507,7 @@ void Manager::addCustomParameter(ofAbstractParameter& param, bool loadFromSettin
 }
 
 glm::vec2 Manager::screenToLaserInput(glm::vec2& pos){
-    
+    // todo make into canvas view conversion
     glm::vec2 returnpos= pos ;//
     return returnpos;
     
@@ -600,8 +600,8 @@ void Manager :: renderPreview() {
     
     std::vector <ofxLaser::Shape*>& shapes = canvasTarget.shapes;
     // Draw the preview laser graphics, with zones overlaid
-    for(size_t i= 0; i<shapes.size(); i++) {
-        shapes[i]->addPreviewToMesh(mesh);
+    for(Shape* shape : shapes) {
+        shape->addPreviewToMesh(mesh);
     }
     
 //    if(useBitmapMask) {
@@ -1659,8 +1659,8 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
             ofParameter<float>& param = laser->rotation;
             if(ImGui::DragFloat("Rotation", (float*)&param.get(), 0.01f,-30,30)) { //  param.getMin(), param.getMax())) {
                 param.set(param.get());
-                
             }
+            
             if(laser->rotation!=0) {
                 ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
                 if (ImGui::Button("Reset")) laser->rotation = 0;
@@ -1669,7 +1669,6 @@ void Manager :: guiLaserSettings(ofxLaser::Laser* laser) {
             ofParameter<glm::vec2>& param2 = laser->outputOffset;
             if(ImGui::DragFloat2("Position", (float*)&param2.get().x, 0.01f, -50.0f,50.0f)) { //  param.getMin(), param.getMax())) {
                 param2.set(param2.get());
-                
             }
             
             glm::vec2 zero2;

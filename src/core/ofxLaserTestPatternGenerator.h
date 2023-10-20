@@ -51,13 +51,13 @@ class TestPatternGenerator {
          } else if(testPattern==2) {
 
            
-             ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+             glm::vec3 v = rect.getBottomRight() - rect.getTopLeft()-glm::vec3(0.2,0.2,0);
              for(float y = 0; y<=1.1; y+=0.333333333) {
-                 shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
+                 shapes.push_back(new Line(glm::vec3(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y,0),glm::vec3(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y,0), ofColor(255), OFXLASER_PROFILE_FAST));
              }
 
              for(float x =0 ; x<=1.1; x+=0.3333333333) {
-                 shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
+                 shapes.push_back(new Line(glm::vec3(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1,0),glm::vec3(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1,0), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
              }
 
              shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
@@ -67,11 +67,11 @@ class TestPatternGenerator {
          }else if(testPattern==3) {
 
          
-             ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+             glm::vec3 v = rect.getBottomRight() - rect.getTopLeft()-glm::vec3(0.2,0.2,0);
 
              for(float y = 0; y<=1.1; y+=0.333333333) {
 
-                 shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
+                 shapes.push_back(new Line(glm::vec3(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y, 0),glm::vec3(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y, 0), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
              }
              shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
 
@@ -83,10 +83,10 @@ class TestPatternGenerator {
          } else if(testPattern==4) {
 
           
-             ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
+             glm::vec3 v = rect.getBottomRight() - rect.getTopLeft()-glm::vec3(0.2,0.2, 0);
 
              for(float x =0 ; x<=1.1; x+=0.3333333333) {
-                 shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
+                 shapes.push_back(new Line(glm::vec3(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1, 0),glm::vec3(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1 ,0), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
 
              }
 
@@ -103,24 +103,24 @@ class TestPatternGenerator {
              ofRectangle thinrect = rect;
              thinrect.scaleFromCenter(0.5, 0.1);
              
-             vector<ofPoint> points;
+             vector<glm::vec3> points;
              vector<ofColor> colours;
 
-             ofPoint currentPosition = thinrect.getTopLeft();
+             glm::vec3 currentPosition = thinrect.getTopLeft();
 
              for(int row = 0; row<5; row ++ ) {
 
 
                  float y =thinrect.getTop() + (thinrect.getHeight()*row/4);
 
-                 ofPoint left = ofPoint(thinrect.getLeft(), y);
+                 glm::vec3 left = glm::vec3(thinrect.getLeft(), y,0);
 
-                 ofPoint right = ofPoint(thinrect.getRight(), y);
+                 glm::vec3 right = glm::vec3(thinrect.getRight(), y,0);
 
-                 int moveIterations = currentPosition.distance(left)/1;
+                 int moveIterations = glm::distance(currentPosition, left)/1;
 
                  for(int i = 0; i<moveIterations; i++) {
-                     points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
+                     points.push_back(glm::mix(currentPosition, left, (float)i/(float)moveIterations));
                      colours.push_back(ofColor(0));
 
                  }
@@ -168,7 +168,7 @@ class TestPatternGenerator {
                      colours.push_back(ofColor(0));
                  }
                  for(float x =left.x ; x<=right.x; x+=speed) {
-                     points.push_back(ofPoint(x,y));
+                     points.push_back(glm::vec3(x,y,0));
                      colours.push_back(c);
                  }
 
@@ -200,7 +200,7 @@ class TestPatternGenerator {
              
 //             float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
              float x = ofMap(sin(progress), -1,1,rect.getLeft(), rect.getRight());
-             shapes.push_back(new Line( ofPoint(x,rect.getTop()), ofPoint(x, rect.getBottom()), ofColor::white, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Line( glm::vec3(x,rect.getTop(),0), glm::vec3(x, rect.getBottom(),0), ofColor::white, OFXLASER_PROFILE_DEFAULT));
 
          }
          return shapes;

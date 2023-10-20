@@ -14,15 +14,17 @@ class Dot : public Shape{
 	
 	public :
 	
-    Dot(const ofPoint& dotPosition, const ofColor& dotColour, float dotIntensity, string profilelabel);
-    void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier) override;
+    Dot(const glm::vec3& dotPosition, const ofColor& dotColour, float dotIntensity, string profilelabel);
+    void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;
     
     virtual Shape* clone() const override {
-        return new Dot(startPos, colour, intensity, profileLabel);
+        return new Dot(getStartPos(), getColour(), intensity, profileLabel);
     }
-    void addPreviewToMesh(ofMesh& mesh) override;
-    virtual bool intersectsRect(ofRectangle & rect) override;
 
+    void addPreviewToMesh(ofMesh& mesh) override;
+    
+    virtual bool clipNearPlane(float nearPlaneZ) override;
+  
 		
 	float intensity = 1;
 	int maxPoints = 5;
