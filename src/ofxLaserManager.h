@@ -147,10 +147,12 @@ class Manager : public ManagerBase {
     ofParameterGroup customParams;
     ofParameter<bool> zoneGridSnap;
     ofParameter<int> zoneGridSize;
+    ofParameter<bool> zoneGridVisible;
     
     ofParameter<bool> canvasGridSnap;
     ofParameter<int> canvasGridSize;
-        
+    ofParameter<bool> canvasGridVisible;
+    
     // TODO are these used?
     ofParameter<bool> zoneEditorShowLaserPath;
     ofParameter<bool> zoneEditorShowLaserPoints;

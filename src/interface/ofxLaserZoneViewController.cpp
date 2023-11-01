@@ -671,9 +671,9 @@ void LaserZoneViewController :: drawImGui() {
             
   
 }
-void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize) {
+void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize, bool visible) {
     
-    ViewWithMoveables::setGrid(snaptogrid, gridsize);
+    ViewWithMoveables::setGrid(snaptogrid, gridsize, visible);
     for(MaskUiQuad* mask : maskUis) {
         mask->setGrid(false, 1);
     }

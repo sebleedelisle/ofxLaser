@@ -62,7 +62,7 @@ class LaserZoneViewController : public ViewWithMoveables {
     void draw() override;
     
     
-    void setGrid(bool snaptogrid, int gridsize) override;
+    void setGrid(bool snaptogrid, int gridsize, bool visible) override;
     
     
     void drawImGui(); 
@@ -76,6 +76,7 @@ class LaserZoneViewController : public ViewWithMoveables {
 
     Laser* laser;
     
+    // i think multiple types are built in now, right? TODO refactor
     vector<ZoneUiBase*> zoneUis;
     vector<ZoneUiBase*> zoneUisSorted;
     

@@ -70,6 +70,14 @@ class MoveablePoly {
     string& getUid() {
         return uid;
     }
+    bool setShowLabel(bool state) {
+        if(state!=showLabel) {
+            showLabel = state;
+            return true;
+        } else {
+            return false;
+        } 
+    }
     
     bool isQuad();
     
@@ -127,6 +135,7 @@ class MoveablePoly {
     float scale = 1;
     bool isDirty = true;
     bool dimmed = false;
+    bool showLabel = true;
     
     bool snapToGrid;
     int gridSize;

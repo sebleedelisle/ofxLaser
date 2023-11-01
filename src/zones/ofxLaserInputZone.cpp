@@ -63,6 +63,7 @@ void InputZone::serialize(ofJson&json) const{
     // adds json node for the handles, which is an array
     ofJson& handlesjson = containerJson["inputzone"];
     handlesjson = {rect.getLeft(), rect.getTop(), rect.getWidth(), rect.getHeight()};
+    containerJson["locked"]  = locked;
     
 
 }
@@ -72,19 +73,15 @@ bool InputZone::deserialize(ofJson&json) {
     
     ofJson& jsonGroup = json["zoneidobject"];
     cout << jsonGroup.dump(3) << endl;
+    
     // OLD API - can delete at some point
-    if(jsonGroup.contains("quadguihandles") && (jsonGroup["quadguihandles"].size()>=4)) {
-        ofJson& handlejson = jsonGroup["quadguihandles"];
-
-        glm::vec2 topleft = glm::vec2(handlejson[0][0], handlejson[0][1]);
-        glm::vec2 botright = glm::vec2(handlejson[3][0], handlejson[3][1]);
-        rect.set(topleft, botright);
-        return true;
-        
-    } else if(jsonGroup.contains("inputzone") && (jsonGroup["inputzone"].size()==4)) {
+    if(jsonGroup.contains("inputzone") && (jsonGroup["inputzone"].size()==4)) {
 
         ofJson& rectjson = jsonGroup["inputzone"];
         rect.set(rectjson[0],rectjson[1],rectjson[2],rectjson[3]);
+        
+        if(jsonGroup.contains("locked")) locked = jsonGroup["locked"].get<bool>();
+        
         return true;
         
     } else {

@@ -19,14 +19,14 @@ class ViewWithMoveables : public ScrollableView  {
     bool update() override;
     
     virtual void draw();
-    void drawMoveables(); 
+    virtual void drawMoveables();
     
     bool setUiElementsEnabled(bool enabled);
     
     virtual void deselectAllButThis(MoveablePoly* uielement);
     virtual void deselectAll(); 
 
-    virtual void setGrid(bool snaptogrid, int gridsize);
+    virtual void setGrid(bool snaptogrid, int gridsize, bool visible);
     virtual void updateGrid();
     
     virtual void mouseMoved(ofMouseEventArgs &e) override;
@@ -48,6 +48,7 @@ class ViewWithMoveables : public ScrollableView  {
     ofMesh gridMesh;
     int gridSize = 1;
     bool snapToGrid = false;
+    bool gridVisible = true; 
     
     bool uiElementsEnabled;
     

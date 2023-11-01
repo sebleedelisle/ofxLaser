@@ -32,5 +32,13 @@ class CanvasViewController : public ViewWithMoveables {
     bool updateZonesFromUI(ShapeTargetCanvas& canvasTarget);
     void updateUIFromZones(ShapeTargetCanvas& canvasTarget);
     
+    bool update() override;
+    
+    
+    virtual void drawMoveables() override;
+    
+    bool zonesChangedFlag = false; 
+    
+    
 };
 }

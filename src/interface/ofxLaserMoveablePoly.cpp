@@ -85,6 +85,9 @@ void MoveablePoly :: drawHandlesIfSelectedAndNotDisabled() {
 }
 
 void MoveablePoly :: drawLabel() {
+    
+    if(!showLabel) return;
+    
     ofPushStyle();
    
     if(dimmed) {

@@ -18,6 +18,9 @@ class BeamZoneContainer : public ZoneIdContainer {
     ZoneId addBeamZone();
     
     virtual bool addZoneByJson(ofJson& json) override;
+    int getNumBeamZones() {
+        return getNumZoneIds();
+    } 
     
     ShapeTargetBeamZone* getBeamZoneForZoneId(ZoneId& zoneid);
     ShapeTargetBeamZone* getBeamZoneAtIndex(int index);

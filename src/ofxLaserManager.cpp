@@ -116,7 +116,7 @@ void Manager :: createAndAddLaser()  {
     laserZoneViews.emplace_back(lasers.back());
     laserZoneViews.back().setOutputRect(getZonePreviewRect());
     laserZoneViews.back().autoFitToOutput();
-    laserZoneViews.back().setGrid(zoneGridSnap, zoneGridSize);
+    laserZoneViews.back().setGrid(zoneGridSnap, zoneGridSize, zoneGridVisible);
     setSelectedLaserIndex(laserindex);
     
 }
@@ -154,9 +154,11 @@ void Manager :: initAndLoadSettings() {
     //params.add(zoneEditorShowLaserPoints.set("Show points in zone editor", false));
     params.add(zoneGridSnap.set("Zone snap to grid", true));
     params.add(zoneGridSize.set("Zone grid size", 20,1,50));
+    params.add(zoneGridVisible.set("Zone grid visible", true));
     
     params.add(canvasGridSnap.set("Canvas snap to grid", true));
     params.add(canvasGridSize.set("Canvas grid size", 20,1,50));
+    params.add(canvasGridVisible.set("Canvas grid visible", true));
     
     params.add(globalLatency.set("Latency (ms)", 150,0,400));
 
@@ -210,10 +212,10 @@ void Manager :: paramChanged(ofAbstractParameter& e) {
         laser->maxLatencyMS = globalLatency;
     }
     for(LaserZoneViewController& laserview : laserZoneViews) {
-        laserview.setGrid(zoneGridSnap, zoneGridSize);
+        laserview.setGrid(zoneGridSnap, zoneGridSize, zoneGridVisible);
         
     }
-    canvasViewController.setGrid(canvasGridSnap, canvasGridSize);
+    canvasViewController.setGrid(canvasGridSnap, canvasGridSize, canvasGridVisible);
     
     //ofLogNotice() << "paramChanged " << e.getName();
     scheduleSaveSettings();
@@ -828,8 +830,6 @@ void Manager::drawLaserGui() {
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS){
         
-       
-    
         //string label ="Add zone ";
         
         if(UI::startWindow("Canvas Zone View Icons", ImVec2(10,60), ImVec2(10,60), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize , false, nullptr )) {
@@ -852,7 +852,6 @@ void Manager::drawLaserGui() {
             
             UI::addDelayedTooltip("Add new canvas zone");
         
-            
             if(UI::Button(ICON_FK_LIB_GRID, false, canvasGridSnap.get())) {
                 canvasGridSnap.set(!canvasGridSnap.get());
                 // choose test pattern
@@ -873,14 +872,28 @@ void Manager::drawLaserGui() {
             UI::stopGhosted();
             UI::addDelayedTooltip("Grid size");
             
+            
+            ImGui::PushItemWidth(21);
+            if(canvasGridVisible.get()) {
+                UI::secondaryColourStart();
+            }
+            if(UI::Button(ICON_FK_EYE, false, canvasGridVisible.get())) {
+                canvasGridVisible.set(!canvasGridVisible.get());
+                canvasViewController.updateUIFromZones(canvasTarget);
+            }
+            UI::secondaryColourEnd();
+            UI::addDelayedTooltip("Grid visible");
+            
+            
+            
             ImGui::PopFont();
             
         }
         
-       
-        
         UI::endWindow();
+        
         if(showCanvasSettingsWindow) {
+            
             if(UI::startWindow("CanvasSettings", ImVec2(300,100),ImVec2(0,0), ImGuiWindowFlags_AlwaysAutoResize, false, &showCanvasSettingsWindow)) {
                 ImGui::Text("CANVAS SETTINGS");
                 
@@ -892,6 +905,9 @@ void Manager::drawLaserGui() {
                 }
                 if(ImGui::DragInt("Height", &h)) {                canvasTarget.setBounds(0,0,w,h);
                     canvasViewController.updateUIFromZones(canvasTarget); 
+                }
+                if(ImGui::DragInt("Zone brightness", &canvasTarget.zoneBrightness, 1, 0, 255)) {
+                    canvasViewController.updateUIFromZones(canvasTarget);
                 }
             }
             UI::endWindow();

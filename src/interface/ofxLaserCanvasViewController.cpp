@@ -9,8 +9,19 @@
 
 using namespace ofxLaser;
 
+bool CanvasViewController :: update() {
+    
+    bool wasUpdated = ViewWithMoveables::update();
+
+    bool anyZonesChanged = zonesChangedFlag;
+    zonesChangedFlag = false;
+    
+    return wasUpdated || anyZonesChanged;
+}
+
+
 bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
-    //return false;
+    // TODO check if changed
     for(int i = 0; i<uiElementsSorted.size(); i++) {
         
         MoveablePoly& poly = *uiElementsSorted[i];
@@ -28,8 +39,11 @@ bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
 
             zonepointer->set( x, y, w, h);
         }
+        zonepointer->locked = poly.getDisabled();
         
+
     }
+    
     if(sourceRect!=canvasTarget.getBounds()) {
         canvasTarget.setBounds(sourceRect);
     }
@@ -81,6 +95,10 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
             // otherwise update it
             uiElement->setFromRect(targetInputZone->getRect());
             uiElement->setGrid(snapToGrid, gridSize);
+            uiElement->setHue(220);
+            uiElement->setBrightness(canvasTarget.zoneBrightness);
+            uiElement->setShowLabel(!targetInputZone->locked);
+            uiElement->setDisabled(targetInputZone->locked);
         }
     }
     
@@ -105,6 +123,8 @@ void CanvasViewController :: drawImGui() {
         ImGui::PushID(uiElementsSorted[i]->getLabel().c_str());
         //ofLogNotice(uiElements[i]->getLabel()) << " " << i;
         MoveablePoly& uiElement = *uiElementsSorted[i];
+        
+        
         // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
         string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
         //if(ImGui::BeginPopup(label.c_str())) {
@@ -122,10 +142,21 @@ void CanvasViewController :: drawImGui() {
                 uiElementsToMoveBack.push_back(&uiElement);
                 ImGui::CloseCurrentPopup();
             }
-            //UI::stopDisabled();
+           
+            if(uiElement.getDisabled()) UI::secondaryColourStart();
 
+            if(ImGui::Button(ICON_FK_LOCK)) {
+                uiElement.setDisabled(!uiElement.getDisabled());
+                zonesChangedFlag = true;
+                
+            }
+            UI::secondaryColourEnd();
+            
             ImGui::EndPopup();
         }
+        
+       
+        
         ImGui::PopID();
         
     }
@@ -142,3 +173,12 @@ void CanvasViewController :: drawImGui() {
   
 }
 
+
+
+void CanvasViewController :: drawMoveables() {
+    ofEnableBlendMode(OF_BLENDMODE_ADD);
+    // draw all the UI elements
+    ViewWithMoveables::drawMoveables();
+    ofDisableBlendMode();
+    
+}

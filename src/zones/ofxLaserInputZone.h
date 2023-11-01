@@ -39,13 +39,15 @@ namespace ofxLaser {
         
 //        const int numHandles = 4;
 //        DragHandle handles[4];
-        
+        bool locked = false;
+     
         protected : 
 		int index = 0;
         ofRectangle rect;
 
         bool isDirty = true;
         
+         
 		
 	};
 }

@@ -58,6 +58,7 @@ void ViewWithMoveables :: drawMoveables() {
 }
 
 void ViewWithMoveables :: drawGrid() {
+    if(!gridVisible) return; 
     ofPushStyle();
     // draw the grid
     if(gridSize*scale<5) {
@@ -75,12 +76,13 @@ void ViewWithMoveables :: drawGrid() {
 }
 
 
-void ViewWithMoveables :: setGrid(bool snaptogrid, int gridsize){
+void ViewWithMoveables :: setGrid(bool snaptogrid, int gridsize, bool visible){
 
-    if((snapToGrid!=snaptogrid) || (gridSize!=gridsize)) {
+    if((snapToGrid!=snaptogrid) || (gridSize!=gridsize) || (gridVisible!=visible)) {
         
         snapToGrid = snaptogrid;
         gridSize = gridsize;
+        gridVisible = visible;
         
         updateGrid();
      

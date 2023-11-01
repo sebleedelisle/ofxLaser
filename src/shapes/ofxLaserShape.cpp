@@ -594,7 +594,7 @@ float Shape ::getMedianZDepth() const {
     if(isEmpty()) return 0;
     if(points.size()==1) return points[0].z;
     float minZ = std::numeric_limits<float>::max();
-    float maxZ = std::numeric_limits<float>::min();
+    float maxZ = -10000000.0f;
     for(const glm::vec3&p : points) {
         if(p.z<minZ) minZ = p.z;
         if(p.z>maxZ) maxZ = p.z;
