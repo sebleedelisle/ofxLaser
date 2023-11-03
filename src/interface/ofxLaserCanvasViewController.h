@@ -10,6 +10,7 @@
 #include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserShapeTargetCanvas.h"
+#include "ofxLaserGuideImageUiQuad.h"
 
 namespace ofxLaser {
 
@@ -34,6 +35,25 @@ class CanvasViewController : public ViewWithMoveables {
     
     bool update() override;
     
+    GuideImage* getGuideImageForUiElement(ShapeTargetCanvas& canvasTarget, MoveablePoly* poly) {
+        for(int i = 0; i<canvasTarget.guideImages.size(); i++) {
+            string uid = "guide"+ofToString(i);
+            if(poly->getUid()==uid) {
+                return &canvasTarget.guideImages.at(i);
+            }
+        }
+        return nullptr;
+    }
+    
+    GuideImageUiQuad* getUiElementForGuideImageIndex(int guideIndex) {
+        string uid = "guide"+ofToString(guideIndex);
+        for(MoveablePoly * uiElement : uiElementsSorted) {
+            if(uiElement->getUid() == uid) {
+                return dynamic_cast<GuideImageUiQuad*>(uiElement);
+            }
+        }
+        return nullptr;
+    }
     
     virtual void drawMoveables() override;
     

@@ -20,6 +20,7 @@ public:
 	ofxLaser::Manager laser;
     
     ofPolyline starPoly;
+    vector<ofColor> starPolyColours;
     //bool testscale = false; 
     
 };

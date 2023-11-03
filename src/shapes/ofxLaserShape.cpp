@@ -578,6 +578,16 @@ void Shape :: setFilled(bool state) {
         filled = false;
     }
 }
+bool Shape :: isStroked() const {
+    return stroked;
+}
+void Shape :: setStroked(bool strokestate) {
+    stroked = strokestate;
+}
+
+
+
+
 
 void Shape :: setClosed(bool closestate) {
     if(closestate!=closed) {

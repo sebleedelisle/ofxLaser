@@ -852,6 +852,23 @@ void Manager::drawLaserGui() {
             
             UI::addDelayedTooltip("Add new canvas zone");
         
+            if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddGuideImage", false, false)) {
+                
+                ofFileDialogResult result = ofSystemLoadDialog("Choose guide image file");
+                if(result.bSuccess) {
+                    canvasTarget.addGuideImage(result.filePath);
+                    scheduleSaveSettings();
+                }
+                
+                
+                int numZones = canvasTarget.getNumZoneIds();
+                ZoneId zoneId = addCanvasZone(numZones*20,numZones*20,100,100);
+            }
+            
+            UI::addDelayedTooltip("Add new guide image");
+        
+            
+            
             if(UI::Button(ICON_FK_LIB_GRID, false, canvasGridSnap.get())) {
                 canvasGridSnap.set(!canvasGridSnap.get());
                 // choose test pattern
@@ -924,76 +941,95 @@ void Manager::drawLaserGui() {
             MoveablePoly& uiElement = *uiElements[i];
             
             InputZone* inputzone =canvasTarget.getInputZoneForZoneIdUid(uiElement.getUid());
+            GuideImage* guideimage = canvasTarget.getGuideImageForUid(uiElement.getUid());
+            
             
             string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
             if(ImGui::BeginPopup(label.c_str())) {
-               
-                
-                ZoneId zoneId = inputzone->getZoneId();
-                
-                
-               // ImGui::Text("CANVAS ZONE %s", zoneId.getLabel().c_str());
-                ImGui::Text("CANVAS ZONE %s", label.c_str());
-                ImGui::Text("CANVAS ZONE %s %s ", zoneId.getLabel().c_str(), zoneId.getUid().c_str());
-               
-                ImGui::Text("Assign to laser : ");
-                for(int j = 0; j<lasers.size(); j++ ) {
-                    bool zoneinlaser = lasers[j]->hasZone(zoneId);
-                    string label =ofToString(j);
-                    if(UI::addNumberedCheckBox(j+1, label.c_str(), &zoneinlaser, false)){
-                        ofLogNotice()<<zoneinlaser;
-                        if(zoneinlaser) {
-                            lasers[j]->addZone(zoneId);
+                bool closecanvaszonesettingspopup = false;
+                if(inputzone!=nullptr) {
+                    ZoneId zoneId = inputzone->getZoneId();
+                    
+                    
+                    // ImGui::Text("CANVAS ZONE %s", zoneId.getLabel().c_str());
+                    ImGui::Text("CANVAS ZONE %s", label.c_str());
+                    ImGui::Text("CANVAS ZONE %s %s ", zoneId.getLabel().c_str(), zoneId.getUid().c_str());
+                    
+                    ImGui::Text("Assign to laser : ");
+                    for(int j = 0; j<lasers.size(); j++ ) {
+                        bool zoneinlaser = lasers[j]->hasZone(zoneId);
+                        string label =ofToString(j);
+                        if(UI::addNumberedCheckBox(j+1, label.c_str(), &zoneinlaser, false)){
+                            ofLogNotice()<<zoneinlaser;
+                            if(zoneinlaser) {
+                                lasers[j]->addZone(zoneId);
+                            } else {
+                                lasers[j]->removeZone(zoneId);
+                            }
+                        }
+                        
+                        
+                    }
+                    
+                    
+                    string buttonlabel = "DELETE ZONE";
+                    
+                    if(UI::DangerButton(buttonlabel.c_str())) {
+                        if(ofGetKeyPressed(OF_KEY_COMMAND)) {
+                            deleteCanvasZone(inputzone);
                         } else {
-                            lasers[j]->removeZone(zoneId);
+                            ImGui::OpenPopup("DELETE ZONE");
                         }
                     }
                     
+                    if(ImGui::BeginPopupModal("DELETE ZONE")) {
+                        
+                        ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
+                        ImGui::Separator();
+                        
+                        UI::dangerColourStart();
+                        if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                            ImGui::CloseCurrentPopup();
+                            
+                            deleteCanvasZone(inputzone);
+                            
+                            
+                            closecanvaszonesettingspopup = true;
+                            
+                        }
+                        
+                        UI::dangerColourEnd();
+                        
+                        ImGui::SetItemDefaultFocus();
+                        ImGui::SameLine();
+                        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                            ImGui::CloseCurrentPopup();
+                        }
+                        ImGui::EndPopup();
+                    }
+                    
+                    
+                    
                     
                 }
-                
-                bool closecanvaszonesettingspopup = false;
-                string buttonlabel = "DELETE ZONE";
-                
-                if(UI::DangerButton(buttonlabel.c_str())) {
-                    if(ofGetKeyPressed(OF_KEY_COMMAND)) {
-                        deleteCanvasZone(inputzone);
-                    } else {
-                        ImGui::OpenPopup("DELETE ZONE");
+                if(guideimage!=nullptr) {
+                    string buttonlabel = "DELETE GUIDE IMAGE";
+                    
+                    if(UI::DangerButton(buttonlabel.c_str())) {
+                        
+                        canvasTarget.deleteGuideImage(guideimage);
+                    
                     }
                 }
                 
-                if(ImGui::BeginPopupModal("DELETE ZONE")) {
-                    
-                    ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
-                    ImGui::Separator();
-                    
-                    UI::dangerColourStart();
-                    if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-                        ImGui::CloseCurrentPopup();
-                        
-                        deleteCanvasZone(inputzone);
-                        
-                       
-                        closecanvaszonesettingspopup = true;
-                        
-                    }
-                    
-                    UI::dangerColourEnd();
-                    
-                    ImGui::SetItemDefaultFocus();
-                    ImGui::SameLine();
-                    if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }
                 
                 if(closecanvaszonesettingspopup) ImGui::CloseCurrentPopup();
-            
+                
                 ImGui::EndPopup();
             }
-                
+                        
+            
+            
             ImGui::PopID();
         }
         

@@ -14,11 +14,12 @@ ShapeTarget :: ShapeTarget (){
    boundsRect.set(0,0,800,800);
 }
 
+
 void ShapeTarget :: deleteShapes(){
-        for(Shape* shape : shapes) {
-            delete shape;
-        }
-        shapes.clear();
+    for(Shape* shape : shapes) {
+        delete shape;
+    }
+    shapes.clear();
     
 }
 bool ShapeTarget :: addShape(Shape* shapetoadd){
@@ -66,4 +67,131 @@ float ShapeTarget :: getWidth() {
 }
 float ShapeTarget :: getHeight() {
     return boundsRect.getHeight();
+}
+
+
+
+
+void ShapeTarget ::  processShapes() {
+    
+    float fov = 550;
+    
+    ofRectangle cliprect = getBounds();
+
+    // TODO this should all be moved to the targets i think
+    vector<ofxLaser::Shape*> emptyShapes;
+    
+    bool anyShapesFilled = false;
+    for(ofxLaser::Shape* shape : shapes) {
+        if(shape->isFilled()) {
+            anyShapesFilled = true;
+            break;
+        }
+    }
+    
+    if(anyShapesFilled) {
+        std::sort(shapes.begin(), shapes.end(), [](const ofxLaser::Shape* a, const ofxLaser::Shape* b) -> bool {
+            float d1 = a->getMedianZDepth();
+            float d2 = b->getMedianZDepth();
+            //ofLogNotice() << d1 << " " << d2;
+            // don't sort if they're basically the same
+            if(fabs(d1-d2)<0.001) return false;
+            else return d1<d2;
+        });
+    }
+    
+    for(Shape* shape : shapes) {
+        
+        // clip to near plane
+        shape->clipNearPlane(fov-10);
+        // convert 3D to 2D
+        
+        vector<glm::vec3>& points = shape->getPoints();
+        for(glm::vec3& p : points) {
+            p = convert3DTo2D(p);
+        }
+        shape->setDirty();
+        
+        shape->clipToRectangle(cliprect);
+        
+        if(shape->isEmpty()) {
+            emptyShapes.push_back(shape);
+        }
+        
+    }
+    
+    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
+        [](Shape* const& s) {
+            return s->isEmpty(); // put your condition here
+        }), shapes.end());
+    
+    for(Shape* shape : emptyShapes) {
+        delete shape;
+        
+    }
+    
+    // subtract shapes that are filled
+    
+    if(anyShapesFilled) {
+        
+//        vector<Shape*> deletedShapes;
+        vector<Shape*> newShapes;
+        ClipperLib::Paths clipperMaskPaths;
+        
+        // go from front to back
+        for(int i = shapes.size()-1; i>=0; i--) {
+            Shape* shape = shapes[i];
+        
+            
+            // clip the shape to the current mask, if we have one
+            vector<Shape*> clippedShapes = ClipperUtils::clipShapeToMask(shape, clipperMaskPaths);
+           
+            // if this shape is filled, add it to the mask
+            if(shape->isFilled()) {
+                ClipperUtils::addShapeToMasks(shape, clipperMaskPaths);
+            }
+            // get the clipped shapes returned and add it to the newshapes
+            if(shape->isStroked()) {
+                newShapes.insert(newShapes.begin(), clippedShapes.begin(), clippedShapes.end());
+            } else {
+                for(Shape* shape : clippedShapes) {
+                    delete shape;
+                }
+            } 
+                
+        
+        }
+        
+        deleteShapes();
+        addShapes(newShapes);
+        
+        
+    }
+    
+
+    
+}
+
+
+// converts 3D coords to screen coords //
+template<typename T>
+T ShapeTarget::convert3DTo2D(T p, ofRectangle viewportrect, float fov ) {
+    
+    T p1 = p; // getTransformed(p);
+
+    if(p1.z==0) return p1;
+  
+    float scale = fov/(-p1.z+fov);
+    p1.z = 0;
+    p1-=viewportrect.getCenter();
+    p1*=scale;
+    p1+=viewportrect.getCenter();
+
+    return p1;
+ 
+}
+template<typename T>
+T ShapeTarget::convert3DTo2D(T p) {
+    return convert3DTo2D(p, getBounds());
+    
 }

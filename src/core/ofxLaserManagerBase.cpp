@@ -248,17 +248,17 @@ void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const o
 
 
 
-void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col, bool filled, string profileName){
-    drawCircle(glm::vec3(x, y, 0), radius, col, filled, profileName);
+void ManagerBase::drawCircle(const float& x, const float& y, const float& radius, const ofColor& col, string profileName){
+    drawCircle(glm::vec3(x, y, 0), radius, col, profileName);
 }
-void ManagerBase::drawCircle(const glm::vec2& pos, const float& radius, const ofColor& col, bool filled, string profileName){
-    drawCircle(glm::vec3(pos.x, pos.y, 0), radius, col, filled, profileName);
+void ManagerBase::drawCircle(const glm::vec2& pos, const float& radius, const ofColor& col, string profileName){
+    drawCircle(glm::vec3(pos.x, pos.y, 0), radius, col, profileName);
 }
-void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col, bool filled, string profileName){
+void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, const ofColor& col,  string profileName){
     ofxLaser::Circle* c = new ofxLaser::Circle(centre, radius, col, profileName);
  
-    c->setFilled(filled);
-    
+    c->setFilled(fillOn);
+    c->setStroked(strokeOn);
     vector<glm::vec3>& points = c->getPoints();
     for(glm::vec3& v : points) {
         v = getTransformed(v);
@@ -270,22 +270,22 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
 }
 
 
-void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, bool filled, string profileName, float brightness){
+void ManagerBase::drawPoly(const ofPolyline & poly, std::vector<ofColor>& colours, string profileName, float brightness){
     
-    drawPolyFromPoints(poly.getVertices(), colours, filled, poly.isClosed(), profileName, brightness);
+    drawPolyFromPoints(poly.getVertices(), colours, poly.isClosed(), profileName, brightness);
     
 }
 
 
 
-void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, bool filled, string profileName, float brightness){
+void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string profileName, float brightness){
     std::vector<ofColor> colours = {col};
-    drawPoly(poly, colours, filled, profileName, brightness);
+    drawPoly(poly, colours, profileName, brightness);
     
     
 }
 
-void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool filled, bool closed, string profileName, float brightness){
+void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
     
     if(points.size()==0) return;
     tmpPoints = points;
@@ -294,7 +294,10 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     }
 
     ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
-    p->setFilled(filled);
+    
+    p->setFilled(fillOn);
+    p->setStroked(strokeOn);
+
     p->setClosed(closed);
     
     if(p->getLength()>0.1) {
@@ -316,7 +319,7 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
     for(size_t i= 0; i<polylines.size(); i++) {
         ofColor col = colours[i];
         col*=brightness;
-        drawPoly(*polylines[i],col, false, renderProfile);
+        drawPoly(*polylines[i],col, renderProfile);
         
     }
     
@@ -380,102 +383,18 @@ void ManagerBase:: update(){
     if(settingsNeedSave && (ofGetElapsedTimef()-lastSaveTime>1)) {
         saveSettings();
     }
-    
+    fillOn = false;
+    strokeOn = true; 
     
 }
 
 void ManagerBase::send(){
     
-
-    vector <ofxLaser::Shape*>& shapes = canvasTarget.shapes;
+    canvasTarget.processShapes();
     
-    // sort shapes based on average z position
-    float fov = 550;
-    
-    ofRectangle cliprect = canvasTarget.getBounds();
-//    cliprect.x+=50;
-//    cliprect.y+=50;
-//    cliprect.width-=100;
-//    cliprect.height-=100;
-    // TODO this should all be moved to the targets i think
-    vector<ofxLaser::Shape*> emptyShapes;
-    
-    bool anyShapesFilled = false;
-    for(ofxLaser::Shape* shape : shapes) {
-        if(shape->isFilled()) {
-            anyShapesFilled = true;
-            break;
-        }
+    for(int i = 0; i<beamZoneContainer.getNumBeamZones(); i++) {
+        beamZoneContainer.getBeamZoneAtIndex(i)->processShapes();
     }
-    
-    if(anyShapesFilled) {
-        std::sort(shapes.begin(), shapes.end(), [](const ofxLaser::Shape* a, const ofxLaser::Shape* b) -> bool {
-            return (a->getMedianZDepth()<b->getMedianZDepth());
-        });
-    }
-    
-    for(Shape* shape : shapes) {
-        
-        // clip to near plane
-        shape->clipNearPlane(fov-10);
-        // convert 3D to 2D
-        
-        vector<glm::vec3>& points = shape->getPoints();
-        for(glm::vec3& p : points) {
-            p = convert3DTo2D(p);
-        }
-        shape->setDirty();
-        
-        shape->clipToRectangle(cliprect);
-        
-        if(shape->isEmpty()) {
-            emptyShapes.push_back(shape);
-        }
-        
-    }
-    
-    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
-        [](Shape* const& s) {
-            return s->isEmpty(); // put your condition here
-        }), shapes.end());
-    
-    for(Shape* shape : emptyShapes) {
-        delete shape;
-        
-    }
-    
-    // subtract shapes that are filled
-    
-    if(anyShapesFilled) {
-        
-//        vector<Shape*> deletedShapes;
-        vector<Shape*> newShapes;
-        ClipperLib::Paths clipperMaskPaths;
-        
-        // go from front to back
-        for(int i = shapes.size()-1; i>=0; i--) {
-            Shape* shape = shapes[i];
-        
-            
-            // clip the shape to the current mask, if we have one
-            vector<Shape*> clippedShapes = ClipperUtils::clipShapeToMask(shape, clipperMaskPaths);
-            // get the clipped shapes returned and add it to the newshapes
-            newShapes.insert(newShapes.begin(), clippedShapes.begin(), clippedShapes.end());
-            // if this shape is filled, add it to the mask
-            if(shape->isFilled()) {
-                ClipperUtils::addShapeToMasks(shape, clipperMaskPaths);
-            }
-        
-        
-        }
-        
-        canvasTarget.deleteShapes();
-        canvasTarget.addShapes(newShapes);
-        
-        
-    }
-    
-    
     
     // here's where the magic happens.
     // 1 :
@@ -636,6 +555,9 @@ bool ManagerBase::loadSettings() {
         beamZoneContainer.deserialize(json["beamZones"]);
     }
     canvasTarget.deserialize(json["canvastarget"]);
+    
+   // canvasTarget.addGuideImage("guide.jpg");
+    
     
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
@@ -823,32 +745,32 @@ bool ManagerBase::deserialize(ofJson& json) {
     
     
 }
-
-
-
-// converts openGL coords to screen coords //
-template<typename T>
-T ManagerBase::convert3DTo2D(T p, ofRectangle viewportrect, float fov ) {
-    
-    T p1 = getTransformed(p);
-
-    if(p1.z==0) return p1;
-  
-    float scale = fov/(-p1.z+fov);
-    p1.z = 0;
-    p1-=viewportrect.getCenter();
-    p1*=scale;
-    p1+=viewportrect.getCenter();
-
-    return p1;
- 
-}
-template<typename T>
-T ManagerBase::convert3DTo2D(T p) {
-    return convert3DTo2D(p, currentShapeTarget->getBounds());
-    
-}
-
+//
+//
+//
+//// converts openGL coords to screen coords //
+//template<typename T>
+//T ManagerBase::convert3DTo2D(T p, ofRectangle viewportrect, float fov ) {
+//
+//    T p1 = getTransformed(p);
+//
+//    if(p1.z==0) return p1;
+//
+//    float scale = fov/(-p1.z+fov);
+//    p1.z = 0;
+//    p1-=viewportrect.getCenter();
+//    p1*=scale;
+//    p1+=viewportrect.getCenter();
+//
+//    return p1;
+// 
+//}
+//template<typename T>
+//T ManagerBase::convert3DTo2D(T p) {
+//    return convert3DTo2D(p, currentShapeTarget->getBounds());
+//
+//}
+//
 
 Laser& ManagerBase::getLaser(int index){
     return *lasers.at(index);

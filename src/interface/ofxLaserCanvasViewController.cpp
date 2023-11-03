@@ -26,22 +26,26 @@ bool CanvasViewController :: updateZonesFromUI(ShapeTargetCanvas& canvasTarget){
         
         MoveablePoly& poly = *uiElementsSorted[i];
         
-        InputZone* zonepointer = canvasTarget.getInputZoneForZoneIdUid(poly.getUid());
-        if(zonepointer!=nullptr) {
-            
-            vector<glm::vec2*> points = poly.getPoints();
-            
-            // TODO better way to get MoveablePoly as rect
-            float x = points[0]->x;
-            float y = points[0]->y;
-            float w = points[2]->x - points[0]->x;
-            float h = points[2]->y - points[0]->y;
-
-            zonepointer->set( x, y, w, h);
-        }
-        zonepointer->locked = poly.getDisabled();
+        GuideImage* guideImage = getGuideImageForUiElement(canvasTarget, &poly);
         
+        if(guideImage!=nullptr) {
+            
+            guideImage->rect = poly.getBoundingBox();
+            guideImage->locked = poly.getDisabled();
+            GuideImageUiQuad* guideImageUiQuad = dynamic_cast<GuideImageUiQuad*>(&poly);
+            guideImage->colour = guideImageUiQuad->colour;
+            
+        } else {
+            
+            InputZone* zonepointer = canvasTarget.getInputZoneForZoneIdUid(poly.getUid());
+            if(zonepointer!=nullptr) {
+                
+                ofRectangle rect = poly.getBoundingBox();
 
+                zonepointer->set( rect.x, rect.y, rect.width, rect.height);
+            }
+            zonepointer->locked = poly.getDisabled();
+        }
     }
     
     if(sourceRect!=canvasTarget.getBounds()) {
@@ -73,6 +77,28 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
         }
     }
     
+    vector<GuideImage>& guideImages = canvasTarget.guideImages;
+    
+    for(int i = 0; i< guideImages.size(); i++ ) {
+        
+        GuideImage& guideImage = guideImages.at(i);
+        string uid = "guide"+ofToString(i);
+        MoveablePoly* uiElement = getUiElementByUid(uid);
+        
+        if(uiElement==nullptr) {
+            GuideImageUiQuad* guideImageUiQuad = new GuideImageUiQuad(uid);
+            guideImageUiQuad->image = guideImage.image; // should copy, hopefully safer
+            guideImageUiQuad->colour = guideImage.colour;
+            guideImageUiQuad->setDisabled(guideImage.locked);
+            
+            uiElementsSorted.push_back(guideImageUiQuad);
+            
+        }
+        
+        
+    }
+    
+    
     vector<MoveablePoly*> elementsToDelete;
     
     // remove interface elements for things we no longer need
@@ -80,26 +106,66 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
     
     for(MoveablePoly* uiElement : uiElementsSorted) {
        
-        InputZone* targetInputZone = nullptr;
         
-        for(InputZone* inputZone : inputZones) {
-            if(inputZone->getZoneId().getUid() == uiElement->getUid()) {
-                targetInputZone =inputZone;
-                break;
+        GuideImageUiQuad* guideImageUiQuad = dynamic_cast<GuideImageUiQuad*>(uiElement);
+        GuideImage* targetGuideImage = nullptr;
+        
+        if(guideImageUiQuad!=nullptr) {
+            for(int i = 0; i< guideImages.size(); i++ ) {
+                
+          
+                string uid = "guide"+ofToString(i);
+                
+                if(guideImageUiQuad->getUid()==uid) {
+                    targetGuideImage = & guideImages.at(i);
+                    
+                }
+                
+                
             }
-        }
-        // if the uiElement doesn't have an input zone then delete it
-        if(targetInputZone == nullptr) {
-            elementsToDelete.push_back(uiElement);
+            
+            if(targetGuideImage!=nullptr) {
+                uiElement->setFromRect(targetGuideImage->rect);
+                uiElement->setGrid(snapToGrid, gridSize);
+                guideImageUiQuad->colour = targetGuideImage->colour;
+                guideImageUiQuad->setDisabled(targetGuideImage->locked);
+                guideImageUiQuad->image = targetGuideImage->image; // should copy, hopefully safer
+                
+            } else {
+                elementsToDelete.push_back(uiElement);
+            }
+            
+            
         } else {
-            // otherwise update it
-            uiElement->setFromRect(targetInputZone->getRect());
-            uiElement->setGrid(snapToGrid, gridSize);
-            uiElement->setHue(220);
-            uiElement->setBrightness(canvasTarget.zoneBrightness);
-            uiElement->setShowLabel(!targetInputZone->locked);
-            uiElement->setDisabled(targetInputZone->locked);
+            
+            
+            InputZone* targetInputZone = nullptr;
+            
+            for(InputZone* inputZone : inputZones) {
+                if(inputZone->getZoneId().getUid() == uiElement->getUid()) {
+                    targetInputZone =inputZone;
+                    break;
+                }
+            }
+            
+            // if the uiElement doesn't have an input zone then delete it
+            if(targetInputZone != nullptr) {
+          
+                // otherwise update it
+                uiElement->setFromRect(targetInputZone->getRect());
+                uiElement->setGrid(snapToGrid, gridSize);
+                uiElement->setHue(220);
+                uiElement->setBrightness(canvasTarget.zoneBrightness);
+                uiElement->setShowLabel(!targetInputZone->locked);
+                uiElement->setDisabled(targetInputZone->locked);
+                
+            } else {
+                elementsToDelete.push_back(uiElement);
+            }
+            
+            
         }
+        
     }
     
     while(elementsToDelete.size()>0) {
@@ -134,10 +200,19 @@ void CanvasViewController :: drawImGui() {
         }
         if(ImGui::BeginPopup(label.c_str())) {
             ImGui::Text("CANVAS ZONE %s", label.c_str());
-            //ImGui::Text("CANVAS ZONE %s", uiElements[i]->getLabel().c_str());
-//            if(find(uiElementsSorted.begin(), uiElementsSorted.end(), &uiElement) == uiElementsSorted.begin()) {
-//                UI::startDisabled();
-//            }
+
+            GuideImageUiQuad* guideImageUiQuad = dynamic_cast<GuideImageUiQuad*>(&uiElement);
+            if(guideImageUiQuad!=nullptr) {
+                ofFloatColor tmpRef = guideImageUiQuad->colour;
+                string label="Image tint colour";
+                if (ImGui::ColorEdit4(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV)){
+                    guideImageUiQuad->colour = tmpRef;
+                    zonesChangedFlag = true;
+                }
+            }
+                
+            
+            
             if(UI::Button("Move to back")) {
                 uiElementsToMoveBack.push_back(&uiElement);
                 ImGui::CloseCurrentPopup();

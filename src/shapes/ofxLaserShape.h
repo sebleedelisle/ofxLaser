@@ -38,6 +38,9 @@ class Shape {
     
     virtual bool isFilled() const;
     virtual void setFilled(bool fillstate);
+    virtual bool isStroked() const;
+    virtual void setStroked(bool strokestate);
+    
     virtual void setClosed(bool closestate);
     virtual bool isClosed(); 
 
@@ -139,6 +142,7 @@ class Shape {
     bool lengthsDirty = true;
     float totalLength = 0; 
     bool filled = false;
+    bool stroked = true;
     bool fillable = true;
     bool reversable = false;
 
