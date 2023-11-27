@@ -390,16 +390,18 @@ void LaserZoneViewController :: drawImGui() {
         
         OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
         
+        if(!outputZone) continue;
+        
         ZoneTransformBase* zoneTransform = &outputZone->getZoneTransform();
         
         ZoneTransformQuadData* zoneTransformQuad = dynamic_cast<ZoneTransformQuadData*>(zoneTransform);
         ZoneTransformLineData* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(zoneTransform);
         ZoneTransformQuadComplexData* zoneTransformQuadComplex = dynamic_cast<ZoneTransformQuadComplexData*>(zoneTransform);
-       
+        
         
         // RIGHT CLIP MENU -----------------------------
         if(zoneUi->getRightClickPressed()) {
-           
+            
             ImGui::OpenPopup("ZONE SETTINGS");
             ofLogNotice(zoneUi->getLabel().c_str());
             
@@ -409,10 +411,10 @@ void LaserZoneViewController :: drawImGui() {
             //OutputZone* laserZone : zoneUi->
             ImGui::Text("ZONE SETTINGS");
             ImGui::Text("%s", zoneUi->getLabel().c_str());
-//            if(ImGui::Checkbox("mute", &zoneUi->muted)) {
-//                outputZone->muted = zoneUi->muted;
-//            }
-//
+            //            if(ImGui::Checkbox("mute", &zoneUi->muted)) {
+            //                outputZone->muted = zoneUi->muted;
+            //            }
+            //
             
             if(UI::Button("MUTE", false, zoneUi->muted)) {
                 zoneUi->muted = !zoneUi->muted;
@@ -429,7 +431,7 @@ void LaserZoneViewController :: drawImGui() {
             }
             
             UI::secondaryColourEnd();
-           
+            
             
             ImGui::SameLine();
             if(zoneTransformLine)  UI::secondaryColourStart();
@@ -469,15 +471,15 @@ void LaserZoneViewController :: drawImGui() {
                     ztq->setDst(ofRectangle(200,240,400,200));
                 }
                 UI::toolTip("Reset zone to default");
-
+                
                 UI::addParameterGroup(ztq->transformParams, false);
                 
                 
             } else if(zoneTransformLine){
                 
                 ZoneTransformLineData* ztl = zoneTransformLine;
-            
-           
+                
+                
                 //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
                 
                 UI::addFloatSlider(ztl->zoneWidth, "%.2f", ImGuiSliderFlags_Logarithmic);
@@ -496,7 +498,7 @@ void LaserZoneViewController :: drawImGui() {
                 UI::stopDisabled();
                 
                 UI::addCheckbox(ztl->locked);
-
+                
                 vector<BezierNode>& nodes = ztl->getNodes();
                 for(int i = 0; i<nodes.size(); i++) {
                     ImGui::PushID(i);
@@ -505,34 +507,34 @@ void LaserZoneViewController :: drawImGui() {
                     ImGui::Text("%d", i+1);
                     ImGui::SameLine();
                     
-//                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
-//                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
-//                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
-//
-//                        if(mode!=node.mode) {
-//                            node.mode = mode;
-//                            ztl->setDirty(true);
-//                        }
+                    //                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
+                    //                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
+                    //                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
+                    //
+                    //                        if(mode!=node.mode) {
+                    //                            node.mode = mode;
+                    //                            ztl->setDirty(true);
+                    //                        }
                     if(nodes.size()>2) {
                         ImGui::SameLine();
-
+                        
                         string label = ofToString(ICON_FK_MINUS_CIRCLE) + "##" + ofToString(i);
                         if (UI::DangerButton(label, false)) {
                             ztl->deleteNode(i);
-
+                            
                         }
                     }
-
+                    
                     ImGui::PopID();
-
+                    
                 }
-
+                
                 string label = ofToString(ICON_FK_PLUS_CIRCLE) + "##addnode";
                 if (UI::Button(label, false)) {
                     ztl->addNode();
-
+                    
                 }
-            
+                
                 
             } else if(zoneTransformQuadComplex) {
                 
@@ -544,15 +546,15 @@ void LaserZoneViewController :: drawImGui() {
                 if(UI::Button("-")) {
                     ztq->decSubdivisionLevel();
                 }
-
-//                if(ztq->isAxisAligned()) {
-//                    UI::startDisabled();
-//                }
-//                if(UI::Button("Reset to square")) {
-//                    ztq->resetToSquare();
-//                }
-//                UI::stopDisabled();
-
+                
+                //                if(ztq->isAxisAligned()) {
+                //                    UI::startDisabled();
+                //                }
+                //                if(UI::Button("Reset to square")) {
+                //                    ztq->resetToSquare();
+                //                }
+                //                UI::stopDisabled();
+                
                 UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
                 ImGui::SameLine();
                 
@@ -560,7 +562,7 @@ void LaserZoneViewController :: drawImGui() {
                     ztq->resetDst(ofRectangle(200,240,400,200));
                 }
                 UI::toolTip("Reset zone to default");
-
+                
                 UI::addParameterGroup(ztq->transformParams, false);
                 
                 
@@ -581,7 +583,7 @@ void LaserZoneViewController :: drawImGui() {
             
             string buttonlabel = "DELETE ZONE";
             if(zoneUi->inputZoneAlt) buttonlabel = "DELETE ALT ZONE";
-           
+            
             if(UI::DangerButton(buttonlabel.c_str())) {
                 ImGui::OpenPopup("DELETE ZONE");
             }
@@ -626,6 +628,7 @@ void LaserZoneViewController :: drawImGui() {
             
             ImGui::EndPopup();
         }
+        
         ImGui::PopID();
 
     }

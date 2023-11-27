@@ -50,6 +50,9 @@ class Manager : public ManagerBase {
     
 
     ofRectangle getPreviewRect();
+    float getPreviewScale();
+    glm::vec2 getPreviewOffset();
+
     ofRectangle getZonePreviewRect();
     ofRectangle getVisualiserPreviewRect();
     

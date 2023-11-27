@@ -2576,6 +2576,14 @@ ofRectangle Manager :: getPreviewRect() {
     
 }
 
+glm::vec2 Manager :: getPreviewOffset() {
+    return canvasViewController.getOffset();
+}
+
+float Manager :: getPreviewScale() {
+    return canvasViewController.getScale();
+}
+
 ofRectangle Manager :: getZonePreviewRect() {
 
     int w = displayRectangle.getWidth()*0.6;

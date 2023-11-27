@@ -53,7 +53,7 @@ void ZoneTransformQuadComplexData::init() {
 bool ZoneTransformQuadComplexData::update(){
     
     if(isDirty) {
-        ofLogNotice("ZoneTransform::update() - isDirty");
+        //ofLogNotice("ZoneTransform::update() - isDirty");
         //updateQuads();
         //updateHandleColours();
         //updateConvex();

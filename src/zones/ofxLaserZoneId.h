@@ -31,7 +31,10 @@ class ZoneId {
     bool operator!=(const ZoneId & other) const;
     
     inline bool operator< (const ZoneId& rhs) const {
-        return true;
+        if(zoneGroup!=rhs.zoneGroup) return zoneGroup<rhs.zoneGroup;
+        else return zoneIndex<rhs.zoneIndex;
+        // TODO add zone type checking
+        //return true;
     }
     
     ZoneType type;

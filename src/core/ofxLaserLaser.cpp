@@ -1661,7 +1661,7 @@ vector<OutputZone*> Laser ::getSortedOutputZones() {
     }
     sort(sortedzones.begin(), sortedzones.end(),
          [](const OutputZone* a, const OutputZone* b) -> bool {
-        return a->getZoneId().getUid() < b->getZoneId().getUid();
+        return a->getZoneId()< b->getZoneId();
     });
     return sortedzones;
     

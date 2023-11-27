@@ -122,7 +122,7 @@ void ShapeTarget ::  processShapes() {
     
     shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
         [](Shape* const& s) {
-            return s->isEmpty(); // put your condition here
+            return s->isEmpty(); // remove from vector if empty
         }), shapes.end());
     
     for(Shape* shape : emptyShapes) {
@@ -133,8 +133,7 @@ void ShapeTarget ::  processShapes() {
     // subtract shapes that are filled
     
     if(anyShapesFilled) {
-        
-//        vector<Shape*> deletedShapes;
+
         vector<Shape*> newShapes;
         ClipperLib::Paths clipperMaskPaths;
         

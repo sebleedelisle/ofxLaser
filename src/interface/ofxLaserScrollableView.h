@@ -23,6 +23,8 @@ class ScrollableView {
     
     void zoom(glm::vec2 anchor, float zoomMultiplier);
     void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
+    float getScale() { return scale; };
+    glm::vec2 getOffset() { return offset; } ; 
     
     void beginViewPort();
     void drawFrame();

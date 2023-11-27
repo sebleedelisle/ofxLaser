@@ -585,17 +585,13 @@ void Shape :: setStroked(bool strokestate) {
     stroked = strokestate;
 }
 
-
-
-
-
 void Shape :: setClosed(bool closestate) {
     if(closestate!=closed) {
         closed = closestate;
         lengthsDirty = true; // bounding box not dirty
     }
-    
 }
+
 bool Shape :: isClosed() {
     return closed;
 } 

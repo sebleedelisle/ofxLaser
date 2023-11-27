@@ -19,8 +19,6 @@ SVGLoader::~SVGLoader() {
 int SVGLoader:: startLoad(string path) {
     
     dir = ofDirectory(path);
-	dir.listDir();
-	const vector<ofFile>& allFiles = dir.getFiles();
 
 	//only show svg files
 	dir.allowExt("svg");
