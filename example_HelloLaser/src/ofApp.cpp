@@ -9,7 +9,8 @@ void ofApp::setup(){
     // If you want to change the size of the laser area, use
     // laser.setCanvasSize(int width, int height) - default is 800 x 800.
     ofSetVerticalSync(false); 
-    starPoly = makeStarPolyline(4);
+    starPoly = makeStarPolyline(4, 100);
+    starPolyInner = makeStarPolyline(4, 50);
 
     starPoly.scale(-1,1);
 
@@ -19,8 +20,7 @@ void ofApp::setup(){
         starPolyColours.push_back(ofColor::fromHsb(hue%255, 255,255));
         hue+=20;
     }
-    
-    
+
     
 }
 
@@ -70,7 +70,13 @@ void ofApp::draw() {
     // 3D rotation around the y axis
     laser.rotateYRad(ofGetElapsedTimef());
     
-    laser.drawPoly(starPoly, starPolyColours, OFXLASER_PROFILE_DEFAULT);
+    //laser.drawPoly(starPoly, starPolyColours, OFXLASER_PROFILE_DEFAULT);
+    //laser.drawPoly(starPolyInner, starPolyColours, OFXLASER_PROFILE_DEFAULT);
+    vector<vector<ofColor>> colours = {starPolyColours, starPolyColours};
+    laser.drawPolys({starPoly, starPolyInner}, colours, OFXLASER_PROFILE_DEFAULT);
+    
+    
+    
     laser.popMatrix();
     
     laser.rotateYRad(ofGetElapsedTimef()*-0.83);
@@ -117,16 +123,16 @@ void ofApp::draw() {
 }
 
 
-ofPolyline ofApp::makeStarPolyline(int numSides) {
+ofPolyline ofApp::makeStarPolyline(int numSides, float size) {
     ofPolyline poly;
     // create a star polyline object
     float angle = 360.0f / (float)numSides /2.0f;
     for(int i = 0; i<numSides; i++) {
         poly.rotateDeg(angle, glm::vec3(0,0,1));
-        poly.addVertex(-100,0);
+        poly.addVertex(-size,0);
         //if(i==numSides) continue;
         poly.rotateDeg(angle, glm::vec3(0,0,1));
-        poly.addVertex(-30,0);
+        poly.addVertex(-size*0.3,0);
     }
     poly.close();
     return poly;

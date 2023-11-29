@@ -102,6 +102,10 @@ class ManagerBase : public TransformationManager {
     void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
     void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed = false, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
   
+    Polyline* getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed = false, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    
+    void drawPolys(const vector<ofPolyline>& polys, vector<vector<ofColor>>&colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    
     void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     void drawCircle(const glm::vec3& centre, const float& radius, const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     void drawCircle(const glm::vec2& centre, const float& radius, const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);

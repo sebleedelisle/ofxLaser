@@ -263,7 +263,7 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
     for(glm::vec3& v : points) {
         v = getTransformed(v);
     }
-    c->update();
+    c->setDirty();
     
     currentShapeTarget->addShape(c);
     
@@ -288,6 +288,20 @@ void ManagerBase::drawPoly(const ofPolyline & poly, const ofColor& col, string p
 void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
     
     if(points.size()==0) return;
+   
+
+    ofxLaser::Polyline* p = getPolyFromPoints(points, colours, closed, profileName, brightness);
+        
+    if(p->getLength()>0.1) {
+        //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
+        currentShapeTarget->addShape(p);
+    } else {
+        delete p;
+    }
+}
+
+Polyline* ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
+    
     tmpPoints = points;
     for(glm::vec3& v : tmpPoints) {
         v = getTransformed(v);
@@ -299,16 +313,18 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     p->setStroked(strokeOn);
 
     p->setClosed(closed);
+    return p;
     
-    if(p->getLength()>0.1) {
-        //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-        currentShapeTarget->addShape(p);
-    } else {
-        delete p;
-    }
 }
 
 
+
+void ManagerBase::drawPolys(const vector<ofPolyline>& polys, vector<vector<ofColor>>&colours, string profileName, float brightness) {
+    
+    ofxLaser::Polylines* polylines = new ofxLaser::Polylines();
+    
+    
+}
 
 
 void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string renderProfile) {
