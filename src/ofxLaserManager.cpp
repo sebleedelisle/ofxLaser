@@ -6,7 +6,6 @@
 //
 
 #include "ofxLaserManager.h"
-#include "ofGraphics.h"
 
 using namespace ofxLaser;
 
