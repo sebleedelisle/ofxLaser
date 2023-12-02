@@ -233,7 +233,7 @@ void DacIDN :: sendFrameToDac() {
 		//DATA START!
 		// now it's points! 7 bytes per point :
 		// XXYYRGB
-		int lastPoint = min(maxPointsPerFragment*(i+1), numPointsToSend);
+		int lastPoint = std::min(maxPointsPerFragment*(i+1), numPointsToSend);
 		for(; pointIndex<lastPoint ; pointIndex++) {
 			IDN_point &point = bufferedPoints[pointIndex];
 			point.getSerialised();
