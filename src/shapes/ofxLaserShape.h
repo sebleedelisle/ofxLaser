@@ -131,6 +131,8 @@ class Shape {
    
 	string profileLabel = "";
 	
+    int id = -1;
+    
 	protected :
     
     vector <glm::vec3> points;
@@ -145,7 +147,6 @@ class Shape {
     bool stroked = true;
     bool fillable = true;
     bool reversable = false;
-
 
 };
 }

@@ -88,16 +88,60 @@ void ShapeTarget ::  processShapes() {
             break;
         }
     }
+    vector<vector<Shape*>> sortedShapeContainers;
     
     if(anyShapesFilled) {
-        std::sort(shapes.begin(), shapes.end(), [](const ofxLaser::Shape* a, const ofxLaser::Shape* b) -> bool {
-            float d1 = a->getMedianZDepth();
-            float d2 = b->getMedianZDepth();
+        
+        for(int i = 0; i<shapes.size(); i++) {
+          
+            Shape* shape = shapes[i];
+            if(shape->id==-1) {
+                sortedShapeContainers.push_back({shape});
+            } else {
+              
+                bool found = false;
+                
+                for(vector<Shape*>& shapecontainer : sortedShapeContainers) {
+                    
+                    if(shapecontainer.front()->id==-1) continue;
+                    //ofLogNotice("shapecontainer.front()->id : ") << shapecontainer.front()->id << " " << shape->id;
+                    
+                    if(shapecontainer.front()->id==shape->id) {
+                        shapecontainer.push_back(shape);
+                        found = true;
+                        break;
+                    }
+                }
+                if(!found) {
+                    sortedShapeContainers.push_back({shape});
+                }
+                
+                
+            }
+            
+            
+        }
+        
+        std::sort(sortedShapeContainers.begin(), sortedShapeContainers.end(), [](const vector<ofxLaser::Shape*>& a, const vector<ofxLaser::Shape*>& b) -> bool {
+           
+            float d1 = a.front()->getMedianZDepth();
+            float d2 = b.front()->getMedianZDepth();
             //ofLogNotice() << d1 << " " << d2;
             // don't sort if they're basically the same
             if(fabs(d1-d2)<0.001) return false;
             else return d1<d2;
         });
+        
+//        std::sort(shapes.begin(), shapes.end(), [](const ofxLaser::Shape* a, const ofxLaser::Shape* b) -> bool {
+//            if((a->id!=-1) && (b->id!=-1) && (a->id==b->id)) return false;
+//            float d1 = a->getMedianZDepth();
+//            float d2 = b->getMedianZDepth();
+//            //ofLogNotice() << d1 << " " << d2;
+//            // don't sort if they're basically the same
+//            if(fabs(d1-d2)<0.001) return false;
+//            else return d1<d2;
+//        });
+        
     }
     
     for(Shape* shape : shapes) {
@@ -120,16 +164,6 @@ void ShapeTarget ::  processShapes() {
         
     }
     
-    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
-        [](Shape* const& s) {
-            return s->isEmpty(); // remove from vector if empty
-        }), shapes.end());
-    
-    for(Shape* shape : emptyShapes) {
-        delete shape;
-        
-    }
-    
     // subtract shapes that are filled
     
     if(anyShapesFilled) {
@@ -138,25 +172,24 @@ void ShapeTarget ::  processShapes() {
         ClipperLib::Paths clipperMaskPaths;
         
         // go from front to back
-        for(int i = shapes.size()-1; i>=0; i--) {
-            Shape* shape = shapes[i];
-        
+        for(int i = sortedShapeContainers.size()-1; i>=0; i--) {
+            vector<Shape*>& shapeContainer = sortedShapeContainers[i];
             
-            // clip the shape to the current mask, if we have one
-            vector<Shape*> clippedShapes = ClipperUtils::clipShapeToMask(shape, clipperMaskPaths);
+            for(Shape* shape : shapeContainer)  {
+                if(shape->isStroked() && (!shape->isEmpty())) {
+                    // clip the shape to the current mask, if we have one
+                    vector<Shape*> clippedShapes = ClipperUtils::clipShapeToMask(shape, clipperMaskPaths);
+                    
+                    newShapes.insert(newShapes.begin(), clippedShapes.begin(), clippedShapes.end());
+                }
+                    
+            }
            
             // if this shape is filled, add it to the mask
-            if(shape->isFilled()) {
-                ClipperUtils::addShapeToMasks(shape, clipperMaskPaths);
+            if(shapeContainer.front()->isFilled()) {
+                ClipperUtils::addShapesToMasks(shapeContainer, clipperMaskPaths);
+
             }
-            // get the clipped shapes returned and add it to the newshapes
-            if(shape->isStroked()) {
-                newShapes.insert(newShapes.begin(), clippedShapes.begin(), clippedShapes.end());
-            } else {
-                for(Shape* shape : clippedShapes) {
-                    delete shape;
-                }
-            } 
                 
         
         }
@@ -165,9 +198,28 @@ void ShapeTarget ::  processShapes() {
         addShapes(newShapes);
         
         
+    } else {
+        
+        shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
+            [](Shape* const& s) {
+                return s->isEmpty(); // remove from vector if empty
+            }), shapes.end());
+        
+        for(Shape* shape : emptyShapes) {
+            delete shape;
+        }
+        
     }
     
-
+//    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),
+//        [](Shape* const& s) {
+//            return s->isEmpty(); // remove from vector if empty
+//        }), shapes.end());
+//
+//    for(Shape* shape : emptyShapes) {
+//        delete shape;
+//
+//    }
     
 }
 

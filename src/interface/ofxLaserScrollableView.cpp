@@ -32,30 +32,42 @@ void ScrollableView :: drawFrame() {
 }
 
 
-void ScrollableView::beginViewPort() {
-    
-   
-    
-    ofPushView();
-    ofViewport(outputRect);
-    
-    ofSetupScreen();
-    
+void ScrollableView::beginViewPort(bool clearScreen) {
+
+    if(useFbo) {
+        if(!fbo.isAllocated()) {
+            ofLogError("FBO not allocated!");
+        }
+        fbo.begin();
+        if(clearScreen) ofBackground(0,0,0);
+    } else {
+        ofPushView();
+        ofViewport(outputRect);
         
+        ofSetupScreen();
+    }
+
     
     ofPushMatrix();
-    // offset for the viewport position
-    //ofTranslate(-outputRect.getTopLeft());
-
-   
-
 
     ofTranslate(offset);
     ofScale(scale, scale);
-    
 
     
+}
+
+
+void ScrollableView::endViewPort() {
     
+    ofPopMatrix();
+    
+    if(useFbo) {
+        fbo.clearColorBuffer(ofColor::red);
+        fbo.end();
+        fbo.draw(outputRect.getTopLeft());
+    } else {
+        ofPopView();
+    }
     
     
 }
@@ -90,13 +102,9 @@ void ScrollableView :: drawEdges() {
     }
     ofPopStyle();
     ofPopMatrix();
-    
+
 }
-void ScrollableView::endViewPort() {
-    ofPopMatrix();
-    ofPopView();
-    
-}
+
 bool ScrollableView::update(){
     //if(getIsVisible()) ofLogNotice() << offset;
     
@@ -138,15 +146,14 @@ void ScrollableView::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
     if(outputRect!=rect) {
         if(updatescaleandoffset) {
             float relativescale = rect.getWidth()/outputRect.getWidth();
-            //glm::vec2 topleft(outputRect.getLeft(), outputRect.getTop());
-            //offset -=topleft;
             offset *=relativescale;
-            //offset+=topleft;
-
             scale*=relativescale;
         }
         
         outputRect = rect;
+        if(useFbo) {
+            fbo.allocate(outputRect.getWidth(), outputRect.getHeight(), GL_RGB, 8);
+        } 
     }
 }
 
@@ -306,4 +313,30 @@ bool ScrollableView :: checkEdges() {
     
     
     return changed; 
+}
+
+
+
+bool ScrollableView :: doesUseFbo() {
+    return useFbo; 
+    
+}
+bool ScrollableView :: setUseFbo(bool state) {
+  
+    if(state!=useFbo) {
+        
+        useFbo = state;
+        if(useFbo) {
+            // set up Fbo
+            fbo.allocate(outputRect.width, outputRect.height);
+        } else {
+            fbo.clear();
+        }
+        return true;
+    } else {
+        return false;
+    }
+        
+    
+    
 }

@@ -26,7 +26,7 @@ class ScrollableView {
     float getScale() { return scale; };
     glm::vec2 getOffset() { return offset; } ; 
     
-    void beginViewPort();
+    void beginViewPort(bool clearScreen = true);
     void drawFrame();
     void drawEdges(); 
     void endViewPort();
@@ -57,6 +57,8 @@ class ScrollableView {
     bool stopDrag();
     bool cancelDrag();
 
+    bool doesUseFbo();
+    bool setUseFbo(bool state);
     
     protected :
     bool isVisible;
@@ -74,7 +76,10 @@ class ScrollableView {
     glm::vec2 dragOffset;
     glm::vec2 dragStartPosition; 
     
-    float zoomSpeed = 0.02f; 
+    float zoomSpeed = 0.02f;
+    
+    ofFbo fbo;
+    bool useFbo = false;
     
     
 };

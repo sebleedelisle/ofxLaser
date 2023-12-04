@@ -58,6 +58,48 @@ void ClipperUtils :: addShapeToMasks(ofxLaser::Shape* element, ClipperLib::Paths
 
 
 
+void ClipperUtils :: addShapesToMasks(vector<ofxLaser::Shape*> elements, ClipperLib::Paths& clipperMasks){
+
+    if(elements.size()>1) {
+       // ofLogNotice("ClipperUtils :: addShapesToMasks");
+    }
+    
+    
+    clipper.Clear();
+    try {
+
+        ClipperLib::Paths clipperElements;
+        for(ofxLaser::Shape* element : elements) {
+            if(!element->isEmpty()) {
+                clipperElements.push_back(shapeToClipper(element));
+            }
+        }
+        
+        if(clipperElements.size()==0) return; 
+        //ClipperLib::Path elementMask = shapeToClipper(element);
+
+
+        if(clipperMasks.size()==0) {
+            clipperMasks = clipperElements;
+            return;
+        }
+        clipper.AddPaths(clipperElements, ClipperLib::ptSubject, true);
+        clipper.AddPaths(clipperMasks, ClipperLib::ptClip, true);
+
+        //vector<ofPolyline> targetPieces = clipper.getClipped(ClipperLib::ctUnion);
+        clipper.Execute(ClipperLib::ctUnion, clipperMasks, ClipperLib::pftEvenOdd, ClipperLib::pftEvenOdd);
+
+        //masks = combinedElements;
+       // return clippedElements;
+
+
+    } catch(...) {
+        ofLogError("Clipper error!");
+        //return ; // vector<BaseGraphicElement*> { element};
+    }
+
+
+}
 
 
 vector<ofxLaser::Shape*> ClipperUtils :: clipShapeToMask(ofxLaser::Shape* shape, ClipperLib::Paths& clipperMasks) {

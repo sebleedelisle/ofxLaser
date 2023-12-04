@@ -22,7 +22,7 @@ class ClipperUtils {
     }
 
     static void addShapeToMasks(ofxLaser::Shape* element, ClipperLib::Paths& clipperMasks);
-   
+    static void addShapesToMasks(vector<ofxLaser::Shape*> elements, ClipperLib::Paths& clipperMasks); 
     static vector<ofxLaser::Shape*> clipShapeToMask(ofxLaser::Shape* shape, ClipperLib::Paths& clipperMasks);
     
     static bool pointWithinMask(glm::vec3 point, ClipperLib::Paths& clipperMasks);

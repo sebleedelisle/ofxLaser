@@ -145,7 +145,7 @@ class ManagerBase : public TransformationManager {
     }
     
     
-  
+    int getNextId();
     //--------------------------------------------------------
     
     DacAssigner& dacAssigner;
@@ -174,7 +174,12 @@ class ManagerBase : public TransformationManager {
  
     ofJson loadedJson;
     
+    
+    
     protected :
+    
+    
+    int currentId = 0;
     
 //    template<typename T>
 //    T convert3DTo2D(T p);

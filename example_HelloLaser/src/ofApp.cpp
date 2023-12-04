@@ -12,16 +12,12 @@ void ofApp::setup(){
     starPoly = makeStarPolyline(4, 100);
     starPolyInner = makeStarPolyline(4, 50);
 
-    starPoly.scale(-1,1);
-
     auto vertices = starPoly.getVertices();
     int hue = 0;
     for(auto& v : vertices) {
         starPolyColours.push_back(ofColor::fromHsb(hue%255, 255,255));
         hue+=20;
     }
-
-    
 }
 
 //--------------------------------------------------------------

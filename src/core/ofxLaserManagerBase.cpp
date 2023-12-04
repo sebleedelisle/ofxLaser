@@ -321,8 +321,26 @@ Polyline* ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const 
 
 void ManagerBase::drawPolys(const vector<ofPolyline>& polys, vector<vector<ofColor>>&colours, string profileName, float brightness) {
     
-    ofxLaser::Polylines* polylines = new ofxLaser::Polylines();
+    if(polys.size()!=colours.size()) {
+        ofLogError("ManagerBase::drawPolys - mismatched polys / colours lengths");
+        return ;
+    }
     
+    int id = getNextId();
+    for(int i = 0; i<polys.size() ; i++ ) {
+        const ofPolyline& ofpolyline = polys[i];
+        ofxLaser::Polyline* poly = getPolyFromPoints(ofpolyline.getVertices(), colours[i], ofpolyline.isClosed(), profileName, brightness);
+        poly->id = id;
+        if(poly->getLength()>0.1) {
+            currentShapeTarget->addShape(poly);
+        } else {
+            delete poly;
+        }
+    }
+    
+    
+    //ofxLaser::Polylines* polylines = new ofxLaser::Polylines();
+    //TODO ******
     
 }
 
@@ -400,9 +418,18 @@ void ManagerBase:: update(){
         saveSettings();
     }
     fillOn = false;
-    strokeOn = true; 
+    strokeOn = true;
+    
+    currentId = 0;
     
 }
+int ManagerBase::getNextId() {
+    int id = currentId;
+    currentId++;
+    return id;
+    
+}
+
 
 void ManagerBase::send(){
     

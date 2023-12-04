@@ -32,7 +32,6 @@ Manager :: Manager(bool hidecanvas) {
 
     if(hidecanvas) showCanvas = false;
 
-
     initAndLoadSettings();
     
     // if no lasers are loaded make one and add a zone
@@ -49,10 +48,13 @@ Manager :: Manager(bool hidecanvas) {
             lasers[0]->addZone(zoneid);
         }
     }
+    
 
     selectedLaserIndex = 0;
     viewMode  = showCanvas ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
 
+    canvasViewController.setUseFbo(true); 
+    
     guiIsVisible = true;
     guiIsMouseDisabled = false; 
     guiLaserSettingsPanelWidth = 320;
@@ -562,11 +564,7 @@ void Manager :: drawPreviews() {
         
         if(isGuiVisible()) {
             canvasViewController.draw();
-//            canvasViewController.drawFrame();
-            canvasViewController.beginViewPort();
-//            canvasViewController.drawEdges();
-//            canvasViewController.drawMoveables();
-//            canvasViewController.drawGrid();
+            canvasViewController.beginViewPort(false);
             renderPreview();
             canvasViewController.endViewPort();
         }
@@ -646,13 +644,8 @@ void Manager :: renderPreview() {
     ofSetLineWidth(4);
     mesh.draw();
     
+
     
-//    if(showGuideImage && guideImage.isAllocated()) {
-//        ofSetColor(guideImageColour);
-//        guideImage.draw(0,0,canvasTarget.getWidth(), guideImage.getHeight() * ((float)canvasTarget.getWidth()/(float)guideImage.getWidth()));
-//
-//
-//    }
     ofDisableBlendMode();
 
     ofPopStyle();
@@ -1575,60 +1568,9 @@ void Manager :: guiLaserOverview() {
             
         }
         
-//        string label = "ADD LASER";
-//        if(UI::Button( label, false, false)) {
-//            // add laser
-//            laserManager.createAndAddLaser();
-//
-//            saveSettings();
-//        }
-//
-//        ImGui::SameLine();
-//        if(ImGui::Button("ADD ZONE", ImVec2(buttonwidth, 0.0f))) {
-//            addCanvasZone(0,0,280,110);
-//            //lockInputZones = false;
-//            saveSettings();
-//        }
-//
-//        if(UI::Button("CONTROLLERS", false, false)) {
-//            // add laser
-//            showDacAssignmentWindow = true;
-//            ImGui::SetWindowFocus("Controller Assignment");
-//
-//        }
         UI::addIntSlider(globalLatency);
         
-        if(viewMode == OFXLASER_VIEW_CANVAS) {
-//            if(UI::addParameter(canvasTarget.getWidth())) {
-//                saveSettings();
-//            }
-//           
-//            if(UI::addParameter(canvasTarget.getHeight())) {
-//                saveSettings();
-//            }
-                
-            
-//            if(UI::Button("LOAD CANVAS GUIDE IMAGE")) {
-//
-//                ofFileDialogResult dialogResult = ofSystemLoadDialog();
-//                if(dialogResult.bSuccess) {
-//                    if(setGuideImage(dialogResult.filePath)){
-//                        showGuideImage =true;
-//                        guideImage.save("guideimages/"+dialogResult.getName());
-//                        guideImageFilename = dialogResult.getName();
-//                        saveSettings();
-//                    }
-//                }
-//            }
-//            if(guideImage.isAllocated()) {
-//                UI::addParameter(showGuideImage);
-//                UI::addParameter(guideImageColour);
-//            }
-                
-//            if(UI::addParameter(lockInputZones)) {
-//                saveSettings();
-//            }
-        }
+
     }
     
     UI::endWindow();
