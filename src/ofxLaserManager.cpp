@@ -1205,7 +1205,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
     
     if (ImGui::BeginCombo("##Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
         
-        for(const string presetName : presets) {
+        for(const string &presetName : presets) {
             
             if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                 //get the preset and make a copy of it
@@ -1237,7 +1237,7 @@ void Manager :: drawLaserSettingsPanel(ofxLaser::Laser* laser, float laserpanelw
         ImGui::Separator();
         if (ImGui::BeginCombo("Scanner presets", label.c_str())) { // The second parameter is the label previewed before opening the combo.
             
-            for(const string presetName : presets) {
+            for(const string &presetName : presets) {
                 
                 if (ImGui::Selectable(presetName.c_str(), presetName == laser->scannerSettings.getLabel())) {
                     //get the preset and make a copy of it
