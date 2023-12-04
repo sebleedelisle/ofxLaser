@@ -961,7 +961,7 @@ bool DacEtherdream :: sendBytes(const uint8_t* buffer, int length) {
 	}
 	catch (Poco::Exception& exc) {
 		//Handle your network errors.
-		cerr << "sendBytes : Network error: " << exc.displayText() << endl;
+		std::cerr << "sendBytes : Network error: " << exc.displayText() << endl;
 		networkerror = true;
 		failed = true;
 	}
