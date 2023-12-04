@@ -256,7 +256,7 @@ void DacIDN :: sendFrameToDac() {
 			//for (int i = 0; i<output.size() ; i++) {
 			for (int j = 0; j<12 ; j++) {
 
-				cout << hex << setfill('0') << setw(2) << (int)(uint8_t)(output[j]) << " ";
+				cout << std::hex << std::setfill('0') << std::setw(2) << (int)(uint8_t)(output[j]) << " ";
 				if((j<36) && (j%4==3)) cout <<endl;
 				else if((j>=36) && ((j-36)%7==6)) cout <<endl;
 			}

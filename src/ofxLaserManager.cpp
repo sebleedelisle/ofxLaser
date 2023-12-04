@@ -515,7 +515,7 @@ void Manager :: renderPreview() {
     
     
     if(showGuideImage && guideImage.isAllocated()) {
-        ofSetColor(guideImageColour);
+        ofSetColor(guideImageColour.get());
         guideImage.draw(0,0,width, height);
         
         
