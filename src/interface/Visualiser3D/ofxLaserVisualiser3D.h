@@ -40,7 +40,7 @@ class Visualiser3D {
     void serialize(ofJson& json);
     bool deserialize(ofJson& json);
     void update();
-    void draw(const ofRectangle& rect, const vector<Laser*>& lasers, bool isdragactive);
+    void draw(const ofRectangle& rect, const vector<Laser*>& lasers, ofFbo& canvasFbo, bool isdragactive);
     void drawGrid();
     
     void drawUI(); 
@@ -65,8 +65,13 @@ class Visualiser3D {
     ofParameter<float> brightness;
     bool showSettingsWindow; 
 
+    glm::vec3 fboPos;
+    glm::vec3 fboAttitude;
+    glm::vec3 fboScale;
     
-    ofMesh grid; 
+    
+    ofMesh grid;
+    float gridHeight; 
     bool dirty = false; 
     bool gridDirty = true;
     bool dragActive = false;

@@ -551,13 +551,24 @@ void Manager :: drawPreviews() {
     
     
     if(viewMode == OFXLASER_VIEW_3D) {
+        canvasViewController.autoFitToOutput();
+        canvasViewController.setIsVisible(true);
+       // canvasViewController.draw();
+        canvasViewController.beginViewPort(true);
+        
+        canvasViewController.drawMoveables();
+        renderPreview();
+        canvasViewController.endViewPort(true);
+        canvasViewController.setIsVisible(false); 
         
         float previewheight = (displayRectangle.getHeight()/2)-menuBarHeight-iconBarHeight;
         int scale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
        
         visualiser3DRect.set(10*scale,(menuBarHeight+iconBarHeight)*scale,previewheight/9*16, previewheight); // 16/9 ratio
+        
+        
         // Draw 3D visualiser
-        visualiser3D.draw(visualiser3DRect, lasers, true);
+        visualiser3D.draw(visualiser3DRect, lasers, canvasViewController.getFbo(), true);
         
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {

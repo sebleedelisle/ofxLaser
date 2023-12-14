@@ -39,7 +39,10 @@ void ScrollableView::beginViewPort(bool clearScreen) {
             ofLogError("FBO not allocated!");
         }
         fbo.begin();
-        if(clearScreen) ofBackground(0,0,0);
+        if(clearScreen) {
+            ofDisableBlendMode(); 
+            ofBackground(0,0,0);
+        }
     } else {
         ofPushView();
         ofViewport(outputRect);
@@ -57,14 +60,14 @@ void ScrollableView::beginViewPort(bool clearScreen) {
 }
 
 
-void ScrollableView::endViewPort() {
+void ScrollableView::endViewPort(bool dontDrawFbo) {
     
     ofPopMatrix();
     
     if(useFbo) {
         fbo.clearColorBuffer(ofColor::red);
         fbo.end();
-        fbo.draw(outputRect.getTopLeft());
+        if(!dontDrawFbo) fbo.draw(outputRect.getTopLeft());
     } else {
         ofPopView();
     }

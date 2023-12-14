@@ -14,11 +14,13 @@ Visualiser3DSettings :: Visualiser3DSettings(){
     
     params.add(label.set("label", "Default"));
     
-     params.add(cameraDistance.set("Camera distance", 50,0,1000));
+    params.add(cameraDistance.set("Camera distance", 50,0,1000));
     params.add(cameraFov.set("Camera FOV", 45,10,120));
     
     params.add(cameraOrbit.set("Camera orbit", glm::vec2(0,0), glm::vec2(-180,-180), glm::vec2(180,180)));
     params.add(cameraOrbitTarget.set("Orbit centre point", glm::vec3(0,0,0), glm::vec3(-1000,-1000,-200), glm::vec3(1000, 1000, 1000) ));
+    
+    params.add(gridHeight.set("Grid height", 20,-1000,1000));
     
 }
 

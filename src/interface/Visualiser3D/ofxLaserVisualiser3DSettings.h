@@ -31,10 +31,8 @@ class Visualiser3DSettings : public PresetBase {
     ofParameter<glm::vec3> cameraOrbitTarget;
     ofParameter<float> cameraDistance;
     ofParameter<float> cameraFov;
-
-
     
+    ofParameter<float> gridHeight;
 
-    
 };
 }

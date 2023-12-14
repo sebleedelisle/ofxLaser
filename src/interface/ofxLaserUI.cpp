@@ -830,6 +830,65 @@ bool UI::addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
 //
 }
 
+
+bool UI :: addMultiChoiceParam(ofParameter<int>& param, const vector<string>& labels) {
+    
+    string label = param.getName();
+    
+    ImGui::Text("%s", label.c_str());
+    bool changed = false;
+    for(int i = 0; i<labels.size(); i++) {
+        
+        ImGui::SameLine();
+        
+        if(param.get()==i) {
+            ofxLaser :: UI::secondaryColourStart();
+        }
+        
+        if(ImGui::Button(ofToUpper(labels[i]).c_str())) {
+            param.set(i);
+            changed = true;
+        }
+        
+        ofxLaser :: UI::secondaryColourEnd();
+        
+    }
+    
+    return changed;
+    
+}
+
+
+bool UI :: addMultiChoiceInt(string label, int& param, const vector<string>& labels) {
+    
+    ImGui::Text("%s", label.c_str());
+    
+    bool changed = false;
+    for(int i = 0; i<labels.size(); i++) {
+        
+        ImGui::SameLine();
+        
+        if(param==i) {
+            ofxLaser :: UI::secondaryColourStart();
+        }
+        string buttonlabel =ofToUpper(labels[i]);
+        if(ImGui::Button(buttonlabel.c_str())) {
+            param =i;
+            changed = true;
+        }
+        
+        ofxLaser :: UI::secondaryColourEnd();
+        
+    }
+    
+    return changed;
+    
+}
+
+
+
+
+
 ofMesh UI::dashedLineMesh;
 
 void UI::drawDashedLine(glm::vec2 p1, glm::vec2 p2, float spacing, float scale){

@@ -15,7 +15,6 @@ Visualiser3D :: Visualiser3D() {
     lasersettings.setLabel("Default");
     settings.setLabel("Default");
 
-    
     if(visualiserPresetManager.getPreset("Default")==nullptr) {
         visualiserPresetManager.addPreset(settings);
     }
@@ -26,8 +25,7 @@ Visualiser3D :: Visualiser3D() {
     params.add(brightness.set("Brightness adjustment", 10,0.1,30));
     params.add(showLaserNumbers.set("Show laser numbers", false));
     params.add(showZoneNumbers.set("Show zone numbers", false));
-    
-   
+
     load();
     ofAddListener(params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
     ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
@@ -37,7 +35,6 @@ Visualiser3D :: Visualiser3D() {
 //    ofAddListener(ofEvents().mouseReleased, this, &Visualiser3D::mouseReleased, OF_EVENT_ORDER_BEFORE_APP);
 //    ofAddListener(ofEvents().mouseDragged, this, &Visualiser3D::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
 //    ofAddListener(ofEvents().mouseScrolled, this, &Visualiser3D::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
-
     // TODO - listener for laser settings - how? 
 
 }
@@ -143,6 +140,7 @@ void Visualiser3D :: update() {
         gridDirty = true; 
 
     }
+    if(settings.gridHeight!=gridHeight) gridDirty = true;
     
     bool needsSave = dirty;
     for(Laser3DVisualObject& laser3D : lasersettings.laserObjects) {
@@ -158,8 +156,8 @@ void Visualiser3D :: update() {
         
 }
 
-void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers, bool isdragactive) {
-    
+void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers, ofFbo& canvasFbo, bool isdragactive) {
+
     dragActive = isdragactive;
     
     update();
@@ -225,6 +223,17 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     
     
     drawGrid();
+    
+    if(canvasFbo.isAllocated()) {
+        ofPushMatrix();
+        ofTranslate(0,-110,0);
+        ofScale(0.5);
+        
+        canvasFbo.setAnchorPercent(0.5,0.5);
+        canvasFbo.draw(fboPos);
+        canvasFbo.setAnchorPercent(0,0);
+        ofPopMatrix();
+    }
     
     for(size_t i= 0; i<lasersettings.laserObjects.size(); i++) {
         
@@ -357,13 +366,12 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     visFbo.end();
     visFbo.draw(rect.getTopLeft());
     
-    
-    
-    
 }
 
 void Visualiser3D :: drawGrid() {
-    float groundLevel = 20;
+    
+   
+    
     if(true) { // grid.size()==0)) {
     
 //        ofRectangle visibleRectangle(camera.getGlobalPosition(), 0,0);
@@ -385,6 +393,7 @@ void Visualiser3D :: drawGrid() {
         if(gridDirty) {
             gridDirty = false;
             float gridspacing = 20;
+            gridHeight = settings.gridHeight;
             
             
             grid.clear();
@@ -393,19 +402,19 @@ void Visualiser3D :: drawGrid() {
                 for(int z = -1000; z<1000; z+=gridspacing) {
                     
                     ofColor col = ofColor(0,50,0);
-                    ofPoint p (x, groundLevel, z);
+                    ofPoint p (x, gridHeight, z);
                     ofPoint v = camera.getGlobalPosition();
                     float dist = v.distance(p);
                     float brightness = ofMap(dist, 500,1000,1,0,true);
                     if(brightness>0) {
                         col*=brightness;
-                        grid.addVertex(glm::vec3(x, groundLevel, z));
-                        grid.addVertex(glm::vec3(x, groundLevel, z+gridspacing));
+                        grid.addVertex(glm::vec3(x, gridHeight, z));
+                        grid.addVertex(glm::vec3(x, gridHeight, z+gridspacing));
                         grid.addColor(col);
                         grid.addColor(col);
                         
-                        grid.addVertex(glm::vec3(x, groundLevel, z));
-                        grid.addVertex(glm::vec3(x+gridspacing,groundLevel,z));
+                        grid.addVertex(glm::vec3(x, gridHeight, z));
+                        grid.addVertex(glm::vec3(x+gridspacing,gridHeight,z));
                         grid.addColor(col);
                         grid.addColor(col);
                     }
@@ -499,6 +508,8 @@ void Visualiser3D ::drawUI(){
         
         UI::addResettableFloat2Drag(settings.cameraOrbit, currentPreset.cameraOrbit, 1, "Orbits around the target point, pitch and yaw");//.set("Camera position", glm::vec3(0,-2000,0)));
         UI::addResettableFloat3Drag(settings.cameraOrbitTarget, currentPreset.cameraOrbitTarget, 1, "The point the camera is looking at");//.set("Camera orientation", glm::vec3(0,0,0)));
+        
+        UI::addResettableFloatDrag(settings.gridHeight, currentPreset.gridHeight); //.set("Camera
         
         ImGui::Separator();
         

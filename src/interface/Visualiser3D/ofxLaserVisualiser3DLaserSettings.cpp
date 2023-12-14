@@ -12,6 +12,7 @@ using namespace ofxLaser;
 
 Visualiser3DLaserSettings :: Visualiser3DLaserSettings(){
     params.add(label.set("label", "Default"));
+    
 }
 
 Visualiser3DLaserSettings& Visualiser3DLaserSettings :: operator=( Visualiser3DLaserSettings& that){

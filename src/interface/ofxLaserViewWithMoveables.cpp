@@ -151,6 +151,9 @@ bool ViewWithMoveables :: mousePressed(ofMouseEventArgs &e){
     bool propagate = true;
 
     ofMouseEventArgs mouseEvent = screenPosToLocalPos(e);
+    if(!getOutputRect().inside(e)) {
+        return propagate;
+    }
     
     if(uiElementsEnabled) {
         

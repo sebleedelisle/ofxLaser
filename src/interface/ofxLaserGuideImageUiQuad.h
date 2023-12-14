@@ -21,7 +21,14 @@ class GuideImageUiQuad : public MoveablePoly {
         
         setHue(180);
         setBrightness(180);
-        fillColourSelected = fillColour = ofColor(0,0,0,0); 
+        fillColourSelected = fillColour = ofColor(0,0,0,0);
+        
+        fillColour  = ofColor::fromHex(0x001123, 0);
+        //fillColourSelected = ofColor::fromHex(0x001123);
+        strokeColour  = ofColor::fromHex(0x0E87E7,0);
+        //strokeColourSelected = ofColor::fromHex(0x0E87E7);
+        handleColour = ofColor::fromHex(0x0E87E7);
+        handleColourOver = ofColor :: fromHex(0xffffff);
     }
     virtual void draw() override {
         ofPushStyle();

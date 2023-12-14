@@ -65,6 +65,9 @@ class UI {
     static bool addNumberedCheckBox(int number, const char* label, bool* v, bool large, bool dangerColour = false);
     static bool addNumberedCheckBox(int number, const string& label, bool* v, bool large = true, bool dangerColour = false);
 
+    static bool addMultiChoiceParam(ofParameter<int>& param, const vector<string>& labels);
+    static bool addMultiChoiceInt(string label, int& param, const vector<string>& labels);
+    
     
     // ofParameters
     

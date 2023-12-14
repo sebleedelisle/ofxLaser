@@ -29,7 +29,7 @@ class ScrollableView {
     void beginViewPort(bool clearScreen = true);
     void drawFrame();
     void drawEdges(); 
-    void endViewPort();
+    void endViewPort(bool dontDrawFbo = false);
     
     virtual void mouseMoved(ofMouseEventArgs &e);
     virtual bool mousePressed(ofMouseEventArgs &e);
@@ -59,6 +59,7 @@ class ScrollableView {
 
     bool doesUseFbo();
     bool setUseFbo(bool state);
+    ofFbo& getFbo(){ return fbo; };
     
     protected :
     bool isVisible;
