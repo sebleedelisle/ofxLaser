@@ -60,7 +60,12 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     //beepSound.load("Beep1.wav");
     currentShapeTarget = &canvasTarget;
     
+    useClipRectangle = false; 
+    
+    
     ClipperUtils::initialise();
+    
+    
     
 }
 
@@ -223,7 +228,7 @@ void ManagerBase::drawDot( const glm::vec2& p, const ofColor& col, float intensi
 void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensity, string profileLabel) {
     
     Dot* d = new Dot(getTransformed(p), col, intensity, profileLabel);
-    currentShapeTarget->addShape(d);
+    currentShapeTarget->addShape(d, useClipRectangle, clipRectangle);
 }
 
 
@@ -240,7 +245,7 @@ void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const o
     
     Line* l = new Line(getTransformed(start), getTransformed(end), col, profileLabel);
     
-    currentShapeTarget->addShape(l);
+    currentShapeTarget->addShape(l, useClipRectangle, clipRectangle);
 
 }
 
@@ -265,7 +270,7 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
     }
     c->setDirty();
     
-    currentShapeTarget->addShape(c);
+    currentShapeTarget->addShape(c, useClipRectangle, clipRectangle);
     
 }
 
@@ -294,7 +299,7 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
         
     if(p->getLength()>0.1) {
         //p->setTargetZone(targetZone); // only relevant for OFXLASER_ZONE_MANUAL
-        currentShapeTarget->addShape(p);
+        currentShapeTarget->addShape(p, useClipRectangle, clipRectangle);
     } else {
         delete p;
     }
@@ -332,7 +337,7 @@ void ManagerBase::drawPolys(const vector<ofPolyline>& polys, vector<vector<ofCol
         ofxLaser::Polyline* poly = getPolyFromPoints(ofpolyline.getVertices(), colours[i], ofpolyline.isClosed(), profileName, brightness);
         poly->id = id;
         if(poly->getLength()>0.1) {
-            currentShapeTarget->addShape(poly);
+            currentShapeTarget->addShape(poly, useClipRectangle, clipRectangle);
         } else {
             delete poly;
         }

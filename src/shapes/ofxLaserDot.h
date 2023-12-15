@@ -18,7 +18,9 @@ class Dot : public Shape{
     void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;
     
     virtual Shape* clone() const override {
-        return new Dot(getStartPos(), getColour(), intensity, profileLabel);
+        Dot* dot = new Dot(getStartPos(), getColour(), intensity, profileLabel);
+        dot->setClipRectangle(clipRectangle);
+        return dot;
     }
 
     void addPreviewToMesh(ofMesh& mesh) override;

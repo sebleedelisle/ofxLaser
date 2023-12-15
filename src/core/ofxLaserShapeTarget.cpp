@@ -22,8 +22,12 @@ void ShapeTarget :: deleteShapes(){
     shapes.clear();
     
 }
-bool ShapeTarget :: addShape(Shape* shapetoadd){
+bool ShapeTarget :: addShape(Shape* shapetoadd, bool useClipRectangle, ofRectangle clipRectangle){
     if(shapetoadd->intersectsRect(boundsRect)) {
+        shapetoadd->setClipRectangle(boundsRect);
+        if(useClipRectangle) {
+            shapetoadd->setIntersectionClipRectangle(clipRectangle);
+        }
         shapes.push_back(shapetoadd);
         return true;
     } else {
@@ -33,15 +37,16 @@ bool ShapeTarget :: addShape(Shape* shapetoadd){
     }
     
 }
+
 bool ShapeTarget :: addShapes(vector<Shape*> shapestoadd){
-    
+
     bool changed = false;
     for(Shape* shape : shapestoadd) {
-        if(addShape(shape)) changed = true;
+        if(addShape(shape, true, shape->getClipRectangle())) changed = true;
     }
-    return changed; 
+    return changed;
     
-    
+
 }
 bool ShapeTarget :: setBounds(float x, float y, float w, float h){
     ofRectangle rect(x, y, w,h);
@@ -76,7 +81,7 @@ void ShapeTarget ::  processShapes() {
     
     float fov = 550;
     
-    ofRectangle cliprect = getBounds();
+    //ofRectangle cliprect = getBounds();
 
     // TODO this should all be moved to the targets i think
     vector<ofxLaser::Shape*> emptyShapes;
@@ -88,6 +93,10 @@ void ShapeTarget ::  processShapes() {
             break;
         }
     }
+    
+    
+    // the shape containers are used to store individual polylines
+    // that make up compound shapes.
     vector<vector<Shape*>> sortedShapeContainers;
     
     if(anyShapesFilled) {
@@ -155,8 +164,8 @@ void ShapeTarget ::  processShapes() {
             p = convert3DTo2D(p);
         }
         shape->setDirty();
-        
-        shape->clipToRectangle(cliprect);
+
+        // todo check to see if object is inside clipping rectangle?
         
         if(shape->isEmpty()) {
             emptyShapes.push_back(shape);
@@ -209,6 +218,11 @@ void ShapeTarget ::  processShapes() {
             delete shape;
         }
         
+    }
+    
+    
+    for(Shape* shape : shapes) {
+        shape->clipToRectangle();
     }
     
 //    shapes.erase(std::remove_if(shapes.begin(), shapes.end(),

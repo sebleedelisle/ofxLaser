@@ -407,17 +407,16 @@ bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
                 changed = true;
                 break;
             }
-            
         }
-        
-        
     }
+    
     if(changed) {
         saveSettings();
         return true;
     } else {
         return false;
     }
+    
 }
 
 void Laser::clearOutputZones() {

@@ -32,6 +32,7 @@ namespace ofxLaser {
         virtual Shape* clone() const override {
             Polyline* p = new Polyline(points, closed, colours, profileLabel);
             p->setFilled(filled);
+            p->setClipRectangle(clipRectangle);
             return p;
             
         }

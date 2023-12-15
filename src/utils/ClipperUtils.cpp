@@ -267,6 +267,7 @@ ofxLaser :: Shape* ClipperUtils :: clipperPathToShape(ClipperLib::Path& path, of
     if(!originalElement->isMultiColoured()) {
         newelement->setColour(originalElement->getColour());
     }
+    newelement->setClipRectangle(originalElement->getClipRectangle()); 
 
     bool pathclosed = (path.front()==path.back());
     int numpoints = pathclosed?path.size()-1 : path.size();

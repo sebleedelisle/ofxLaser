@@ -21,7 +21,9 @@ class Line : public Shape{
         glm::vec3 start = points.front();
         glm::vec3 end = points.front();
         ofColor c = colours.front();
-        return new Line(start, end, c, profileLabel);
+        Line* line =new Line(start, end, c, profileLabel);
+        line->setClipRectangle(clipRectangle);
+        return line;
     }
     
 	void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;

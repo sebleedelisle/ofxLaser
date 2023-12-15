@@ -174,7 +174,9 @@ class ManagerBase : public TransformationManager {
  
     ofJson loadedJson;
     
-    
+    bool useClipRectangle = false;
+    ofRectangle clipRectangle;
+  
     
     protected :
     
@@ -203,9 +205,8 @@ class ManagerBase : public TransformationManager {
     ShapeTarget* currentShapeTarget; 
     ShapeTargetCanvas canvasTarget;
     BeamZoneContainer beamZoneContainer;
-    //vector<ShapeTargetBeamZone> zones;
-    //std::deque <ofxLaser::Shape*> shapes;
-
+    
+      
     // used in "drawPoly" functions
     // to avoid generating polyline objects
     ofPolyline tmpPoly;

@@ -26,6 +26,7 @@ namespace ofxLaser {
             circle->setFilled(isFilled());
             circle->setClosed(true); 
             circle->profileLabel = profileLabel ;
+            circle->setClipRectangle(clipRectangle);
             return (Shape*)circle;
         }
         

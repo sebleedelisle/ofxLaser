@@ -20,7 +20,7 @@ class ShapeTarget {
     void processShapes();
     
     virtual void deleteShapes();
-    virtual bool addShape(Shape* shapetoadd);
+    virtual bool addShape(Shape* shapetoadd, bool useClipRectangle, ofRectangle clipRectangle = ofRectangle());
     bool addShapes(vector<Shape*> shapestoadd);
 
     virtual bool setBounds(ofRectangle& boundsrect);

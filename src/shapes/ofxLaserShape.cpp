@@ -193,6 +193,19 @@ void Shape :: setColour(const ofFloatColor colour, float brightness){
     colours = {colour * brightness};
 
 }
+
+void Shape :: setClipRectangle(const ofRectangle& rect) {
+    clipRectangle = rect;
+}
+ofRectangle Shape :: getClipRectangle() {
+    return clipRectangle;
+} 
+void Shape :: setIntersectionClipRectangle(ofRectangle& rect) {
+    clipRectangle = clipRectangle.getIntersection(rect);
+    
+}
+
+
 void Shape :: appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) {
     
 };
@@ -384,11 +397,33 @@ float Shape :: getAngleAtIndexDegrees( int index) {
 }
 
 
-bool Shape :: clipToRectangle(ofRectangle& rect) {
+bool Shape :: clipToRectangle() {
+    
+    ofRectangle& rect = clipRectangle;
     
     if(isEmpty()) return false;
     bool changed = false;
     
+    bool anyinside = false;
+    glm::vec3 lastpoint = points[0];
+    for(glm::vec3& p : points) {
+        if(pointInsideRect(p, rect)) {
+            anyinside = true;
+            break;
+        }
+        if(doesLineIntersectRect(rect, p, lastpoint)) {
+            anyinside = true;
+            break;
+        }
+        lastpoint = p;
+        
+    }
+    if(!anyinside) {
+        points.clear();
+        colours.clear();
+        setColour(ofColor::black);
+        return true;
+    }
     
     vector<glm::vec3> & vertices = points;
     vector<Point> segmentPoints;
@@ -398,9 +433,11 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
     glm::vec3 previousPoint = vertices.front();
     
     // go through each point
-    for(int i = 0; i<vertices.size(); i++) {
+    for(int i = 0; i<=vertices.size(); i++) {
         
-        glm::vec3& p = vertices.at(i);
+        if(i==vertices.size()&&!closed) break;
+        
+        glm::vec3& p = vertices.at(i%vertices.size());
        
         // if it's outside the rectangle
         
@@ -411,8 +448,7 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
             bool intersectsRect = ((i>0)&&(rect.intersects(previousPoint, p)) &&(getColourAtPoint(i)!=ofColor::black) &&(getColourAtPoint(i-1)!=ofColor::black) );
             
           //  ofLogNotice("Intersects rect ") << intersectsRect << "  leaves rect : " << leavesRect;
-           
-            
+
             // two different cases here, either we are going from inside the rectangle
             // to outside the rectangle, or else we are going from outside the rectangle
             // to outside, but passing through.
@@ -435,7 +471,14 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
                         intersection = intersections[0];
                     }
                     // todo calculate where we are between points
-                    float trimFactor = 1;
+                    float trimFactor = 0;
+                    // trimfactor should be the unit position between the points.
+                    // previousPoint to intersectionpoint divided by
+                    // previousPoint to current point
+                    float l1 = glm::distance(previousPoint, intersection);
+                    float l2 = glm::distance(previousPoint, p);
+                    if(l2>0) trimFactor = l1/l2;
+                    
 
                     ofColor c = getColourAtFloatIndex(i-1+trimFactor);
               
@@ -470,13 +513,17 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
                     
                     if(intersections.size()==0) {
                         // probably when a point is on the edge exactly?
-                        //ofLogError("Shape :: clipToRectangle - weird, should have found an intersection for this line... ");
+                        ofLogError("Shape :: clipToRectangle - weird, should have found an intersection for this line... ");
                     } else {
                         intersection = intersections.front();
                        
                     }
                     
                     float trimFactor = 1;// ofMap(nearPlaneZ, previousPoint.z, p.z, 0, 1);
+                    float l1 = glm::distance(previousPoint, intersection);
+                    float l2 = glm::distance(previousPoint, p);
+                    if(l2>0) trimFactor = l1/l2;
+                    
                     
                     ofColor c = getColourAtFloatIndex(i-1+trimFactor);
                     segmentPoints.push_back(Point(intersection, c));
@@ -500,6 +547,9 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
     
     if(newsegments.size()==0) {
         //ofLogNotice("No line segments!");
+        points.clear();
+        colours.clear();
+        return true;
     }
     
     // TODO break this out... also maybe split into separate polylines?
@@ -514,15 +564,26 @@ bool Shape :: clipToRectangle(ofRectangle& rect) {
         }
         // if we have another one...
         if(i+1<newsegments.size()) {
-            points.push_back(segpoints.back());
-            colours.push_back(ofColor(0,0,0));
+            ofColor blankColor = ofColor(0); // reversed?ofColor(0,255,255) : ofColor(255,0,0);
+            points.push_back(segpoints.back() + glm::vec3(0.1,0.1,0));
+            colours.push_back(blankColor);
             
-            points.push_back(newsegments[i+1].front());
-            colours.push_back(ofColor(0,0,0));
+            points.push_back(newsegments[i+1].front()+ glm::vec3(0.1,0.1,0));
+            colours.push_back(blankColor);
         }
     }
+    ofColor blankColor = ofColor(0,0,0);
     
     
+    if(closed) {
+        points.insert(points.begin(), points.front()+ glm::vec3(0.1,0.1,0));
+        colours.insert(colours.begin(), blankColor);
+    }
+    
+    points.push_back(points.back()+ glm::vec3(0.1,0.1,0));
+    colours.push_back(blankColor);
+    
+        
     setDirty();
     
     return true;
@@ -558,11 +619,42 @@ vector<glm::vec3> Shape :: getLineRectangleIntersectionPoints(ofRectangle& rect,
     
     
 }
+
+
+bool Shape :: doesLineIntersectRect(ofRectangle& rect, glm::vec3 p0, glm::vec3 p1) {
+    
+    glm::vec3 topLeft(rect.getTopLeft());
+    glm::vec3 topRight(rect.getTopRight());
+    glm::vec3 bottomRight(rect.getBottomRight());
+    glm::vec3 bottomLeft(rect.getBottomLeft());
+    
+    glm::vec3 intersection;
+    
+    if(ofLineSegmentIntersection(p0, p1, topLeft,     topRight,    intersection)) {
+        return true;
+    }
+    
+    if(ofLineSegmentIntersection(p0, p1, topRight,    bottomRight, intersection)) {
+        return true;
+    }
+    if(ofLineSegmentIntersection(p0, p1, bottomRight, bottomLeft,  intersection)) {
+        return true;
+    }
+    if(ofLineSegmentIntersection(p0, p1, bottomLeft,  topLeft,     intersection)) {
+        return true;
+    }
+
+    return false;
+    
+    
+}
+
+
 // want to return points that are on the edge of the rectangle, unlike oF rect.inside
 bool Shape :: pointInsideRect(glm::vec3& p, ofRectangle& rect) {
-
-    return p.x >= rect.getMinX() && p.y >= rect.getMinY() &&
-           p.x <= rect.getMaxX() && p.y <= rect.getMaxY();
+    return rect.inside(p);
+//    return p.x >= rect.getMinX() && p.y >= rect.getMinY() &&
+//           p.x <= rect.getMaxX() && p.y <= rect.getMaxY();
 }
 
 

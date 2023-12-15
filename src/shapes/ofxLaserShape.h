@@ -110,6 +110,9 @@ class Shape {
     virtual void setColours(const vector<ofColor>& newcolours, float brightness = 1);
     virtual void setColours(const vector<ofFloatColor>& newcolours, float brightness = 1);
     virtual void setColour(const ofFloatColor colour, float brightness = 1);
+    virtual void setClipRectangle(const ofRectangle& rect);
+    virtual ofRectangle getClipRectangle();
+    virtual void setIntersectionClipRectangle(ofRectangle& rect);
     
     void setDirty(); 
    
@@ -120,8 +123,10 @@ class Shape {
     bool intersectsRect(ofRectangle & rect);
     
     virtual bool clipNearPlane(float nearPlaneZ) = 0;
-    virtual bool clipToRectangle(ofRectangle& rect);
+    virtual bool clipToRectangle();
     vector<glm::vec3> getLineRectangleIntersectionPoints(ofRectangle& rect, glm::vec3 p1, glm::vec3 p2);
+    
+    bool doesLineIntersectRect(ofRectangle& rect, glm::vec3 p1, glm::vec3 p2);
     
     bool pointInsideRect(glm::vec3& p, ofRectangle& rect); 
 
@@ -139,6 +144,7 @@ class Shape {
     vector <ofFloatColor> colours;
     bool closed = false;
     ofRectangle boundingBox;
+    ofRectangle clipRectangle; 
     vector<float> lengths;
     bool boundingBoxDirty = true;
     bool lengthsDirty = true;
