@@ -551,15 +551,20 @@ void Manager :: drawPreviews() {
     
     
     if(viewMode == OFXLASER_VIEW_3D) {
+
         canvasViewController.autoFitToOutput();
         canvasViewController.setIsVisible(true);
-       // canvasViewController.draw();
         canvasViewController.beginViewPort(true);
-        
+        // ew nasty. Probably worth seeing if there's a better way to do this.
+        // Also, check performance.
+        float zoneBrightness = canvasTarget.zoneBrightness;
+        canvasTarget.zoneBrightness = 0;
+        canvasViewController.updateUIFromZones(canvasTarget);
         canvasViewController.drawMoveables();
+        canvasTarget.zoneBrightness = zoneBrightness;
         renderPreview();
         canvasViewController.endViewPort(true);
-        canvasViewController.setIsVisible(false); 
+        canvasViewController.setIsVisible(false);
         
         float previewheight = (displayRectangle.getHeight()/2)-menuBarHeight-iconBarHeight;
         int scale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
@@ -1908,6 +1913,16 @@ void Manager :: guiTopBar(int ypos) {
         UI::addDelayedTooltip("Show test pattern across all zones");
         ImGui::SameLine();
         
+        if(UI::Button(ICON_FK_EYE, false, hideContentDuringTestPattern)) {
+            hideContentDuringTestPattern = !hideContentDuringTestPattern;
+            for(Laser* laser : lasers) {
+                laser->hideContentDuringTestPattern = hideContentDuringTestPattern;
+            }
+            saveSettings();
+//            updateGlobalTestPattern();
+        }
+        
+        ImGui::SameLine();
         ImGui::PushItemWidth(140);
         if(!testPatternGlobalActive) UI::startGhosted();
         if(UI::addIntSlider("##Global Test Pattern", testPatternGlobal, 1, TestPatternGenerator::getNumTestPatterns())) {
@@ -1977,7 +1992,7 @@ void Manager :: guiTopBar(int ypos) {
         ImGui::SameLine();
         ImGui::SetCursorPosX(ImGui::GetCursorPosX()+10);
         
-        ImGui::Text("%s",ofToString(ofToString(round(ofGetFrameRate()))).c_str());
+        ImGui::Text("%s %s",ofToString(round(ofGetFrameRate())).c_str(), ofToString(round(ofGetTargetFrameRate())).c_str() );
         //ImGui::PopFont();
         
     }
@@ -2112,7 +2127,8 @@ void Manager :: guiDacAssignment() {
                     
                     label = dacAssigner.getAliasForLabel(laser->getDacLabel());
                     ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(130,19) );
-                    
+                    DacData dacdata = dacAssigner.getDacDataForLabel(laser->getDacLabel()) ;
+                    ofxLaser::UI::addHover(dacdata.address);
                     
                     // only draggable if there is a dac here
                     if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
@@ -2193,6 +2209,7 @@ void Manager :: guiDacAssignment() {
                     int id =lasers.size()+i;
                     ImGui::PushID(id);
                     string label = dacAssigner.getAliasForLabel(dacdata.getLabel()); // dacdata.alias; // ->getDacLabel();
+                    label = label;
                     
                     ImGuiSelectableFlags selectableflags = 0;
                     
@@ -2204,7 +2221,11 @@ void Manager :: guiDacAssignment() {
                         //
                     }
                     
+                    
                     ImGui::Selectable(label.c_str(), false, selectableflags, ImVec2(160,19));
+                    string address = dacdata.address;
+                    ofxLaser::UI::addHover(address);
+
                     if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)){
                         // if DAC is double clicked add it to the next empty slot
                         for (int n = 0; n < lasers.size(); n++){

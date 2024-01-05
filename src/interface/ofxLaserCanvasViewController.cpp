@@ -62,7 +62,7 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
         updateGrid();
     }
     // REALLY this whole system needs to be abstracted out so that it can better handle different
-    // types of interface elements but
+    // types of interface elements but...
     
     // make interface elements for anything we're missing
     vector<InputZone*> inputZones = canvasTarget.getInputZones();
@@ -87,6 +87,7 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
         
         if(uiElement==nullptr) {
             GuideImageUiQuad* guideImageUiQuad = new GuideImageUiQuad(uid);
+            ofLogNotice("copying guide image");
             guideImageUiQuad->image = guideImage.image; // should copy, hopefully safer
             guideImageUiQuad->colour = guideImage.colour;
             guideImageUiQuad->setDisabled(guideImage.locked);
@@ -129,7 +130,8 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
                 uiElement->setGrid(snapToGrid, gridSize);
                 guideImageUiQuad->colour = targetGuideImage->colour;
                 guideImageUiQuad->setDisabled(targetGuideImage->locked);
-                guideImageUiQuad->image = targetGuideImage->image; // should copy, hopefully safer
+                //ofLogNotice("copying guide image");
+                //guideImageUiQuad->image = targetGuideImage->image; // should copy, hopefully safer
                 
             } else {
                 elementsToDelete.push_back(uiElement);

@@ -22,7 +22,8 @@ public:
     ofPolyline starPoly;
     ofPolyline starPolyInner;
     vector<ofColor> starPolyColours;
-    //bool testscale = false; 
+    //bool testscale = false;
+    bool fillShapes = true; 
     
 };
 

@@ -52,8 +52,10 @@ ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
     params.add(numLasers.set("numLasers", 0));
     params.add(useAltZones.set("Use alternative zones", false));
     params.add(dontCalculateDisconnected.set("Don't calculate disconnected", false));
-    useAltZones.addListener(this, &ofxLaser::ManagerBase::useAltZonesChanged);
+    params.add(hideContentDuringTestPattern.set("Hide content during test pattern", true));
     
+    useAltZones.addListener(this, &ofxLaser::ManagerBase::useAltZonesChanged);
+    //hideContentDuringTestPattern.addListener(this, &ofxLaser::ManagerBase::hideContentDuringTestPatternChanged);
     testPatternGlobal = 1;
     testPatternGlobalActive = false; 
     
@@ -121,7 +123,7 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
 
         for(OutputZone* zone : zones) {
             ZoneId zoneid = zone->getZoneId();
-            if(zoneid.type == ZoneId::BEAM) {
+            if(zoneid.getType() == ZoneId::BEAM) {
                 deleteBeamZone(zoneid);
             }
         }
@@ -581,6 +583,15 @@ void ManagerBase::useAltZonesChanged(bool& state) {
         laser->useAlternate = useAltZones;
         
     }
+    
+}
+
+void ManagerBase::hideContentDuringTestPatternChanged(bool& state) {
+    
+    for(Laser* laser : lasers) {
+        laser->hideContentDuringTestPattern = hideContentDuringTestPattern;
+    }
+    saveSettings();
     
 }
 

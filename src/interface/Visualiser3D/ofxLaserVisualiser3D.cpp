@@ -157,7 +157,9 @@ void Visualiser3D :: update() {
 }
 
 void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers, ofFbo& canvasFbo, bool isdragactive) {
-
+    
+    
+    
     dragActive = isdragactive;
     
     update();
@@ -198,6 +200,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     
     ofPushMatrix();
     ofPushStyle();
+    ofDisableAlphaBlending();
     ofEnableBlendMode(OF_BLENDMODE_ADD);
     
     //float scalefactor = (float)rect.getWidth()/800.0f;
@@ -225,6 +228,8 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     drawGrid();
     
     if(canvasFbo.isAllocated()) {
+        ofDisableBlendMode();
+        
         ofPushMatrix();
         ofTranslate(0,-110,0);
         ofScale(0.5);
@@ -233,6 +238,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
         canvasFbo.draw(fboPos);
         canvasFbo.setAnchorPercent(0,0);
         ofPopMatrix();
+        ofEnableBlendMode(OF_BLENDMODE_ADD);
     }
     
     for(size_t i= 0; i<lasersettings.laserObjects.size(); i++) {

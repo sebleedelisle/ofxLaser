@@ -37,6 +37,7 @@ void Dot::appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const 
 
 
 void Dot::addPreviewToMesh(ofMesh& mesh){
+    if(isEmpty()) return; 
     float radius = ofMap(intensity, 0, 1,0.1,0.8, true);
     ofColor c(getColour());
     c*=(ofMap(intensity,0,0.5,0,1,true));

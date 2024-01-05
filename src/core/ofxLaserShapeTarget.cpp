@@ -23,18 +23,19 @@ void ShapeTarget :: deleteShapes(){
     
 }
 bool ShapeTarget :: addShape(Shape* shapetoadd, bool useClipRectangle, ofRectangle clipRectangle){
-    if(shapetoadd->intersectsRect(boundsRect)) {
+    // removed! It doesn't work with 3D!
+    //if(shapetoadd->intersectsRect(boundsRect)) {
         shapetoadd->setClipRectangle(boundsRect);
         if(useClipRectangle) {
             shapetoadd->setIntersectionClipRectangle(clipRectangle);
         }
         shapes.push_back(shapetoadd);
         return true;
-    } else {
+   // } else {
         // bit nasty
-        delete shapetoadd;
-        return false;
-    }
+   //     delete shapetoadd;
+   //     return false;
+   // }
     
 }
 

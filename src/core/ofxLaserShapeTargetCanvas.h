@@ -21,10 +21,12 @@ class GuideImage {
     
     public :
     
-    GuideImage(){};
+    GuideImage(){
+        ofLogNotice("GuideImage::GuideImage()");
+    };
     
     bool load(string _filename) {
-        
+        ofLogNotice("GuideImage::load ") << _filename;
         if(image.load(_filename)) {
             filename = _filename;
             return true;

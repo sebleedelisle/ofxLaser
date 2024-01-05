@@ -992,7 +992,7 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
     
     if(syncToTargetFramerate && (laserPoints.size()!=targetNumPoints)) {
         
-        ofLogError("syncToTargetFramerate failed! " + ofToString(targetNumPoints)+ " " + ofToString(laserPoints.size()));
+        //ofLogError("syncToTargetFramerate failed! " + ofToString(targetNumPoints)+ " " + ofToString(laserPoints.size()));
     }
     
     dac->sendFrame(laserPoints);

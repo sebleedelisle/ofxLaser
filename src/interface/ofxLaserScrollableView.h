@@ -61,6 +61,8 @@ class ScrollableView {
     bool setUseFbo(bool state);
     ofFbo& getFbo(){ return fbo; };
     
+    bool initialiseFbo();
+    
     protected :
     bool isVisible;
     

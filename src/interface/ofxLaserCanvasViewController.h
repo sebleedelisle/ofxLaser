@@ -33,6 +33,8 @@ class CanvasViewController : public ViewWithMoveables {
     bool updateZonesFromUI(ShapeTargetCanvas& canvasTarget);
     void updateUIFromZones(ShapeTargetCanvas& canvasTarget);
     
+    void setOutputZonesBrightness(float brightness);
+    
     bool update() override;
     
     GuideImage* getGuideImageForUiElement(ShapeTargetCanvas& canvasTarget, MoveablePoly* poly) {

@@ -652,7 +652,13 @@ bool Shape :: doesLineIntersectRect(ofRectangle& rect, glm::vec3 p0, glm::vec3 p
 
 // want to return points that are on the edge of the rectangle, unlike oF rect.inside
 bool Shape :: pointInsideRect(glm::vec3& p, ofRectangle& rect) {
-    return rect.inside(p);
+    if(p.z!=0) {
+        return true; 
+    } else {
+        
+        return rect.inside(p);
+        
+    }
 //    return p.x >= rect.getMinX() && p.y >= rect.getMinY() &&
 //           p.x <= rect.getMaxX() && p.y <= rect.getMaxY();
 }

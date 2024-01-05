@@ -57,9 +57,11 @@ map<ZoneId, ZoneId> ZoneIdContainer :: renumberZones() {
     
         ZoneId& zoneId = zoneIdObjects[i]->zoneId;
         ZoneId originalZoneId = zoneId; // makes copy
-        zoneId.zoneIndex = i;
-        zoneId.zoneGroup = zoneGroup;
-        zoneId.type = type; // shouldn't change but hopefully OK
+        
+        zoneId.set(type, zoneGroup, i);
+//        zoneId.zoneIndex = i;
+//        zoneId.zoneGroup = zoneGroup;
+//        zoneId.type = type; // shouldn't change but hopefully OK
         
         if(zoneId!=originalZoneId) {
             zonesChanged.insert({originalZoneId,zoneId});

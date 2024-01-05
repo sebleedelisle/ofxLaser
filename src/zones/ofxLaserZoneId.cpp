@@ -15,6 +15,20 @@ ZoneId :: ZoneId(){
     zoneGroup = 0;
     zoneIndex = 0;
     label = "";
+    cachedUid = "";
+}
+
+bool ZoneId :: set(ZoneType zonetype, int group, int index) {
+    if((zonetype!=type) || (group!=zoneGroup) || (index!=zoneIndex)) {
+        type = zonetype;
+        zoneGroup = group;
+        zoneIndex= index;
+        updateUid();
+        return true;
+    } else {
+        return false;
+    }
+    
 }
 
 string ZoneId :: getLabel() {
@@ -32,15 +46,26 @@ string ZoneId :: getLabel() {
     }
     
 }
+//const string& getUid() const;
+const string& ZoneId :: getUid() const {
+    // caching id for optimisation
+    return cachedUid;
+}
 
-string ZoneId :: getUid() const {
+ofxLaser::ZoneId::ZoneType ZoneId :: getType() {
+    return type;
+}
+
+void ZoneId :: updateUid() {
+    
     string uid = "";
     if(type==BEAM) uid = "B";
     else uid = "C";
     uid = uid+ofToString(zoneGroup)+"_"+ofToString(zoneIndex);
-    return uid;
+    
+    cachedUid = uid;
+     
 }
-
 void ZoneId :: serialize(ofJson& json) const{
     ofJson& zoneIdJson = json["zoneId"];
     zoneIdJson["type"] = (int)type;
@@ -60,7 +85,7 @@ bool ZoneId :: deserialize(ofJson& json) {
             zoneGroup = zoneIdJson["zonegroup"];
             zoneIndex = zoneIdJson["zoneindex"];
             label = zoneIdJson["label"];
-    
+            updateUid();
             return true;
             
         } else {

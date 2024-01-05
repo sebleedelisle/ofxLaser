@@ -22,7 +22,11 @@ class ZoneId {
     };
     
     string getLabel() ;
-    string getUid() const;
+    const string& getUid() const;
+    ZoneType getType(); 
+    void updateUid();
+    
+    bool set(ZoneType zonetype, int group, int num); 
     
     virtual void serialize(ofJson& json) const;
     virtual bool deserialize(ofJson& json);
@@ -37,9 +41,16 @@ class ZoneId {
         //return true;
     }
     
+    protected :
+    
     ZoneType type;
     int zoneGroup;
     int zoneIndex;
+    
+    ZoneType cachedType;
+    int cachedZoneGroup;
+    int cachedZoneIndex;
+    string cachedUid = "" ;
     
     string label;
     

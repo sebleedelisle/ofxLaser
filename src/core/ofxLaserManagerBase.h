@@ -80,6 +80,8 @@ class ManagerBase : public TransformationManager {
     void updateGlobalTestPattern();
     //void canvasSizeChanged(int&size);
     void useAltZonesChanged(bool& state); 
+    
+    void hideContentDuringTestPatternChanged(bool& state); 
     bool areAllLasersUsingAlternateZones();
     
     void setStroke(bool strokestate) {
@@ -162,10 +164,12 @@ class ManagerBase : public TransformationManager {
     ofParameter<int> numLasers; // << not used except for load / save
     
     ofParameter<bool> dontCalculateDisconnected;
+    ofParameter<bool> hideContentDuringTestPattern;
     
     ofParameter<float>globalBrightness;
 
     BitmapMaskManager laserMask;
+    
                 
   //  bool zonesChanged;
     //std::vector<InputZone*> zones;

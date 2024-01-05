@@ -101,7 +101,7 @@ class TestPatternGenerator {
              ofColor c;
 
              ofRectangle thinrect = rect;
-             thinrect.scaleFromCenter(0.5, 0.1);
+             thinrect.scaleFromCenter(0.95, 0.4);
              
              vector<glm::vec3> points;
              vector<ofColor> colours;

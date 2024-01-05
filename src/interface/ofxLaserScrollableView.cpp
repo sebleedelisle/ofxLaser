@@ -155,8 +155,8 @@ void ScrollableView::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
         
         outputRect = rect;
         if(useFbo) {
-            fbo.allocate(outputRect.getWidth(), outputRect.getHeight(), GL_RGB, 8);
-        } 
+            initialiseFbo();
+        }
     }
 }
 
@@ -330,10 +330,7 @@ bool ScrollableView :: setUseFbo(bool state) {
         
         useFbo = state;
         if(useFbo) {
-            // set up Fbo
-            fbo.allocate(outputRect.width, outputRect.height);
-        } else {
-            fbo.clear();
+            initialiseFbo();
         }
         return true;
     } else {
@@ -343,3 +340,18 @@ bool ScrollableView :: setUseFbo(bool state) {
     
     
 }
+
+bool ScrollableView :: initialiseFbo() {
+    // set up Fbo
+    if(!fbo.isAllocated() || (fbo.getWidth()!=(int)outputRect.width) || (fbo.getHeight()!=(int)outputRect.height)) {
+        ofLogNotice("ScrollableView :: initialiseFbo - allocating FBO");
+        fbo.allocate(outputRect.width, outputRect.height, GL_RGB, 4);
+        return true;
+    } else {
+        fbo.clear();
+        return false; 
+    }
+   
+
+}
+

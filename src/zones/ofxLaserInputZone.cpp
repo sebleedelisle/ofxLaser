@@ -11,9 +11,9 @@
 using namespace ofxLaser;
 
 InputZone::InputZone(float x, float y, float w, float h) {
-    //setIndex(0);
-    zoneId.type = ZoneId::CANVAS;
-    zoneId.zoneGroup = 0; 
+  
+    zoneId.set(ZoneId::CANVAS, 0,0);
+    
 	set(x, y, w,h);
 
 }
