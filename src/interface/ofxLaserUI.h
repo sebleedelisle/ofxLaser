@@ -131,6 +131,8 @@ class UI {
     
     static bool Button(string label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     
+    static bool ToggleButton(string label, bool&value, bool large = false, const ImVec2& size_arg = ImVec2(0,0));
+    
     static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     static bool DangerButton(string label, bool large = false, const ImVec2& size_arg = ImVec2(0,0));
     static void secondaryColourStart();

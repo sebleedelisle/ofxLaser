@@ -25,7 +25,13 @@ Visualiser3D :: Visualiser3D() {
     params.add(brightness.set("Brightness adjustment", 10,0.1,30));
     params.add(showLaserNumbers.set("Show laser numbers", false));
     params.add(showZoneNumbers.set("Show zone numbers", false));
-
+    
+    canvasPos = {0,-110,0};
+    canvasScale = {0.5, 0.5,0.5};
+    canvasRotation = {0, 0, 0};
+    showCanvas = false;
+    
+    // TODO this needs to go somewhere else!
     load();
     ofAddListener(params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
     ofAddListener(settings.params.parameterChangedE(), this, &Visualiser3D::paramsChanged);
@@ -36,7 +42,10 @@ Visualiser3D :: Visualiser3D() {
 //    ofAddListener(ofEvents().mouseDragged, this, &Visualiser3D::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
 //    ofAddListener(ofEvents().mouseScrolled, this, &Visualiser3D::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
     // TODO - listener for laser settings - how? 
-
+    
+    
+   
+    
 }
 Visualiser3D :: ~Visualiser3D() {
     
@@ -142,6 +151,8 @@ void Visualiser3D :: update() {
     }
     if(settings.gridHeight!=gridHeight) gridDirty = true;
     
+    // dirty is set when a param changes
+
     bool needsSave = dirty;
     for(Laser3DVisualObject& laser3D : lasersettings.laserObjects) {
         if(laser3D.dirty) {
@@ -227,15 +238,20 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     
     drawGrid();
     
-    if(canvasFbo.isAllocated()) {
+    if(showCanvas && canvasFbo.isAllocated()) {
         ofDisableBlendMode();
         
         ofPushMatrix();
-        ofTranslate(0,-110,0);
-        ofScale(0.5);
-        
+        ofTranslate(canvasPos);
+        ofScale(canvasScale);
+        // todo - fix order
+        ofRotateXDeg(canvasRotation.x);
+        ofRotateYDeg(canvasRotation.y);
+        ofRotateZDeg(canvasRotation.z);
+
         canvasFbo.setAnchorPercent(0.5,0.5);
-        canvasFbo.draw(fboPos);
+        
+        canvasFbo.draw(0,0);
         canvasFbo.setAnchorPercent(0,0);
         ofPopMatrix();
         ofEnableBlendMode(OF_BLENDMODE_ADD);
@@ -440,6 +456,31 @@ void Visualiser3D ::load() {
 
     ofDeserialize(json, params);
     
+    if(json.contains("showcanvas")) {
+        showCanvas =json["showcanvas"].get<bool>();
+    }
+    if(json.contains("canvaspos") && (json["canvaspos"].size()==3)) {
+        canvasPos = {
+            json["canvaspos"][0].get<float>(),
+            json["canvaspos"][1].get<float>(),
+            json["canvaspos"][2].get<float>()
+        };
+    }
+    if(json.contains("canvasrotation") && (json["canvasrotation"].size()==3)) {
+        canvasRotation= {
+            json["canvasrotation"][0].get<float>(),
+            json["canvasrotation"][1].get<float>(),
+            json["canvasrotation"][2].get<float>()
+        };
+    }
+    if(json.contains("canvasscale") && (json["canvasscale"].size()==3)) {
+        canvasScale= {
+            json["canvasscale"][0].get<float>(),
+            json["canvasscale"][1].get<float>(),
+            json["canvasscale"][2].get<float>()
+        };
+    }
+             
     filename ="ofxLaser/Visualiser3DSettings.json";
     if(ofFile(filename).exists()) {
         ofJson json1 = ofLoadJson(filename);
@@ -452,11 +493,21 @@ void Visualiser3D ::load() {
     
         lasersettings.deserialize(json2);
     }
+    
+    
+    
 }
 void Visualiser3D ::save() {
     
     ofJson json;
     ofSerialize(json, params);
+    
+   
+    json["showcanvas"] = showCanvas;
+    json["canvaspos"] = {canvasPos.x, canvasPos.y, canvasPos.z};
+    json["canvasrotation"] = {canvasRotation.x, canvasRotation.y, canvasRotation.z};
+    json["canvasscale"] = {canvasScale.x, canvasScale.y, canvasScale.z};
+
     ofSavePrettyJson("ofxLaser/Visualiser3D.json", json);
     
     ofJson json1;
@@ -516,6 +567,24 @@ void Visualiser3D ::drawUI(){
         UI::addResettableFloat3Drag(settings.cameraOrbitTarget, currentPreset.cameraOrbitTarget, 1, "The point the camera is looking at");//.set("Camera orientation", glm::vec3(0,0,0)));
         
         UI::addResettableFloatDrag(settings.gridHeight, currentPreset.gridHeight); //.set("Camera
+        
+        ImGui::Separator();
+        
+      
+        
+        if(ImGui::Checkbox("Show canvas", &showCanvas)) {
+            dirty = true;
+        }
+        if(UI::addFloat3Drag("Canvas position", canvasPos, 1, {-1000,-1000,-1000},  {1000,1000,1000} )) {
+            dirty = true;
+        }
+        if(UI::addFloat3Drag("Canvas rotation", canvasRotation, 1, {-180,-180,-180},  {180,180,180} )) {
+            dirty = true;
+        }
+        if(UI::addFloat3Drag("Canvas scale", canvasScale, 0.01, {0,0,0},  {5,5,5} )) {
+            dirty = true;
+        }
+       
         
         ImGui::Separator();
         

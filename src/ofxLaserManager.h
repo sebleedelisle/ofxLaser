@@ -47,7 +47,6 @@ class Manager : public ManagerBase {
     
     virtual void serialize(ofJson& json) override;
     virtual bool deserialize(ofJson& json) override;
-    
 
     ofRectangle getPreviewRect();
     float getPreviewScale();
@@ -59,11 +58,11 @@ class Manager : public ManagerBase {
     bool updateDisplayRectangle(); 
     bool setDisplayRectangle(int x, int y, int w, int h);
 
+    bool setOverlayIconsVisible(bool state); 
+    
     virtual void setCanvasSize(int width, int height) override;
     virtual bool deleteCanvasZone(InputZone* inputZone) override;
    
-   // bool setGuideImage(string filename);
-
     void selectNextLaser();
     void selectPreviousLaser();
     int getLaserIndex(Laser* laser); 
@@ -143,7 +142,8 @@ class Manager : public ManagerBase {
     int guiSpacing;
     int menuBarHeight = 20;
     int iconBarHeight = 32;
-    bool showCanvas = true;
+    bool enableCanvasFunctionality = true;
+    bool overlayIconsVisible = true;
     
     
     ofParameterGroup interfaceParams;

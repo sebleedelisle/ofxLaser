@@ -62,6 +62,8 @@ void Dot::addPreviewToMesh(ofMesh& mesh){
 
 bool Dot :: clipNearPlane(float nearPlaneZ) {
     
+    if(isEmpty()) return true;
+       
     if(getStartPos().z>nearPlaneZ) {
         points.clear();
         colours.clear(); 

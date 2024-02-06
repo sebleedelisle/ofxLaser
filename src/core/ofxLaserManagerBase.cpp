@@ -182,17 +182,6 @@ bool ManagerBase :: deleteCanvasZone(InputZone* inputZone) {
     
 }
 
-
-
-void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
-    if(lasers.size()<=lasernum) {
-        ofLog(OF_LOG_ERROR, "Invalid laser number passed to addZoneToLaser(...)");
-        return;
-    }
-    // Todo - check zone exists
-    lasers[lasernum]->addZone(zoneId);
-}
-
 bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
 
     map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
@@ -210,6 +199,17 @@ bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
     }
     
 }
+
+
+void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
+    if(lasers.size()<=lasernum) {
+        ofLog(OF_LOG_ERROR, "Invalid laser number passed to addZoneToLaser(...)");
+        return;
+    }
+    // Todo - check zone exists
+    lasers[lasernum]->addZone(zoneId);
+}
+
 
 void ManagerBase::createDefaultCanvasZone() {
     // check there aren't any zones yet?
@@ -604,9 +604,7 @@ bool ManagerBase::loadSettings() {
     }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
-    if((json.contains("canvaswidth")) && (json.contains("canvasheight"))){
-
-    }
+  
 
     
     if(!beamZoneContainer.deserialize(json["beamzones"])) {
@@ -615,29 +613,10 @@ bool ManagerBase::loadSettings() {
     }
     canvasTarget.deserialize(json["canvastarget"]);
     
-   // canvasTarget.addGuideImage("guide.jpg");
-    
     
     // reset the global brightness setting, despite what was in the settings.
     globalBrightness = 0.2;
 
-    // load the zone config files
-    
-    ofJson zonesJson;
-    filename ="ofxLaser/zones.json";
-    if(ofFile(filename).exists()) {
-        zonesJson= ofLoadJson(filename);
-    }
-
-    // REPLACE THIS WITH canvasTarget.deserialise
-//    canvasTarget.clearZones();
-//    for(ofJson& zoneJson : zonesJson) {
-//
-//        canvasTarget.addInputZone(0,0,100,100);
-////        canvasTarget.zones.back()->deserialize(zoneJson);
-//        
-//    }
-    
     // NOW load the lasers
     
     // numLasers was saved in the json
@@ -735,6 +714,9 @@ bool ManagerBase::saveSettings() {
     return savesuccess;
     
 }
+
+
+
 void ManagerBase :: serialize(ofJson& json) {
 
     ofJson& jsonLaserSettings = json; // ["managersettings"];

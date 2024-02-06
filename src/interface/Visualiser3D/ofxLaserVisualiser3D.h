@@ -65,9 +65,10 @@ class Visualiser3D {
     ofParameter<float> brightness;
     bool showSettingsWindow; 
 
-    glm::vec3 fboPos;
-    glm::vec3 fboAttitude;
-    glm::vec3 fboScale;
+    bool showCanvas;
+    glm::vec3 canvasPos;
+    glm::vec3 canvasRotation;
+    glm::vec3 canvasScale;
     
     
     ofMesh grid;

@@ -24,7 +24,8 @@ class ScrollableView {
     void zoom(glm::vec2 anchor, float zoomMultiplier);
     void setOffsetAndScale(glm::vec2 newoffset =glm::vec2(0,0), float newscale = 1);
     float getScale() { return scale; };
-    glm::vec2 getOffset() { return offset; } ; 
+    void setOffset(glm::vec2 newoffset);
+    glm::vec2 getOffset() { return offset; } ;
     
     void beginViewPort(bool clearScreen = true);
     void drawFrame();
@@ -43,6 +44,7 @@ class ScrollableView {
     
     void setSourceRect(ofRectangle rect);
     void setOutputRect(ofRectangle rect, bool updatescaleandoffset = false);
+    void setOutputRectTopLeft(float left, float top);
     ofRectangle getOutputRect();
     
     void autoFitToOutput();

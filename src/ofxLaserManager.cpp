@@ -30,7 +30,7 @@ Manager :: Manager(bool hidecanvas) {
         ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
     }
 
-    if(hidecanvas) showCanvas = false;
+    if(hidecanvas) enableCanvasFunctionality = false;
 
     initAndLoadSettings();
     
@@ -41,7 +41,7 @@ Manager :: Manager(bool hidecanvas) {
         //lasers[0]->addZone(0);
        
     }
-    if(showCanvas) {
+    if(enableCanvasFunctionality) {
         if(canvasTarget.getNumZoneIds()==0) {
             createDefaultCanvasZone();
             ZoneId zoneid = canvasTarget.getZoneIds()[0]->zoneId;
@@ -51,9 +51,15 @@ Manager :: Manager(bool hidecanvas) {
     
 
     selectedLaserIndex = 0;
-    viewMode  = showCanvas ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
+    viewMode  = enableCanvasFunctionality ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
 
     canvasViewController.setUseFbo(true); 
+    // seems nasty - this should be set somewhere else???
+//    int pixelscale = ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+//    ofRectangle canvasrect = canvasViewController.getOutputRect();
+//    canvasrect.x =54*pixelscale;
+//    canvasrect.y = 100*pixelscale;
+
     
     guiIsVisible = true;
     guiIsMouseDisabled = false; 
@@ -93,6 +99,7 @@ Manager :: Manager(bool hidecanvas) {
     ofAddListener(ofEvents().mouseDragged, this, &Manager::mouseDragged, OF_EVENT_ORDER_BEFORE_APP);
     ofAddListener(ofEvents().mouseScrolled, this, &Manager::mouseScrolled, OF_EVENT_ORDER_BEFORE_APP);
     showCopySettingsWindow = showDacAssignmentWindow = showCanvasSettingsWindow = false;
+
 
 }
 
@@ -184,7 +191,80 @@ void Manager :: initAndLoadSettings() {
 
 }
 
+
+// I don't think this function is currently being called!
+// ah except for when importing and exporting laser settings
+// At the moment, loading and saving is done via the load/save functions.
+
+// Currently uses files :
+// ofxLaser/laserSettings.json - deserializes the params list, beam zones, canvas target
+// It reads the numLasers value from laserSettings.json, then attempts to load lasers 
+// for each one
+//
+// The deserialize function does the same thing, except I think it also saves all the laser
+// settings within the same file. I believe the zones are saved as different files though,
+// probably not great?
+//
+// ok so each laser also has a load/save settings function that looks for files.
+// Will need to refactor that so it is serialize / deserialize. Lasers
+// should not take ownership of their own load and save!
+//
+// How to untangle!!!
+// Step one :
+// Investigate Laser load save
+//      laser.loadSettings only seems to ever be called by the laser manager
+//      laser.saveSettings is used throughout Laser!
+
+// Move zone load and save to Laser itself, and include in laser settings
+//      Note that laser serialize / deserialize does actually include the zone
+//      settings.
+// At the moment zone load/save seems to have to manage whether the zone has
+// changed itself - I'm guessing at some point it got slow and needed optimizing.
+// This suggests that laser.save is called often. Research!
+// Laser.saveSettings is called :
+//      - when a zone is added
+//      - when a zone/alt zone is removed
+//      - on updateZones, if a zone is in the changed list.
+//          - *** WHEN is this called?
+//          - updateZones is called by the laserManager when a beam zone or canvas
+//            zone is deleted. Clumsy!
+//          - I don't fully understand this system. I think it's something to do with
+//            the connection between the zones in the laser and their interface. Honestly
+//            it seems like a total mess. But that might be because I have forgotten
+//            how it works.
+//      - on Laser::update() if any of the zones return true to their "update" function
+//      - when any of the parameters are changed (unless ignoreParamChange is set - ugh)
+
+
+
+// Investigate how and when those functions are called and offset them up a level.
+//
+// Create serialize / deserialize for Laser that includes all zone settings!
+// Rewrite laser load / save so that it uses the serialize / deserialize function
+// Get rid of laser load / save, move it up to the laser manager.
+//      Rewrite laser.saveSettings calls so that they mark the laser as needing save.
+
+// WAIT... is bundling all the laser settings into one file sensible?
+// PRO  - code is more consistent
+//      - only one set of code for exporting ofxlaser setting / saving
+// CON  - saving could be slow if you have a complex set up
+//      - if save is interupted, whole set up could be corrupted
+
+// SOLUTION :
+// A hybrid approach where the lasers themselves no longer know about saving and loading
+// but they do serialize and deserialize their data
+// I need to move away from separate files for each zone data though.
+
+void Manager :: serialize(ofJson& json) {
+    ManagerBase::serialize(json);
+    
+    visualiser3D.serialize(json["visualiser3D"]);
+    
+}
+
+
 bool Manager :: deserialize(ofJson& json) {
+    
     bool success = ManagerBase::deserialize(json);
     //cout << json.dump(3) << endl; 
     
@@ -201,12 +281,6 @@ bool Manager :: deserialize(ofJson& json) {
     
 }
 
-void Manager :: serialize(ofJson& json) {
-    ManagerBase::serialize(json);
-    
-    visualiser3D.serialize(json["visualiser3D"]);
-    
-}
 
 void Manager :: paramChanged(ofAbstractParameter& e) {
     for(Laser* laser : lasers) {
@@ -380,7 +454,7 @@ bool Manager :: deleteLaser(Laser* laser) {
         if(selectedLaserIndex>=getNumLasers()) selectedLaserIndex = getNumLasers()-1;
         if(getNumLasers()==0) {
             showLaserOutputSettingsWindow = false;
-            viewMode = showCanvas ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
+            viewMode = enableCanvasFunctionality ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
         }
         
         if(laserindex!=-1) {
@@ -403,7 +477,7 @@ void Manager::selectNextLaser() {
         setSelectedLaserIndex(next);
     } else {
         if(viewMode == OFXLASER_VIEW_OUTPUT) {
-            viewMode = showCanvas ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
+            viewMode = enableCanvasFunctionality ? OFXLASER_VIEW_CANVAS : OFXLASER_VIEW_3D;
         } else {
             viewMode = OFXLASER_VIEW_OUTPUT;
         }
@@ -548,7 +622,7 @@ void Manager :: drawPreviews() {
     }
     
     canvasViewController.setIsVisible(viewMode==OFXLASER_VIEW_CANVAS);
-    
+    canvasViewController.setOutputRectTopLeft(54, 54);
     
     if(viewMode == OFXLASER_VIEW_3D) {
 
@@ -577,7 +651,7 @@ void Manager :: drawPreviews() {
         
         
     } else if(viewMode == OFXLASER_VIEW_CANVAS) {
-        
+         
         if(isGuiVisible()) {
             canvasViewController.draw();
             canvasViewController.beginViewPort(false);
@@ -667,6 +741,19 @@ void Manager :: renderPreview() {
     ofPopStyle();
 }
 
+
+bool Manager::setOverlayIconsVisible(bool state) {
+    
+    if(overlayIconsVisible!=state) {
+        overlayIconsVisible = state;
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+
 void Manager::drawLaserGui() {
     
     //ImGui::ShowDemoWindow();
@@ -684,368 +771,363 @@ void Manager::drawLaserGui() {
     Laser* currentLaser = getSelectedLaser();
         
         // TODO check null laser
-    
-    if(viewMode == OFXLASER_VIEW_OUTPUT){
-    
-        if(UI::startWindow("Laser select", ImVec2(10,60), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, false, nullptr )) {
+    if(overlayIconsVisible) {
+        if(viewMode == OFXLASER_VIEW_OUTPUT){
             
-            ImGui::PushFont(UI::mediumFont);
-            
-            if(ImGui::Button(ICON_FK_PLUS, ImVec2(0,22))) {
-                createAndAddLaser();
-                ZoneId zoneId = createNewBeamZone();
-                //int zonenum = canvasTarget.zones.size()-1;
-                int lasernum = getSelectedLaserIndex();
-                addZoneToLaser(zoneId, lasernum);
-                scheduleSaveSettings();
-            }
-            ImGui::SameLine();
-            
-            ImGui::Text("LASER :"); ImGui::SameLine();
-            
-            for(int i = 0; i< getNumLasers(); i++ ) {
+            if(UI::startWindow("Laser select", ImVec2(10,60), ImVec2(800,iconBarHeight),ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize, false, nullptr )) {
                 
-                string laserNumberString = ofToString(i+1);
-               
-                if(i==getSelectedLaserIndex()) UI::secondaryColourStart();
-                // LASER BUTTONS
-                if(ImGui::Button(laserNumberString.c_str(), ImVec2(25,22))) {
-                    setSelectedLaserIndex(i);
-                }
-                ImGui::SameLine();
-                UI::secondaryColourEnd();
+                ImGui::PushFont(UI::mediumFont);
                 
-            }
-            ImGui::PopFont();
-        }
-        UI::endWindow();
-    
-        //string label ="Add zone ";
-        
-        if(UI::startWindow("Zone View Icons", ImVec2(10,100), ImVec2(10,60), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize , false, nullptr )) {
-            
-            
-            ImGui::PushFont(UI::mediumFont);
-            //ImGui::PushItemWidth(170);
-            
-            if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddZone", false, false)) {
-                ZoneId zoneId = createNewBeamZone();
-                int lasernum = getSelectedLaserIndex();
-                addZoneToLaser(zoneId, lasernum);
-                
-            }
-            UI::addDelayedTooltip("Add new beam zone");
-            
-            if(showCanvas) {
-                
-                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false)) {
-                    
-                    // MAKE NEW ZONE panel
-                    ImGui::OpenPopup("Add canvas zone");
-
-                    
-                    
-                }
-                UI::addDelayedTooltip("Add existing canvas zone to laser");
-                
-            }
-            
-            if(UI::Button(ICON_FK_LIB_ADDMASK, false, false)) {
-                
-                // MAKE NEW MASK panel
-                currentLaser->maskManager.addQuadMask();
-            }
-            UI::addDelayedTooltip("Add new mask");
-
-            if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, currentLaser->testPatternActive)) {
-                currentLaser->testPatternActive = !currentLaser->testPatternActive;
-            }
-            UI::addDelayedTooltip("Show test pattern");
-            
-            if(!currentLaser->testPatternActive) {
-                UI::startGhosted();
-            }
-            ImGui::PushItemWidth(21);
-            if(ImGui::DragInt("##testpattern", &currentLaser->testPattern, 0.2, 1, TestPatternGenerator::getNumTestPatterns())) {
-            }
-            UI::addDelayedTooltip("Select test pattern");
-           
-                
-            UI::stopGhosted();
-            
-            ImGui::PopItemWidth();
-
-            
-            
-            if(UI::Button(ICON_FK_LIB_GRID, false, zoneGridSnap.get())) {
-                zoneGridSnap.set(!zoneGridSnap.get());
-                // choose test pattern
-                
-            }
-            UI::addDelayedTooltip("Snap to Grid");
-            
-            ImGui::PushItemWidth(21);
-            if(!zoneGridSnap.get()) {
-                UI::startGhosted();
-            }
-            int gridExponent = 0; //zoneGridSize.get();
-            while(pow(2,gridExponent) < zoneGridSize.get())
-                gridExponent++;
-            if(ImGui::DragInt("##gridexponent", &gridExponent, 0.3, 0, 8)) {
-                zoneGridSize.set(pow(2,gridExponent));
-            }
-            UI::stopGhosted();
-            UI::addDelayedTooltip("Grid size");
-            
-            ImGui::PopFont();
-            
-        }
-        
-        if(ImGui::BeginPopup("Add canvas zone")) {
-            
-            int lasernum = getSelectedLaserIndex();
-            Laser& laser = getLaser(lasernum);
-            vector<InputZone*> inputZones = canvasTarget.getInputZones();
-            
-            for(InputZone* zone : inputZones) {
-                ZoneId zoneid = zone->getZoneId();
-                bool hasZone = laser.hasZone(zoneid);
-                if(hasZone) {
-                    UI::secondaryColourStart();
-                    
-                }
-                if(ImGui::Button(zoneid.getLabel().c_str())) {
-                    if(hasZone) {
-                        laser.removeZone(zoneid);
-                    } else {
-                        laser.addZone(zoneid);
-                    }
-                    
-                }
-                UI::secondaryColourEnd();
-            }
-            
-            if (ImGui::Button("Done", ImVec2(120, 0))) {
-                ImGui::CloseCurrentPopup();
-            }
-            //addZoneToLaser(zoneId, lasernum);
-            
-            ImGui::EndPopup();
-        }
-        
-        UI::endWindow();
-        
-      
-        
-    } else if(viewMode == OFXLASER_VIEW_CANVAS){
-        
-        //string label ="Add zone ";
-        
-        if(UI::startWindow("Canvas Zone View Icons", ImVec2(10,60), ImVec2(10,60), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize , false, nullptr )) {
-            
-            
-            ImGui::PushFont(UI::mediumFont);
-            
-            if(showCanvasSettingsWindow) UI::secondaryColourStart();
-            if(UI::Button(ofToString(ICON_FK_BARS) + "##OpenSettings", false, false)) {
-                showCanvasSettingsWindow = !showCanvasSettingsWindow;
-            }
-            UI::secondaryColourEnd();
-            
-            //ImGui::PushItemWidth(170);
-            
-            if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false)) {
-                int numZones = canvasTarget.getNumZoneIds();
-                ZoneId zoneId = addCanvasZone(numZones*20,numZones*20,100,100);
-            }
-            
-            UI::addDelayedTooltip("Add new canvas zone");
-        
-            if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddGuideImage", false, false)) {
-                
-                ofFileDialogResult result = ofSystemLoadDialog("Choose guide image file");
-                if(result.bSuccess) {
-                    canvasTarget.addGuideImage(result.filePath);
+                if(ImGui::Button(ICON_FK_PLUS, ImVec2(0,22))) {
+                    createAndAddLaser();
+                    ZoneId zoneId = createNewBeamZone();
+                    //int zonenum = canvasTarget.zones.size()-1;
+                    int lasernum = getSelectedLaserIndex();
+                    addZoneToLaser(zoneId, lasernum);
                     scheduleSaveSettings();
                 }
+                ImGui::SameLine();
                 
+                ImGui::Text("LASER :"); ImGui::SameLine();
                 
-                int numZones = canvasTarget.getNumZoneIds();
-                ZoneId zoneId = addCanvasZone(numZones*20,numZones*20,100,100);
-            }
-            
-            UI::addDelayedTooltip("Add new guide image");
-        
-            
-            
-            if(UI::Button(ICON_FK_LIB_GRID, false, canvasGridSnap.get())) {
-                canvasGridSnap.set(!canvasGridSnap.get());
-                // choose test pattern
-                
-            }
-            UI::addDelayedTooltip("Snap to Grid");
-            
-            ImGui::PushItemWidth(21);
-            if(!canvasGridSnap.get()) {
-                UI::startGhosted();
-            }
-            int gridExponent = 0; //zoneGridSize.get();
-            while(pow(2,gridExponent) < canvasGridSize.get())
-                gridExponent++;
-            if(ImGui::DragInt("##gridexponent", &gridExponent, 0.3, 0, 8)) {
-                canvasGridSize.set(pow(2,gridExponent));
-            }
-            UI::stopGhosted();
-            UI::addDelayedTooltip("Grid size");
-            
-            
-            ImGui::PushItemWidth(21);
-            if(canvasGridVisible.get()) {
-                UI::secondaryColourStart();
-            }
-            if(UI::Button(ICON_FK_EYE, false, canvasGridVisible.get())) {
-                canvasGridVisible.set(!canvasGridVisible.get());
-                canvasViewController.updateUIFromZones(canvasTarget);
-            }
-            UI::secondaryColourEnd();
-            UI::addDelayedTooltip("Grid visible");
-            
-            
-            
-            ImGui::PopFont();
-            
-        }
-        
-        UI::endWindow();
-        
-        if(showCanvasSettingsWindow) {
-            
-            if(UI::startWindow("CanvasSettings", ImVec2(300,100),ImVec2(0,0), ImGuiWindowFlags_AlwaysAutoResize, false, &showCanvasSettingsWindow)) {
-                ImGui::Text("CANVAS SETTINGS");
-                
-                int w = canvasTarget.getWidth();
-                int h = canvasTarget.getHeight();
-                
-                if(ImGui::DragInt("Width", &w)) {                canvasTarget.setBounds(0,0,w,h);
-                    canvasViewController.updateUIFromZones(canvasTarget);
+                for(int i = 0; i< getNumLasers(); i++ ) {
+                    
+                    string laserNumberString = ofToString(i+1);
+                    
+                    if(i==getSelectedLaserIndex()) UI::secondaryColourStart();
+                    // LASER BUTTONS
+                    if(ImGui::Button(laserNumberString.c_str(), ImVec2(25,22))) {
+                        setSelectedLaserIndex(i);
+                    }
+                    ImGui::SameLine();
+                    UI::secondaryColourEnd();
+                    
                 }
-                if(ImGui::DragInt("Height", &h)) {                canvasTarget.setBounds(0,0,w,h);
-                    canvasViewController.updateUIFromZones(canvasTarget); 
-                }
-                if(ImGui::DragInt("Zone brightness", &canvasTarget.zoneBrightness, 1, 0, 255)) {
-                    canvasViewController.updateUIFromZones(canvasTarget);
-                }
+                ImGui::PopFont();
             }
             UI::endWindow();
-        }
-        
-        vector<MoveablePoly*>& uiElements =canvasViewController.uiElementsSorted;
-
-        for(int i = 0; i<uiElements.size(); i++) {
             
-            ImGui::PushID(uiElements[i]->getLabel().c_str());
+            //string label ="Add zone ";
             
-           // ofLogNotice(uiElements[i]->getLabel()) << " " << i;
-            
-            MoveablePoly& uiElement = *uiElements[i];
-            
-            InputZone* inputzone =canvasTarget.getInputZoneForZoneIdUid(uiElement.getUid());
-            GuideImage* guideimage = canvasTarget.getGuideImageForUid(uiElement.getUid());
-            
-            
-            string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
-            if(ImGui::BeginPopup(label.c_str())) {
-                bool closecanvaszonesettingspopup = false;
-                if(inputzone!=nullptr) {
-                    ZoneId zoneId = inputzone->getZoneId();
+            if(UI::startWindow("Zone View Icons", ImVec2(10,100), ImVec2(10,60), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize , false, nullptr )) {
+                
+                
+                ImGui::PushFont(UI::mediumFont);
+                //ImGui::PushItemWidth(170);
+                
+                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddZone", false, false)) {
+                    ZoneId zoneId = createNewBeamZone();
+                    int lasernum = getSelectedLaserIndex();
+                    addZoneToLaser(zoneId, lasernum);
                     
+                }
+                UI::addDelayedTooltip("Add new beam zone");
+                
+                if(enableCanvasFunctionality) {
+                    if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false)) {
+                        // MAKE NEW ZONE panel
+                        ImGui::OpenPopup("Add canvas zone");
+                    }
+                    UI::addDelayedTooltip("Add existing canvas zone to laser");
                     
-                    // ImGui::Text("CANVAS ZONE %s", zoneId.getLabel().c_str());
-                    ImGui::Text("CANVAS ZONE %s", label.c_str());
-                    ImGui::Text("CANVAS ZONE %s %s ", zoneId.getLabel().c_str(), zoneId.getUid().c_str());
+                }
+                
+                if(UI::Button(ICON_FK_LIB_ADDMASK, false, false)) {
                     
-                    ImGui::Text("Assign to laser : ");
-                    for(int j = 0; j<lasers.size(); j++ ) {
-                        bool zoneinlaser = lasers[j]->hasZone(zoneId);
-                        string label =ofToString(j);
-                        if(UI::addNumberedCheckBox(j+1, label.c_str(), &zoneinlaser, false)){
-                            ofLogNotice()<<zoneinlaser;
-                            if(zoneinlaser) {
-                                lasers[j]->addZone(zoneId);
-                            } else {
-                                lasers[j]->removeZone(zoneId);
-                            }
-                        }
-                        
+                    // MAKE NEW MASK panel
+                    currentLaser->maskManager.addQuadMask();
+                }
+                UI::addDelayedTooltip("Add new mask");
+                
+                if(UI::Button(ICON_FK_LIB_TESTPATTERN, false, currentLaser->testPatternActive)) {
+                    currentLaser->testPatternActive = !currentLaser->testPatternActive;
+                }
+                UI::addDelayedTooltip("Show test pattern");
+                
+                if(!currentLaser->testPatternActive) {
+                    UI::startGhosted();
+                }
+                ImGui::PushItemWidth(21);
+                if(ImGui::DragInt("##testpattern", &currentLaser->testPattern, 0.2, 1, TestPatternGenerator::getNumTestPatterns())) {
+                }
+                UI::addDelayedTooltip("Select test pattern");
+                
+                
+                UI::stopGhosted();
+                
+                ImGui::PopItemWidth();
+                
+                
+                
+                if(UI::Button(ICON_FK_LIB_GRID, false, zoneGridSnap.get())) {
+                    zoneGridSnap.set(!zoneGridSnap.get());
+                    // choose test pattern
+                    
+                }
+                UI::addDelayedTooltip("Snap to Grid");
+                
+                ImGui::PushItemWidth(21);
+                if(!zoneGridSnap.get()) {
+                    UI::startGhosted();
+                }
+                int gridExponent = 0; //zoneGridSize.get();
+                while(pow(2,gridExponent) < zoneGridSize.get())
+                    gridExponent++;
+                if(ImGui::DragInt("##gridexponent", &gridExponent, 0.3, 0, 8)) {
+                    zoneGridSize.set(pow(2,gridExponent));
+                }
+                UI::stopGhosted();
+                UI::addDelayedTooltip("Grid size");
+                
+                ImGui::PopFont();
+                
+            }
+            
+            if(ImGui::BeginPopup("Add canvas zone")) {
+                
+                int lasernum = getSelectedLaserIndex();
+                Laser& laser = getLaser(lasernum);
+                vector<InputZone*> inputZones = canvasTarget.getInputZones();
+                
+                for(InputZone* zone : inputZones) {
+                    ZoneId zoneid = zone->getZoneId();
+                    bool hasZone = laser.hasZone(zoneid);
+                    if(hasZone) {
+                        UI::secondaryColourStart();
                         
                     }
-                    
-                    
-                    string buttonlabel = "DELETE ZONE";
-                    
-                    if(UI::DangerButton(buttonlabel.c_str())) {
-                        if(ofGetKeyPressed(OF_KEY_COMMAND)) {
-                            deleteCanvasZone(inputzone);
+                    if(ImGui::Button(zoneid.getLabel().c_str())) {
+                        if(hasZone) {
+                            laser.removeZone(zoneid);
                         } else {
-                            ImGui::OpenPopup("DELETE ZONE");
-                        }
-                    }
-                    
-                    if(ImGui::BeginPopupModal("DELETE ZONE")) {
-                        
-                        ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
-                        ImGui::Separator();
-                        
-                        UI::dangerColourStart();
-                        if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-                            ImGui::CloseCurrentPopup();
-                            
-                            deleteCanvasZone(inputzone);
-                            
-                            
-                            closecanvaszonesettingspopup = true;
-                            
+                            laser.addZone(zoneid);
                         }
                         
-                        UI::dangerColourEnd();
-                        
-                        ImGui::SetItemDefaultFocus();
-                        ImGui::SameLine();
-                        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-                            ImGui::CloseCurrentPopup();
-                        }
-                        ImGui::EndPopup();
                     }
-                    
-                    
-                    
-                    
-                }
-                if(guideimage!=nullptr) {
-                    string buttonlabel = "DELETE GUIDE IMAGE";
-                    
-                    if(UI::DangerButton(buttonlabel.c_str())) {
-                        
-                        canvasTarget.deleteGuideImage(guideimage);
-                    
-                    }
+                    UI::secondaryColourEnd();
                 }
                 
-                
-                if(closecanvaszonesettingspopup) ImGui::CloseCurrentPopup();
+                if (ImGui::Button("Done", ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                //addZoneToLaser(zoneId, lasernum);
                 
                 ImGui::EndPopup();
             }
+            
+            UI::endWindow();
+            
+            
+            
+        } else if(viewMode == OFXLASER_VIEW_CANVAS){
+            
+            //string label ="Add zone ";
+            
+            if(UI::startWindow("Canvas Zone View Icons", ImVec2(10,60), ImVec2(10,60), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize , false, nullptr )) {
+                
+                
+                ImGui::PushFont(UI::mediumFont);
+                
+                if(showCanvasSettingsWindow) UI::secondaryColourStart();
+                if(UI::Button(ofToString(ICON_FK_BARS) + "##OpenSettings", false, false)) {
+                    showCanvasSettingsWindow = !showCanvasSettingsWindow;
+                }
+                UI::secondaryColourEnd();
+                
+                //ImGui::PushItemWidth(170);
+                
+                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false)) {
+                    int numZones = canvasTarget.getNumZoneIds();
+                    ZoneId zoneId = addCanvasZone(numZones*20,numZones*20,100,100);
+                }
+                
+                UI::addDelayedTooltip("Add new canvas zone");
+                
+                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddGuideImage", false, false)) {
+                    
+                    ofFileDialogResult result = ofSystemLoadDialog("Choose guide image file");
+                    if(result.bSuccess) {
+                        canvasTarget.addGuideImage(result.filePath);
+                        scheduleSaveSettings();
+                    }
+                    
+                    
+                    int numZones = canvasTarget.getNumZoneIds();
+                    ZoneId zoneId = addCanvasZone(numZones*20,numZones*20,100,100);
+                }
+                
+                UI::addDelayedTooltip("Add new guide image");
+                
+                
+                
+                if(UI::Button(ICON_FK_LIB_GRID, false, canvasGridSnap.get())) {
+                    canvasGridSnap.set(!canvasGridSnap.get());
+                    // choose test pattern
+                    
+                }
+                UI::addDelayedTooltip("Snap to Grid");
+                
+                ImGui::PushItemWidth(21);
+                if(!canvasGridSnap.get()) {
+                    UI::startGhosted();
+                }
+                int gridExponent = 0; //zoneGridSize.get();
+                while(pow(2,gridExponent) < canvasGridSize.get())
+                    gridExponent++;
+                if(ImGui::DragInt("##gridexponent", &gridExponent, 0.3, 0, 8)) {
+                    canvasGridSize.set(pow(2,gridExponent));
+                }
+                UI::stopGhosted();
+                UI::addDelayedTooltip("Grid size");
+                
+                
+                ImGui::PushItemWidth(21);
+                if(canvasGridVisible.get()) {
+                    UI::secondaryColourStart();
+                }
+                if(UI::Button(ICON_FK_EYE, false, canvasGridVisible.get())) {
+                    canvasGridVisible.set(!canvasGridVisible.get());
+                    canvasViewController.updateUIFromZones(canvasTarget);
+                }
+                UI::secondaryColourEnd();
+                UI::addDelayedTooltip("Grid visible");
+                
+                
+                
+                ImGui::PopFont();
+                
+            }
+            
+            UI::endWindow();
+            
+            if(showCanvasSettingsWindow) {
+                
+                if(UI::startWindow("CanvasSettings", ImVec2(300,100),ImVec2(0,0), ImGuiWindowFlags_AlwaysAutoResize, false, &showCanvasSettingsWindow)) {
+                    ImGui::Text("CANVAS SETTINGS");
+                    
+                    int w = canvasTarget.getWidth();
+                    int h = canvasTarget.getHeight();
+                    
+                    if(ImGui::DragInt("Width", &w)) {                canvasTarget.setBounds(0,0,w,h);
+                        canvasViewController.updateUIFromZones(canvasTarget);
+                    }
+                    if(ImGui::DragInt("Height", &h)) {                canvasTarget.setBounds(0,0,w,h);
+                        canvasViewController.updateUIFromZones(canvasTarget);
+                    }
+                    if(ImGui::DragInt("Zone brightness", &canvasTarget.zoneBrightness, 1, 0, 255)) {
+                        canvasViewController.updateUIFromZones(canvasTarget);
+                    }
+                }
+                UI::endWindow();
+            }
+            
+            vector<MoveablePoly*>& uiElements =canvasViewController.uiElementsSorted;
+            
+            for(int i = 0; i<uiElements.size(); i++) {
+                
+                ImGui::PushID(uiElements[i]->getLabel().c_str());
+                
+                // ofLogNotice(uiElements[i]->getLabel()) << " " << i;
+                
+                MoveablePoly& uiElement = *uiElements[i];
+                
+                InputZone* inputzone =canvasTarget.getInputZoneForZoneIdUid(uiElement.getUid());
+                GuideImage* guideimage = canvasTarget.getGuideImageForUid(uiElement.getUid());
+                
+                
+                string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
+                if(ImGui::BeginPopup(label.c_str())) {
+                    bool closecanvaszonesettingspopup = false;
+                    if(inputzone!=nullptr) {
+                        ZoneId zoneId = inputzone->getZoneId();
                         
+                        
+                        // ImGui::Text("CANVAS ZONE %s", zoneId.getLabel().c_str());
+                        ImGui::Text("CANVAS ZONE %s", label.c_str());
+                        ImGui::Text("CANVAS ZONE %s %s ", zoneId.getLabel().c_str(), zoneId.getUid().c_str());
+                        
+                        ImGui::Text("Assign to laser : ");
+                        for(int j = 0; j<lasers.size(); j++ ) {
+                            bool zoneinlaser = lasers[j]->hasZone(zoneId);
+                            string label =ofToString(j);
+                            if(UI::addNumberedCheckBox(j+1, label.c_str(), &zoneinlaser, false)){
+                                ofLogNotice()<<zoneinlaser;
+                                if(zoneinlaser) {
+                                    lasers[j]->addZone(zoneId);
+                                } else {
+                                    lasers[j]->removeZone(zoneId);
+                                }
+                            }
+                            
+                            
+                        }
+                        
+                        
+                        string buttonlabel = "DELETE ZONE";
+                        
+                        if(UI::DangerButton(buttonlabel.c_str())) {
+                            if(ofGetKeyPressed(OF_KEY_COMMAND)) {
+                                deleteCanvasZone(inputzone);
+                            } else {
+                                ImGui::OpenPopup("DELETE ZONE");
+                            }
+                        }
+                        
+                        if(ImGui::BeginPopupModal("DELETE ZONE")) {
+                            
+                            ImGui::Text("Are you sure you want to delete this zone? All of its settings will be deleted.\n\n");
+                            ImGui::Separator();
+                            
+                            UI::dangerColourStart();
+                            if (ImGui::Button("DELETE", ImVec2(120, 0))) {
+                                ImGui::CloseCurrentPopup();
+                                
+                                deleteCanvasZone(inputzone);
+                                
+                                
+                                closecanvaszonesettingspopup = true;
+                                
+                            }
+                            
+                            UI::dangerColourEnd();
+                            
+                            ImGui::SetItemDefaultFocus();
+                            ImGui::SameLine();
+                            if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+                                ImGui::CloseCurrentPopup();
+                            }
+                            ImGui::EndPopup();
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    if(guideimage!=nullptr) {
+                        string buttonlabel = "DELETE GUIDE IMAGE";
+                        
+                        if(UI::DangerButton(buttonlabel.c_str())) {
+                            
+                            canvasTarget.deleteGuideImage(guideimage);
+                            
+                        }
+                    }
+                    
+                    
+                    if(closecanvaszonesettingspopup) ImGui::CloseCurrentPopup();
+                    
+                    ImGui::EndPopup();
+                }
+                
+                
+                
+                ImGui::PopID();
+            }
             
-            
-            ImGui::PopID();
         }
         
+        
     }
-    
-
-    
 
     // show laser settings :
    
@@ -1583,7 +1665,14 @@ void Manager :: guiLaserOverview() {
         
             
         }
-        
+        if(ImGui::Button("ADD LASER")) {
+            createAndAddLaser();
+            ZoneId zoneId = createNewBeamZone();
+            //int zonenum = canvasTarget.zones.size()-1;
+            int lasernum = getSelectedLaserIndex();
+            addZoneToLaser(zoneId, lasernum);
+            scheduleSaveSettings();
+        }
         UI::addIntSlider(globalLatency);
         
 
@@ -1937,7 +2026,7 @@ void Manager :: guiTopBar(int ypos) {
         if(UI::Button("3D", false, viewMode==OFXLASER_VIEW_3D)) {
             viewMode = OFXLASER_VIEW_3D;
         }
-        if(showCanvas) {
+        if(enableCanvasFunctionality) {
             ImGui::SameLine();
             if(UI::Button("CANVAS", false, viewMode==OFXLASER_VIEW_CANVAS)) {
                 viewMode = OFXLASER_VIEW_CANVAS;

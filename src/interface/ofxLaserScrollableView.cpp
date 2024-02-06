@@ -159,6 +159,11 @@ void ScrollableView::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
         }
     }
 }
+void ScrollableView::setOutputRectTopLeft(float left, float top) {
+    outputRect.x = left;
+    outputRect.y = top; 
+    
+}
 
 ofRectangle ScrollableView::getOutputRect() {
     return outputRect;
@@ -173,7 +178,10 @@ void ScrollableView::setOffsetAndScale(glm::vec2 newoffset, float newscale){
     scale = newscale;
     checkEdges();
 }
-
+void ScrollableView::setOffset(glm::vec2 newoffset){
+    offset = newoffset;
+    checkEdges();
+}
 glm::vec2 ScrollableView::screenPosToLocalPos(glm::vec2 pos) {
     return ((pos-offset)/scale) - glm::vec2(outputRect.getLeft(),outputRect.getTop());
 }

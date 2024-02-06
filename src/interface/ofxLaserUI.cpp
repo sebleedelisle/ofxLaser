@@ -861,7 +861,7 @@ bool UI :: addMultiChoiceParam(ofParameter<int>& param, const vector<string>& la
 
 bool UI :: addMultiChoiceInt(string label, int& param, const vector<string>& labels) {
     
-    ImGui::Text("%s", label.c_str());
+    if(label.size()>0) ImGui::Text("%s", label.c_str());
     
     bool changed = false;
     for(int i = 0; i<labels.size(); i++) {
@@ -1032,6 +1032,16 @@ bool UI::Button(const char* label, bool large, bool secondaryColour, const ImVec
     if(large) UI::largeItemEnd();
     if(secondaryColour) UI::secondaryColourEnd();
     return returnvalue;
+}
+
+bool UI::ToggleButton(string label, bool&value, bool large, const ImVec2& size_arg) {
+    if(Button(label, large, value, size_arg)) {
+        value = !value;
+        return true;
+    } else {
+        return false;
+    } 
+    
 }
 
 bool UI::DangerButton(string label, bool large, const ImVec2& size_arg ){
