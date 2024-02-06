@@ -28,7 +28,7 @@ Polyline::Polyline(const ofPolyline& poly, const ofColor& col, string profilelab
     reset();
     profileLabel = profilelabel;
     setPoints(poly);
-    setColours((vector<ofColor>){col}, brightness);
+    setColours(vector<ofColor>{col}, brightness);
     
     
 }

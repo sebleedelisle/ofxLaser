@@ -14,7 +14,7 @@ Circle::Circle(const glm::vec3& centre, const float radius, const ofColor& col, 
 	
 	
 	reversable = false;
-    setColours((vector<ofFloatColor>){col});
+    setColours(vector<ofFloatColor>{col});
 
     //radius = _radius;
     //centre = _centre;

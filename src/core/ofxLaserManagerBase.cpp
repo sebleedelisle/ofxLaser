@@ -307,7 +307,7 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     }
 }
 
-Polyline* ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
+ofxLaser::Polyline* ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
     
     tmpPoints = points;
     for(glm::vec3& v : tmpPoints) {
