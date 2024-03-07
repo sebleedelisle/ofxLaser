@@ -1,0 +1,67 @@
+name: build-vs
+
+# make the action not run on the local repo if the branch is also in a pull request to OF/OF
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-vs2022:
+    runs-on: windows-2022
+    strategy:
+      matrix:
+        # platform: [x64, ARM64, ARM64EC]
+        platform: [x64]
+
+    env:
+      BITS: ${{ matrix.bits }}
+    steps:
+      - name: checkout openframeworks
+        uses: actions/checkout@v4
+        with:
+          repository: openframeworks/openFrameworks
+      # now we add in ofxLaser as addon
+      - name: checkout ofxLaser
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.workspace }}/addons/ofxLaser
+      # and here we replace the empty example with the hello laser example
+      - name: remove emptyExample
+        run: rm -r ${{ github.workspace }}/examples/templates/emptyExample
+      - name: replace emptyExample with example_HelloLaser
+        run: cp -r ${{ github.workspace }}/addons/ofxLaser/example_HelloLaser ${{ github.workspace }}/examples/templates/emptyExample
+
+      # continue openframeworks defined pipeline
+      - uses: msys2/setup-msys2@v2.22.0
+        with:
+          update: true
+          install: >-
+            git
+            unzip
+            rsync
+            wget
+      - name: Install dependencies
+        shell: msys2 {0}
+        run:
+          ./scripts/ci/vs/install_bleeding.sh
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+      # - name: Build emptyExample
+      #   working-directory: ${{env.GITHUB_WORKSPACE}}
+      #   run:
+      #     msbuild examples/templates/emptyExample/emptyExample.vcxproj /p:configuration=release /p:platform=${{ matrix.platform }} /p:PlatformToolset=v143
+      # - name: Build allAddonsExample
+      #   working-directory: ${{env.GITHUB_WORKSPACE}}
+      #   run:
+      #     msbuild examples/templates/allAddonsExample/allAddonsExample.vcxproj /p:configuration=release /p:platform=${{ matrix.platform }} /p:PlatformToolset=v143
+      - name: Build DEBUG emptyExample
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run:
+          msbuild examples/templates/emptyExample/emptyExample.vcxproj /p:configuration=debug /p:platform=${{ matrix.platform }} /p:PlatformToolset=v143
+      # - name: Build DEBUG allAddonsExample
+      #   working-directory: ${{env.GITHUB_WORKSPACE}}
+      #   run:
+      #     msbuild examples/templates/allAddonsExample/allAddonsExample.vcxproj /p:configuration=debug /p:platform=${{ matrix.platform }} /p:PlatformToolset=v143
+
