@@ -1,0 +1,48 @@
+name: build-emscripten
+
+# make the action not run on the local repo if the branch is also in a pull request to OF/OF
+on: [push]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-emscripten:
+    runs-on: ubuntu-latest
+    strategy:
+        matrix:
+          cfg:
+          - {target: emscripten}
+    env:
+     TARGET: ${{matrix.cfg.target}}
+    steps:
+    - name: checkout openframeworks
+      uses: actions/checkout@v4
+      with:
+        repository: openframeworks/openFrameworks
+    # now we add in ofxLaser as addon
+    - name: checkout ofxLaser
+      uses: actions/checkout@v4
+      with:
+        path: ${{ github.workspace }}/addons/ofxLaser
+    # and here we replace the empty example with the hello laser example
+    - name: remove emptyExample
+      run: rm -r ${{ github.workspace }}/examples/templates/emptyExample
+    - name: replace emptyExample with example_HelloLaser
+      run: cp -r ${{ github.workspace }}/addons/ofxLaser/example_HelloLaser ${{ github.workspace }}/examples/templates/emptyExample
+
+    # continue openframeworks defined pipeline
+
+    - name: Docker Step
+      run:  "docker run -di --name emscripten -v $PWD:/src emscripten/emsdk:3.1.21 bash"
+    - name: Download libs
+      run: ./scripts/$TARGET/download_libs.sh
+    - name: Install dependencies
+      run: ./scripts/ci/$TARGET/install.sh
+    - name: Build
+      run: docker exec -i emscripten sh -c "scripts/ci/$TARGET/build.sh";
+    - name: Upload Libs
+      run: scripts/ci/upload_of_lib.sh;
+      env:
+          GA_CI_SECRET: ${{ secrets.CI_SECRET }}
