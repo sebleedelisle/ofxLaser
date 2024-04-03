@@ -136,6 +136,7 @@ class Shape {
    
 	string profileLabel = "";
 	
+    // ID is used for making groups of compound shapes
     int id = -1;
     
 	protected :

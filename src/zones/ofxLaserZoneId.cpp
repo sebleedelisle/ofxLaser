@@ -31,21 +31,46 @@ bool ZoneId :: set(ZoneType zonetype, int group, int index) {
     
 }
 
-string ZoneId :: getLabel() {
+string ZoneId :: getLabel() const {
     if(label=="") {
-        
-        string newlabel = "";
-        
-        if(type==BEAM) newlabel = "BEAM ";
-        else newlabel = "CANVAS ";
-        newlabel = newlabel +ofToString(zoneIndex+1);
-        return newlabel;
-            
+        return getDefaultLabel();
     } else {
         return label;
     }
     
 }
+string ZoneId :: getDefaultLabel() const {
+    
+    string newlabel = "";
+    
+    if(type==BEAM) newlabel = "BEAM ";
+    else newlabel = "CANVAS ";
+    newlabel = newlabel +ofToString(zoneIndex+1);
+    return newlabel;
+            
+   
+    
+}
+
+
+bool ZoneId :: setLabel(string newlabel) {
+        
+    if(newlabel != getDefaultLabel()) {
+        if(newlabel!=label) {
+            label = newlabel;
+            return true;
+        } else {
+            return false;
+        }
+    
+    } else {
+            
+        label = "";
+        return true;
+    }
+    
+}
+
 //const string& getUid() const;
 const string& ZoneId :: getUid() const {
     // caching id for optimisation
@@ -100,10 +125,10 @@ bool ZoneId :: deserialize(ofJson& json) {
     
 }
 bool ZoneId::operator==(const ZoneId & other) const{
-    return other.getUid()==getUid();
+    return (other.getUid()==getUid()) && (other.getLabel()==getLabel());
 }
 
 //--------------------------------------------------------------
 bool ZoneId::operator!=(const ZoneId & other) const{
-    return other.getUid()!=getUid();
+    return !(other==*this);
 }

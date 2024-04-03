@@ -19,7 +19,7 @@ class Line : public Shape{
 	
     virtual Shape* clone() const override {
         glm::vec3 start = points.front();
-        glm::vec3 end = points.front();
+        glm::vec3 end = points.back();
         ofColor c = colours.front();
         Line* line =new Line(start, end, c, profileLabel);
         line->setClipRectangle(clipRectangle);

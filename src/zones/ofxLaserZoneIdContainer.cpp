@@ -70,10 +70,26 @@ map<ZoneId, ZoneId> ZoneIdContainer :: renumberZones() {
         
     }
     return zonesChanged;
+}
+
+
+map<ZoneId, ZoneId> ZoneIdContainer :: moveZoneByIdToIndex(ZoneId& zoneId, int index) {
+  
+    ObjectWithZoneId* zoneIdObject = getObjectForZoneId(zoneId);
     
+    vector<ObjectWithZoneId*> :: iterator from = find(zoneIdObjects.begin(), zoneIdObjects.end(), zoneIdObject);
+    vector<ObjectWithZoneId*> :: iterator to = zoneIdObjects.begin()+index;
     
+    if(from < to ) {
+        rotate(from, from+1, to+1);
+    } else if (from > to) {
+        rotate(to, from, from+1);
+    }
+    
+    return renumberZones();
     
 }
+
 
 bool ZoneIdContainer :: clearZones() {
     if(zoneIdObjects.size()==0) return false;

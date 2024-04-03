@@ -21,7 +21,9 @@ class ZoneId {
         CANVAS
     };
     
-    string getLabel() ;
+    string getLabel() const;
+    string getDefaultLabel() const ;
+    bool setLabel(string newlabel);
     const string& getUid() const;
     ZoneType getType(); 
     void updateUid();
