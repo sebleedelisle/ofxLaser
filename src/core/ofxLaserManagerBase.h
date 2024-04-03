@@ -47,8 +47,9 @@ class ManagerBase : public TransformationManager {
     virtual bool deleteLaser(Laser* laser);
     
     ZoneId createNewBeamZone();
-    bool deleteBeamZone(ZoneId& zoneid);
+    bool deleteBeamZone(OutputZone* outputZone);
     ShapeTargetBeamZone* getBeamZoneByIndex(int index); 
+    bool updateZoneLabels(); 
     
     ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
     ZoneId addCanvasZone(const ofRectangle& zoneRect);
@@ -59,6 +60,8 @@ class ManagerBase : public TransformationManager {
     void unSetAllAltZones(); 
 
     void addZoneToLaser(ZoneId& zoneId, unsigned int lasernum);
+    int getLaserIndexForBeamZoneId(ZoneId& zoneId); 
+    bool moveBeamZoneToIndex(int sourceindex, int targetindex);
     
     virtual void setCanvasSize(int width, int height);
     
@@ -119,6 +122,15 @@ class ManagerBase : public TransformationManager {
     Laser& getLaser(int index = 0);
     int getNumLasers() { return (int)lasers.size(); };
     int getNumBeamZones() { return (int)beamZoneContainer.getNumZoneIds(); }; 
+    vector<string> getBeamZoneLabels() {
+        vector<string> labels;
+        for(int i = 0; i<beamZoneContainer.getNumBeamZones(); i++ ) {
+            ShapeTargetBeamZone* beamzone = beamZoneContainer.getBeamZoneAtIndex(i);
+            labels.push_back(beamzone->zoneId.getLabel());
+            
+        }
+        return labels;
+    }
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
     OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));

@@ -215,8 +215,6 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
     if(ofFile(filename).exists()) {
         laserZoneJson = ofLoadJson(filename);
     }
-    
-    
     if(!laserZoneJson.empty()) {
         outputzone->deserialize(laserZoneJson);
     } else {
@@ -418,6 +416,33 @@ bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
     }
     
 }
+
+bool Laser::updateZoneLabels(vector<ObjectWithZoneId*>& zoneids){
+    
+    ofLogNotice("Laser::updateZoneLabels");
+    bool changed = false;
+    
+    for(OutputZone* outputZone : outputZones) {
+        //for (auto const& [key, val] : symbolTable)
+        ZoneId id = outputZone->getZoneId();
+        
+        ofLogNotice(id.getUid()) << " " << id.getLabel()<< " " ;
+       
+        for (ObjectWithZoneId* objectWithZoneId : zoneids) {
+            ZoneId& updatedzoneid  =objectWithZoneId->zoneId;
+            if(id.getUid()==updatedzoneid.getUid()) {
+                if(id.getLabel()!=updatedzoneid.getLabel()) {
+                    ofLogNotice("    changed to: ") << updatedzoneid.getLabel();
+                    changed = true;
+                    outputZone->setZoneId(updatedzoneid);
+                }
+                
+            }
+        }
+    }
+    return changed;
+}
+
 
 void Laser::clearOutputZones() {
     

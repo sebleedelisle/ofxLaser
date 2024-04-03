@@ -112,8 +112,6 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     //int index = it-lasers.begin();
     // hopefully should renumber current laser OK
     
-    // remove laser from laser array
-    lasers.erase(it);
     
     // TODO delete zones that are only assigned to this laser *************************
     if(deleteZones) {
@@ -124,12 +122,15 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
         for(OutputZone* zone : zones) {
             ZoneId zoneid = zone->getZoneId();
             if(zoneid.getType() == ZoneId::BEAM) {
-                deleteBeamZone(zoneid);
+                deleteBeamZone(zone);
             }
         }
         
     }
     
+    // remove laser from laser array
+    lasers.erase(it);
+
     // delete laser object
     delete laser;
     
@@ -182,22 +183,35 @@ bool ManagerBase :: deleteCanvasZone(InputZone* inputZone) {
     
 }
 
-bool ManagerBase::deleteBeamZone(ZoneId& zoneid) {
-
-    map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
-
+bool ManagerBase::deleteBeamZone(OutputZone* outputZone) {
+    
+    ZoneId zoneid = outputZone->getZoneId();
+    
     bool changed = false;
-    for(Laser* laser : lasers) {
-        changed = laser->removeZone(zoneid) || changed;
-        changed = laser->updateZones(changedZones)|| changed;
+    
+    if(outputZone->getIsAlternate()) {
+        for(Laser* laser : lasers) {
+            changed = laser->removeAltZone(zoneid) || changed;
+        }
+        
+    } else {
+        map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
+        // zone should actually only be in one of the lasers...
+       
+        for(Laser* laser : lasers) {
+            changed = laser->removeAltZone(zoneid) || changed;
+            changed = laser->removeZone(zoneid) || changed;
+            changed = laser->updateZones(changedZones)|| changed;
+        }
+        
     }
+    
     if (changed) {
         scheduleSaveSettings();
         return true;
     } else{
         return false;
     }
-    
 }
 
 
@@ -208,6 +222,33 @@ void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
     }
     // Todo - check zone exists
     lasers[lasernum]->addZone(zoneId);
+}
+
+int ManagerBase::getLaserIndexForBeamZoneId(ZoneId& zoneId) {
+        
+    for(int i = 0; i<lasers.size(); i++) {
+        Laser& laser = *lasers[i];
+        if(laser.hasZone(zoneId)) {
+            return i;
+        }
+        
+    }
+    return -1;
+}
+
+bool ManagerBase :: moveBeamZoneToIndex(int sourceindex, int targetindex) {
+    if(sourceindex == targetindex) return false;
+    if((sourceindex<0) || (sourceindex>=beamZoneContainer.getNumZoneIds()) || (targetindex<0) || (targetindex>=beamZoneContainer.getNumZoneIds()))
+        return false;
+    
+    ZoneId zoneid = beamZoneContainer.getBeamZoneAtIndex(sourceindex)->zoneId;
+    map<ZoneId, ZoneId> changedzones = beamZoneContainer.moveZoneByIdToIndex(zoneid,targetindex);
+    
+    for(Laser* laser : lasers) {
+        laser->updateZones(changedzones);
+    }
+    return true;
+    
 }
 
 
@@ -632,6 +673,7 @@ bool ManagerBase::loadSettings() {
         Laser* laser = lasers[i];
         laser->loadSettings();
         
+        
         // if the laser has a dac id saved in the settings,
         // tell the dacAssigner about it
         // if the dac isn't available, it'll make the data and store it
@@ -645,6 +687,8 @@ bool ManagerBase::loadSettings() {
     // the vector (shouldn't be needed but it doesn't hurt)
     lasers.resize(numLasers);
     
+    // make sure the lasers adopt the zone labels from the beamZoneContainer
+    updateZoneLabels();
     // shouldn't be needed but hey
     disarmAllLasers();
     
@@ -666,6 +710,17 @@ bool ManagerBase::loadSettings() {
     
     
 }
+
+bool ManagerBase::updateZoneLabels() {
+    bool changed = false;
+    for(Laser* laser : lasers) {
+        if(laser->updateZoneLabels(beamZoneContainer.getZoneIds())) {
+            changed = true;
+        }
+    }
+    return changed; 
+}
+
 
 bool ManagerBase::scheduleSaveSettings() {
     if(!settingsNeedSave) {

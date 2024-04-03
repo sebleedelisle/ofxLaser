@@ -29,6 +29,7 @@
 
 #include "ofxLaserZoneContent.h"
 #include "ofxLaserTestPatternGenerator.h"
+#include "ofxLaserObjectWithZoneId.h"
 
 namespace ofxLaser {
 
@@ -94,7 +95,8 @@ class Laser {
     bool unSoloZone(ZoneId zoneId);
     bool isLaserZoneActive(OutputZone* outputZone);
     
-    bool updateZones(map<ZoneId, ZoneId>& changedZones); 
+    bool updateZones(map<ZoneId, ZoneId>& changedZones);
+    bool updateZoneLabels(vector<ObjectWithZoneId*>& zones);
 
     // gets output zones (but not alt zones) in order
     vector<OutputZone*> getSortedOutputZones();

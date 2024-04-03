@@ -11,6 +11,7 @@
 #include "ofMain.h"
 #include "ofxLaserDragHandle.h"
 #include "ofxLaserPolygonBase.h"
+#include "ofxFontManager.h"
 
 namespace ofxLaser {
 

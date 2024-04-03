@@ -28,11 +28,12 @@ void Dot::appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const 
     // the value is the fraction of the brightness of the last pixel, from 0 (brightest) to 1(dimmest);
     float interpolation = pointcount - (maxPoints * intensity/speedMultiplier);
     ofColor col(getColour());
-    
-    for(int i = 0; i<pointcount-1; i++) {
-        pointsToAppendTo.push_back(ofxLaser::Point(getStartPos(), col));
+    if(!isEmpty()) {
+        for(int i = 0; i<pointcount-1; i++) {
+            pointsToAppendTo.push_back(ofxLaser::Point(getStartPos(), col));
+        }
+        pointsToAppendTo.push_back(ofxLaser::Point(getStartPos(), col* ofMap(interpolation, 0, 1,1,0)));
     }
-    pointsToAppendTo.push_back(ofxLaser::Point(getStartPos(), col* ofMap(interpolation, 0, 1,1,0)));
 };
 
 

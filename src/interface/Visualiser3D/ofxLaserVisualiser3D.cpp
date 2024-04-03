@@ -184,7 +184,7 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     }
     
     if((!visFbo.isAllocated()) || (visFbo.getWidth()!=round(rect.getWidth())) || (visFbo.getHeight()!=round(rect.getHeight()))) {
-        ofLogNotice("Visualiser3D :: draw  - fbo.allocated");
+        //ofLogNotice("Visualiser3D :: draw  - fbo.allocated");
         visFbo.clear();
         visFbo.allocate(round(rect.getWidth()), round(rect.getHeight()), GL_RGBA, 4);
     }
@@ -265,15 +265,24 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
         ofPushMatrix();
         
         
-        //move to the laser position
-        ofTranslate(laser3D.position);
+
         if(i<lasers.size()) {
             ofSetColor(0,100,0);
         } else {
             ofSetColor(0,50,0);
         }
-        
-        if(showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
+       
+        //move to the laser position
+        ofTranslate(laser3D.position);
+        if(showLaserNumbers) {
+            
+            ofFill();
+            ofxFontManager::drawStringAsShapes(ofToString(i+1), glm::vec2(0,-6), ofxFontManager::CENTRE, ofxFontManager::BOTTOM, "default-xsmall");
+            ofNoFill();
+            //ofDrawBitmapString(ofToString(i+1), -2,-6);
+        }
+        //if(showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
+       
         if((showZoneNumbers) && (i<lasers.size())) {
             ofxLaser::Laser* laser = lasers[i];
             vector<OutputZone*> outputzones = laser->getActiveZones();
@@ -284,12 +293,13 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
             for(OutputZone* outputzone : outputzones) {
                 if(outputzone->getIsAlternate()) continue;
                 string label = outputzone->getLabel();
-                zoneoutputstring += label+" ";
+                zoneoutputstring += label+"\n";
                 //outputzonenumbers.push_back(label);
                 textwidth+=(2+(label.size()*4));
                 
             }
-            ofDrawBitmapString(zoneoutputstring, -textwidth/2 ,10);
+            //ofDrawBitmapString(zoneoutputstring, -textwidth/2 ,10);
+            ofxFontManager::drawStringAsShapes(zoneoutputstring, glm::vec2(0,6), ofxFontManager::CENTRE, ofxFontManager::TOP, "default-xsmall");
             
             
         }

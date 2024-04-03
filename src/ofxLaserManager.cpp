@@ -1125,12 +1125,9 @@ void Manager::drawLaserGui() {
             }
             
         }
-        
-        
     }
 
     // show laser settings :
-   
     ofxLaser::Manager& laserManager = *this;
     
     // Show laser zone settings mute / solo / etc
@@ -1140,7 +1137,7 @@ void Manager::drawLaserGui() {
         //guiLaserOutputSettings();
     //}
     guiDacAssignment();
-    
+        
     visualiser3D.drawUI();
 
     for(LaserZoneViewController& laserzoneview : laserZoneViews ) {
@@ -1149,7 +1146,161 @@ void Manager::drawLaserGui() {
     canvasViewController.drawImGui();
     guiCopyLaserSettings();
     
+    guiZoneSettings();
+    
 }
+
+
+void Manager :: guiZoneSettings() {
+    
+    if(viewMode != OFXLASER_VIEW_OUTPUT) return;
+    
+    int sourceindex = -1;
+    int targetindex = -1;
+    bool autosort = false;
+    bool labelchanged = false;
+    
+    static char newZoneLabel[255];
+    
+    if(UI::startWindow("Laser zones", ImVec2(800+guiSpacing, guiSpacing+menuBarHeight), ImVec2(380,500))) {
+        
+        
+        if(ImGui::Button("Autosort")) {
+            // zoneChaseSettings.resetCustomOrder();
+            autosort = true;
+        }
+        ImGui::Text("Drag and drop to re-order beam zones");
+        
+        //        ImGui::Columns(2);
+        //        ImGui::SetColumnWidth(0, 330);
+        //vector<int>& customOrder = zoneChaseSettings.customOrder;
+        
+        //vector<int>& activeZoneNumbers = selectedClip->getActiveZoneNumbers();
+        int numzones = beamZoneContainer.getNumZoneIds();
+        
+        for (int n = 0; n < numzones; n++) {
+            ImGui::PushID(n);
+            int item = n;// customOrder[n];
+            ZoneId& zoneid = beamZoneContainer.getBeamZoneAtIndex(n)->zoneId;
+            int laserindexforzone = getLaserIndexForBeamZoneId(zoneid);
+            //int zonenumber = activeZoneNumbers[item];
+            string label =  "Laser " + ofToString(laserindexforzone+1)+" "+ ofToString(ICON_FK_ARROW_RIGHT) +" "+ zoneid.getLabel();
+            
+            ImGui::Text("%d", n+1); ImGui::SameLine();
+            ImGui::SetCursorPosX(24);
+            
+            ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(130,19));
+            
+            // make it a drag source
+            if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_None))
+            {
+                ImGui::SetDragDropPayload("MOVE_BEAM_ZONE", &n, sizeof(int));    // Set payload to carry the index of our item (could be anything)
+                
+                ImGui::Text("Move %s", label.c_str());
+                
+                ImGui::EndDragDropSource();
+            }
+            
+            if (ImGui::BeginDragDropTarget())
+            {
+                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("MOVE_BEAM_ZONE"))
+                {
+                    IM_ASSERT(payload->DataSize == sizeof(int));
+                    int payload_n = *(const int*)payload->Data;
+                    
+                    // DO THE SWAP
+                    ofLogNotice("moving : ") << payload_n << " to " << n << " ";
+                    sourceindex = payload_n;
+                    targetindex = n;
+                    
+                }
+                ImGui::EndDragDropTarget();
+            }
+            
+            
+            
+            label = "Edit "+zoneid.getLabel()+" alias";
+            
+            string currentZoneLabel = zoneid.getLabel();
+            ImGui::SameLine();
+            if(ImGui::Button(ICON_FK_PENCIL)) {
+                strcpy(newZoneLabel, currentZoneLabel.c_str());
+                ImGui::OpenPopup(label.c_str());
+            }
+            
+            if (ImGui::BeginPopupModal(label.c_str(), 0)){
+                
+                if(ImGui::InputText("##1", newZoneLabel, IM_ARRAYSIZE(newZoneLabel), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsUppercase)){
+                    // don't need to do anything here
+                    //            for(int i=0;i<strlen(newDacAlias);i++){
+                    //                newDacAlias[i] = toupper(newDacAlias[i]);
+                    //            }
+                    //            ofLogNotice() << newDacAlias;
+                }
+                
+                ImGui::Separator();
+                label = "OK## ";//+daclabel;
+                if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
+                    string newzonelabel = newZoneLabel;
+                    //  rename zoneid here :
+                    if(zoneid.setLabel(newzonelabel)) {
+                        // save zones!
+                        labelchanged = true;
+                        
+                        
+                        }
+                    
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::SetItemDefaultFocus();
+                ImGui::SameLine();
+                label = "Cancel## ";//+daclabel;
+                if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
+                    ImGui::CloseCurrentPopup();
+                }
+                ImGui::EndPopup();
+            }
+            
+            ImGui::PopID();
+            
+            
+            
+        }
+    }
+    UI::endWindow();
+    
+    if(autosort) {
+        int numzones = beamZoneContainer.getNumZoneIds();
+        
+        for(int i = 1; i<numzones; i++) {
+            int targetslot = i;
+            int laserindex1 = getLaserIndexForBeamZoneId(beamZoneContainer.getObjectAtIndex(i)->zoneId);
+            
+            for(int j = i-1; j>=0; j--) {
+                int laserindex2 = getLaserIndexForBeamZoneId(beamZoneContainer.getObjectAtIndex(j)->zoneId);
+                if(laserindex2>laserindex1) targetslot = j;
+                // if value at j> value at i, then target becomes j
+            }
+            
+            moveBeamZoneToIndex(i, targetslot);
+            
+        }
+        saveSettings();
+        
+    }
+    if(sourceindex>-1) {
+        moveBeamZoneToIndex(sourceindex, targetindex);
+        saveSettings();
+    }
+    
+    if(labelchanged) {
+        updateZoneLabels();
+        saveSettings();
+    }
+        
+}
+
 //
 //void Manager::guiLaserOutputSettings() {
 //    
@@ -1441,10 +1592,10 @@ void Manager::guiMenuBar() {
         
         if (ImGui::BeginMenu("File"))
         {
-            if (ImGui::BeginMenu("Import"))
+            if (ImGui::BeginMenu("Laser Settings"))
             {
                 //
-                if(ImGui::MenuItem("Import Laser Settings")) {
+                if(ImGui::MenuItem("Import")) {
                     // TODO set range
                     ofFileDialogResult result = ofSystemLoadDialog("Choose laser settings file (ofxl) to import");
                     if(result.bSuccess) {
@@ -1453,13 +1604,9 @@ void Manager::guiMenuBar() {
                     }
                 }
                 
-                ImGui::EndMenu();
-            }
-            
-            if (ImGui::BeginMenu("Export"))
-            {
-                //
-                if(ImGui::MenuItem("Export Laser Settings")) {
+              
+                
+                if(ImGui::MenuItem("Export")) {
                     // TODO set range
                     ofFileDialogResult result = ofSystemSaveDialog("lasersettings.ofxl", "Save Laser Settings file");
                     if(result.bSuccess) {
@@ -1470,7 +1617,13 @@ void Manager::guiMenuBar() {
                 }
                 
                 ImGui::EndMenu();
+                
             }
+            
+           
+                //
+               
+            
             
             ImGui::EndMenu();
             
@@ -1491,6 +1644,8 @@ void Manager::guiMenuBar() {
             if (ImGui::MenuItem("Controller assignment", "",showDacAssignmentWindow )) {
                 showDacAssignmentWindow= !showDacAssignmentWindow;
                 //ImGui::SetWindowFocus("Controller Assignment");
+                ImGui::SetWindowCollapsed("Controller Assignment", false);
+                ImGui::SetWindowFocus("Controller Assignment");
             }
             if (ImGui::MenuItem("3D Visualiser settings", "", visualiser3D.showSettingsWindow)) {
                 visualiser3D.showSettingsWindow = !visualiser3D.showSettingsWindow;
@@ -1516,6 +1671,8 @@ void Manager :: guiLaserOverview() {
     
     if(!showLaserOverviewWindow) return;
     ofxLaser::Manager& laserManager = *this;
+    
+    Laser* laserToDelete = nullptr;
     
     // calculate x position of main window
     int x = displayRectangle.getWidth() - guiLaserSettingsPanelWidth - guiSpacing;
@@ -1649,7 +1806,7 @@ void Manager :: guiLaserOverview() {
                 
                 if(guiDeleteLaserButtonAndPopup(laserobject, i)) {
                     // then laser object was deleted!
-                    laserobject = nullptr;
+                    laserToDelete = laserobject ;
                 }
             }
            
@@ -1673,12 +1830,21 @@ void Manager :: guiLaserOverview() {
             addZoneToLaser(zoneId, lasernum);
             scheduleSaveSettings();
         }
+        if(ImGui::Button("ASSIGN LASER CONTROLLERS")) {
+            showDacAssignmentWindow = true;
+            ImGui::SetWindowCollapsed("Controller Assignment", false);
+            ImGui::SetWindowFocus("Controller Assignment");
+        }
         UI::addIntSlider(globalLatency);
         
 
     }
     
     UI::endWindow();
+    
+    if(laserToDelete!=nullptr) {
+        deleteLaser(laserToDelete);
+    }
    
 }
 
@@ -2368,8 +2534,9 @@ void Manager :: guiEditDacAliasButtonAndPopup(string daclabel) {
     
     if (ImGui::BeginPopupModal(label.c_str(), 0)){
         
-        if(ImGui::InputText("##1", newDacAlias, IM_ARRAYSIZE(newDacAlias))){
-           // don't need to do anything here
+        if(ImGui::InputText("##1", newDacAlias, IM_ARRAYSIZE(newDacAlias) )){
+//           // don't need to do anything here
+
         }
         
         ImGui::Separator();
@@ -2401,7 +2568,7 @@ bool Manager :: guiDeleteLaserButtonAndPopup(Laser* laser, int index) {
     if (UI::DangerButton(buttonlabel, false)) {
         // delete laser
         if(ofGetKeyPressed(OF_KEY_COMMAND)) {
-            deleteLaser(laser);
+            //deleteLaser(laser);
             deleted = true;
         } else {
             ImGui::OpenPopup(label.c_str());
@@ -2417,7 +2584,7 @@ bool Manager :: guiDeleteLaserButtonAndPopup(Laser* laser, int index) {
         
         if (ImGui::Button("DELETE", ImVec2(120, 0))) {
             ImGui::CloseCurrentPopup();
-            deleteLaser(laser);
+            //deleteLaser(laser);
             deleted = true;
         }
         

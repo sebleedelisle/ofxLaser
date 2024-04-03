@@ -12,7 +12,7 @@
 #include "ofxLaserCanvasViewController.h"
 #include "ofxLaserIconSVGs.h"
 
-#define OFX_LASER_HIDE_CANVAS true
+#define OFX_LASER_HIDE_CANVAS false
 
 enum ofxLaserViewMode {
     OFXLASER_VIEW_3D, // show 3D view
@@ -92,7 +92,8 @@ class Manager : public ManagerBase {
     void guiLaserOverview();
     void guiLaserSettings(ofxLaser::Laser* laser);
     //void guiLaserOutputSettings();
-
+    void guiZoneSettings();
+    
     void guiCopyLaserSettings();
     void guiDacAnalytics();
     void guiCustomParameters();

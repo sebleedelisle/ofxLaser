@@ -96,8 +96,13 @@ void MoveablePoly :: drawLabel() {
         ofSetColor(strokeColour);
     }
     
-    ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
-    
+    //ofDrawBitmapString(getLabel(), centre );//- glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofPushMatrix();
+    ofTranslate(round(getCentre().x), round(getCentre().y));
+    //ofDrawCircle(0,0,10);
+    ofScale(1/scale, 1/scale);
+    ofxFontManager :: drawStringAsShapes(getLabel(), glm::vec2(0,0), ofxFontManager::CENTRE, ofxFontManager::MIDDLE);
+    ofPopMatrix();
     ofPopStyle();
     
 }

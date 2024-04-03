@@ -384,13 +384,18 @@ int LaserZoneViewController :: getLaserIndex() {
 void LaserZoneViewController :: drawImGui() {
     if(!isVisible) return;
     
+    
+    OutputZone* outputZoneToDelete = nullptr;
+    
     for(ZoneUiBase* zoneUi : zoneUis) {
         
-        ImGui::PushID(zoneUi->getLabel().c_str());
+        
         
         OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
         
         if(!outputZone) continue;
+        
+        ImGui::PushID(zoneUi->getLabel().c_str());
         
         ZoneTransformBase* zoneTransform = &outputZone->getZoneTransform();
         
@@ -570,9 +575,9 @@ void LaserZoneViewController :: drawImGui() {
             
             if(!zoneUi->inputZoneAlt) {
                 if(doesAltZoneExistForZoneIndex(zoneUi->zoneId)) {
-                    if(UI::DangerButton("DELETE ALT ZONE")) {
-                        laser->removeAltZone(zoneUi->zoneId);
-                    }
+//                    if(UI::DangerButton("DELETE ALT ZONE")) {
+//                        laser->removeAltZone(zoneUi->zoneId);
+//                    }
                     
                 } else {
                     if(UI::Button("ADD ALT ZONE")) {
@@ -595,18 +600,27 @@ void LaserZoneViewController :: drawImGui() {
                 
                 UI::dangerColourStart();
                 if (ImGui::Button("DELETE", ImVec2(120, 0))) {
-                    ImGui::CloseCurrentPopup();
+                    //ImGui::ClosePopup("ZONE SETTINGS");
+                    ImGui::ClosePopupToLevel(0, false);
+                    
+                    outputZoneToDelete = outputZone;
                     
                     // if this is an alt zone, just remove this
                     // otherwise remove this and also its alt zone if
                     // it has one
-                    ZoneId zoneid = outputZone->getZoneId();
-                    if(zoneUi->inputZoneAlt) {
-                        laser->removeAltZone(zoneid);
-                    } else {
-                        laser->removeAltZone(zoneid);
-                        ManagerBase::instance()->deleteBeamZone(zoneid);
-                    }
+                    //ZoneId zoneid = outputZone->getZoneId();
+                    
+//                    if(zoneUi->inputZoneAlt) {
+//                        //laser->removeAltZone(zoneid);
+//                        zoneToDelete = zoneid;
+//                        deleteAltZone = true;
+//                        //deleteZone = true;
+//                    } else {
+//                        
+//                        zoneToDelete = zoneid;
+//                        deleteZone = true;
+//                        
+//                    }
                     //laser->removeZone(zoneid);
                     //
                     // LATER - TO DO - if this is a laser zone, delete it
@@ -672,6 +686,9 @@ void LaserZoneViewController :: drawImGui() {
         ImGui::PopID();
     }
             
+    if(outputZoneToDelete!=nullptr) {
+        ManagerBase::instance()->deleteBeamZone(outputZoneToDelete);
+    }
   
 }
 void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize, bool visible) {

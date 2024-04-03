@@ -49,7 +49,7 @@ void ViewWithMoveables :: drawMoveables() {
     for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->draw();
         ofPushMatrix();
-        ofTranslate(-outputRect.getTopLeft() / scale);
+        //ofTranslate(-outputRect.getTopLeft() / scale);
         uiElement->drawLabel();
         ofPopMatrix();
         
