@@ -53,7 +53,7 @@ void ofApp::draw() {
         // to make the dot. It defaults to 1.
         float intensity = (float)(x+1)/numDots;
         float xposition = ofMap(x, 0,numDots-1,200,600);
-   //     laser.drawDot(xposition, 600, ofColor::red, intensity, OFXLASER_PROFILE_FAST);
+        laser.drawDot(xposition, 600, ofColor::red, intensity, OFXLASER_PROFILE_FAST);
     }
 
     laser.setFill(fillShapes); // when true, subtracts the center of polys and circles!
@@ -64,18 +64,18 @@ void ofApp::draw() {
 
     laser.pushMatrix();
     // 3D rotation around the y axis
-    //laser.rotateYRad(ofGetElapsedTimef());
+    laser.rotateYRad(ofGetElapsedTimef());
    
     vector<vector<ofColor>> colours = {starPolyColours, starPolyColours};
     //laser.drawPoly(starPoly, starPolyColours, OFXLASER_PROFILE_DEFAULT);
-   // laser.drawPolys({starPoly, starPolyInner}, colours, OFXLASER_PROFILE_DEFAULT);
+    laser.drawPolys({starPoly, starPolyInner}, colours, OFXLASER_PROFILE_DEFAULT);
     
     laser.popMatrix();
     
     laser.rotateYRad(ofGetElapsedTimef()*-0.83);
     laser.translate(100,0,0);
     laser.rotateYRad(ofGetElapsedTimef()*0.83); // so that circle always faces front
-   // laser.drawCircle(0,0,10,ofColor::cyan, OFXLASER_PROFILE_FAST);
+    laser.drawCircle(0,0,10,ofColor::cyan, OFXLASER_PROFILE_FAST);
     
     laser.popMatrix();
     
@@ -87,7 +87,7 @@ void ofApp::draw() {
     laser.drawCircle(glm::vec3((mousepos.x-400), (mousepos.y-400),0), 60, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
     laser.popMatrix();
 
-   // laser.drawCircle(glm::vec3(mousepos.x, mousepos.y,1), 10, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
+    laser.drawCircle(glm::vec3(mousepos.x, mousepos.y,1), 10, ofColor(0,50,255), OFXLASER_PROFILE_FAST);
   
    
 

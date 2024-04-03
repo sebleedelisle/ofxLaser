@@ -80,9 +80,9 @@ common:
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
 
-	win_cb:
+	#win_cb:
 
-	linuxarmv6l:
-	linuxarmv7l:
-	android/armeabi:	
-	android/armeabi-v7a:
+	#linuxarmv6l:
+	#linuxarmv7l:
+	#android/armeabi:	
+	#android/armeabi-v7a:

@@ -65,7 +65,7 @@ void ScrollableView::endViewPort(bool dontDrawFbo) {
     ofPopMatrix();
     
     if(useFbo) {
-        fbo.clearColorBuffer(ofColor::red);
+        //fbo.clearColorBuffer(ofColor::red);
         fbo.end();
         if(!dontDrawFbo) fbo.draw(outputRect.getTopLeft());
     } else {
