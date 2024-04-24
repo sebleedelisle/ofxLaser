@@ -77,6 +77,33 @@ ManagerBase :: ~ManagerBase() {
     
 }
 
+//
+//
+void ManagerBase ::resetAllLasersToDefault() {
+    vector<string> dacLabels;
+    for(Laser* laser : lasers) {
+        dacLabels.push_back(laser->dacLabel.get());
+    }
+    
+    int numlasers = getNumLasers();
+    while(lasers.size()>0) {
+        deleteLaser(lasers[0]);
+    }
+    beamZoneContainer.clearZones();
+    
+    for(int lasernum = 0; lasernum<numlasers; lasernum++) {
+        createAndAddLaser();
+        ZoneId zoneId = createNewBeamZone();
+        addZoneToLaser(zoneId, lasernum);
+        //getLaser(lasernum).dacLabel = dacLabels[lasernum];
+        dacAssigner.assignToLaser(dacLabels[lasernum], getLaser(lasernum));
+    }
+    
+    saveSettings();
+    //outputZone
+    
+}
+
 
 void ManagerBase :: setCanvasSize(int w, int h){
     canvasTarget.setBounds(0,0,w,h);
@@ -96,6 +123,8 @@ void ManagerBase::createAndAddLaser() {
     
 }
 
+
+
 bool ManagerBase :: deleteLaser(Laser* laser) {
     
     bool deleteZones = true;
@@ -112,7 +141,7 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
     //int index = it-lasers.begin();
     // hopefully should renumber current laser OK
     
-    
+    laser->deleteAllSettingsFiles();
     // TODO delete zones that are only assigned to this laser *************************
     if(deleteZones) {
         vector<OutputZone*> zones = laser->getSortedOutputZones();
@@ -125,7 +154,6 @@ bool ManagerBase :: deleteLaser(Laser* laser) {
                 deleteBeamZone(zone);
             }
         }
-        
     }
     
     // remove laser from laser array
@@ -414,7 +442,7 @@ void ManagerBase:: update(){
     }
     
     // resets transformations
-    reset();
+    resetTransformations();
     
     dacAssigner.update();
     

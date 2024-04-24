@@ -162,7 +162,11 @@ void Laser :: init() {
     
 }
 
+void Laser :: reset() {
+    init();
 
+    
+}
 void Laser :: setGlobalTestPattern(bool active, int pattern) {
     testPatternGlobal = pattern;
     testPatternGlobalActive = active;
@@ -211,10 +215,11 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
         
     ofJson laserZoneJson;
     string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + (isAlternate?"alt.json" : ".json");
-    
-    if(ofFile(filename).exists()) {
-        laserZoneJson = ofLoadJson(filename);
-    }
+    // not sure if we still need this - does it get called by loadSettings ? I don't think it does.
+    // Comment out for now
+//    if(ofFile(filename).exists()) {
+//        laserZoneJson = ofLoadJson(filename);
+//    }
     if(!laserZoneJson.empty()) {
         outputzone->deserialize(laserZoneJson);
     } else {
@@ -222,6 +227,10 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
         // initialise zoneTransform
         //outputzone->init(sourceRect);
         //outputzone->zoneMask = inputzone->rect;
+        // if it's a canvas zone then set perspective to true by default
+        if(zoneId.getType() == ZoneId :: CANVAS) {
+            outputzone->zoneTransformQuad.useHomography = true;
+        }
     }
     outputzone->setIsAlternate(isAlternate);
 
@@ -283,6 +292,7 @@ bool Laser :: removeZone(ZoneId zoneId){
 bool Laser :: removeZone(OutputZone* outputZone){
     
     if(outputZone==nullptr) return false;
+    deleteSettingsFileForZone(outputZone);
     
     vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
     
@@ -302,6 +312,10 @@ bool Laser :: removeZone(OutputZone* outputZone){
 //}
 
 bool Laser :: removeAltZone(OutputZone* outputZone){
+    
+    if(outputZone==nullptr) return false;
+    
+    deleteSettingsFileForZone(outputZone);
     
     vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
     if(it!=outputZones.end()) {
@@ -419,7 +433,7 @@ bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
 
 bool Laser::updateZoneLabels(vector<ObjectWithZoneId*>& zoneids){
     
-    ofLogNotice("Laser::updateZoneLabels");
+   // ofLogNotice("Laser::updateZoneLabels");
     bool changed = false;
     
     for(OutputZone* outputZone : outputZones) {
@@ -1571,7 +1585,7 @@ bool Laser::saveSettings(){
         ofJson laserzonejson;
         laserZone->serialize(laserzonejson);
         
-        string filename = "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneId().getUid()) + (laserZone->getIsAlternate()?"alt.json" : ".json");
+        string filename = getFilenameForZone(laserZone);
         
         // somewhat fiddly check to see if zone needs saving, TODO : probably needs looking at
         bool needssave = true;
@@ -1593,6 +1607,24 @@ bool Laser::saveSettings(){
     return success;
     
 }
+
+string Laser :: getFilenameForZone(OutputZone* outputZone) {
+    return "laser"+ ofToString(laserIndex) +"zone" + ofToString(outputZone->getZoneId().getUid()) + (outputZone->getIsAlternate()?"alt.json" : ".json");
+}
+
+void Laser :: deleteAllSettingsFiles() {
+    for(OutputZone* outputZone : outputZones) {
+        deleteSettingsFileForZone(outputZone);
+    }
+    ofFile :: removeFile(savePath + "laser"+ ofToString(laserIndex) +".json");
+    
+}
+
+bool Laser :: deleteSettingsFileForZone(OutputZone* outputZone) {
+    //string filename = getFilenameForZone(outputZone);
+    return ofFile :: removeFile(savePath + getFilenameForZone(outputZone));
+}
+
 
 void Laser :: serialize(ofJson& json) {
     
@@ -1640,10 +1672,10 @@ bool Laser :: deserialize(ofJson& json) {
     
     clearOutputZones();
     
-    ofJson zonjson = json["outputzones"];
+    ofJson zonejson = json["outputzones"];
     
     // if the json node isn't found then this should do nothing
-    for(auto jsonitem : zonjson) {
+    for(auto jsonitem : zonejson) {
     
         // if a zone exists with this index then add a LaserZone for it
 

@@ -28,9 +28,7 @@ void ScrollableView :: drawFrame() {
     ofDrawRectangle(outputRect);
     ofPopStyle();
     
-    
 }
-
 
 void ScrollableView::beginViewPort(bool clearScreen) {
 
@@ -109,7 +107,6 @@ void ScrollableView :: drawEdges() {
 }
 
 bool ScrollableView::update(){
-    //if(getIsVisible()) ofLogNotice() << offset;
     
     if(boundingRect!=sourceRect) {
         boundingRect = sourceRect;
@@ -183,19 +180,33 @@ void ScrollableView::setOffset(glm::vec2 newoffset){
     checkEdges();
 }
 glm::vec2 ScrollableView::screenPosToLocalPos(glm::vec2 pos) {
-    return ((pos-offset)/scale) - glm::vec2(outputRect.getLeft(),outputRect.getTop());
+    pos.x-=outputRect.getLeft();
+    pos.y-=outputRect.getTop();
+    
+    pos-=offset;
+    pos/=scale;
+   
+    return pos;
+}
+
+glm::vec2 ScrollableView::localPosToScreenPos(glm::vec2 pos) {
+    pos*=scale;
+    pos+=offset;
+    
+    pos.x+=outputRect.getLeft();
+    pos.y+=outputRect.getTop();
+    
+    return pos;
 }
 
 ofMouseEventArgs ScrollableView::screenPosToLocalPos(ofMouseEventArgs e) {
-    e.x-=outputRect.getLeft();
-    e.y-=outputRect.getTop();
-    
-    e-=offset;
-    e/=scale;
-   
+    glm::vec2 pos = screenPosToLocalPos(glm::vec2(e));
+    e.x = pos.x;
+    e.y = pos.y;
     
     return e;
 }
+
 bool ScrollableView::mousePressed(ofMouseEventArgs &e){
     
     if(!getIsVisible()) return true;
@@ -247,7 +258,8 @@ void ScrollableView::mouseReleased(ofMouseEventArgs &e){
 
 void ScrollableView::mouseScrolled(ofMouseEventArgs &e){
     if(!getIsVisible()) return ;
-    
+    if(!zoomEnabled) return; 
+        
     if(hitTest(e)) {
         zoom(e-outputRect.getTopLeft(), 1+(e.scrollY*zoomSpeed));
     }

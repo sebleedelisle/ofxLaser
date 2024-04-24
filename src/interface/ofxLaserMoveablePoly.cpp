@@ -96,13 +96,18 @@ void MoveablePoly :: drawLabel() {
         ofSetColor(strokeColour);
     }
     
-    //ofDrawBitmapString(getLabel(), centre );//- glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    //
+#ifdef USE_FONT_MANAGER
     ofPushMatrix();
     ofTranslate(round(getCentre().x), round(getCentre().y));
     //ofDrawCircle(0,0,10);
     ofScale(1/scale, 1/scale);
     ofxFontManager :: drawStringAsShapes(getLabel(), glm::vec2(0,0), ofxFontManager::CENTRE, ofxFontManager::MIDDLE);
     ofPopMatrix();
+#else
+    //ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
+    ofDrawBitmapString(getLabel(), getCentre());// - glm::vec3(4.0f*getLabel().size()/scale,-4.0f/scale, 0));
+#endif
     ofPopStyle();
     
 }
@@ -257,7 +262,7 @@ bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
                 startDraggingHandleByIndex(i);
                 
                 // if we're not distorted then also start dragging the relavent corners
-                if(isQuad() && poly.isAxisAligned()) {
+                if(isQuad() && outlinePoly.isAxisAligned()) {
                     DragHandle& anchorHandle = handles[(i+2)%4];
                     DragHandle& dragHandle1 = handles[(i+1)%4];
                     DragHandle& dragHandle2 = handles[(i+3)%4];
@@ -370,7 +375,7 @@ bool MoveablePoly :: hitTest(glm::vec2& p)  {
     
 }
 bool MoveablePoly :: hitTest(float x, float y)  {
-    return poly.hitTestEdges(x, y, 4/scale);
+    return outlinePoly.hitTestEdges(x, y, 4/scale);
 }
 
 void MoveablePoly :: updatePoly() {
@@ -380,8 +385,8 @@ void MoveablePoly :: updatePoly() {
         centre+=glm::vec2(handle);
     }
     centre/=handles.size();
-    poly.setFromPoints(getPoints());
-    poly.update();
+    outlinePoly.setFromPoints(getPoints());
+    outlinePoly.update();
 }
 
 bool MoveablePoly :: setFromPoints(vector<glm::vec2>* points) {
@@ -436,13 +441,13 @@ vector<glm::vec2*> MoveablePoly :: getPoints() {
 }
 ofRectangle MoveablePoly :: getBoundingBox() {
     
-    return poly.getBoundingBox();
+    return outlinePoly.getBoundingBox();
     
 }
 void MoveablePoly :: drawShape() {
    
     ofBeginShape();
-    for(glm::vec2& point : poly) {
+    for(glm::vec2& point : outlinePoly) {
         ofVertex(point);
     }
     

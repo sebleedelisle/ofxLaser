@@ -40,7 +40,9 @@
 #include "ofxLaserZoneUiQuadComplex.h"
 #include "ofxLaserZoneUiLine.h"
 #include "ofxLaserMaskUiQuad.h"
-
+#ifdef USE_FONT_MANAGER
+#include "ofxFontManager.h"
+#endif 
 namespace ofxLaser {
 class LaserZoneViewController : public ViewWithMoveables {
     
@@ -49,6 +51,8 @@ class LaserZoneViewController : public ViewWithMoveables {
     LaserZoneViewController();
     LaserZoneViewController(Laser * laser);
     ~LaserZoneViewController();
+    
+    virtual void drawMoveables() override;
     
     ZoneUiBase* getZoneInterfaceForOutputZone(OutputZone* outputZone);
     OutputZone* getOutputZoneForZoneUI(ZoneUiBase* zoneUi, vector<OutputZone*>& outputZones);
@@ -63,7 +67,6 @@ class LaserZoneViewController : public ViewWithMoveables {
     
     
     void setGrid(bool snaptogrid, int gridsize, bool visible) override;
-    
     
     void drawImGui(); 
     void drawLaserPath();

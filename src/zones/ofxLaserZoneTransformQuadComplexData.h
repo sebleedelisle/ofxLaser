@@ -36,6 +36,7 @@ class ZoneTransformQuadComplexData : public ZoneTransformBase {
     virtual bool update() override;
     
     virtual void init() override;
+    void setDefault();
     
     virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
@@ -44,7 +45,9 @@ class ZoneTransformQuadComplexData : public ZoneTransformBase {
     void resetDst(const ofRectangle& rect); 
     void resetDst(glm::vec2 topleft, glm::vec2 topright, glm::vec2 bottomleft, glm::vec2 bottomright);
         
-    void drag(glm::vec2 dragoffset); 
+    
+    void updatePoints(vector<glm::vec2*> points);
+    //void drag(glm::vec2 dragoffset);
     // resets to perpendicular corners
 //    void resetToSquare() ;
 //    bool isAxisAligned() ;
@@ -73,7 +76,7 @@ class ZoneTransformQuadComplexData : public ZoneTransformBase {
     
     
     
-    ofParameter<bool>useHomography;
+//    ofParameter<bool>useHomography;
     
    // vector<glm::vec2*> getCornerPoints();
   

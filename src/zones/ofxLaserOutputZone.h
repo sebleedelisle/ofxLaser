@@ -50,6 +50,7 @@ class OutputZone {
     
     //InputZone& zone;
     ZoneTransformBase& getZoneTransform();
+    void resetAllTransforms();
     ZoneTransformQuadData zoneTransformQuad;
     ZoneTransformLineData zoneTransformLine;
     ZoneTransformQuadComplexData zoneTransformQuadComplex;
@@ -57,9 +58,9 @@ class OutputZone {
     ofParameterGroup zoneParams;
     
     ofParameter<bool>muted;
+    ofParameter<bool>locked;
     ofParameter<bool>soloed;
     ofParameter<int>transformType;
-    
     
     bool isDirty;
     

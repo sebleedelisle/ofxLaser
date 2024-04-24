@@ -26,6 +26,7 @@ bool BeamZoneContainer :: addZoneByJson(ofJson& json) {
 
 ZoneId BeamZoneContainer :: addBeamZone(){
    ShapeTargetBeamZone* newbeamzone = new ShapeTargetBeamZone();
+
    addZoneIdObject(newbeamzone);
    return newbeamzone->zoneId;
 } 

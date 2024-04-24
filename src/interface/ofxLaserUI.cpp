@@ -54,6 +54,7 @@ void UI::setupGui() {
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
     font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
+    font->FontSize+=10;
     
     imGuiOfx.setDefaultFont(font);
     //io.FontGlobalScale  = 0.5f;
@@ -265,8 +266,8 @@ bool UI::addIntSlider(ofParameter<int>& param, string labelSuffix) {
         return false;
     }
 }
-bool UI::addFloatSlider(ofParameter<float>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
-    string label = param.getName()+labelSuffix;
+bool UI::addFloatSlider(string label, ofParameter<float>& param, const char* format, ImGuiSliderFlags flags) {
+    
     ofParameterGroup parent = param.getFirstParent();
     if(parent) label = label+"##"+parent.getName();
     float value =param.get();
@@ -276,6 +277,11 @@ bool UI::addFloatSlider(ofParameter<float>& param, const char* format, ImGuiSlid
     } else {
         return false;
     }
+}
+bool UI::addFloatSlider(ofParameter<float>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
+    string label = param.getName()+labelSuffix;
+    return addFloatSlider(label, param, format, flags );
+   
 }
 bool UI::addFloat2Slider(ofParameter<glm::vec2>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
     
@@ -442,12 +448,12 @@ bool UI::addRectDrag(ofRectangle&rect, float speed, const char* format, string l
     glm::vec2 topleft = rect.getTopLeft();
     glm::vec2 area(rect.getWidth(), rect.getHeight());
     
-    if(addFloat2Drag(label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
+    if(addFloat2Drag("Position##"+label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
         
         changed = true;
     }
-    label += "area";
-    if(addFloat2Drag(label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+//    label += " area";
+    if(addFloat2Drag("Size##"+label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
         //param.get().(tmpRef);
         //param.get().width = (area.x);
         //param->height = (area.y);
@@ -557,11 +563,8 @@ bool UI::resetButton(string label) {
     return (ImGui::Button(label.c_str()));
         
 }
-bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string labelSuffix) {
 
-    string label = param.getName()+labelSuffix;
-    ofParameterGroup parent = param.getFirstParent();
-    if(parent) label = label+"##"+parent.getName();
+bool UI::addFloatAsIntSlider(string label, ofParameter<float>& param, float multiplier){
     
     int value = param*multiplier;
     if (ImGui::SliderInt(label.c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d")) {
@@ -570,6 +573,16 @@ bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string
     } else {
         return false;
     }
+}
+
+
+bool UI::addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string labelSuffix) {
+
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    return addFloatAsIntSlider(label, param, multiplier);
+    
 }
 bool UI::addFloatAsIntPercentage(ofParameter<float>& param, string labelSuffix) {
     
@@ -602,6 +615,7 @@ bool UI::addCheckbox(ofParameter<bool>&param, string labelSuffix) {
         return false;
     }
 }
+
 bool UI::addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetParam, string labelSuffix) {
     
     string label = param.getName()+labelSuffix;
@@ -1044,6 +1058,23 @@ bool UI::ToggleButton(string label, bool&value, bool large, const ImVec2& size_a
     
 }
 
+bool UI::ToggleButton(string label, ofParameter<bool>&param) {
+    
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    bool* value = (bool*)&param.get();
+    
+    return(ToggleButton(label.c_str(), *value ));
+    
+}
+
+bool UI::ToggleButton(ofParameter<bool>&param, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    return(ToggleButton(label, param ));
+}
+
+
 bool UI::DangerButton(string label, bool large, const ImVec2& size_arg ){
     bool returnvalue;
     
@@ -1219,15 +1250,17 @@ bool UI::keyReleased(ofKeyEventArgs &e) {
 }
 
 
-void UI::toolTip(string& str) {
-    toolTip(str.c_str());
-}
+
 void UI::addHover(string& str) {
     addHover(str.c_str());
 }
 
 void UI::addDelayedHover(string str) {
     addDelayedTooltip(str.c_str());
+}
+
+void UI::toolTip(string& str) {
+    toolTip(str.c_str());
 }
 void UI::toolTip(const char* desc)
 {
@@ -1244,6 +1277,33 @@ void UI::toolTip(const char* desc)
         ImGui::PopFont();
     }
 }
+void UI::toolTipWarning(string& str) {
+    toolTipWarning(str.c_str());
+}
+void UI::toolTipWarning(const char* desc)
+{
+    ImGui::SameLine(0,3);
+    float v = ImGui::GetCursorPosY();
+    ImGui::SetCursorPosY(v-7);
+    ImGui::PushStyleColor(ImGuiCol_Text, {1,0.3,0.4,1});
+    ImGui::PushFont(largeFont);
+    ImGui::Text(ICON_FK_EXCLAMATION_CIRCLE);
+    ImGui::PopStyleColor();
+    ImGui::PopFont();
+    //ImGui::SetCursorPosY(v);
+    
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+}
+
 void UI::addHover(const char* desc) {
     if (ImGui::IsItemHovered() )
     {

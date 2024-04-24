@@ -23,6 +23,7 @@ OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
     
     zoneParams.setName("OutputZone");
     zoneParams.add(muted.set("mute", false));
+    zoneParams.add(locked.set("lock", false));
     zoneParams.add(soloed.set("solo", false));
     zoneParams.add(transformType.set("Transform type", 0,0,1));
 
@@ -162,6 +163,9 @@ void OutputZone :: serialize(ofJson& json) const{
     ofJson paramsJson;
     ofSerialize(paramsJson, zoneParams);
     json["zoneparams"] = paramsJson;
+    json["is_alternate"] = isAlternate;
+    
+    
     ofJson zoneTransformQuadJson;
     zoneTransformQuad.serialize(zoneTransformQuadJson);
     json["zonetransformquad"] = zoneTransformQuadJson;
@@ -191,6 +195,13 @@ bool OutputZone :: deserialize(ofJson& json){
         
         ofDeserialize(fixedJson, zoneParams);
     }
+    
+    if(json.contains("is_alternate")) {
+        isAlternate = json["is_alternate"].get<bool>();
+    } else {
+        isAlternate = false;
+    }
+    
     if(json.contains("zonetransformquad")) {
         ofJson zoneTransformQuadJson = json["zonetransformquad"];
         zoneTransformQuad.deserialize(zoneTransformQuadJson);
@@ -223,3 +234,13 @@ ZoneTransformBase& OutputZone :: getZoneTransform(){
         return zoneTransformQuad;
     }
 }
+
+
+void OutputZone :: resetAllTransforms() {
+
+    zoneTransformLine.setDefault();
+    zoneTransformQuadComplex.setDefault();
+    zoneTransformQuad.setDefault();
+}
+    
+    

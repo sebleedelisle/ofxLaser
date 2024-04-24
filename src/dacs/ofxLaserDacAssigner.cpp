@@ -84,7 +84,7 @@ DacAssigner :: DacAssigner() {
     dacManagers.push_back(new DacManagerLaserDock());
     dacManagers.push_back(new DacManagerHelios());
     dacManagers.push_back(new DacManagerEtherDream());
-    dacManagers.push_back(new DacManagerLaserDockNet());
+    //dacManagers.push_back(new DacManagerLaserDockNet());
     updateDacList();
 	
 }

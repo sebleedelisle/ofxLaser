@@ -26,10 +26,10 @@ Visualiser3D :: Visualiser3D() {
     params.add(showLaserNumbers.set("Show laser numbers", false));
     params.add(showZoneNumbers.set("Show zone numbers", false));
     
-    canvasPos = {0,-110,0};
-    canvasScale = {0.5, 0.5,0.5};
-    canvasRotation = {0, 0, 0};
-    showCanvas = false;
+//    canvasPos = {0,-110,0};
+//    canvasScale = {0.5, 0.5,0.5};
+//    canvasRotation = {0, 0, 0};
+//    showCanvas = false;
     
     // TODO this needs to go somewhere else!
     load();
@@ -238,16 +238,16 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
     
     drawGrid();
     
-    if(showCanvas && canvasFbo.isAllocated()) {
+    if(lasersettings.showCanvas && canvasFbo.isAllocated()) {
         ofDisableBlendMode();
         
         ofPushMatrix();
-        ofTranslate(canvasPos);
-        ofScale(canvasScale);
+        ofTranslate(lasersettings.canvasPos);
+        ofScale(lasersettings.canvasScale->x, lasersettings.canvasScale->y);
         // todo - fix order
-        ofRotateXDeg(canvasRotation.x);
-        ofRotateYDeg(canvasRotation.y);
-        ofRotateZDeg(canvasRotation.z);
+        ofRotateXDeg(lasersettings.canvasRotation->x);
+        ofRotateYDeg(lasersettings.canvasRotation->y);
+        ofRotateZDeg(lasersettings.canvasRotation->z);
 
         canvasFbo.setAnchorPercent(0.5,0.5);
         
@@ -275,18 +275,23 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
         //move to the laser position
         ofTranslate(laser3D.position);
         if(showLaserNumbers) {
-            
+#ifdef USE_FONT_MANAGER
             ofFill();
-            ofxFontManager::drawStringAsShapes(ofToString(i+1), glm::vec2(0,-6), ofxFontManager::CENTRE, ofxFontManager::BOTTOM, "default-xsmall");
+            ofPushMatrix();
+            ofTranslate(0,-6);
+            ofScale(1/GlobalScale::getScale());
+            ofxFontManager::drawStringAsShapes(ofToString(i+1), glm::vec2(0,0), ofxFontManager::CENTRE, ofxFontManager::BOTTOM, "default-xsmall");
             ofNoFill();
-            //ofDrawBitmapString(ofToString(i+1), -2,-6);
+            ofPopMatrix();
+#else
+            ofDrawBitmapString(ofToString(i+1), -2,-6);
+#endif
         }
-        //if(showLaserNumbers) ofDrawBitmapString(ofToString(i+1), -2,-6);
-       
+         
         if((showZoneNumbers) && (i<lasers.size())) {
             ofxLaser::Laser* laser = lasers[i];
             vector<OutputZone*> outputzones = laser->getActiveZones();
-            //vector<string> outputzonenumbers;
+
             int spacing = 3;
             int textwidth = 0;
             string zoneoutputstring;
@@ -298,8 +303,17 @@ void Visualiser3D :: draw(const ofRectangle& rect, const vector<Laser*>& lasers,
                 textwidth+=(2+(label.size()*4));
                 
             }
-            //ofDrawBitmapString(zoneoutputstring, -textwidth/2 ,10);
-            ofxFontManager::drawStringAsShapes(zoneoutputstring, glm::vec2(0,6), ofxFontManager::CENTRE, ofxFontManager::TOP, "default-xsmall");
+#ifdef USE_FONT_MANAGER
+            ofFill();
+            ofPushMatrix();
+            ofTranslate(0,6);
+            ofScale(1/GlobalScale::getScale());
+            ofxFontManager::drawStringAsShapes(zoneoutputstring, glm::vec2(0,0), ofxFontManager::CENTRE, ofxFontManager::TOP, "default-xsmall");
+            ofNoFill();
+            ofPopMatrix();
+#else
+            ofDrawBitmapString(zoneoutputstring, -textwidth/2 ,10);
+#endif
             
             
         }
@@ -466,30 +480,30 @@ void Visualiser3D ::load() {
 
     ofDeserialize(json, params);
     
-    if(json.contains("showcanvas")) {
-        showCanvas =json["showcanvas"].get<bool>();
-    }
-    if(json.contains("canvaspos") && (json["canvaspos"].size()==3)) {
-        canvasPos = {
-            json["canvaspos"][0].get<float>(),
-            json["canvaspos"][1].get<float>(),
-            json["canvaspos"][2].get<float>()
-        };
-    }
-    if(json.contains("canvasrotation") && (json["canvasrotation"].size()==3)) {
-        canvasRotation= {
-            json["canvasrotation"][0].get<float>(),
-            json["canvasrotation"][1].get<float>(),
-            json["canvasrotation"][2].get<float>()
-        };
-    }
-    if(json.contains("canvasscale") && (json["canvasscale"].size()==3)) {
-        canvasScale= {
-            json["canvasscale"][0].get<float>(),
-            json["canvasscale"][1].get<float>(),
-            json["canvasscale"][2].get<float>()
-        };
-    }
+//    if(json.contains("showcanvas")) {
+//        showCanvas =json["showcanvas"].get<bool>();
+//    }
+//    if(json.contains("canvaspos") && (json["canvaspos"].size()==3)) {
+//        canvasPos = {
+//            json["canvaspos"][0].get<float>(),
+//            json["canvaspos"][1].get<float>(),
+//            json["canvaspos"][2].get<float>()
+//        };
+//    }
+//    if(json.contains("canvasrotation") && (json["canvasrotation"].size()==3)) {
+//        canvasRotation= {
+//            json["canvasrotation"][0].get<float>(),
+//            json["canvasrotation"][1].get<float>(),
+//            json["canvasrotation"][2].get<float>()
+//        };
+//    }
+//    if(json.contains("canvasscale") && (json["canvasscale"].size()==3)) {
+//        canvasScale= {
+//            json["canvasscale"][0].get<float>(),
+//            json["canvasscale"][1].get<float>(),
+//            json["canvasscale"][2].get<float>()
+//        };
+//    }
              
     filename ="ofxLaser/Visualiser3DSettings.json";
     if(ofFile(filename).exists()) {
@@ -513,10 +527,10 @@ void Visualiser3D ::save() {
     ofSerialize(json, params);
     
    
-    json["showcanvas"] = showCanvas;
-    json["canvaspos"] = {canvasPos.x, canvasPos.y, canvasPos.z};
-    json["canvasrotation"] = {canvasRotation.x, canvasRotation.y, canvasRotation.z};
-    json["canvasscale"] = {canvasScale.x, canvasScale.y, canvasScale.z};
+//    json["showcanvas"] = showCanvas;
+//    json["canvaspos"] = {canvasPos.x, canvasPos.y, canvasPos.z};
+//    json["canvasrotation"] = {canvasRotation.x, canvasRotation.y, canvasRotation.z};
+//    json["canvasscale"] = {canvasScale.x, canvasScale.y, canvasScale.z};
 
     ofSavePrettyJson("ofxLaser/Visualiser3D.json", json);
     
@@ -562,14 +576,19 @@ void Visualiser3D ::drawUI(){
     
     if(UI::startWindow("3D Visualiser", ImVec2(100,100), ImVec2(500,0), 0, false, &showSettingsWindow)) {
         
+           
+        UI::addResettableFloatSlider(brightness, 10);
+        UI::addCheckbox(showLaserNumbers);
+        UI::addCheckbox(showZoneNumbers);
+        
+        ImGui::Separator();
+        
         visualiserPresetManager.drawComboBox(settings);
         visualiserPresetManager.drawSaveButtons(settings);
         
         Visualiser3DSettings& currentPreset = *visualiserPresetManager.getPreset(settings.getLabel());
+  
         
-        UI::addResettableFloatSlider(brightness, 10);
-        UI::addCheckbox(showLaserNumbers);
-        UI::addCheckbox(showZoneNumbers);
         UI::addResettableFloatDrag(settings.cameraDistance, currentPreset.cameraDistance); //.set("Camera FOV", 45,10,120))
         UI::addResettableFloatDrag(settings.cameraFov, currentPreset.cameraFov); //.set("Camera FOV", 45,10,120));
         
@@ -581,26 +600,54 @@ void Visualiser3D ::drawUI(){
         ImGui::Separator();
         
       
-        
-        if(ImGui::Checkbox("Show canvas", &showCanvas)) {
-            dirty = true;
-        }
-        if(UI::addFloat3Drag("Canvas position", canvasPos, 1, {-1000,-1000,-1000},  {1000,1000,1000} )) {
-            dirty = true;
-        }
-        if(UI::addFloat3Drag("Canvas rotation", canvasRotation, 1, {-180,-180,-180},  {180,180,180} )) {
-            dirty = true;
-        }
-        if(UI::addFloat3Drag("Canvas scale", canvasScale, 0.01, {0,0,0},  {5,5,5} )) {
-            dirty = true;
-        }
-       
-        
-        ImGui::Separator();
+//        
+//        if(ImGui::Checkbox("Show canvas", &showCanvas)) {
+//            dirty = true;
+//        }
+//        if(UI::addFloat3Drag("Canvas position", canvasPos, 1, {-1000,-1000,-1000},  {1000,1000,1000} )) {
+//            dirty = true;
+//        }
+//        if(UI::addFloat3Drag("Canvas rotation", canvasRotation, 1, {-180,-180,-180},  {180,180,180} )) {
+//            dirty = true;
+//        }
+//        if(UI::addFloat3Drag("Canvas scale", canvasScale, 0.01, {0,0,0},  {5,5,5} )) {
+//            dirty = true;
+//        }
+//       
+//        
+//        ImGui::Separator();
         
         visualiserLaserPresetManager.drawComboBox(lasersettings);
         visualiserLaserPresetManager.drawSaveButtons(lasersettings);
         Visualiser3DLaserSettings& currentLaserPreset = *visualiserLaserPresetManager.getPreset(lasersettings.getLabel());
+        
+        if( ImGui::TreeNode("Canvas")) {
+            UI::addCheckbox(lasersettings.showCanvas);
+            UI::addResettableFloat3Drag(lasersettings.canvasPos, currentLaserPreset.canvasPos, 1, "","%.0f", "##canvaspos");
+            UI::addResettableFloat3Drag(lasersettings.canvasRotation, currentLaserPreset.canvasRotation, 1, "", "%.0f", "##canvasrotation");
+         
+            float xscale = lasersettings.canvasScale->x;
+            float yscale = lasersettings.canvasScale->y;
+            
+            if(UI::addResettableFloatSlider("Canvas scale x", xscale, currentLaserPreset.canvasScale->x, 0.01,10 ) ) {
+                if(ofGetKeyPressed(OF_KEY_SHIFT)) {
+                    lasersettings.canvasScale = {xscale,yscale} ;
+                } else {
+                    lasersettings.canvasScale = {xscale,xscale} ;
+                }
+            }
+            if(UI::addResettableFloatSlider("Canvas scale y", yscale, currentLaserPreset.canvasScale->y, 0.01,10 ) ) {
+                if(ofGetKeyPressed(OF_KEY_SHIFT)) {
+                    lasersettings.canvasScale = {yscale,yscale} ;
+                } else {
+                    lasersettings.canvasScale = {xscale,xscale} ;
+                }
+            }
+            //UI::addFloatSlider("canvas scale y", &lasersettings.canvasScale->y, 0.01,10 );
+            //        (lasersettings.canvasScale, currentLaserPreset.canvasScale,0.01,"", "%.0f", "##canvasscale");
+            
+            ImGui::TreePop();
+        }
         
         for(int i = 0; i<lasersettings.laserObjects.size(); i++) {
             ImGui::Separator();

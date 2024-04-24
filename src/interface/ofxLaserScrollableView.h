@@ -39,12 +39,12 @@ class ScrollableView {
     virtual void mouseReleased(ofMouseEventArgs &e);
     virtual void mouseScrolled(ofMouseEventArgs &e);
     
-    bool setIsVisible(bool visible);
-    bool getIsVisible(); 
+    virtual bool setIsVisible(bool visible);
+    virtual bool getIsVisible();
     
-    void setSourceRect(ofRectangle rect);
-    void setOutputRect(ofRectangle rect, bool updatescaleandoffset = false);
-    void setOutputRectTopLeft(float left, float top);
+    virtual void setSourceRect(ofRectangle rect);
+    virtual void setOutputRect(ofRectangle rect, bool updatescaleandoffset = false);
+    virtual void setOutputRectTopLeft(float left, float top);
     ofRectangle getOutputRect();
     
     void autoFitToOutput();
@@ -54,6 +54,9 @@ class ScrollableView {
     glm::vec2 screenPosToLocalPos(glm::vec2 pos);
     ofMouseEventArgs screenPosToLocalPos(ofMouseEventArgs pos);
 
+    glm::vec2 localPosToScreenPos(glm::vec2 pos);
+    
+    
     bool startDrag(glm::vec2 mousepos);
     bool updateDrag(glm::vec2 mousepos);
     bool stopDrag();
@@ -82,6 +85,7 @@ class ScrollableView {
     glm::vec2 dragStartPosition; 
     
     float zoomSpeed = 0.02f;
+    bool zoomEnabled = true;
     
     ofFbo fbo;
     bool useFbo = false;

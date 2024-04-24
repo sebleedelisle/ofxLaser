@@ -84,6 +84,7 @@ class UI {
     
     
     static bool addIntSlider(ofParameter<int>& param, string labelSuffix = "");
+    static bool addFloatSlider(string label, ofParameter<float>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0) ;
     static bool addFloatSlider(ofParameter<float>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
     static bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "") ;
     static bool addFloat3Slider(ofParameter<glm::vec3>& parameter, const char* format="%.2f", ImGuiSliderFlags flags = 0, string labelSuffix = "");
@@ -97,7 +98,8 @@ class UI {
     static bool addRectDrag(ofParameter<ofRectangle>&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
     static bool addRectDrag(ofRectangle&param, float speed=1, const char* format="%.2f", string labelSuffix = "");
 
-    static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string label = "");
+    static bool addFloatAsIntSlider(string label, ofParameter<float>& param, float multiplier);
+    static bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string labelSuffix = "");
     static bool addFloatAsIntPercentage(ofParameter<float>& param, string labelSuffix = "");
     
     static bool addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetParam, string labelSuffix = "");
@@ -132,7 +134,9 @@ class UI {
     static bool Button(string label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     
     static bool ToggleButton(string label, bool&value, bool large = false, const ImVec2& size_arg = ImVec2(0,0));
-    
+    static bool ToggleButton(ofParameter<bool>&param, string labelSuffix = "");
+    static bool ToggleButton(string label, ofParameter<bool>&param);
+
     static bool Button(const char* label, bool large = false, bool secondaryColour = false, const ImVec2& size_arg = ImVec2(0,0));
     static bool DangerButton(string label, bool large = false, const ImVec2& size_arg = ImVec2(0,0));
     static void secondaryColourStart();
@@ -207,8 +211,11 @@ class UI {
     static void render();
     
     static void toolTip(string& str);
-  
     static void toolTip(const char* desc);
+    
+    static void toolTipWarning(string& str);
+    static void toolTipWarning(const char* desc);
+    
     static void addHover(string& str);
     static void addDelayedHover(string str);
     static void addHover(const char* desc);

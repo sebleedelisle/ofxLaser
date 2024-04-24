@@ -19,6 +19,7 @@ class ZoneUiLine : public ZoneUiBase {
     
     bool updateDataFromUi(OutputZone* outputZone) override;
     bool updateFromData(OutputZone* outputZone) override;
+    glm::vec2 getClosestPointOnLine(glm::vec2 pos); 
     
     bool mousePressed(ofMouseEventArgs &e) override;
     
@@ -26,6 +27,7 @@ class ZoneUiLine : public ZoneUiBase {
     
     void updatePoly() override;
     bool autoSmooth = true; 
+    ofPolyline linePoly;
     
    //vector<DragHandle*> anchorPoints; // bezier anchor points
    // vector<DragHandle*> controlPoints; // bezier control points

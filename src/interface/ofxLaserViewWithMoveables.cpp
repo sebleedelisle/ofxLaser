@@ -49,7 +49,10 @@ void ViewWithMoveables :: drawMoveables() {
     for(MoveablePoly* uiElement: uiElementsSorted) {
         uiElement->draw();
         ofPushMatrix();
-        //ofTranslate(-outputRect.getTopLeft() / scale);
+#ifndef USE_FONT_MANAGER
+        // fix for bitmap fonts which act weird with translation / scale
+        ofTranslate(-outputRect.getTopLeft() / scale);
+#endif
         uiElement->drawLabel();
         ofPopMatrix();
         

@@ -28,7 +28,8 @@ bool ZoneUiQuadComplex ::  updateDataFromUi(OutputZone* outputZone) {
         return changed;
     } else {
         if(isDragging) {
-            zoneQuad->drag(dragOffset);
+            //zoneQuad->drag(dragOffset);
+            zoneQuad->updatePoints(getPoints());
             //zoneQuad->setDstCorners(handles[0], handles[1], handles[3], handles[2]);
         } else if(mainDragHandleIndex>=0) {
             zoneQuad->moveHandle(mainDragHandleIndex, *getMainDragHandle(), constrainedToSquare && !ofGetKeyPressed(OF_KEY_ALT));
@@ -69,14 +70,14 @@ bool ZoneUiQuadComplex :: updateFromData(OutputZone* outputZone) {
 //        for(glm::vec2 p : perimeterpoints) {
 //            perimeterPolyline.addVertex(p.x, p.y, 0);
 //        }
-        poly.setFromPoints(zonetransform->getPerimeterPoints());
+        outlinePoly.setFromPoints(zonetransform->getPerimeterPoints());
         
         setNumHandles(zonetransform->getNumPoints());
         for(int i = 0; i<handles.size(); i++) {
             glm::vec2 dstpoint =zonetransform->getDestPointAt(i);
             if(dstpoint!=handles[i]) {
                 handles[i].set(dstpoint);
-               
+                handles[i].setGrid(snapToGrid, gridSize);
                 
                 changed = true;
             }

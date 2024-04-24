@@ -41,7 +41,7 @@ class ZoneTransformBase {
 	
     ofParameterGroup transformParams; 
 
-    ofParameter<bool>locked;
+    //ofParameter<bool>locked;
 
 	ofRectangle srcRect;
 	

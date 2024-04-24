@@ -5,12 +5,15 @@
 //
 
 #pragma once
+#include "ofMain.h"
 #include "ofxLaserLaser.h"
 #include "ofxLaserLaser3DVisualObject.h"
 #include "ofxLaserPresetManager.h"
 #include "ofxLaserVisualiser3DSettings.h"
 #include "ofxLaserVisualiser3DLaserSettings.h"
+#ifdef USE_FONT_MANAGER
 #include "ofxFontManager.h"
+#endif
 
 namespace ofxLaser {
 
@@ -66,10 +69,10 @@ class Visualiser3D {
     ofParameter<float> brightness;
     bool showSettingsWindow; 
 
-    bool showCanvas;
-    glm::vec3 canvasPos;
-    glm::vec3 canvasRotation;
-    glm::vec3 canvasScale;
+//    bool showCanvas;
+//    glm::vec3 canvasPos;
+//    glm::vec3 canvasRotation;
+//    glm::vec3 canvasScale;
     
     
     ofMesh grid;

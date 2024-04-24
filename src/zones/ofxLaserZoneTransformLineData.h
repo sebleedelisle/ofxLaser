@@ -31,15 +31,18 @@ class ZoneTransformLineData : public ZoneTransformBase {
     
     virtual void init() override;
     
-    bool setFromPoints(const vector<glm::vec2*> points);
-    void updateCurves(); 
+    bool setFromPoints(vector<glm::vec2*> points);
+    bool setFromPoints(const vector<glm::vec2> points);
+    
+    void updateCurves();
+    void setDefault();
     
     bool moveHandle(int handleindex, glm::vec2 newpos);
     virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
  
     void getPerimeterPoints(vector<glm::vec2>& points) override;
-    
+    ofPolyline& getLinePoly();
   
     virtual Point getWarpedPoint(const Point& p) override;
     virtual ofPoint getWarpedPoint(const ofPoint& p) override;
@@ -55,7 +58,7 @@ class ZoneTransformLineData : public ZoneTransformBase {
     void addNode();
     
     bool autoSmooth = true;
-    float smoothLevel = 0.4;
+    float smoothLevel = 0.3;
     
     virtual glm::vec2 getCentre() override;
     
@@ -68,8 +71,8 @@ class ZoneTransformLineData : public ZoneTransformBase {
     bool initialised = false;
     
     vector<BezierNode> nodes; // all handles for all points
-    ofPolyline poly;
-    ofPolyline polyPerimeter;
+    ofPolyline linePoly;
+    ofPolyline perimeterPoly;
     
     
 };

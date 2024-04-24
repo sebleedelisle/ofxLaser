@@ -41,6 +41,7 @@ class Laser {
     ~Laser();
     
     void init();
+    void reset();
     
     string getLabel();
     void setDac(DacBase* dac);
@@ -53,6 +54,10 @@ class Laser {
     bool loadSettings();
     bool saveSettings();
     bool getSaveStatus();
+    
+    string getFilenameForZone(OutputZone* outputZone);
+    bool deleteSettingsFileForZone(OutputZone* outputZone);
+    void deleteAllSettingsFiles(); 
     
     void serialize(ofJson& json);
     bool deserialize(ofJson& json);

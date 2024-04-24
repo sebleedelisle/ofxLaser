@@ -42,6 +42,8 @@ class ManagerBase : public TransformationManager {
     ManagerBase();
     ~ManagerBase();
     
+    virtual void resetAllLasersToDefault();
+    
     virtual void update();
    
     virtual bool deleteLaser(Laser* laser);

@@ -18,7 +18,7 @@ DacManagerLaserDockNet :: DacManagerLaserDockNet()  {
        // auto ip = address.get<Poco::Net::NetworkInterface::BROADCAST_ADDRESS>();
         //commandUdpSocket.bind(
         Poco::Net::SocketAddress sa("255.255.255.255", DacLaserDockNetConsts::ALIVE_PORT);
-        Poco::Net::SocketAddress la("10.0.1.188", DacLaserDockNetConsts::ALIVE_PORT);
+        Poco::Net::SocketAddress la("192.168.1.2", DacLaserDockNetConsts::ALIVE_PORT);
         //commandUdpSocket.bind(la);
         
         //commandUdpSocket = Poco::Net::DatagramSocket(sa);
@@ -28,10 +28,8 @@ DacManagerLaserDockNet :: DacManagerLaserDockNet()  {
         commandUdpSocket.connect(sa);
         commandUdpSocket.setBroadcast(true);
         commandUdpSocket.setBlocking(false);
-
         
-        ofLogNotice() << commandUdpSocket.address().toString();
-        //ofLogNotice() << commandUdpSocket.
+        ofLogNotice("DacManagerLaserDockNet socket : ") << commandUdpSocket.address().toString();
 
         connected = true;
     } catch (Poco::Exception& exc) {
@@ -197,7 +195,6 @@ void DacManagerLaserDockNet :: threadedFunction() {
         sleep(1000);
             
     }
-            
      
 }
     
@@ -213,6 +210,9 @@ vector<DacData> DacManagerLaserDockNet :: updateDacList(){
         daclist.emplace_back(getType(), id, status.ip_address);
 
     }
+    
+    daclist.emplace_back(getType(), "LaserDockNetTest", "192.168.0.162");
+
     return daclist;
 }
 

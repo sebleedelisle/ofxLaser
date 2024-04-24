@@ -11,6 +11,7 @@
 #include "ofxLaserZoneViewController.h"
 #include "ofxLaserCanvasViewController.h"
 #include "ofxLaserIconSVGs.h"
+#include "GlobalScale.h"
 
 #define OFX_LASER_HIDE_CANVAS false
 
@@ -36,6 +37,7 @@ class Manager : public ManagerBase {
     Manager(bool hidecanvas = false);
     ~Manager();
     
+    virtual void resetAllLasersToDefault() override;
     virtual void initAndLoadSettings();
     virtual void update() override;
     virtual void createAndAddLaser() override;
@@ -53,6 +55,7 @@ class Manager : public ManagerBase {
     glm::vec2 getPreviewOffset();
 
     ofRectangle getZonePreviewRect();
+    ofRectangle getCanvasPreviewRect();
     ofRectangle getVisualiserPreviewRect();
     
     bool updateDisplayRectangle(); 
@@ -109,6 +112,7 @@ class Manager : public ManagerBase {
     bool showCanvasSettingsWindow;
     bool showCopySettingsWindow;
     bool showDacAssignmentWindow;
+    bool showBeamZoneSortWindow;
     
     bool toggleGui();
     void setGuiVisible(bool visible);
@@ -172,6 +176,10 @@ class Manager : public ManagerBase {
     
     bool autoSizeToScreen = true;
   
+    vector<LaserZoneViewController> laserZoneViews;
+    CanvasViewController canvasViewController;
+   
+    
     protected :
     
     bool initialised = false;
@@ -191,8 +199,6 @@ class Manager : public ManagerBase {
     
     //ofImage guideImage;
   
-    vector<LaserZoneViewController> laserZoneViews;
-    CanvasViewController canvasViewController;
      
     PresetManager<ScannerSettings> scannerPresetManager;
     PresetManager<ColourSettings> colourPresetManager;

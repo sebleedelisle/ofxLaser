@@ -11,8 +11,9 @@
 #include "ofMain.h"
 #include "ofxLaserDragHandle.h"
 #include "ofxLaserPolygonBase.h"
+#ifdef USE_FONT_MANAGER
 #include "ofxFontManager.h"
-
+#endif
 namespace ofxLaser {
 
 class MoveablePoly {
@@ -116,7 +117,7 @@ class MoveablePoly {
     
     glm::vec2 centre;
     
-    PolygonBase poly;
+    PolygonBase outlinePoly;
 
     glm::vec2 mousePos;
     glm::vec2 dragOffset;

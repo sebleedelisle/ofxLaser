@@ -39,6 +39,8 @@ bool Visualiser3DSettings :: operator == (Visualiser3DSettings& that){
     ofJson json2;
     serialize(json2);
     json2["label"] = "";
+//    ofLogNotice(json1.dump());
+//    ofLogNotice(json2.dump());
     
     return json1.dump() == json2.dump();
 }

@@ -185,6 +185,9 @@ void CanvasViewController :: updateUIFromZones( ShapeTargetCanvas& canvasTarget)
 
 
 void CanvasViewController :: drawImGui() {
+    
+    if(!isVisible) return;
+    
     vector<MoveablePoly*> uiElementsToMoveBack;
     
     for(int i = 0; i<uiElementsSorted.size(); i++) {
@@ -192,6 +195,8 @@ void CanvasViewController :: drawImGui() {
         //ofLogNotice(uiElements[i]->getLabel()) << " " << i;
         MoveablePoly& uiElement = *uiElementsSorted[i];
         
+        // NOTE!!! There is another part of this window that is rendered inside the
+        // Manager::drawLaserGui function.
         
         // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
         string label ="CANVAS ZONE SETTINGS " + uiElement.getUid();
@@ -201,10 +206,13 @@ void CanvasViewController :: drawImGui() {
             ofLogNotice("Opening pop up : ") << label;
         }
         if(ImGui::BeginPopup(label.c_str())) {
-            ImGui::Text("CANVAS ZONE %s", label.c_str());
+           // ImGui::Text("CANVAS ZONE %s", label.c_str());
 
             GuideImageUiQuad* guideImageUiQuad = dynamic_cast<GuideImageUiQuad*>(&uiElement);
             if(guideImageUiQuad!=nullptr) {
+                
+                
+                
                 ofFloatColor tmpRef = guideImageUiQuad->colour;
                 string label="Image tint colour";
                 if (ImGui::ColorEdit4(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV)){
@@ -212,8 +220,6 @@ void CanvasViewController :: drawImGui() {
                     zonesChangedFlag = true;
                 }
             }
-                
-            
             
             if(UI::Button("Move to back")) {
                 uiElementsToMoveBack.push_back(&uiElement);
@@ -258,4 +264,9 @@ void CanvasViewController :: drawMoveables() {
     ViewWithMoveables::drawMoveables();
     ofDisableBlendMode();
     
+}
+
+
+void CanvasViewController::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
+    ScrollableView::setOutputRect(rect, updatescaleandoffset);
 }

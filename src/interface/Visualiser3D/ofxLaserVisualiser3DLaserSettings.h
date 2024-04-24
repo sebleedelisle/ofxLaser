@@ -30,5 +30,11 @@ class Visualiser3DLaserSettings : public PresetBase {
 
     vector<Laser3DVisualObject> laserObjects;
     
+    ofParameter<bool> showCanvas;
+    ofParameter<glm::vec3> canvasPos;
+    ofParameter<glm::vec3> canvasRotation;
+    ofParameter<glm::vec2> canvasScale;
+    
+    
 };
 }

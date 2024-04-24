@@ -25,8 +25,17 @@ ZoneTransformLineData :: ZoneTransformLineData() {
     transformParams.add(zoneWidth.set("Width", 10,0,400));
    
     updateSrc(ofRectangle(0,0,100,100));
+    setDefault();
 
     ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformLineData::paramChanged);
+    
+}
+
+void ZoneTransformLineData :: setDefault() {
+   
+    resetNodes();
+    autoSmooth = true;
+    zoneWidth = 64;
     
 }
 
@@ -41,12 +50,21 @@ ZoneTransformLineData::~ZoneTransformLineData() {
 
 
 void ZoneTransformLineData::init() {
-
+    setDefault();
     resetNodes();
 
 }
 
 bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {
+    vector<glm::vec2>points2;
+    for(glm::vec2* p : points) {
+        points2.push_back(*p);
+    }
+    bool changed = setFromPoints(points2);
+   
+    return changed;
+}
+bool ZoneTransformLineData::setFromPoints(vector<glm::vec2> points) {
 
     bool changed = false;
     
@@ -59,8 +77,8 @@ bool ZoneTransformLineData::setFromPoints(const vector<glm::vec2*> points) {
     
     for(size_t i = 0; i<points.size(); i+=3) {
         BezierNode& node = nodes[i/3];
-        const glm::vec2& point = *points[i];
-        changed = node.setFromAnchorAndControlPoints(*points[i], *points[i+1], *points[i+2]) || changed;
+        //const glm::vec2& point = points[i];
+        changed = node.setFromAnchorAndControlPoints(points[i], points[i+1], points[i+2]) || changed;
     }
     
     if(autoSmooth) { //  && changed) {
@@ -104,7 +122,7 @@ bool ZoneTransformLineData :: moveHandle(int handleindex, glm::vec2 newpos) {
 void ZoneTransformLineData :: updateCurves () {
     
     // Cardinal spline algorithm.
-    float scale = smoothLevel /3;
+    float scale = smoothLevel /3 * 2;
     
     for(int i = 0; i<nodes.size(); i++)  {
         
@@ -128,17 +146,34 @@ void ZoneTransformLineData :: updateCurves () {
         
     }
     
+    // try and fix the ends
+    BezierNode& nodeA = nodes[0];
+    BezierNode& nodeB = nodes[1];
     
+    glm::vec2 nodeBcpVector = nodeB.getControlPoint1() - nodeB.getPosition();
+    glm::vec2 vecAB = glm::normalize(nodeB.getPosition()-nodeA.getPosition());
+    glm::vec2 proj = glm::dot(nodeBcpVector, vecAB)* vecAB;
+    nodeA.handles[2] = nodeA.getPosition() + nodeBcpVector - (proj * 2);
+    nodeA.handles[1] = nodeA.getPosition();
+    
+    BezierNode& nodeD = nodes.back();
+    BezierNode& nodeC = nodes[nodes.size()-2];
+    
+    glm::vec2 nodeDcpVector = nodeC.getControlPoint2() - nodeC.getPosition();
+    glm::vec2 vecDC = glm::normalize(nodeC.getPosition()-nodeD.getPosition());
+    glm::vec2 proj2 = glm::dot(nodeDcpVector, vecDC)* vecDC;
+    nodeD.handles[1] = nodeD.getPosition() + nodeDcpVector - (proj2 * 2);
+    nodeD.handles[2] = nodeD.getPosition();
     
 }
 
 
 void ZoneTransformLineData::resetNodes() {
     nodes.resize(2);
-    nodes[0].reset(300,400);
+    nodes[0].reset(192,304);
     nodes[0].start = true;
     //nodes[1].reset(400,400);
-    nodes[1].reset(500,400);
+    nodes[1].reset(608,304);
     nodes[1].end = true;
     
 }
@@ -193,17 +228,17 @@ ofPoint ZoneTransformLineData::getWarpedPoint(const ofPoint& p){
     float xunit = ofMap(p.x, srcRect.getLeft(), srcRect.getRight(), 0, 1);
     float yunit = ofMap(p.y, srcRect.getTop(), srcRect.getBottom(), 1, -1);
     
-    float polylength = poly.getPerimeter();
+    float polylength = linePoly.getPerimeter();
     float polyx = xunit*polylength;
     
     //ofPoint normal = getVectorNormal(handles[0], handles[1]);
     
-    ofPoint posx = poly.getPointAtLength(polyx);
-    float index = poly.getIndexAtLength(polyx);
+    ofPoint posx = linePoly.getPointAtLength(polyx);
+    float index = linePoly.getIndexAtLength(polyx);
     // fixing a stupid bug in ofPolyline
     if(index == 0) index = 1;
-    if(index >= poly.size()-2) index = poly.size()-3;
-    glm::vec3 normal = poly.getNormalAtIndexInterpolated(index);
+    if(index >= linePoly.size()-2) index = linePoly.size()-3;
+    glm::vec3 normal = linePoly.getNormalAtIndexInterpolated(index);
     if(glm::length(normal)==0) {
         //cout << " " ;
         
@@ -234,55 +269,55 @@ ofxLaser::Point ZoneTransformLineData::getWarpedPoint(const ofxLaser::Point& p){
 };
 
 void ZoneTransformLineData::updatePolyline() {
-    poly.clear();
+    linePoly.clear();
     BezierNode* previousnode = &nodes[0];
-    poly.addVertex(glm::vec3(previousnode->getPosition(),0));
+    linePoly.addVertex(glm::vec3(previousnode->getPosition(),0));
     
     for(int i = 1; i<nodes.size(); i++) {
         BezierNode& node = nodes[i];
                     
-        poly.bezierTo(glm::vec3(previousnode->getControlPoint2(),0), glm::vec3(node.getControlPoint1(),0), glm::vec3(node.getPosition(),0));
+        linePoly.bezierTo(glm::vec3(previousnode->getControlPoint2(),0), glm::vec3(node.getControlPoint1(),0), glm::vec3(node.getPosition(),0));
         
         previousnode = &node;
             
     }
 
     
-    poly = poly.getResampledBySpacing(1);
+    linePoly = linePoly.getResampledBySpacing(1);
     
 }
 
 void ZoneTransformLineData :: updatePerimeter() {
     
     int resolution = 1;
-    polyPerimeter.clear();
+    perimeterPoly.clear();
     
-    float polylength = poly.getPerimeter();
+    float polylength = linePoly.getPerimeter();
     for(float d = 0; d<=polylength; d+=resolution) {
         
-        glm::vec3 p = poly.getPointAtLength(d);
-        float index = poly.getIndexAtLength(d);
-        glm::vec3 v = poly.getNormalAtIndexInterpolated(index);
+        glm::vec3 p = linePoly.getPointAtLength(d);
+        float index = linePoly.getIndexAtLength(d);
+        glm::vec3 v = linePoly.getNormalAtIndexInterpolated(index);
         
         //polyPerimeter.addVertex(p);
      
-        polyPerimeter.addVertex(p+(v*zoneWidth.get()));
+        perimeterPoly.addVertex(p+(v*zoneWidth.get()));
         
         
     }
     for(float d = polylength; d>=0; d-=resolution) {
         
-        glm::vec3 p = poly.getPointAtLength(d);
-        float index = poly.getIndexAtLength(d);
-        glm::vec3 v = poly.getNormalAtIndexInterpolated(index);
+        glm::vec3 p = linePoly.getPointAtLength(d);
+        float index = linePoly.getIndexAtLength(d);
+        glm::vec3 v = linePoly.getNormalAtIndexInterpolated(index);
         
         //polyPerimeter.addVertex(p);
      
-        polyPerimeter.addVertex(p-(v*zoneWidth.get()));
+        perimeterPoly.addVertex(p-(v*zoneWidth.get()));
         
         
     }
-    polyPerimeter.setClosed(true);
+    perimeterPoly.setClosed(true);
     
 }
 
@@ -299,7 +334,7 @@ bool ZoneTransformLineData::deleteNode(int i){
     
     if(nodes.size()<=2) return false;
     
-    if((i>0) && (i<nodes.size()) ) {
+    if((i>=0) && (i<nodes.size()) ) {
         nodes.erase(nodes.begin()+i);
         isDirty = true;
         return true;
@@ -312,13 +347,14 @@ void ZoneTransformLineData :: addNode() {
 
     glm::vec3 endpos = glm::vec3(nodes.back().getPosition(),0);
     //int mode = nodes.back().mode;
-    glm::vec3 tangent = poly.getTangentAtIndexInterpolated(poly.getIndexAtPercent(0.99));
+    glm::vec3 tangent = linePoly.getTangentAtIndexInterpolated(linePoly.getIndexAtPercent(0.99));
     tangent*=100;
     endpos+=tangent;
     
     nodes.resize(nodes.size()+1);
     BezierNode& node = nodes.back();
     node.reset(endpos.x, endpos.y);
+
    // node.mode = mode;
     
     isDirty = true;
@@ -330,7 +366,7 @@ void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
     points.clear();
     
    
-    const ofPolyline& pline_ref= polyPerimeter;
+    const ofPolyline& pline_ref= perimeterPoly;
     auto& verts= pline_ref.getVertices();
     auto vertices = pline_ref.getVertices();
     for(auto&  vertex : vertices) {
@@ -338,6 +374,11 @@ void ZoneTransformLineData::getPerimeterPoints(vector<glm::vec2>& points) {
     }
 
 }
+
+
+ofPolyline& ZoneTransformLineData::getLinePoly() {
+    return linePoly;
+} 
 
 void ZoneTransformLineData::serialize(ofJson&json) const {
     ofSerialize(json, transformParams);
@@ -400,6 +441,7 @@ bool ZoneTransformLineData::deserialize(ofJson& jsonGroup) {
    // ofLogNotice("ZoneTransformLineData::deserialize");
     return true;
 }
+
 
 //
 //bool ZoneTransformLineData::setSelected(bool v) {

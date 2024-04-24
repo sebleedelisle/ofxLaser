@@ -22,7 +22,7 @@ ZoneTransformQuadComplexData::ZoneTransformQuadComplexData() {
     // Used for serialize / deserialize
     transformParams.setName("ZoneTransformParams");
 
-    transformParams.add(useHomography.set("perspective", false));
+//    transformParams.add(useHomography.set("perspective", false));
     
     updateSrc(ofRectangle(0,0,100,100));
     resetDst(ofRectangle(100,100,200,200));
@@ -42,9 +42,7 @@ ZoneTransformQuadComplexData::~ZoneTransformQuadComplexData() {
 
 void ZoneTransformQuadComplexData::init() {
     
-    ofRectangle destRect(300,300,200,200) ;
-  
-    resetDst(destRect);
+    setDefault();
 
     
 }
@@ -174,12 +172,16 @@ void ZoneTransformQuadComplexData::resetDst(glm::vec2 topleft, glm::vec2 toprigh
  
 }
 
-void ZoneTransformQuadComplexData :: drag(glm::vec2 dragoffset) {
-    
-    for(glm::vec2& p : dstPoints) {
-        p+=dragoffset;
-        
+void ZoneTransformQuadComplexData :: updatePoints(vector<glm::vec2*> points) {
+
+    for(int i = 0; i<points.size(); i++) {
+        dstPoints[i] = *points[i];
     }
+    //
+//    for(glm::vec2& p : dstPoints) {
+//        p+=dragoffset;
+//        
+//    }
     isDirty = true;
     
 }
@@ -198,122 +200,7 @@ bool ZoneTransformQuadComplexData :: moveHandle(int handleindex, glm::vec2 newpo
     }
     
 }
-    
-//
-//    vector<glm::vec2*> points = getCornerPointsClockwise();
-//    bool pointchanged = false;
-//    if(*points[i]!=newpos) {
-//        // clamp between points to avoid concave shapes
-//        if(!lockSquare) {
-//            // clamp to vector between neighbours
-//            GeomUtils::clampToVector(newpos, *points[(i+3)%4], *points[(i+1)%4], true, false);
-//
-//            glm::vec2& pointbefore = *points[(i+3)%4];
-//            glm::vec2& pointopposite = *points[(i+2)%4];
-//            glm::vec2& pointafter = *points[(i+1)%4];
-//
-//            // clamp between edges to avoid over-extension
-//            // this mess of code calculates a vector between the adjacent two points,
-//            // but then rotates it so that the moving point cannot get quite colinear
-//            float minangle = 2.0f;
-//            glm::vec2 beforeedge =  pointbefore - pointopposite;
-//            beforeedge = glm::rotate(beforeedge, float(minangle*PI/180.0f));
-//            GeomUtils::clampToVector(newpos,  pointopposite+beforeedge, pointopposite, true, false);
-//
-//
-//            glm::vec2 afteredge = pointafter - pointopposite;
-//            afteredge = glm::rotate(afteredge, float(-minangle*PI/180.0f)); // rotate it one degree
-//            GeomUtils::clampToVector(newpos,  pointafter, pointafter+afteredge, true, false);
-//
-//
-//
-//
-//            *points[i] = newpos;
-//
-//        } else {
-//            // constrained version
-//            float minsize = 2;
-//
-//            glm::vec2& pointbefore = *points[(i+3)%4];
-//            glm::vec2& pointopposite = *points[(i+2)%4];
-//            glm::vec2& pointafter = *points[(i+1)%4];
-//
-//            // vectors 90º apart based around the opposite point
-//            glm::vec2 v1 = glm::normalize(pointopposite - pointbefore)* minsize;
-//            glm::vec2 v2 = glm::normalize(pointopposite - pointafter) * minsize;
-//
-//            // adding v1 and v2 stops the square getting too small
-//            glm::vec2 edgebefore = pointbefore+v1;
-//            glm::vec2 edgeafter = pointafter-v2;
-//
-//            // stop the point from crossing inside out
-//            GeomUtils::clampToVector(newpos, pointbefore-v2, edgebefore-v2, true, false);
-//            GeomUtils::clampToVector(newpos, pointafter-v1, edgeafter-v1, true, false);
-//
-//
-//            *points[i] = newpos;
-//
-//            v1+=pointbefore;
-//            v2+=pointafter;
-//
-//            // point before needs to clamp onto its own edge
-//            pointbefore = GeomUtils::getClampedToVector(newpos, pointbefore, v1, true, true);
-//            pointafter = GeomUtils::getClampedToVector(newpos, pointafter, v2, true, true);
-//
-//
-//
-//        }
-//        pointchanged = (*points[i]==newpos);
-//        *points[i]=newpos;
-//
-//    }
-//    isDirty|=pointchanged;
-//    
-//    return pointchanged;
-//    
-//    
-//}
-
-//
-//void ZoneTransformQuadComplexData::resetFromCorners() {
-//    vector<glm::vec2> corners = getCorners();
-//    setDstCorners(corners[0], corners[1], corners[2], corners[3]);
-//
-//}
-//
-//vector<glm::vec2*> ZoneTransformQuadComplexData::getCornerPoints(){
-//    vector<glm::vec2*> corners;
-//    corners.push_back(&dstPoints[0]);
-//    corners.push_back(&dstPoints[1]);
-//    corners.push_back(&dstPoints[2]);
-//    corners.push_back(&dstPoints[3]);
-//    return corners;
-//}
-//
-//vector<glm::vec2> ZoneTransformQuadComplexData::getCorners(){
-//
-//    vector<glm::vec2> corners;
-//
-//    corners.push_back(dstPoints[0]);
-//    corners.push_back(dstPoints[1]);
-//    corners.push_back(dstPoints[2]);
-//    corners.push_back(dstPoints[3]);
-//    return corners;
-//
-//}
-//
-//vector<glm::vec2*> ZoneTransformQuadComplexData::getCornerPointsClockwise(){
-//    vector<glm::vec2*> corners;
-//
-//    corners.push_back(&dstPoints[0]);
-//    corners.push_back(&dstPoints[1]);
-//    corners.push_back(&dstPoints[3]);
-//    corners.push_back(&dstPoints[2]);
-//
-//
-//
-//    return corners;
-//}
+  
 
 void ZoneTransformQuadComplexData::getPerimeterPoints(vector<glm::vec2>& points) {
     points.clear();
@@ -373,10 +260,15 @@ vector<glm::vec2> ZoneTransformQuadComplexData::getPerimeterPoints() {
 //
 //}
 
+void ZoneTransformQuadComplexData :: setDefault() {
+    setSubdivisionLevel(1);
+    resetDst(ofRectangle(192,192,416,224));
+}
 
 bool ZoneTransformQuadComplexData :: setSubdivisionLevel(int newlevel) {
     if(newlevel!=subdivisionLevel) {
-    
+        while(newlevel>subdivisionLevel) incSubdivisionLevel();
+        while(newlevel<subdivisionLevel) decSubdivisionLevel(); 
         return true;
         
     } else {

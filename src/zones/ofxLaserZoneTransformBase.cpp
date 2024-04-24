@@ -19,7 +19,7 @@ ZoneTransformBase:: ZoneTransformBase(){
    
     transformParams.setName("ZoneTransformBaseParams");
     
-    transformParams.add(locked.set("locked", false));
+    //transformParams.add(locked.set("locked", false));
     srcRect.set(0,0,400,400); 
  
     

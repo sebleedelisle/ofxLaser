@@ -15,10 +15,10 @@ class TransformationManager {
     public :
     
     TransformationManager() {
-        reset();
+        resetTransformations();
     }
     
-    void reset() {
+    void resetTransformations() {
         currentMatrix = glm::mat4(1.0f); // identity matrix;
         matrixStack.clear();
     }

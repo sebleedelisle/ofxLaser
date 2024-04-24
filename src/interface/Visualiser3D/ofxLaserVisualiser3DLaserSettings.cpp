@@ -13,6 +13,16 @@ using namespace ofxLaser;
 Visualiser3DLaserSettings :: Visualiser3DLaserSettings(){
     params.add(label.set("label", "Default"));
     
+    
+    params.add(showCanvas.set("Show canvas", false));
+    params.add(canvasPos.set("Canvas position", {0,-52,0}, {-1000,-1000,-1000}, {1000,1000,1000}));
+    params.add(canvasRotation.set("Canvas rotation", {0,0,0}, {-180,-180,-180}, {180,180,180}));
+    params.add(canvasScale.set("Canvas scale", {0.5,0.5}, {0.01,0.01}, {10,10}));
+//    ofParameter<glm::vec3> canvasPos;
+//    ofParameter<glm::vec3> canvasRotation;
+//    ofParameter<glm::vec2> canvasScale;
+    
+    
 }
 
 Visualiser3DLaserSettings& Visualiser3DLaserSettings :: operator=( Visualiser3DLaserSettings& that){
@@ -44,6 +54,9 @@ void Visualiser3DLaserSettings :: serialize(ofJson&json) const{
         laser.serialize(laserjson);
         jsonGroup.push_back(laserjson);
     }
+    
+   
+    
    // ofLogNotice("Visualiser 3D laser json : ") << jsonGroup.dump(3);
     
 }

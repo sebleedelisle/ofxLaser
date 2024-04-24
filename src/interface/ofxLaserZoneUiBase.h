@@ -12,6 +12,7 @@
 #include "ofxLaserMoveablePoly.h"
 //#include "ofxLaserZoneTransformBase.h"
 #include "ofxLaserOutputZone.h"
+#include "ofxLaserUI.h"
 
 class ZoneTransformBase;
 
@@ -23,6 +24,10 @@ class ZoneUiBase : public MoveablePoly {
     
     ZoneUiBase() = default;
     virtual ~ZoneUiBase() = default; 
+    
+    
+    virtual void drawLabel() override;
+    
 
     virtual bool updateDataFromUi(OutputZone* outputZone);
     virtual bool updateFromData(OutputZone* outputZone);
@@ -30,7 +35,8 @@ class ZoneUiBase : public MoveablePoly {
 
     ZoneId zoneId;
     bool inputZoneAlt = false;
-    bool muted = false; 
+    bool muted = false;
+    bool locked = false;
 
     protected :
 

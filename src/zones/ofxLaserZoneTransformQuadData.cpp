@@ -24,7 +24,7 @@ ZoneTransformQuadData::ZoneTransformQuadData() {
     transformParams.add(useHomography.set("perspective", false));
     
     updateSrc(ofRectangle(0,0,100,100));
-    setDst(ofRectangle(100,100,200,200));
+    setDefault();
         
     ofAddListener(transformParams.parameterChangedE(), this, &ZoneTransformQuadData::paramChanged);
     
@@ -42,9 +42,10 @@ ZoneTransformQuadData::~ZoneTransformQuadData() {
 
 void ZoneTransformQuadData::init() {
     
-    ofRectangle destRect(300,300,200,200) ;
-  
-    setDst(destRect);
+//    ofRectangle destRect(300,300,200,200) ;
+//  
+//    setDst(destRect);
+    setDefault();
 
     updateQuads();
     
@@ -74,7 +75,7 @@ glm::vec2 ZoneTransformQuadData::getCentre() {
 
 
 void ZoneTransformQuadData :: resetToSquare() {
-    if(locked) return;
+    //if(locked) return;
     vector<glm::vec2*> cornerhandles = getCornerPoints();
     vector<glm::vec2> corners;
     // convert to ofPoints
@@ -178,6 +179,10 @@ void ZoneTransformQuadData :: setDstCorners(glm::vec2 topleft, glm::vec2 toprigh
     }
     isDirty|=pointschanged;
  
+}
+
+void ZoneTransformQuadData :: setDefault() {
+    setDst(ofRectangle(192,192,416,224));
 }
 
 bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool lockSquare) {

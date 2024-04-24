@@ -19,8 +19,8 @@ class TestPatternGenerator {
     public :
     
     static int getNumTestPatterns() {
-        return 10;
-    } 
+        return 11;
+    }
     
     static vector<ofxLaser::Shape*> getTestPatternShapes(int testPattern, const ofRectangle& rect) {
         vector<Shape*> shapes;
@@ -201,6 +201,22 @@ class TestPatternGenerator {
 //             float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
              float x = ofMap(sin(progress), -1,1,rect.getLeft(), rect.getRight());
              shapes.push_back(new Line( glm::vec3(x,rect.getTop(),0), glm::vec3(x, rect.getBottom(),0), ofColor::white, OFXLASER_PROFILE_DEFAULT));
+
+         } else if(testPattern ==11) {
+       
+             ofColor col = ofColor(255);
+             shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
+             shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_DEFAULT));
+             //shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_DEFAULT));
+             //shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_DEFAULT));
+             
+             shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+             shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
+        
 
          }
          return shapes;

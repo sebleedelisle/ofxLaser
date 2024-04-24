@@ -33,6 +33,8 @@ class CanvasViewController : public ViewWithMoveables {
     bool updateZonesFromUI(ShapeTargetCanvas& canvasTarget);
     void updateUIFromZones(ShapeTargetCanvas& canvasTarget);
     
+    virtual void setOutputRect(ofRectangle rect, bool updatescaleandoffset = false) override;
+    
     void setOutputZonesBrightness(float brightness);
     
     bool update() override;
