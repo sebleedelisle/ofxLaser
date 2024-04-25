@@ -17,6 +17,8 @@ class GlobalScale {
 //    
     
     static float getScale() {
+        ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+        //ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->glfwGetWindowContentScale();
         return ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
         
         
