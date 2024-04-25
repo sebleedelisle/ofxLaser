@@ -6,7 +6,7 @@
 //
 #pragma once
 #include "ofMain.h"
-
+#include "GLFW/glfw3.h"
 
 class GlobalScale {
     public :
@@ -17,9 +17,18 @@ class GlobalScale {
 //    
     
     static float getScale() {
-        ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->getPixelScreenCoordScale();
-        //ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->glfwGetWindowContentScale();
-        return ((ofAppGLFWWindow *)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+        //ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->getPixelScreenCoordScale();
+       // ofLogNotice() << ((ofAppGLFWWindow*)(ofGetWindowPtr()))->glfwGetWindowContentScale();
+        
+        ofAppGLFWWindow* glfwWindow = ((ofAppGLFWWindow*)(ofGetWindowPtr()));
+        
+        
+        float tmpxscale, tmpyscale;
+        //glfWindow->getGLFWWindow()
+        glfwGetWindowContentScale(glfwWindow->getGLFWWindow(), &tmpxscale, &tmpyscale);
+        std::cout << tmpxscale << " " << tmpyscale << endl;
+//        
+        return glfwWindow->getPixelScreenCoordScale();
         
         
     }
