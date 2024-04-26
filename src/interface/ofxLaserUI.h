@@ -204,9 +204,9 @@ class UI {
     static void largeItemEnd() ;
     static void extraLargeItemStart();
     static void extraLargeItemEnd() ;
-    static bool updateMouse(ofMouseEventArgs &e);
-    static bool mousePressed(ofMouseEventArgs &e) ;
-    static bool mouseReleased(ofMouseEventArgs &e) ;
+    //static bool updateMouse(ofMouseEventArgs &e);
+    //static bool mousePressed(ofMouseEventArgs &e) ;
+    //static bool mouseReleased(ofMouseEventArgs &e) ;
     static bool keyPressed(ofKeyEventArgs &e) ;
     static bool keyReleased(ofKeyEventArgs &e) ;
     static void render();

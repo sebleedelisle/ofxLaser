@@ -452,7 +452,9 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
-    // COMMENTING OUT as it conflicts with manual mouse position setting
+    x /= io.DisplayFramebufferScale.x;
+    y /= io.DisplayFramebufferScale.y;
+
     io.AddMousePosEvent((float)x, (float)y);
     bd->LastValidMousePos = ImVec2((float)x, (float)y);
     ImGui_ImplGlfw_RestoreContext();
@@ -688,14 +690,10 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
-                
-#ifndef __APPLE__
-                // ADDED IN OFXLASER TO OVERCOME SCREEN SCALING ON WINDOWS ISSUES
-                mouse_x/=io.DisplayFramebufferScale.x;
-                mouse_y/=io.DisplayFramebufferScale.y;
-#endif
-                
+                // OK SO THIS CODE ONLY RUNS WHEN THE MOUSE IS OUTSIDE THE WINDOW! 
+
                 bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
+            
                 io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
             }
         }
