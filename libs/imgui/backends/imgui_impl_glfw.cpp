@@ -452,6 +452,7 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
+    // COMMENTING OUT as it conflicts with manual mouse position setting
     io.AddMousePosEvent((float)x, (float)y);
     bd->LastValidMousePos = ImVec2((float)x, (float)y);
     ImGui_ImplGlfw_RestoreContext();
@@ -687,6 +688,13 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
+                
+#ifndef __APPLE__
+                // ADDED IN OFXLASER TO OVERCOME SCREEN SCALING ON WINDOWS ISSUES
+                mouse_x/=io.DisplayFramebufferScale.x;
+                mouse_y/=io.DisplayFramebufferScale.y;
+#endif
+                
                 bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
                 io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
             }
@@ -850,7 +858,8 @@ void ImGui_ImplGlfw_NewFrame()
     
     
     //*********************************************************************************************
-    //io.DisplayFramebufferScale = ImVec2(1.2,1.2);
+//    io.DisplaySize = ImVec2((float)w/1.2, (float)h/1.2);
+//    io.DisplayFramebufferScale = ImVec2(1.2,1.2);
     
     
     if (bd->WantUpdateMonitors)

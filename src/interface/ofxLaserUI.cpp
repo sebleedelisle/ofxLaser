@@ -40,7 +40,7 @@ void UI::setupGui() {
        
     }
     
-    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange, true );
+    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange , true, true );
 //
     ImGuiIO& io = ImGui::GetIO();
     
@@ -1224,7 +1224,8 @@ void UI::extraLargeItemEnd() {
     }
 }
 bool UI::updateMouse(ofMouseEventArgs &e) {
-    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
     //ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
     return false; // propagate events
 }
@@ -1235,7 +1236,9 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
     else if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
     
     ImGuiIO& io =ImGui::GetIO();
-    io.MousePos = ImVec2((float)e.x, (float)e.y);
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
+    //io.MousePos = ImVec2((float)e.x, (float)e.y);
     io.MouseDown[iobutton] = true;
     //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
     if(io.WantCaptureMouse) {
@@ -1251,7 +1254,9 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
 bool UI::mouseReleased(ofMouseEventArgs &e) {
     int iobutton = e.button;
     if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
-    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
     ImGui::GetIO().MouseDown[iobutton] = false;
     if(ImGui::GetIO().WantCaptureMouse) return true;
     else return false;
