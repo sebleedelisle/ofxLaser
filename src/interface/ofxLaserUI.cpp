@@ -53,11 +53,13 @@ void UI::setupGui() {
     io.IniFilename = buffer;
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
+
+
+
     font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
     font->FontSize+=10;
     
     imGuiOfx.setDefaultFont(font);
-    //io.FontGlobalScale  = 0.5f;
     
 
     //symbolFont->
@@ -82,6 +84,15 @@ void UI::setupGui() {
     ImGui::GetStyle().ItemSpacing = ImVec2(8.0f,5.0f);
     ImGui::GetStyle().ItemInnerSpacing = ImVec2(6.0f,6.0f);
     ImGui::GetStyle().WindowMinSize = ImVec2(10.0f,10.0f);
+
+#ifndef TARGET_OSX
+    float scale = GlobalScale::getScale(); 
+    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+    ImGui::GetStyle().ScaleAllSizes(scale);
+    io.FontGlobalScale = scale; 
+
+#endif
+
     
     ImGui::CreateContext();
 
@@ -110,11 +121,16 @@ void UI::updateGui() {
     io.DeltaTime = ofGetLastFrameTime();
     
     // Update settings
-    // todo make dependent of OS
+
 #ifdef TARGET_OSX
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
 #else
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+    //io.DisplayFramebufferScale = { 3,3 };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+   /* if (ImGui::GetIO().FontGlobalScale != GlobalScale::getScale()) {
+
+        (ImGui::GetIO().FontGlobalScale = GlobalScale::getScale()); 
+    } */
 #endif
 }
 

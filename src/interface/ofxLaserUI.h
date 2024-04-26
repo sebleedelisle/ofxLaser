@@ -14,6 +14,7 @@
 #include <imgui_internal.h>
 #include "IconsForkAwesome.h"
 #include "ForkAwesome.cpp"
+#include "GlobalScale.h"
 
 namespace ofxLaser {
 

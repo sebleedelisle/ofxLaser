@@ -50,7 +50,12 @@ namespace ofxImGui
 	public:
 		~EngineGLFW()
 		{
-			exit();
+			try {
+				exit();
+			}
+			catch (...) {
+				// pfff
+			} 
 		}
 
 		// BaseEngine required
