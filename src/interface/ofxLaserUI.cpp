@@ -133,11 +133,7 @@ void UI::updateGui() {
     } */
 #endif
     
-    //ImVec2 previousscale =io.DisplayFramebufferScale;
-    float scale = GlobalScale::getScale();
-    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
-    
-    //ofLogNotice("io.DisplayFramebufferScale before ") << previousscale << " after " << io.DisplayFramebufferScale;
+   
     
     
     
@@ -147,12 +143,17 @@ void UI::updateGui() {
 }
 
 void UI::startGui() {
+    //ImVec2 previousscale =io.DisplayFramebufferScale;
+    int w = ofGetWidth();
+    int h = ofGetHeight();
     
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().DisplaySize = ImVec2((float)w/scale, (float)h/scale);
+    ImGui::GetIO().DisplayFramebufferScale = { scale, scale };
+  
+    //ofLogNotice("io.DisplayFramebufferScale before ") << previousscale << " after " << io.DisplayFramebufferScale;
     imGuiOfx.begin();
-//    ImGui::NewFrame();
-    
-    //ImGui::ShowStyleEditor() ;
-    //ImGui::ShowDemoWindow();
+
     
   
 }

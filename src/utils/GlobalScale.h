@@ -14,7 +14,7 @@ class GlobalScale {
     
     static float getScale() {
 
-        
+        //return 1.2;
         ofAppGLFWWindow* glfwWindow = ((ofAppGLFWWindow*)(ofGetWindowPtr()));
         float tmpxscale, tmpyscale;
         glfwGetWindowContentScale(glfwWindow->getGLFWWindow(), &tmpxscale, &tmpyscale);
