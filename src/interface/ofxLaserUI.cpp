@@ -85,13 +85,13 @@ void UI::setupGui() {
     ImGui::GetStyle().ItemInnerSpacing = ImVec2(6.0f,6.0f);
     ImGui::GetStyle().WindowMinSize = ImVec2(10.0f,10.0f);
 
-#ifndef TARGET_OSX
-    float scale = GlobalScale::getScale(); 
-    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
-    ImGui::GetStyle().ScaleAllSizes(scale);
-    io.FontGlobalScale = scale; 
-
-#endif
+//#ifndef TARGET_OSX
+//    float scale = GlobalScale::getScale(); 
+//    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+//    ImGui::GetStyle().ScaleAllSizes(scale);
+//    io.FontGlobalScale = scale; 
+//
+//#endif
 
     
     ImGui::CreateContext();
@@ -132,6 +132,18 @@ void UI::updateGui() {
         (ImGui::GetIO().FontGlobalScale = GlobalScale::getScale()); 
     } */
 #endif
+    
+    //ImVec2 previousscale =io.DisplayFramebufferScale;
+    float scale = GlobalScale::getScale();
+    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+    
+    //ofLogNotice("io.DisplayFramebufferScale before ") << previousscale << " after " << io.DisplayFramebufferScale;
+    
+    
+    
+    //ImGui::GetStyle().ScaleAllSizes(scale);
+    //io.FontGlobalScale = scale;
+    
 }
 
 void UI::startGui() {
