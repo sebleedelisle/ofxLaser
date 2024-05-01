@@ -56,23 +56,36 @@ void UI::setupGui() {
 
 
 
-    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
-    font->FontSize+=10;
-    
-    imGuiOfx.setDefaultFont(font);
+      
+  
     
 
     //symbolFont->
-    ImFontConfig config;
-    config.MergeMode = true;
-    config.GlyphMinAdvanceX = 13;
+    ImFontConfig mergeConfig;
+    mergeConfig.MergeMode = true;
+    mergeConfig.GlyphMinAdvanceX = 13;
+    mergeConfig.OversampleH = 4;
+    mergeConfig.OversampleV = 4;
+    
+    ImFontConfig oversampleConfig;
+    oversampleConfig.OversampleH = 4;
+    oversampleConfig.OversampleV = 4;
+    
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
-
-    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,16, &config, icon_ranges);
-    largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,18, &config, icon_ranges);
+    
+    // merges the symbol font into the default font
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 13, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the medium font
+    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 16, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the large font
+    largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 24, &mergeConfig, icon_ranges);
+    
+    imGuiOfx.setDefaultFont(font);
 
     ImGui::StyleColorsDark();
 

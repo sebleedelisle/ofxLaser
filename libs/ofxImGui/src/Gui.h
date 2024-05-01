@@ -28,6 +28,7 @@ namespace ofxImGui
 		void exit();
 
         void setSharedMode(bool _sharedMode=true);
+        
         bool isInSharedMode() const;
 
 		void begin();
