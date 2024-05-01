@@ -1236,10 +1236,12 @@ void UI::extraLargeItemEnd() {
         largeItemActive = false;
     }
 }
+
+/*
 bool UI::updateMouse(ofMouseEventArgs &e) {
-    float scale = GlobalScale::getScale();
-    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
-    //ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
+    float scale =  GlobalScale::getScale();
+    ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+    ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y)) << " " << scale;
     return false; // propagate events
 }
 bool UI::mousePressed(ofMouseEventArgs &e) {
@@ -1249,8 +1251,8 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
     else if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
     
     ImGuiIO& io =ImGui::GetIO();
-    float scale = GlobalScale::getScale();
-    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
+    float scale =  GlobalScale::getScale();
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
     //io.MousePos = ImVec2((float)e.x, (float)e.y);
     io.MouseDown[iobutton] = true;
     //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
@@ -1267,13 +1269,15 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
 bool UI::mouseReleased(ofMouseEventArgs &e) {
     int iobutton = e.button;
     if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
-    float scale = GlobalScale::getScale();
-    ImGui::GetIO().MousePos = ImVec2((float)e.x*scale, (float)e.y*scale);
+    float scale =  GlobalScale::getScale();
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
     //ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
     ImGui::GetIO().MouseDown[iobutton] = false;
     if(ImGui::GetIO().WantCaptureMouse) return true;
     else return false;
 }
+
+*/
 bool UI::keyPressed(ofKeyEventArgs &e) {
    // ImGui::GetIO().KeysDown[e.key] = true;
     
