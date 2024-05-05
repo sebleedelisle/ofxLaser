@@ -452,8 +452,13 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
+    
+    // not quite sure why but for some reason we don't need this on OSX *shrug*
+#ifndef TARGET_OSX
+    
     x /= io.DisplayFramebufferScale.x;
     y /= io.DisplayFramebufferScale.y;
+#endif
 
     io.AddMousePosEvent((float)x, (float)y);
     bd->LastValidMousePos = ImVec2((float)x, (float)y);
