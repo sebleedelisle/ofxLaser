@@ -452,6 +452,14 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
+    
+    // not quite sure why but for some reason we don't need this on OSX *shrug*
+#ifndef TARGET_OSX
+    
+    x /= io.DisplayFramebufferScale.x;
+    y /= io.DisplayFramebufferScale.y;
+#endif
+
     io.AddMousePosEvent((float)x, (float)y);
     bd->LastValidMousePos = ImVec2((float)x, (float)y);
     ImGui_ImplGlfw_RestoreContext();
@@ -687,7 +695,10 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
+                // OK SO THIS CODE ONLY RUNS WHEN THE MOUSE IS OUTSIDE THE WINDOW! 
+
                 bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
+            
                 io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
             }
         }
@@ -844,9 +855,16 @@ void ImGui_ImplGlfw_NewFrame()
     int display_w, display_h;
     glfwGetWindowSize(bd->Window, &w, &h);
     glfwGetFramebufferSize(bd->Window, &display_w, &display_h);
-    io.DisplaySize = ImVec2((float)w, (float)h);
-    if (w > 0 && h > 0)
-        io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
+    //io.DisplaySize = ImVec2((float)w, (float)h);
+    //if (w > 0 && h > 0)
+        //io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
+    
+    
+    //*********************************************************************************************
+//    io.DisplaySize = ImVec2((float)w/1.2, (float)h/1.2);
+//    io.DisplayFramebufferScale = ImVec2(1.2,1.2);
+    
+    
     if (bd->WantUpdateMonitors)
         ImGui_ImplGlfw_UpdateMonitors();
 

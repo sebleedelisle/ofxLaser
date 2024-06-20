@@ -90,6 +90,7 @@ void ManagerBase ::resetAllLasersToDefault() {
         deleteLaser(lasers[0]);
     }
     beamZoneContainer.clearZones();
+    canvasTarget.clearZones();
     
     for(int lasernum = 0; lasernum<numlasers; lasernum++) {
         createAndAddLaser();
@@ -98,6 +99,8 @@ void ManagerBase ::resetAllLasersToDefault() {
         //getLaser(lasernum).dacLabel = dacLabels[lasernum];
         dacAssigner.assignToLaser(dacLabels[lasernum], getLaser(lasernum));
     }
+    setCanvasSize(800,800);
+    createDefaultCanvasZone();
     
     saveSettings();
     //outputZone
@@ -806,6 +809,7 @@ void ManagerBase :: serialize(ofJson& json) {
     ofSerialize(jsonLaserSettings, params);
 
     beamZoneContainer.serialize(jsonLaserSettings["beamzones"]);
+    canvasTarget.serialize(jsonLaserSettings["canvas"]);
 
     ofJson& jsonLasers = json["lasers"];
     for(size_t i= 0; i<lasers.size(); i++) {
@@ -821,8 +825,8 @@ bool ManagerBase::deserialize(ofJson& json) {
     //cout << json.dump(3) << endl;
     
     ofDeserialize(json, params);
-    if((json.contains("canvaswidth")) && (json.contains("canvasheight"))){
-
+    if(json.contains("canvas")) {
+        canvasTarget.deserialize(json["canvas"]);
     }
 
     if(!beamZoneContainer.deserialize(json["beamzones"])) {

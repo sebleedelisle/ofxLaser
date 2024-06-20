@@ -32,7 +32,7 @@
 #include "ofxLaserDacData.h"
 #include "ofxLaserDacManagerBase.h"
 #include "ofxLaserDacManagerLaserdock.h"
-#include "ofxLaserDacManagerLaserDockNet.h"
+//#include "ofxLaserDacManagerLaserDockNet.h"
 #include "ofxLaserDacManagerEtherDream.h"
 #include "ofxLaserDacManagerHelios.h"
 #include "ofxLaserDacAliasManager.h"

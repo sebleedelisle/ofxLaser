@@ -40,7 +40,7 @@ void UI::setupGui() {
        
     }
     
-    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange, true );
+    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange , true, true );
 //
     ImGuiIO& io = ImGui::GetIO();
     
@@ -53,24 +53,39 @@ void UI::setupGui() {
     io.IniFilename = buffer;
     //ImGui::LoadIniSettingsFromDisk(io.IniFilename);
     
-    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13);
-    font->FontSize+=10;
-    
-    imGuiOfx.setDefaultFont(font);
-    //io.FontGlobalScale  = 0.5f;
+
+
+
+      
+  
     
 
     //symbolFont->
-    ImFontConfig config;
-    config.MergeMode = true;
-    config.GlyphMinAdvanceX = 13;
+    ImFontConfig mergeConfig;
+    mergeConfig.MergeMode = true;
+    mergeConfig.GlyphMinAdvanceX = 13;
+    mergeConfig.OversampleH = 4;
+    mergeConfig.OversampleV = 4;
+    
+    ImFontConfig oversampleConfig;
+    oversampleConfig.OversampleH = 4;
+    oversampleConfig.OversampleV = 4;
+    
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,13, &config, icon_ranges);
-
-    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16);
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,16, &config, icon_ranges);
-    largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24);
-    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size,18, &config, icon_ranges);
+    
+    // merges the symbol font into the default font
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 13, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the medium font
+    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 16, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the large font
+    largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 24, &mergeConfig, icon_ranges);
+    
+    imGuiOfx.setDefaultFont(font);
 
     ImGui::StyleColorsDark();
 
@@ -82,6 +97,15 @@ void UI::setupGui() {
     ImGui::GetStyle().ItemSpacing = ImVec2(8.0f,5.0f);
     ImGui::GetStyle().ItemInnerSpacing = ImVec2(6.0f,6.0f);
     ImGui::GetStyle().WindowMinSize = ImVec2(10.0f,10.0f);
+
+//#ifndef TARGET_OSX
+//    float scale = GlobalScale::getScale(); 
+//    io.DisplayFramebufferScale = { scale, scale };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+//    ImGui::GetStyle().ScaleAllSizes(scale);
+//    io.FontGlobalScale = scale; 
+//
+//#endif
+
     
     ImGui::CreateContext();
 
@@ -110,21 +134,39 @@ void UI::updateGui() {
     io.DeltaTime = ofGetLastFrameTime();
     
     // Update settings
-    // todo make dependent of OS
+
 #ifdef TARGET_OSX
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
 #else
-    ImGui::GetIO().KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+    //io.DisplayFramebufferScale = { 3,3 };// ImVec2(GlobalScale::getScale(), GlobalScale::getScale());
+   /* if (ImGui::GetIO().FontGlobalScale != GlobalScale::getScale()) {
+
+        (ImGui::GetIO().FontGlobalScale = GlobalScale::getScale()); 
+    } */
 #endif
+    
+   
+    
+    
+    
+    //ImGui::GetStyle().ScaleAllSizes(scale);
+    //io.FontGlobalScale = scale;
+    
 }
 
 void UI::startGui() {
+    //ImVec2 previousscale =io.DisplayFramebufferScale;
+    int w = ofGetWidth();
+    int h = ofGetHeight();
     
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().DisplaySize = ImVec2((float)w/scale, (float)h/scale);
+    ImGui::GetIO().DisplayFramebufferScale = { scale, scale };
+  
+    //ofLogNotice("io.DisplayFramebufferScale before ") << previousscale << " after " << io.DisplayFramebufferScale;
     imGuiOfx.begin();
-//    ImGui::NewFrame();
-    
-    //ImGui::ShowStyleEditor() ;
-    //ImGui::ShowDemoWindow();
+
     
   
 }
@@ -1194,9 +1236,12 @@ void UI::extraLargeItemEnd() {
         largeItemActive = false;
     }
 }
+
+/*
 bool UI::updateMouse(ofMouseEventArgs &e) {
-    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
-    //ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y));
+    float scale =  GlobalScale::getScale();
+    ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+    ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y)) << " " << scale;
     return false; // propagate events
 }
 bool UI::mousePressed(ofMouseEventArgs &e) {
@@ -1206,7 +1251,9 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
     else if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
     
     ImGuiIO& io =ImGui::GetIO();
-    io.MousePos = ImVec2((float)e.x, (float)e.y);
+    float scale =  GlobalScale::getScale();
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+    //io.MousePos = ImVec2((float)e.x, (float)e.y);
     io.MouseDown[iobutton] = true;
     //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
     if(io.WantCaptureMouse) {
@@ -1222,11 +1269,15 @@ bool UI::mousePressed(ofMouseEventArgs &e) {
 bool UI::mouseReleased(ofMouseEventArgs &e) {
     int iobutton = e.button;
     if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
-    ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+    float scale =  GlobalScale::getScale();
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+    //ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
     ImGui::GetIO().MouseDown[iobutton] = false;
     if(ImGui::GetIO().WantCaptureMouse) return true;
     else return false;
 }
+
+*/
 bool UI::keyPressed(ofKeyEventArgs &e) {
    // ImGui::GetIO().KeysDown[e.key] = true;
     

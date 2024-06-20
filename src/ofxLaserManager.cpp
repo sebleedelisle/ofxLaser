@@ -773,7 +773,7 @@ void Manager::drawLaserGui() {
 #ifdef TARGET_OSX
     bool commandPressed = ofGetKeyPressed(OF_KEY_COMMAND);
 #else
-    bool commandPressed = = ofGetKeyPressed(OF_KEY_COMMAND);
+    bool commandPressed = ofGetKeyPressed(OF_KEY_CONTROL);
 #endif
     
     guiMenuBar();
@@ -2403,7 +2403,7 @@ bool Manager :: guiDeleteLaserButtonAndPopup(Laser* laser, int index) {
 #ifdef TARGET_OSX
     bool commandPressed = ofGetKeyPressed(OF_KEY_COMMAND);
 #else
-    bool commandPressed = = ofGetKeyPressed(OF_KEY_COMMAND);
+    bool commandPressed = ofGetKeyPressed(OF_KEY_CONTROL);
 #endif
     
     string label ="Delete Laser "+ofToString(index+1)+"?";

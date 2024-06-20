@@ -211,7 +211,7 @@ namespace ofxImGui
             //ImGui_ImplOpenGL2_DestroyDeviceObjects(); // Called below
             ImGui_ImplOpenGL2_Shutdown();
         }
-        ImGui_ImplGlfw_Shutdown();
+        //ImGui_ImplGlfw_Shutdown();
 
 		isSetup = false;
 	}

@@ -21,7 +21,13 @@ namespace ofxImGui
 	//--------------------------------------------------------------
 	Gui::~Gui()
 	{
-		exit();
+    /*    try {
+            exit();
+        }
+        catch (...) {
+            ofLogError("Gui destructor - error closing");
+        } */
+
 	}
 
 	//--------------------------------------------------------------
@@ -142,48 +148,53 @@ namespace ofxImGui
 	//--------------------------------------------------------------
 	void Gui::exit()
 	{
-        // Unregister the afterDraw() callback (if used)
-        listener.unsubscribe();
+        try {
+            // Unregister the afterDraw() callback (if used)
+            listener.unsubscribe();
 
-        // Exit engine
-        if(ownedContext){
-            ImGui::SetCurrentContext(context);
-            engine.exit();
-        }
+            // Exit engine
+            if (ownedContext) {
+                ImGui::SetCurrentContext(context);
+                engine.exit();
+            }
 
-        // Theme
-		if (theme)
-		{
-			delete theme;
-			theme = nullptr;
-		}
-
-        // Textures
-		for (size_t i = 0; i < loadedTextures.size(); i++)
-		{
-            if(loadedTextures[i])
+            // Theme
+            if (theme)
             {
-                delete loadedTextures[i];
-                loadedTextures[i] = NULL;
-            }
-		}
-		loadedTextures.clear();
-
-        // Destroy context
-        if(ownedContext){
-            auto it = imguiContexts.begin();
-            while( it != imguiContexts.end() && it->second != context ) it++;
-            if( it != imguiContexts.end() ) imguiContexts.erase(it);
-
-            auto frameEntry = isRenderingFrame.find(context);
-            if( frameEntry != isRenderingFrame.end()){
-                isRenderingFrame.erase(frameEntry);
+                delete theme;
+                theme = nullptr;
             }
 
-            ImGui::DestroyContext(context);
-            ownedContext = false;
+            // Textures
+            for (size_t i = 0; i < loadedTextures.size(); i++)
+            {
+                if (loadedTextures[i])
+                {
+                    delete loadedTextures[i];
+                    loadedTextures[i] = NULL;
+                }
+            }
+            loadedTextures.clear();
+
+            // Destroy context
+            if (ownedContext) {
+                auto it = imguiContexts.begin();
+                while (it != imguiContexts.end() && it->second != context) it++;
+                if (it != imguiContexts.end()) imguiContexts.erase(it);
+
+                auto frameEntry = isRenderingFrame.find(context);
+                if (frameEntry != isRenderingFrame.end()) {
+                    isRenderingFrame.erase(frameEntry);
+                }
+
+                ImGui::DestroyContext(context);
+                ownedContext = false;
+            }
+            context = nullptr;
         }
-        context = nullptr;
+        catch (...) {
+            // who cares, we're exiting :D 
+        } 
 		
 	}
 
