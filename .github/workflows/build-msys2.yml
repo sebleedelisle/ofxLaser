@@ -1,0 +1,67 @@
+name: build-msys2
+
+# make the action not run on the local repo if the branch is also in a pull request to OF/OF
+on: [push]
+
+env:
+  ccache: ccache
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-msys2:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        msystem:
+        - mingw64
+        # - ucrt64
+    # defaults:
+    #   run:
+    #     shell: msys2 {0}
+    steps:
+    - name: checkout openframeworks
+      uses: actions/checkout@v4
+      with:
+        repository: openframeworks/openFrameworks
+    # now we add in ofxLaser as addon
+    - name: checkout ofxLaser
+      uses: actions/checkout@v4
+      with:
+        path: ${{ github.workspace }}/addons/ofxLaser
+    # and here we replace the empty example with the hello laser example
+    - name: remove emptyExample
+      run: rm -r ${{ github.workspace }}/examples/templates/emptyExample
+    - name: replace emptyExample with example_HelloLaser
+      run: cp -r ${{ github.workspace }}/addons/ofxLaser/example_HelloLaser ${{ github.workspace }}/examples/templates/emptyExample
+
+    # continue openframeworks defined pipeline    
+    - name: ccache
+      uses: hendrikmuhs/ccache-action@v1.2.12
+      with:
+        # key: ${{ matrix.os }}-${{ matrix.type }}
+        key: ${{ matrix.msystem }}
+    - uses: msys2/setup-msys2@v2
+      with:
+        cache: true
+        update: false
+        msystem: ${{matrix.msystem}}
+        pacboy: assimp:p cairo:p curl:p freeglut:p FreeImage:p gcc:p gdb:p glew:p glfw:p glm:p harfbuzz:p libsndfile:p libusb:p libxml2:p mpg123:p nlohmann-json:p ntldd-git:p openal:p opencv:p pkgconf:p pugixml:p rtaudio:p uriparser:p utf8cpp:p zlib:p poco:p
+        # boost:p tools:p
+        # install: >-
+        # unzip
+        # git
+        # rsync
+        # wget
+        
+    - name: Install dependencies
+      run: msys2 ./scripts/ci/msys2/install.sh
+
+    - name: Build
+      run: msys2 ./scripts/ci/msys2/build.sh
+
+    # - name: Run tests
+    #   run: msys2 ./scripts/ci/msys2/run_tests.sh
+

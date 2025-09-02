@@ -1,0 +1,161 @@
+#########################
+# general patterns
+#########################
+
+docs/html
+docs/tagfile.xml
+
+*/bin/*
+!*/bin/data/
+!*/bin/data/svg/
+
+# for bin folder in root
+/bin/*
+!/bin/data/
+
+[Bb]uild/
+[Oo]bj/
+*.o
+[Dd]ebug*/
+[Rr]elease*/
+*.mode*
+*.app/
+*.pyc
+.svn/
+
+#########################
+# IDE
+#########################
+
+# XCode
+*.pbxuser
+*.perspective
+*.perspectivev3
+*.mode1v3
+*.mode2v3
+#XCode 4
+xcuserdata
+*.xcworkspace
+*.xcodeproj
+openFrameworks-Info.plist
+Makefile
+Project.xcconfig
+config.make
+
+
+# Code::Blocks
+*.depend
+*.layout
+*.cbTemp
+
+# Visual Studio
+*.sdf
+*.opensdf
+*.suo
+*.pdb
+*.ilk
+*.aps
+ipch/
+
+# Eclipse
+.metadata
+local.properties
+.externalToolBuilders
+
+# Codelite
+*.session
+*.tags
+*.workspace.*
+
+#########################
+# operating system
+#########################
+
+# Linux
+*~
+# KDE
+.directory
+.AppleDouble
+
+# OSX
+.DS_Store
+*.swp
+*~.nib
+# Thumbnails
+._*
+
+# Windows
+# Windows image file caches
+Thumbs.db
+# Folder config file
+Desktop.ini
+
+#Android
+.csettings
+
+#########################
+# packages
+#########################
+
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+*.sln
+*.db
+*.vcxproj
+*.opendb
+*.filters
+*.user
+*.rc
+/example_SVGLoad/bin/data/svgs/fake_love_heart_original.svg
+<<<<<<< HEAD
+/example_SVGLoad/bin/data/laserSettings.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/Projector1.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/laserSettings.xml
+/example_HelloLaser/bin/data/Zone1.xml
+/example_SVGLoad/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/dacIP.txt
+=======
+/example_SVGLoad/bin/data/dacIP.txt
+/example_SVGLoad/bin/data/Zone1.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_SVGLoad/bin/data/WarpProjectorProjector1Zone0.xml
+/example_HelloLaser/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_HelloLaser/bin/data/_1
+/example_HelloLaser/bin/data/1
+/example_HelloLaser/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/LaserMask.png
+/example_SVGLoad/bin/data/Projector1.xml
+/example_SVGLoad/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/Projector1.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0.xml
+/example_IDNTest/bin/data/laserSettings.xml
+/example_HelloLaser/bin/data/laserSettings.xml
+/example_IDNTest/bin/data/WarpProjectorProjector1Zone0-Points.xml
+/example_HelloLaser/bin/data/Zone1.xml
+>>>>>>> e29d3c15d7cde8a71e3e3d860f1cec479481a2aa
+/example_SVGLoad/bin/data/WarpProjector1Zone1-Points.xml
+/example_SVGLoad/bin/data/WarpProjector1Zone1.xml
+/example_MultipleLasers/bin
+/example_SVGLoad/bin
+example_HelloLaser/bin/data/*..json
+*.db-wal
+*.db-shm
+*.json
+*.ofxlg
+/example_HelloLaser/of.entitlements
