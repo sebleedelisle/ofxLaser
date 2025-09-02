@@ -3,13 +3,29 @@
 ofxLaser
 =========
 
-An openFrameworks addon for controlling one or more ILDA lasers, it's particularly good at rendering graphics. It currently works with Etherdream, Helios, Laserdock/LaserCube, but more DACs to be added in the future.
+## About ofxLaser
 
-Comprehensive multi-laser support, limited only by your CPU. 
+ofxLaser is a core library for sending laser frames to supported DACs (Ether Dream, Helios, LaserCube, AVB, etc).  
+It provides the **low-level building blocks** for laser output: connection management, point optimisation, colour correction, and zone handling.
 
-[![Seb Lee showreel](https://github.com/sebleedelisle/ofxLaser/blob/main/video_thumbnail.png?raw=true)](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel")
+This library is intended for developers, educators, and hobbyists who want to experiment with laser control in openFrameworks.  
+It is licensed for **non-commercial use only** (see [LICENSE](LICENSE)).
 
-Every project in the [showreel](https://www.youtube.com/watch?v=l2lMqerYE78 "ofxLaser showreel") was made with ofxLaser and openFrameworks. 
+---
+
+## Looking for complete show software?
+
+If you need a full professional environment for designing and running shows, check out **[Liberation](https://liberationlaser.com)**.  
+
+Liberation is built on the same foundation as ofxLaser, but adds:
+
+- A 3D visualiser and advanced editing tools
+- Powerful node editing tool for creating laser graphics and beam effects
+- Clip deck, timeline, and FX systems  
+- MIDI/DMX/Art-Net integration  
+- Professional support and reliability  
+
+Liberation is the **polished, supported application**, while ofxLaser remains a lean toolkit for learning and prototyping.
 
 Safety Notice
 =============
