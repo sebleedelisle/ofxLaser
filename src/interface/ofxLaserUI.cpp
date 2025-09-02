@@ -1,0 +1,1705 @@
+//
+//  ofxLaserUI.cpp
+//  ofxLaser
+//
+//  Created by Seb Lee-Delisle on 23/03/2021.
+//
+
+#include "ofxLaserUI.h"
+
+
+namespace ofxLaser {
+namespace UI {
+
+ofxImGui::Gui imGuiOfx;
+ImFont* font;
+ImFont* mediumFont;
+ImFont* largeFont;
+ImFont* symbolFont;
+
+static bool initialised = false;
+static bool ghosted = false;
+static bool disabled = false;
+static bool secondaryColourActive = false;
+static bool dangerColourActive = false;
+static bool customColourActive = false;
+static bool largeItemActive = false;
+
+static string imguiSavePath;
+
+static ofMesh dashedLineMesh;
+
+void render() {
+    
+    imGuiOfx.end();
+}
+
+
+void setupGui() {
+    
+    if(initialised) {
+        ofLogError("setupGui has been called more than once and it should not be");
+        throw;
+        
+    }
+    
+    imGuiOfx.setup(nullptr, true, ImGuiConfigFlags_NoMouseCursorChange , true, true );
+    
+    ImGuiIO& io = ImGui::GetIO();
+    
+    imguiSavePath = ofToDataPath("ofxLaser/imgui.ini");
+    
+    const std::string::size_type size = imguiSavePath.size();
+    char *buffer = new char[size + 1];   //we need extra char for NUL
+    // bit nasty but hey
+    memcpy(buffer, imguiSavePath.c_str(), size + 1);
+    io.IniFilename = buffer;
+    
+    ImFontConfig mergeConfig;
+    mergeConfig.MergeMode = true;
+    mergeConfig.GlyphMinAdvanceX = 13;
+    mergeConfig.OversampleH = 4;
+    mergeConfig.OversampleV = 4;
+    
+    ImFontConfig oversampleConfig;
+    oversampleConfig.OversampleH = 4;
+    oversampleConfig.OversampleV = 4;
+    
+    static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
+    
+    // merges the symbol font into the default font
+    font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 13, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the medium font
+    mediumFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 16, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 16, &mergeConfig, icon_ranges);
+    
+    // merges the symbol font into the large font
+    largeFont = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoBold_compressed_data, RobotoBold_compressed_size, 24, &oversampleConfig);
+    symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 24, &mergeConfig, icon_ranges);
+    
+    imGuiOfx.setDefaultFont(font);
+    
+    setStyles();
+    
+    ImGui::CreateContext();
+    
+    io.DisplaySize = ImVec2((float)ofGetWidth(), (float)ofGetHeight());
+    io.MouseDrawCursor = false;
+    
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    ImGui::GetIO().ConfigDockingWithShift = true;
+    
+    ImGui::GetIO().MouseDrawCursor = false;
+    
+    io.Fonts->Build();
+    imGuiOfx.engine.updateFontsTexture();
+    //imGuiOfx.engine.
+    //
+    //    // TODO remove on close down ?
+    //    ofEvents().mouseMoved.add(&updateMouse, OF_EVENT_ORDER_BEFORE_APP);
+    //    ofEvents().mouseDragged.add(&updateMouse, OF_EVENT_ORDER_BEFORE_APP);
+    //    ofEvents().mousePressed.add(&mousePressed,OF_EVENT_ORDER_BEFORE_APP);
+    //    ofEvents().mouseReleased.add(&mouseReleased,OF_EVENT_ORDER_BEFORE_APP);
+    //    ofEvents().keyPressed.add(&keyPressed,OF_EVENT_ORDER_BEFORE_APP);
+    //    ofEvents().keyReleased.add(&keyReleased,OF_EVENT_ORDER_BEFORE_APP);
+}
+
+void updateGui() {
+    ImGuiIO& io = ImGui::GetIO();
+    io.DeltaTime = ofGetLastFrameTime();
+
+#ifdef TARGET_OSX
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
+#else
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+
+#endif
+
+    
+}
+
+void startGui() {
+    //ImVec2 previousscale =io.DisplayFramebufferScale;
+    int w = ofGetWidth();
+    int h = ofGetHeight();
+    
+    float scale = GlobalScale::getScale();
+    ImGui::GetIO().DisplaySize = ImVec2((float)w/scale, (float)h/scale);
+    ImGui::GetIO().DisplayFramebufferScale = { scale, scale };
+    
+    //ofLogNotice("io.DisplayFramebufferScale before ") << previousscale << " after " << io.DisplayFramebufferScale;
+    imGuiOfx.begin();
+    
+    ofxLaser::UI::RenderConfirmationPopup(); 
+    
+}
+
+//
+//void endGui() {
+//
+//    imGuiOfx.end();
+////    ImGui::NewFrame();
+//
+//    //ImGui::ShowStyleEditor() ;
+//   // ImGui::ShowDemoWindow();
+//
+//
+//}
+
+template <typename T>
+bool resetButton(T& param, T& resetParam){
+    static_assert(std::is_base_of<ofAbstractParameter, T>::value, "T must derive from ofAbstractParameter");
+    
+    if(param.get()!=resetParam.get()) {
+        
+        string label = param.getName();
+        if(param.getFirstParent()) label = label+param.getFirstParent().getName();
+        
+        if(resetButton(label)) {
+            param.set(resetParam);
+            return true;
+        }
+    }
+    return false;
+    
+}
+template <typename T, typename T2>
+bool resetButton(T& param, T2 resetValue){
+    static_assert(std::is_base_of<ofAbstractParameter, T>::value, "T must derive from ofAbstractParameter");
+    
+    if(param.get()!=resetValue) {
+        
+        string label = param.getName();
+        if(param.getFirstParent()) label = label+param.getFirstParent().getName();
+        
+        if(resetButton(label)) {
+            param.set(resetValue);
+            return true;
+        }
+    }
+    return false;
+    
+}
+
+
+bool addIntSlider(string label, int& target, int min, int max){
+    return ImGui::SliderInt(label.c_str(), (int*)&target, min, max, "%d");;
+}
+bool addFloatSlider(string label, float& target, float min, float max, const char* format, ImGuiSliderFlags flags) {
+    bool changed =  ImGui::SliderFloat(label.c_str(), &target, min, max, format, flags);
+    ImGui::SetItemUsingMouseWheel();
+    if( ImGui::IsItemHovered() ) {
+        float wheel = ImGui::GetIO().MouseWheel;
+        if( wheel )
+        {
+            if( ImGui::IsItemActive() )
+            {
+                ImGui::ClearActiveID();
+            }
+            else
+            {
+                target += (wheel/4) * 0.1;
+                changed = true;
+            }
+        }
+    }
+    return changed;
+}
+bool addFloat2Slider(string label, glm::vec2& target, glm::vec2 min, glm::vec2 max, const char* format, ImGuiSliderFlags flags){
+    return ImGui::SliderFloat2(label.c_str(), glm::value_ptr(target), min.x, max.x, format, flags);
+    
+}
+bool addFloat3Slider(string label, glm::vec3& target, glm::vec3 min, glm::vec3 max,  const char* format, ImGuiSliderFlags flags){
+    //float speed = (max.x-min.x)/100;
+    return ImGui::SliderFloat3(label.c_str(), glm::value_ptr(target), min.x, max.x, format, flags);
+}
+bool addFloatDrag(string label, float& target, float speed, float min, float max, const char* format) {
+    return ImGui::DragFloat(label.c_str(), &target, speed, min, max, format);
+}
+bool addIntDrag(string label, int& target, float speed, float min, float max, const char* format) {
+    return ImGui::DragInt(label.c_str(), &target, speed, min, max, format);
+}
+
+bool addIntDragSmall(string label, int& target, float speed, float min, float max, const char* format) {
+    string templabel = "##" + label;
+    //ImGui::SetNextItemWidth(40);
+    bool returnvalue = ImGui::DragInt(templabel.c_str(), &target, speed, min, max, format);
+    addDelayedHover(ofSplitString(label, "##")[0]);
+    return returnvalue;
+}
+
+bool addFloat2Drag(string label, glm::vec2& target, float speed, glm::vec2 min, glm::vec2 max, const char* format) {
+    return ImGui::DragFloat2(label.c_str(), glm::value_ptr(target), speed, min.x, max.x, format);
+}
+bool addFloat3Drag(string label, glm::vec3& target, float speed, glm::vec3 min, glm::vec3 max, const char* format) {
+    return ImGui::DragFloat3(label.c_str(), glm::value_ptr(target), speed, min.x, max.x, format);
+}
+bool addResettableFloatSlider(string label, float& target, float resetValue, float min, float max, string tooltip, const char* format, ImGuiSliderFlags flags){
+    
+    bool returnvalue = addFloatSlider(label, target, min, max, format,  flags);
+    if(tooltip!="") toolTip(tooltip);
+    
+    if(target!=resetValue) {
+        
+        if(resetButton(label)) {
+            target = resetValue;
+            returnvalue = true;
+        }
+    }
+    return returnvalue;
+}
+
+bool addFloatAsIntPercentage(string label, float& target, float min, float max) {
+    float multiplier = 100.0f;
+    int value = target*multiplier;
+    if (ImGui::SliderInt(label.c_str(), &value, min*multiplier, max*multiplier, "%d%%")) {
+        target =ofClamp((float)value/multiplier,min,max);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool addResettableFloatAsIntPercentage(string label, float& target, float resetvalue, float min, float max) {
+    
+    bool changed =addFloatAsIntPercentage(label, target, min, max);
+    
+    if((target!=resetvalue) && (resetButton(label))) {
+        target = resetvalue;
+        changed = true;
+    }
+    return changed;
+}
+
+
+// ofParameter versions
+
+bool addIntSlider(ofParameter<int>& param, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    int value = param.get();
+    
+    if(addIntSlider(label, value, param.getMin(), param.getMax()) ) {
+        param.set(value);
+        return true;
+    } else {
+        return false;
+    }
+}
+bool addFloatSlider(string label, ofParameter<float>& param, const char* format, ImGuiSliderFlags flags) {
+    
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    float value =param.get();
+    if(addFloatSlider(label, value, param.getMin(), param.getMax(), format, flags)){
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+}
+bool addFloatSlider(ofParameter<float>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
+    string label = param.getName()+labelSuffix;
+    return addFloatSlider(label, param, format, flags );
+    
+}
+bool addFloat2Slider(ofParameter<glm::vec2>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
+    
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    auto tmpRef = param.get();
+    
+    if (ImGui::SliderFloat2(label.c_str(), glm::value_ptr(tmpRef), param.getMin().x, param.getMax().x, format, flags)) {
+        //if (ImGui::InputFloat2(parameter.getName().c_str(), glm::value_ptr(tmpRef), format)) {
+        param.set(tmpRef);
+        return true;
+    }
+    return false;
+}
+bool addFloat3Slider(ofParameter<glm::vec3>& param, const char* format, ImGuiSliderFlags flags, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    glm::vec3 tmp = param.get();
+    if(addFloat3Slider(label, tmp, param.getMin(), param.getMax(), format, flags)){
+        //if (ImGui::SliderFloat3(label.c_str(), glm::value_ptr(tmpRef), parameter.getMin().x, parameter.getMax().x, format, power)) {
+        param.set(tmp);
+        return true;
+    }
+    return false;
+}
+bool addFloatDrag(ofParameter<float>&param, float speed, const char* format, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    float value =param.get();
+    if(ImGui::DragFloat(label.c_str(), &value, speed, param.getMin(), param.getMax(), format)){
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool addIntDrag(ofParameter<int>&param, float speed, const char* format, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    int value =param.get();
+    if(ImGui::DragInt(label.c_str(), &value, speed, param.getMin(), param.getMax(), format)){
+        param.set(ofClamp(value, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+
+bool addFloatAsIntDrag(float&value, float min, float max, float multiplier, float speed, string label) {
+    
+    
+    bool shiftpressed =ofGetKeyPressed(OF_KEY_SHIFT);
+    bool showfloat = shiftpressed;
+    if(floor(value)!=value) showfloat = true;
+    
+    if(addFloatDrag(label, value, shiftpressed? 0.01f : speed, min, max, showfloat? "%.2f" : "%.0f")){
+        
+        if(shiftpressed) {
+        } else {
+            value = roundf(value);
+        }
+        //param.set(ofClamp(value, param.getMin(), param.getMax()));
+        
+        return true;
+    } else {
+        return false;
+    }
+    
+    
+}
+bool addFloatAsIntDrag(ofParameter<float>&param, float multiplier, float speed, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    float value =param.get();
+    bool shiftpressed =ofGetKeyPressed(OF_KEY_SHIFT);
+    bool showfloat = shiftpressed;
+    if(floor(value)!=value) showfloat = true;
+    
+    if(addFloatAsIntDrag(value, param.getMin(), param.getMin(), multiplier, speed, label)){
+        
+        param.set(value);
+        
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+bool addFloat2Drag(ofParameter<glm::vec2>&param, float speed, const char* format, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    auto tmpRef = param.get();
+    if(addFloat2Drag(label, tmpRef, speed, param.getMin(), param.getMax(), format)){
+        param.set(tmpRef);
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool addFloat3Drag(ofParameter<glm::vec3>&param, float speed, const char* format, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    auto tmpRef = param.get();
+    if(addFloat3Drag(label, tmpRef, speed, param.getMin(), param.getMax(), format)){
+        param.set(tmpRef);
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+
+bool addRectDrag(ofParameter<ofRectangle>&param, float speed, const char* format, string labelSuffix) {
+    
+    bool changed = false;
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+parent.getName();
+    
+    ofRectangle tempRect = param.get();
+    glm::vec2 topleft = tempRect.getTopLeft();
+    glm::vec2 area (tempRect.getWidth(), tempRect.getHeight());
+    
+    if(addFloat2Drag(label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
+        
+        changed = true;
+    }
+    label += "area";
+    if(addFloat2Drag(label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+        //param.get().(tmpRef);
+        //param.get().width = (area.x);
+        //param->height = (area.y);
+        changed = true;
+    }
+    if(changed) {
+        tempRect.x = (topleft.x);
+        tempRect.y = (topleft.y);
+        tempRect.width = area.x;
+        tempRect.height = area.y;
+        param.set(tempRect);
+    }
+    
+    return changed;
+}
+
+bool addRectDrag(ofRectangle&rect, float speed, const char* format, string label) {
+    
+    bool changed = false;
+    
+    
+    glm::vec2 topleft = rect.getTopLeft();
+    glm::vec2 area(rect.getWidth(), rect.getHeight());
+    
+    if(addFloat2Drag("Position##"+label, topleft, speed, glm::vec2(-2000,-2000), glm::vec2(2000,2000), format)){
+        
+        changed = true;
+    }
+    //    label += " area";
+    if(addFloat2Drag("Size##"+label, area, speed, glm::vec2(0,0), glm::vec2(2000,2000), format)){
+        //param.get().(tmpRef);
+        //param.get().width = (area.x);
+        //param->height = (area.y);
+        changed = true;
+    }
+    if(changed) {
+        rect.x = (topleft.x);
+        rect.y = (topleft.y);
+        rect.width = area.x;
+        rect.height = area.y;
+    }
+    
+    return changed;
+    
+    
+}
+
+bool addResettableIntSlider(ofParameter<int>& param, int resetParam, string tooltip, string labelSuffix){
+    
+    bool returnvalue = addIntSlider(param, labelSuffix);
+    if(tooltip!="") toolTip(tooltip);
+    
+    return resetButton(param, resetParam) || returnvalue;
+}
+
+
+
+bool addResettableFloatSlider(ofParameter<float>& param, float resetParam, string tooltip, const char* format, ImGuiSliderFlags flags, string labelSuffix){
+    
+    bool returnvalue = addFloatSlider(param, format, flags, labelSuffix);
+    if(tooltip!="") toolTip(tooltip);
+    
+    return resetButton(param, resetParam) || returnvalue;
+}
+bool addResettableFloatDrag(ofParameter<float>& param, float resetParam, float speed, string tooltip, const char* format, string labelSuffix){
+    
+    bool returnvalue = addFloatDrag(param, speed, format, labelSuffix);
+    if(tooltip!="") toolTip(tooltip);
+    
+    return resetButton(param, resetParam) || returnvalue;
+}
+bool addResettableFloat2Drag(ofParameter<glm::vec2>& param, ofParameter<glm::vec2>& resetParam, float speed, string tooltip, const char* format, string labelSuffix){
+    
+    bool returnvalue = addFloat2Drag(param, speed, format, labelSuffix);
+    if(tooltip!="") toolTip(tooltip);
+    
+    return resetButton(param, resetParam) || returnvalue;
+}
+bool addResettableFloat3Drag(ofParameter<glm::vec3>& param, ofParameter<glm::vec3>& resetParam, float speed, string tooltip, const char* format, string labelSuffix){
+    
+    bool returnvalue = addFloat3Drag(param, speed, format, labelSuffix);
+    if(tooltip!="") toolTip(tooltip);
+    
+    return resetButton(param, resetParam) || returnvalue;
+}
+bool addColour(ofParameter<ofFloatColor>& param, bool alpha, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    auto tmpRef = param.get();
+    if (alpha)
+    {
+        if (ImGui::ColorEdit4(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+        {
+            param.set(tmpRef);
+            return true;
+        }
+    }
+    else if (ImGui::ColorEdit3(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+    {
+        param.set(tmpRef);
+        return true;
+    }
+    
+    return false;
+}
+bool addColour(ofParameter<ofColor>& param, bool alpha, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    ofFloatColor tmpRef = param.get();
+    if (alpha)
+    {
+        if (ImGui::ColorEdit4(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+        {
+            param.set(tmpRef);
+            return true;
+        }
+    }
+    else if (ImGui::ColorEdit3(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV))
+    {
+        param.set(tmpRef);
+        return true;
+    }
+    
+    return false;
+}
+
+bool resetButton(string label) {
+    
+    label = ofToString(ICON_FK_UNDO)+"##"+label;
+    ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+    return (ImGui::Button(label.c_str()));
+    
+}
+
+bool addFloatAsIntSlider(string label, ofParameter<float>& param, float multiplier){
+    
+    int value = param*multiplier;
+    if (ImGui::SliderInt(label.c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d")) {
+        param.set(ofClamp((float)value/multiplier, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool addFloatAsIntSlider(ofParameter<float>& param, float multiplier, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    return addFloatAsIntSlider(label, param, multiplier);
+    
+}
+bool addFloatAsIntPercentage(ofParameter<float>& param, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    float multiplier = 100.0f;
+    int value = param*multiplier;
+    if (ImGui::SliderInt(label.c_str(), &value, param.getMin()*multiplier, param.getMax()*multiplier, "%d%%")) {
+        param.set(ofClamp((float)value/multiplier, param.getMin(), param.getMax()));
+        return true;
+    } else {
+        return false;
+    }
+}
+
+
+bool addCheckbox(ofParameter<bool>&param, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    
+    if(ImGui::Checkbox(label.c_str(), (bool*)&param.get())) {
+        param.set(param.get()); // trigger the events
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool addResettableCheckbox(ofParameter<bool>&param, ofParameter<bool>&resetParam, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    bool returnvalue = addCheckbox(param, labelSuffix);
+    if(param!=resetParam) {
+        
+        if(resetButton(label)) {
+            param.set(resetParam);
+            returnvalue = true;
+        }
+    }
+    
+    return returnvalue;
+}
+bool addNumberedCheckbox(int number, ofParameter<bool>&param, string labelSuffix, bool large) {
+    
+    string label = param.getName()+labelSuffix;
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    
+    
+    if(addNumberedCheckBox(number, label.c_str(), (bool*)&param.get(), large)) {
+        param.set(param.get()); // trigger the events
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool addNumberedCheckBox(int number, const string& label, bool* v, bool large, bool dangercolour){
+    return addNumberedCheckBox(number, label.c_str(), v, large,  dangercolour);
+    
+}
+
+
+bool addNumberedCheckBox(int number, const char* label, bool* v, bool large, bool dangercolour){
+    
+    using namespace ImGui;
+    
+    bool useSecondaryColour = *v;
+    
+    
+    ImGuiWindow* window = GetCurrentWindow();
+    if (window->SkipItems)
+        return false;
+    
+    if (useSecondaryColour) {
+        if(dangercolour) dangerColourStart();
+        else secondaryColourStart();
+    }
+    
+    ImGuiContext& g = *GImGui;
+    const ImGuiStyle& style = g.Style;
+    const ImGuiID id = window->GetID(label);
+    const ImVec2 label_size = CalcTextSize(label, NULL, true);
+    
+    const float square_sz = GetFrameHeight();
+    const ImVec2 pos = window->DC.CursorPos;
+    const ImRect total_bb(pos, pos + ImVec2(square_sz + (label_size.x > 0.0f ? style.ItemInnerSpacing.x + label_size.x : 0.0f), label_size.y + style.FramePadding.y * 2.0f));
+    ItemSize(total_bb, style.FramePadding.y);
+    if (!ItemAdd(total_bb, id)) {
+        secondaryColourEnd();
+        dangerColourEnd();
+        return false;
+    }
+    
+    bool hovered, held;
+    bool pressed = ButtonBehavior(total_bb, id, &hovered, &held);
+    if (pressed)
+    {
+        *v = !(*v);
+        MarkItemEdited(id);
+    }
+    
+    const ImRect check_bb(pos, pos + ImVec2(square_sz, square_sz));
+    RenderNavHighlight(total_bb, id);
+    
+    
+    RenderFrame(check_bb.Min, check_bb.Max, GetColorU32((held && hovered) ? ImGuiCol_FrameBgActive : hovered ? ImGuiCol_FrameBgHovered : ImGuiCol_FrameBg), true, style.FrameRounding);
+    
+    
+    //ImU32 check_col = GetColorU32(ImGuiCol_CheckMark);
+    //    if (window->DC.ItemFlags & ImGuiItemFlags_MixedValue)
+    //    {
+    //        // Undocumented tristate/mixed/indeterminate checkbox (#2644)
+    //        ImVec2 pad(ImMax(1.0f, IM_FLOOR(square_sz / 3.6f)), ImMax(1.0f, IM_FLOOR(square_sz / 3.6f)));
+    //        window->DrawList->AddRectFilled(check_bb.Min + pad, check_bb.Max - pad, check_col, style.FrameRounding);
+    //    }
+    //    else if (*v)
+    //    {
+    //        const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
+    //        RenderCheckMark(window->DrawList, check_bb.Min + ImVec2(pad, pad), check_col, square_sz - pad*2.0f);
+    //
+    //    }
+    
+    // BIG NUMBER IN CHECK BOX
+    string numString = ofToString(number).c_str();
+    if(large) ImGui::PushFont(largeFont);
+    //const float pad = ImMax(1.0f, IM_FLOOR(square_sz / 6.0f));
+    ImVec2 textArea   = ImGui::CalcTextSize(numString.c_str());
+    textArea.x*=0.5f;
+    textArea.y*=0.5f;
+    
+    RenderText(check_bb.GetCenter() - (textArea), numString.c_str());
+    if(large) ImGui::PopFont();
+    
+    if (g.LogEnabled)
+        LogRenderedText(&total_bb.Min, *v ? "[x]" : "[ ]");
+    if (label_size.x > 0.0f)
+        RenderText(ImVec2(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y), label);
+    
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, window->DC.ItemFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
+    
+    secondaryColourEnd();
+    dangerColourEnd();
+    
+    return pressed;
+}
+
+
+//bool addParameter(ofAbstractParameter& param) {
+//    //return false;
+//    shared_ptr<ofAbstractParameter> ref = param.newReference();
+//    return addParameter(ref);
+//}
+bool addParameter(ofAbstractParameter& param) {
+    
+    ofAbstractParameter* paramPtr = &param;
+    
+    ofParameterGroup* parameterGroupPtr = dynamic_cast<ofParameterGroup*>(paramPtr);
+    
+    if(parameterGroupPtr) {
+        
+        bool changed = false;
+        for(auto& param : *parameterGroupPtr) {
+            if(addParameter(*param)) changed = true;
+        }
+        return changed;
+    }
+    
+    ofParameter<bool>* parameterBoolPtr = dynamic_cast<ofParameter<bool>*>(paramPtr);
+    if(parameterBoolPtr) {
+        return addCheckbox(*parameterBoolPtr);
+    }
+    
+    ofParameter<float>* parameterFloat = dynamic_cast<ofParameter<float>*>(paramPtr);
+    if(parameterFloat) {
+        return addFloatSlider(*parameterFloat);
+    }
+    
+    ofParameter<int>* parameterInt = dynamic_cast<ofParameter<int>*>(paramPtr);
+    if(parameterInt) {
+        return addIntSlider(*parameterInt);
+    }
+    
+    ofParameter<glm::vec2>* parameterVec2 = dynamic_cast<ofParameter<glm::vec2>*>(paramPtr);
+    if(parameterVec2) {
+        return addFloat2Drag(*parameterVec2);
+    }
+    
+    ofParameter<glm::vec3>* parameterVec3 = dynamic_cast<ofParameter<glm::vec3>*>(paramPtr);
+    if(parameterVec3) {
+        return addFloat3Drag(*parameterVec3);
+    }
+    
+    ofParameter<ofFloatColor>* parameterFloatColour = dynamic_cast<ofParameter<ofFloatColor>*>(paramPtr);
+    if (parameterFloatColour){
+        return addColour(*parameterFloatColour);
+    }
+    
+    ofParameter<ofColor>* parameterColour = dynamic_cast<ofParameter<ofColor>*>(paramPtr);
+    if (parameterColour){
+        return addColour(*parameterColour);
+    }
+    
+    
+    ofParameter<ofRectangle>* parameterRect = dynamic_cast<ofParameter<ofRectangle>*>(paramPtr);
+    if (parameterRect){
+        return addRectDrag(*parameterRect);
+    }
+    
+    ofParameter<string>* parameterString = dynamic_cast<ofParameter<string>*>(paramPtr);
+    if (parameterString){
+        // if(parameterString->getName()=="") {
+        vector<string> lines = ofSplitString(parameterString->get(), "\n");
+        for(string& line : lines) {
+            ImGui::Text("%s", line.c_str());
+        }
+        // } else {
+        //vector<string> lines = ofSplitString(parameterString->get(), "\n");
+        //if(lines.size>1) {
+        //char *buf = *parameterString.get().c_str();
+        // char* str = parameterString->get().c_str();
+        
+        //string inputtext = parameterString->get();
+        //ImGui::InputTextMultiline("Text", &inputtext);
+        
+        //}
+        
+        return true;
+    }
+    // throw error here?
+    return false;
+    
+}
+
+bool addParameterGroup(ofParameterGroup& parameterGroup, bool showTitle){
+    
+    if(showTitle) {
+        ImGui::Separator();
+        if((parameterGroup.getName()!="")) {
+            ImGui::Text("%s", parameterGroup.getName().c_str());
+        }
+        
+    }
+    
+    return addParameter(parameterGroup);
+    //    for(auto& param : parameterGroup) {
+    //        addParameter(param);
+    //
+    //    }
+    //
+}
+
+
+bool addMultiChoiceParam(ofParameter<int>& param, const vector<string>& labels) {
+    
+    string label = param.getName();
+    
+    ImGui::Text("%s", label.c_str());
+    bool changed = false;
+    for(int i = 0; i<labels.size(); i++) {
+        
+        ImGui::SameLine();
+        
+        if(param.get()==i) {
+            secondaryColourStart();
+        }
+        ImGui::PushID(param.getName().c_str());
+        if(ImGui::Button(ofToUpper(labels[i]).c_str())) {
+            param.set(i);
+            changed = true;
+        }
+        ImGui::PopID();
+        secondaryColourEnd();
+        
+    }
+    
+    return changed;
+    
+}
+
+
+bool addMultiChoiceInt(string label, int& param, const vector<string>& labels) {
+    
+    if(label.size()>0) ImGui::Text("%s", label.c_str());
+    
+    bool changed = false;
+    for(int i = 0; i<labels.size(); i++) {
+        
+        ImGui::SameLine();
+        
+        if(param==i) {
+            secondaryColourStart();
+        }
+        string buttonlabel =ofToUpper(labels[i]);
+        if(ImGui::Button(buttonlabel.c_str())) {
+            param =i;
+            changed = true;
+        }
+        
+        secondaryColourEnd();
+        
+    }
+    
+    return changed;
+    
+}
+
+void drawDashedLine(glm::vec2 p1, glm::vec2 p2, float spacing, float scale){
+    drawDashedLine(glm::vec3(p1,0), glm::vec3(p2,0), spacing, scale);
+}
+
+void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing, float scale){
+    
+    dashedLineMesh.clear();
+    
+    float l = glm::length(p2-p1);
+    
+    
+    spacing/=scale;
+    float dotsize = ofGetStyle().lineWidth / scale; // assumes proportional scaling
+    for(float p = 0; p<l; p+=spacing) {
+        dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p,0,l,0,1)));
+        dashedLineMesh.addVertex(glm::mix(p1, p2, ofMap(p+dotsize,0,l,0,1)));
+    }
+    ofPushStyle();
+    ofNoFill();
+    //   ofSetColor(colour);
+    //ofSetLineWidth(5);
+    
+    dashedLineMesh.setMode(OF_PRIMITIVE_LINES);
+    //dashedLineMesh.setMode(OF_PRIMITIVE_POINTS);
+    dashedLineMesh.draw();
+    ofPopStyle();
+    
+}
+
+void startGhosted() {
+    ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+    ghosted = true;
+}
+void stopGhosted() {
+    if(ghosted) {
+        ImGui::PopStyleVar();
+        ghosted = false;
+    }
+}
+
+void startDisabled() {
+    if(!disabled) {
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
+        ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+        disabled = true;
+    }
+}
+void stopDisabled() {
+    if(disabled) {
+        ImGui::PopStyleVar();
+        ImGui::PopItemFlag();
+        disabled = false;
+    }
+}
+bool startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flags, bool resetPosition, bool* openstate) {
+    
+    ImGuiWindowFlags window_flags = flags;
+    window_flags |= ImGuiWindowFlags_NoNav;
+    //      if (no_titlebar)        window_flags |= ImGuiWindowFlags_NoTitleBar;
+    //      if (no_scrollbar)       window_flags |= ImGuiWindowFlags_NoScrollbar;
+    //      if (!no_menu)           window_flags |= ImGuiWindowFlags_MenuBar;
+    //
+    //
+    //      if (no_collapse)        window_flags |= ImGuiWindowFlags_NoCollapse;
+    //      if (no_nav)             window_flags |= ImGuiWindowFlags_NoNav;
+    //      if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground;
+    //      if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
+    //      if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
+    //      if (no_close)           p_open = NULL; // Don't pass our bool* to Begin
+    
+    // set the main window size and position
+    ImGui::SetNextWindowSize(size, ImGuiCond_Once);
+    
+    if(resetPosition) ImGui::SetNextWindowSize(size, ImGuiCond_Always );
+    ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+    
+    // start the main window!
+    return ImGui::Begin(name.c_str(), openstate, window_flags);
+    
+}
+
+void drawRectangle(float x, float y, float w, float h, ofColor colour, bool filled , bool fromCentre, float thickness, float rounding ) {
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ofRectangle rect(x+p.x, y+p.y, w, h);
+    if(fromCentre) rect.setFromCenter(x+p.x, y+p.y, w, h);
+    
+    ImU32 imCol = ofColorToImU32(colour);
+    
+    if(filled) {
+        draw_list->AddRectFilled(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, rounding,  0);
+    } else {
+        draw_list->AddRect(ImVec2(rect.getLeft(), rect.getTop()), ImVec2(rect.getRight(), rect.getBottom()), imCol, rounding,  0, thickness);
+    }
+}
+
+void drawRectangle( ofColor colour, bool filled) {
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 size = ImVec2(15,15);
+    
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    p.x+=0;
+    p.y+=2;
+    
+    ImU32 col = ofColorToImU32(colour);
+    
+    //draw_list->AddCircleFilled(p,radius, col);
+    //ImGui::InvisibleButton("##invisible", ImVec2(radius*2, radius*2) - ImVec2(2,2));
+    if(filled) {
+        draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col);
+    } else {
+        draw_list->AddRect(p, ImVec2(p.x + size.x, p.y + size.y), col);
+    }
+    ImGui::InvisibleButton("##gradient2", size - ImVec2(0,2));
+    
+}
+
+
+ImU32 ofColorToImU32 (ofColor col) {
+    return ImGui::GetColorU32(ImVec4((float)col.r/255.0f, (float)col.g/255.0f, (float)col.b/255.0f, (float)col.a/255.0f));
+    
+}
+void endWindow() {
+    ImGui::End();
+}
+
+
+bool Button(string label, bool large, bool secondaryColour, const ImVec2& size_arg ){
+    
+    return Button(label.c_str(), large, secondaryColour, size_arg);
+}
+
+bool Button(const char* label, bool large, bool secondaryColour, const ImVec2& size_arg ){
+    bool returnvalue;
+    
+    if(large) largeItemStart();
+    if(secondaryColour) secondaryColourStart();
+    returnvalue =  ImGui::ButtonEx(label, size_arg, 0);
+    
+    if(large) largeItemEnd();
+    if(secondaryColour) secondaryColourEnd();
+    return returnvalue;
+}
+
+bool ToggleButton(string label, bool&value, bool large, const ImVec2& size_arg) {
+    if(Button(label, large, value, size_arg)) {
+        value = !value;
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool ToggleButton(string label, ofParameter<bool>&param) {
+    
+    ofParameterGroup parent = param.getFirstParent();
+    if(parent) label = label+"##"+parent.getName();
+    bool* value = (bool*)&param.get();
+    
+    return(ToggleButton(label.c_str(), *value ));
+    
+}
+
+bool ToggleButton(ofParameter<bool>&param, string labelSuffix) {
+    
+    string label = param.getName()+labelSuffix;
+    return(ToggleButton(label, param ));
+}
+
+
+bool DangerButton(string label, bool large, const ImVec2& size_arg ){
+    bool returnvalue;
+    
+    if(large) largeItemStart();
+    dangerColourStart();
+    returnvalue =  ImGui::ButtonEx(label.c_str(), size_arg, 0);
+    
+    if(large) largeItemEnd();
+    dangerColourEnd();
+    return returnvalue;
+}
+void secondaryColourStart() {
+    if(!secondaryColourActive) {
+        ImColor dark(174, 84,0);
+        ImColor mid(206,115,0);
+        ImColor light(218,145,65);
+        
+        float hue = 0.12f;
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)light);
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(hue, 0.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)light);
+        secondaryColourActive = true;
+    }
+}
+void secondaryColourEnd() {
+    if(secondaryColourActive) {
+        ImGui::PopStyleColor(7);
+        secondaryColourActive = false;
+    }
+}
+void dangerColourStart() {
+    if(!dangerColourActive) {
+        float hue = 0.98f;
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.6f, 0.9f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 1.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(hue, 0.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(hue, 0.6f, 0.4f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(hue, 0.6f, 0.6f));
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(hue, 0.6f, 0.8f));
+        dangerColourActive = true;
+    }
+}
+
+void customColourStart(ofColor colour) {
+    if(!customColourActive) {
+        ofColor darkcol = colour*0.5;
+        ofColor lightcolour = colour*1.2;
+        
+        
+        ImColor dark(darkcol.r, darkcol.g, darkcol.b);
+        ImColor mid(colour.r, colour.g, colour.b);
+        ImColor light(lightcolour.r, lightcolour.g, lightcolour.b);
+        
+        
+        ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)light);
+        
+        ImGui::PushStyleColor(ImGuiCol_CheckMark, (ImVec4)ImColor::HSV(0.0f, 0.0f, 1.0f));
+        
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)dark);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)mid);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)light);
+        customColourActive = true;
+    }
+}
+
+
+
+void customColourEnd() {
+    if(customColourActive) {
+        ImGui::PopStyleColor(7);
+        customColourActive = false;
+    }
+}
+void dangerColourEnd() {
+    if(dangerColourActive) {
+        ImGui::PopStyleColor(7);
+        dangerColourActive = false;
+    }
+}
+
+void largeItemStart() {
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 10.0f)); // 3 Size of elements (padding around contents);
+    // increase the side of the slider grabber
+    ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+    
+}
+void largeItemEnd() {
+    
+    ImGui::PopStyleVar(2);
+}
+void extraLargeItemStart() {
+    if(largeItemActive) {
+        ofLogNotice("----- large item already active!");
+    } else {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(78.0f, 80.0f)); // 3 Size of elements (padding around contents);
+        // increase the side of the slider grabber
+        ImGui::PushStyleVar(ImGuiStyleVar_GrabMinSize, 26.0f); // 4 minimum size of slider grab
+        largeItemActive = true;
+    }
+}
+void extraLargeItemEnd() {
+    if(!largeItemActive) {
+        ofLogNotice("----- large item not active!");
+    } else {
+        ImGui::PopStyleVar(2);
+        largeItemActive = false;
+    }
+}
+
+/*
+ bool updateMouse(ofMouseEventArgs &e) {
+ float scale =  GlobalScale::getScale();
+ ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+ ofLogNotice("Mouse updated " + ofToString(ImGui::GetIO().MousePos.x) +" " +ofToString(ImGui::GetIO().MousePos.y)) << " " << scale;
+ return false; // propagate events
+ }
+ bool mousePressed(ofMouseEventArgs &e) {
+ //ofLogNotice("mousePressed ")<< e.button;
+ int iobutton = e.button;
+ if(iobutton == 1) iobutton = 0; // fix for alt click -> middle button
+ else if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+ 
+ ImGuiIO& io =ImGui::GetIO();
+ float scale =  GlobalScale::getScale();
+ //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+ //io.MousePos = ImVec2((float)e.x, (float)e.y);
+ io.MouseDown[iobutton] = true;
+ //cout << (ImGui::GetIO().WantCaptureMouse)<< endl;
+ if(io.WantCaptureMouse) {
+ //ofLogNotice("ImGui captured mouse press");
+ return true;
+ 
+ }
+ else {
+ //ofLogNotice("ImGui no capture mouse press");
+ return false;
+ }
+ }
+ bool mouseReleased(ofMouseEventArgs &e) {
+ int iobutton = e.button;
+ if(iobutton == 2) iobutton = 1; // 1 is right click in imgui
+ float scale =  GlobalScale::getScale();
+ //ImGui::GetIO().MousePos = ImVec2((float)e.x/scale, (float)e.y/scale);
+ //ImGui::GetIO().MousePos = ImVec2((float)e.x, (float)e.y);
+ ImGui::GetIO().MouseDown[iobutton] = false;
+ if(ImGui::GetIO().WantCaptureMouse) return true;
+ else return false;
+ }
+ 
+ */
+bool keyPressed(ofKeyEventArgs &e) {
+    // ImGui::GetIO().KeysDown[e.key] = true;
+    
+    if(ImGui::GetIO().WantCaptureKeyboard) {
+        
+        // ofLogNotice("ImGui captured key press");
+        return true;
+    }
+    else {
+        //ofLogNotice("ImGui no capture key press");
+        return false;
+    }
+}
+bool keyReleased(ofKeyEventArgs &e) {
+    // TODO check but I think this happens twice...
+    // ImGui::GetIO().KeysDown[e.key] = false;
+    if(ImGui::GetIO().WantCaptureKeyboard) {
+        return false;
+    }
+    else return false;
+}
+
+
+
+void addHover(string& str) {
+    addHover(str.c_str());
+}
+
+void addDelayedHover(string str) {
+    addDelayedTooltip(str.c_str());
+}
+
+void toolTip(string& str) {
+    toolTip(str.c_str());
+}
+void toolTip(const char* desc)
+{
+    ImGui::SameLine(0,3);
+    ImGui::TextDisabled(ICON_FK_QUESTION_CIRCLE);
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+}
+void toolTipWarning(string& str) {
+    toolTipWarning(str.c_str());
+}
+void toolTipWarning(const char* desc)
+{
+    ImGui::SameLine(0,3);
+    float v = ImGui::GetCursorPosY();
+    ImGui::SetCursorPosY(v-7);
+    ImGui::PushStyleColor(ImGuiCol_Text, {1,0.3,0.4,1});
+    ImGui::PushFont(largeFont);
+    ImGui::Text(ICON_FK_EXCLAMATION_CIRCLE);
+    ImGui::PopStyleColor();
+    ImGui::PopFont();
+    //ImGui::SetCursorPosY(v);
+    
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+}
+
+void addHover(const char* desc) {
+    if (ImGui::IsItemHovered() )
+    {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+}
+void addDelayedTooltip(const char* desc) {
+    if (ImGui::IsItemHovered() && (GImGui->HoveredIdNotActiveTimer >1)) {
+        ImGui::PushFont(font);
+        ImGui::BeginTooltip();
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+        ImGui::PopFont();
+    }
+    
+}
+
+const char ColorMarkerStart = '{';
+const char ColorMarkerEnd = '}';
+
+
+bool ProcessInlineHexColor( const char* start, const char* end, ImVec4& color )
+{
+    const int hexCount = ( int )( end - start );
+    if( hexCount == 6 || hexCount == 8 )
+    {
+        char hex[9];
+        strncpy( hex, start, hexCount );
+        hex[hexCount] = 0;
+        
+        unsigned int hexColor = 0;
+        if( sscanf( hex, "%x", &hexColor ) > 0 )
+        {
+            color.x = static_cast< float >( ( hexColor & 0x00FF0000 ) >> 16 ) / 255.0f;
+            color.y = static_cast< float >( ( hexColor & 0x0000FF00 ) >> 8  ) / 255.0f;
+            color.z = static_cast< float >( ( hexColor & 0x000000FF )       ) / 255.0f;
+            color.w = 1.0f;
+            
+            if( hexCount == 8 )
+            {
+                color.w = static_cast< float >( ( hexColor & 0xFF000000 ) >> 24 ) / 255.0f;
+            }
+            
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+
+
+//const float colPos = 220.0f;
+//ImGui::TextWithColors( "{77ff77}(A)" ); ImGui::SameLine( colPos ); ImGui::Text( "Press buttons, toggle items" );
+//ImGui::TextWithColors( "{77ff77}(A){} + DPad Left/Right" ); ImGui::SameLine( colPos ); ImGui::Text( "Manipulate items" );
+//ImGui::TextWithColors( "{ff7777}(B)" ); ImGui::SameLine( colPos ); ImGui::Text( "Close popups, go to parent, clear focus" );
+//ImGui::TextWithColors( "{7777ff}(X)" ); ImGui::SameLine( colPos ); ImGui::Text( "Access menus" );
+
+void TextWithColors( const char* fmt, ... )
+{
+    char tempStr[4096];
+    
+    va_list argPtr;
+    va_start( argPtr, fmt );
+    
+    std::vsnprintf( tempStr, sizeof( tempStr ), fmt, argPtr );
+    
+    va_end( argPtr );
+    tempStr[sizeof( tempStr ) - 1] = '\0';
+    
+    bool pushedColorStyle = false;
+    const char* textStart = tempStr;
+    const char* textCur = tempStr;
+    
+    float ypos = ImGui::GetCursorPosY();
+    while( textCur < ( tempStr + sizeof( tempStr ) ) && *textCur != '\0' )
+    {
+        if( *textCur == ColorMarkerStart )
+        {
+            // Print accumulated text
+            if( textCur != textStart )
+            {
+                ImGui::SetCursorPosY(ypos);
+                ImGui::TextUnformatted( textStart, textCur );
+                ImGui::SameLine( 0.0f, 0.0f );
+            }
+            
+            // Process color code
+            const char* colorStart = textCur + 1;
+            do
+            {
+                ++textCur;
+            }
+            while( *textCur != '\0' && *textCur != ColorMarkerEnd );
+            
+            // Change color
+            if( pushedColorStyle )
+            {
+                ImGui::PopStyleColor();
+                pushedColorStyle = false;
+            }
+            
+            ImVec4 textColor;
+            if( ProcessInlineHexColor( colorStart, textCur, textColor ) )
+            {
+                ImGui::PushStyleColor( ImGuiCol_Text, textColor );
+                pushedColorStyle = true;
+            }
+            
+            textStart = textCur + 1;
+        }
+        else if( *textCur == '\n' )
+        {
+            ImGui::SetCursorPosY(ypos);
+            // Print accumulated text an go to next line
+            ImGui::TextUnformatted( textStart, textCur );
+            textStart = textCur + 1;
+        }
+        
+        ++textCur;
+    }
+    
+    if( textCur != textStart )
+    {
+        ImGui::SetCursorPosY(ypos);
+        ImGui::TextUnformatted( textStart, textCur );
+    }
+    else
+    {
+        ImGui::NewLine();
+    }
+    
+    if( pushedColorStyle )
+    {
+        ImGui::PopStyleColor();
+    }
+}
+
+ImU32 getColourForState(int state) {
+    const ImVec4 stateCols[] = {{0,1,0,1}, {1,0.5,0,1}, {1,0,0,1}, {0.3,0.3,0.3,1}};
+    return ImGui::GetColorU32(stateCols[state]);
+}
+
+glm::vec3 getScaleFromMatrix(const glm::mat4& m) {
+    glm::vec3 pos;
+    glm::quat rot;
+    glm::vec3 scale;
+    
+    pos = m[3];
+    for(int i = 0; i < 3; i++)
+        scale[i] = glm::length(glm::vec3(m[i]));
+    const glm::mat3 rotMtx(
+                           glm::vec3(m[0]) / scale[0],
+                           glm::vec3(m[1]) / scale[1],
+                           glm::vec3(m[2]) / scale[2]);
+    rot = glm::quat_cast(rotMtx);
+    return scale;
+}
+
+
+void drawImGuiTexture(GLuint& textureid, int x, int y, int w, int h, bool sameLine){
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 offset = ImGui::GetWindowPos();
+    int newx =x+offset.x;
+    int newy =y+offset.y;
+    
+    draw_list->PushTextureID(GetImTextureID(textureid));
+    draw_list->PrimReserve(6, 4);
+    draw_list->PrimRectUV(ImVec2(newx,newy), ImVec2(newx+w,newy+h), ImVec2(0,0), ImVec2(1,1),ImGui::GetColorU32(ImVec4(1.0f, 1.0f, 1.0f, 1.0f)));
+    
+    draw_list->PopTextureID();
+    ImGui::SetCursorPosX(x+w);
+    if(!sameLine) ImGui::SetCursorPosY(y+h);
+}
+
+
+
+void shiftCursorY(float distance) {
+    ImGui::SetCursorPosY(ImGui::GetCursorPosY()+distance);
+}
+void shiftCursorX(float distance) {
+    ImGui::SetCursorPosX(ImGui::GetCursorPosX()+distance);
+}
+
+
+void ColumnSeparator() {
+    float columnwidth = ImGui::GetColumnWidth();
+    shiftCursorY(10);
+    
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+    ImVec2 p = ImGui::GetCursorScreenPos();
+    ImVec2 p2 = p;
+    p.x+=columnwidth-20;
+    
+    ImU32 imCol = ofColorToImU32(ofColor::grey);
+    
+    draw_list->AddLine(p, p2 , imCol);
+    shiftCursorY(10);
+    
+}
+
+void setStyles() {
+    
+    
+    ImGuiStyle& style = ImGui::GetStyle();
+    
+    style.WindowRounding = 4.0f;
+    style.WindowBorderSize = 0.0f;
+    style.IndentSpacing = 0.0f;
+    
+    style.ItemSpacing = ImVec2(6.0f,6.0f);
+    style.ItemInnerSpacing = ImVec2(6.0f,6.0f);
+    style.WindowMinSize = ImVec2(10.0f,10.0f);
+    
+    style.FramePadding = ImVec2(6.0f,4.0f);
+    
+    style.FrameRounding= 2.0f;
+    style.GrabRounding = 1.0f;
+    
+    style.PopupRounding = 8.0f;
+    
+    ImVec4* colors = style.Colors;
+    
+    colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f);
+    colors[ImGuiCol_WindowBg]               = ImVec4(0.0f, 0.0f, 0.0f, 0.94f);
+    colors[ImGuiCol_ChildBg]                = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_PopupBg]                = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+    colors[ImGuiCol_Border]                 = ImVec4(0.43f, 0.43f, 0.50f, 0.50f);
+    colors[ImGuiCol_BorderShadow]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_FrameBg]                = ImVec4(0.16f, 0.29f, 0.48f, 0.4f);
+    colors[ImGuiCol_FrameBgHovered]         = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+    colors[ImGuiCol_FrameBgActive]          = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+    colors[ImGuiCol_TitleBg]                = ImVec4(24.0f/255.0f, 43.0f/255.0f, 72.0f/255.0f, 230.0f/255.0f);
+    colors[ImGuiCol_TitleBgActive]          = ImVec4(0.16f, 0.29f, 0.48f, 0.95f);
+    colors[ImGuiCol_TitleBgCollapsed]       = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
+    colors[ImGuiCol_MenuBarBg]              = ImVec4(0.14f, 0.14f, 0.14f, 1.00f);
+    colors[ImGuiCol_ScrollbarBg]            = ImVec4(0.02f, 0.02f, 0.02f, 0.53f);
+    colors[ImGuiCol_ScrollbarGrab]          = ImVec4(0.31f, 0.31f, 0.31f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabHovered]   = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+    colors[ImGuiCol_ScrollbarGrabActive]    = ImVec4(0.51f, 0.51f, 0.51f, 1.00f);
+    colors[ImGuiCol_CheckMark]              = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_SliderGrab]             = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
+    colors[ImGuiCol_SliderGrabActive]       = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_Button]                 = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
+    colors[ImGuiCol_ButtonHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_ButtonActive]           = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+    colors[ImGuiCol_Header]                 = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
+    colors[ImGuiCol_HeaderHovered]          = ImVec4(0.26f, 0.59f, 0.98f, 0.50f);
+    colors[ImGuiCol_HeaderActive]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_Separator]              = ImVec4(0.43f, 0.43f, 0.50f, 0.10f);
+    colors[ImGuiCol_SeparatorHovered]       = ImVec4(0.10f, 0.40f, 0.75f, 0.78f);
+    colors[ImGuiCol_SeparatorActive]        = ImVec4(0.10f, 0.40f, 0.75f, 1.00f);
+    colors[ImGuiCol_ResizeGrip]             = ImVec4(0.26f, 0.59f, 0.98f, 0.20f);
+    colors[ImGuiCol_ResizeGripHovered]      = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
+    colors[ImGuiCol_ResizeGripActive]       = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
+    colors[ImGuiCol_Tab]                    = ImLerp(colors[ImGuiCol_Header],       colors[ImGuiCol_TitleBgActive], 0.80f);
+    colors[ImGuiCol_TabHovered]             = colors[ImGuiCol_HeaderHovered];
+    colors[ImGuiCol_TabActive]              = ImLerp(colors[ImGuiCol_HeaderActive], colors[ImGuiCol_TitleBgActive], 0.60f);
+    colors[ImGuiCol_TabUnfocused]           = ImLerp(colors[ImGuiCol_Tab],          colors[ImGuiCol_TitleBg], 0.80f);
+    colors[ImGuiCol_TabUnfocusedActive]     = ImLerp(colors[ImGuiCol_TabActive],    colors[ImGuiCol_TitleBg], 0.40f);
+    colors[ImGuiCol_DockingPreview]         = colors[ImGuiCol_HeaderActive];// * ImVec4(1.0f, 1.0f, 1.0f, 0.7f);
+    colors[ImGuiCol_DockingEmptyBg]         = ImVec4(0.20f, 0.20f, 0.20f, 1.00f);
+    colors[ImGuiCol_PlotLines]              = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
+    colors[ImGuiCol_PlotLinesHovered]       = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
+    colors[ImGuiCol_PlotHistogram]          = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
+    colors[ImGuiCol_PlotHistogramHovered]   = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
+    colors[ImGuiCol_TableHeaderBg]          = ImVec4(0.19f, 0.19f, 0.20f, 1.00f);
+    colors[ImGuiCol_TableBorderStrong]      = ImVec4(0.31f, 0.31f, 0.35f, 1.00f);   // Prefer using Alpha=1.0 here
+    colors[ImGuiCol_TableBorderLight]       = ImVec4(0.23f, 0.23f, 0.25f, 1.00f);   // Prefer using Alpha=1.0 here
+    colors[ImGuiCol_TableRowBg]             = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
+    colors[ImGuiCol_TableRowBgAlt]          = ImVec4(1.00f, 1.00f, 1.00f, 0.06f);
+    colors[ImGuiCol_TextSelectedBg]         = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+    colors[ImGuiCol_DragDropTarget]         = ImVec4(1.00f, 1.00f, 0.00f, 0.90f);
+    colors[ImGuiCol_NavHighlight]           = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
+    colors[ImGuiCol_NavWindowingHighlight]  = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
+    colors[ImGuiCol_NavWindowingDimBg]      = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
+    colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.0f, 0.0f,0.0f,0.4f);
+    
+}
+
+
+
+// State variables
+   static bool show_popup = false;
+   static std::string popup_message;
+   static std::function<void()> on_ok_callback;
+
+   // Call this when you want to open the popup
+   void OpenConfirmationPopup(const std::string& message, std::function<void()> onOk) {
+       popup_message = message;
+       on_ok_callback = onOk;
+       show_popup = true;
+   }
+
+   // Call this inside your ImGui frame rendering
+   void RenderConfirmationPopup() {
+       if (show_popup) {
+           ImGui::OpenPopup("Confirmation Popup");
+           show_popup = false; // Reset the flag after opening
+       }
+       ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 2);
+       ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {16,16});
+       ImGui::PushStyleColor(ImGuiCol_Border, {0.4,0.4,0.4,0.6});
+       
+       if (ImGui::BeginPopup("Confirmation Popup")) {
+           vector<string> lines = ofSplitString(popup_message,"\n");
+           ImGui::PushFont(mediumFont);
+           for(string& line : lines) {
+               ImGui::Text("%s", line.c_str());
+           }
+           ImGui::PopFont();
+           shiftCursorY();
+           ImGui::Separator();
+           shiftCursorY();
+           
+           if (DangerButton("OK")) {
+               ImGui::CloseCurrentPopup();
+               if (on_ok_callback) {
+                   on_ok_callback();
+               }
+           }
+           ImGui::SetItemDefaultFocus();
+           ImGui::SameLine();
+           if (ofxLaser :: UI::Button("Cancel")) {
+               ImGui::CloseCurrentPopup();
+           }
+
+           ImGui::EndPopup();
+       }
+       ImGui::PopStyleVar(2);
+       ImGui::PopStyleColor();
+   }
+
+
+
+
+
+
+
+
+
+}
+}

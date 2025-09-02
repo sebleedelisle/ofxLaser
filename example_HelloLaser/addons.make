@@ -1,0 +1,6 @@
+ofxAssimpModelLoader
+ofxOpenCv
+ofxNetwork
+ofxPoco
+ofxLaser
+ofxSvg

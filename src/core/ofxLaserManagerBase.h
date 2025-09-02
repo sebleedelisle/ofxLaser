@@ -1,0 +1,251 @@
+//
+//  ofxLaserManager.hpp
+//  ofxLaser
+//
+//  Created by Seb Lee-Delisle on 06/11/2017.
+//
+//
+
+#pragma once
+
+#include "ofMain.h"
+#include "ofxLaserTransformationManager.h"
+#include "ofxLaserConstants.h"
+#include "ofxLaserDacAssigner.h"
+#include "ofxLaserInputZone.h"
+#include "ofxLaserShape.h"
+#include "ofxLaserLine.h"
+#include "ofxLaserPolyline.h"
+#include "ofxLaserCircle.h"
+#include "ofxLaserDacBase.h"
+#include "ofxLaserBitmapMaskManager.h"
+#include "ofxLaserGraphic.h"
+#include "ofxLaserLaser.h"
+#include "ofxLaserZoneContent.h"
+
+#include "ofxLaserShapeTargetCanvas.h"
+#include "ofxLaserShapeTargetBeamZone.h"
+#include "ofxLaserBeamZoneContainer.h"
+#include "ClipperUtils.h"
+#include "SebUtils.h"
+
+namespace ofxLaser {
+
+
+class ManagerBase : public TransformationManager {
+    
+    public :
+    
+    // it's a Singleton so shouldn't ever have more than one.
+    static ManagerBase * instance();
+    static ManagerBase * laserManager;
+    
+    ManagerBase();
+    ~ManagerBase();
+    
+    virtual void resetAllLasersToDefault();
+    
+    virtual void update();
+   
+    virtual bool deleteLaser(std::shared_ptr<Laser>& laser);
+    
+    ZoneId createNewBeamZone();
+    bool deleteBeamZone(std::shared_ptr<OutputZone>& outputZone);
+    std::shared_ptr<ShapeTargetBeamZone> getBeamZoneByIndex(int index);
+    bool updateZoneLabels();
+    
+    ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
+    ZoneId addCanvasZone(const ofRectangle& zoneRect);
+    virtual bool deleteCanvasZone(std::shared_ptr<InputZone> zone);
+    
+    bool hasAnyAltZones();
+    void setAllAltZones();
+    void unSetAllAltZones(); 
+
+    void addZoneToLaser(ZoneId& zoneId, unsigned int lasernum);
+    int getLaserIndexForBeamZoneId(ZoneId& zoneId); 
+    bool moveBeamZoneToIndex(int sourceindex, int targetindex);
+    
+    virtual void setCanvasSize(int width, int height);
+    int getCanvasWidth() {
+        return canvasTarget->getWidth();
+    }
+    int getCanvasHeight() {
+        return canvasTarget->getHeight();
+    } 
+    
+    bool loadSettings();
+    bool saveSettings();
+    bool scheduleSaveSettings();
+    
+    virtual void serialize(ofJson& json);
+    virtual bool deserialize(ofJson& json);
+    
+    void send();
+    void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);
+    
+    int getLaserPointRate(unsigned int lasernum = 0);
+    float getLaserFrameRate(unsigned int lasernum);
+    
+    void armAllLasers();
+    void disarmAllLasers();
+    void updateGlobalTestPattern();
+    //void canvasSizeChanged(int&size);
+    void useAltZonesChanged(bool& state); 
+    
+    void hideContentDuringTestPatternChanged(bool& state); 
+    bool areAllLasersUsingAlternateZones();
+    
+    void setStroke(bool strokestate) {
+        strokeOn = strokestate;
+    }
+    void setFill(bool fillstate) {
+        fillOn = fillstate; 
+    }
+        
+
+    void drawDot(const glm::vec3& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawDot(const glm::vec2& p, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawDot(float x, float y, const ofColor& col, float intensity =1, string profileName = OFXLASER_PROFILE_DEFAULT);
+ 
+    void drawLine(const glm::vec3& start, const glm::vec3& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawLine(const glm::vec2& start, const glm::vec2& end, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+    void drawLine(float x1, float y1, float x2, float y2, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT);
+   
+    void drawPoly(const ofPolyline &poly, const ofColor& col, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness = 1);
+    void drawPoly(const ofPolyline & poly, vector<ofColor>& colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    void drawPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed = false, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+  
+    std::shared_ptr<ofxLaser::Polyline> getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed = false, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    
+    void drawPolys(const vector<ofPolyline>& polys, vector<vector<ofColor>>&colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
+    void drawPolysFromPoints(const vector<vector<glm::vec3>>& allPoints, vector<vector<ofColor>>&allColours, string profileName, float brightness);
+    
+    void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec3& centre, const float& radius, const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+    void drawCircle(const glm::vec2& centre, const float& radius, const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
+   
+    void drawLaserGraphic(Graphic& graphic, float brightness = 1, string renderProfile = OFXLASER_PROFILE_DEFAULT);
+    
+    
+    vector<std::shared_ptr<Laser>>& getLasers();
+    std::shared_ptr<Laser>& getLaser(int index = 0);
+    int getNumLasers() { return (int)lasers.size(); };
+    int getNumBeamZones() { return (int)beamZoneContainer.getNumZoneIds(); }; 
+    vector<string> getBeamZoneLabels() {
+        vector<string> labels;
+        for(int i = 0; i<beamZoneContainer.getNumBeamZones(); i++ ) {
+            std::shared_ptr<ShapeTargetBeamZone> beamzone = beamZoneContainer.getBeamZoneAtIndex(i);
+            labels.push_back(beamzone->zoneId.getLabel());
+            
+        }
+        return labels;
+    }
+    
+    OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
+    OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
+  
+    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
+    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
+  
+
+    bool setTargetBeamZone(int index);
+    bool setTargetCanvas(int canvasIndex = 0);
+    
+    
+    bool isLaserArmed(unsigned int i);
+	bool areAllLasersArmed();
+    
+    void beginDraw() {
+        // to do : check target
+        ofViewport((ofGetWidth()-canvasTarget->getWidth())/-2, (ofGetHeight()-canvasTarget->getHeight())/-2, ofGetWidth(), ofGetHeight()) ;
+        ofPushMatrix();
+        ofTranslate((ofGetWidth()-canvasTarget->getWidth())/2, (ofGetHeight()-canvasTarget->getHeight())/2);
+        
+    }
+    void endDraw() {
+        ofPopMatrix();
+        ofViewport(0,0,ofGetWidth(), ofGetHeight());
+    }
+    
+    
+    int getNextId();
+    //--------------------------------------------------------
+    
+    DacAssigner& dacAssigner;
+    
+    //ofParameter<int> canvasWidth, canvasHeight;
+
+    int testPatternGlobal;
+    bool testPatternGlobalActive;
+    
+    ofParameter<bool> useAltZones;
+    //ofParameter<bool> useBitmapMask;
+    //ofParameter<bool> showBitmapMask;
+    //ofParameter<bool> laserCanvasMaskOutlines;
+    ofParameter<int> numLasers; // << not used except for load / save
+    
+    ofParameter<bool> dontCalculateDisconnected;
+    ofParameter<bool> hideContentDuringTestPattern;
+    
+    ofParameter<float>globalBrightness;
+
+    BitmapMaskManager laserMask;
+    
+                
+  //  bool zonesChanged;
+    //std::vector<InputZone*> zones;
+    
+    ofParameterGroup params;
+ 
+    ofJson loadedJson;
+    
+    bool useClipRectangle = false;
+    ofRectangle clipRectangle;
+  
+    
+    protected :
+    
+    
+    int currentId = 0;
+    
+//    template<typename T>
+//    T convert3DTo2D(T p);
+//
+//    template<typename T>
+//    T convert3DTo2D(T p, ofRectangle viewportrect, float fov = 550);
+    
+//    template<typename T>
+//    T convert3DTo2D(float x, float y, float z ); 
+//    //ofPoint convert3DTo2D( float ax, float ay, float az );
+    
+    virtual void createAndAddLaser();
+    
+    void createDefaultCanvasZone();
+    
+    //ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
+    //int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
+    
+    std::vector<std::shared_ptr<Laser>> lasers;
+    
+    std::shared_ptr<ShapeTarget> currentShapeTarget;
+    std::shared_ptr<ShapeTargetCanvas> canvasTarget;
+    BeamZoneContainer beamZoneContainer;
+    
+      
+    // used in "drawPoly" functions
+    // to avoid generating polyline objects
+    ofPolyline tmpPoly;
+    vector<glm::vec3> tmpPoints;
+  
+    ofSoundPlayer beepSound;
+    bool settingsNeedSave = false;
+    float lastSaveTime = 0;
+    
+    bool strokeOn = true;
+    bool fillOn = false;
+    
+    private:
+};
+}
+

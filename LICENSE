@@ -1,0 +1,30 @@
+ofxLaser License (Non-Commercial Share-Alike)
+
+Copyright (c) 2013-2025 Seb Lee-Delisle
+
+Permission is granted to any person obtaining a copy of this software and
+associated documentation files (the "Software") to use, copy, modify, and 
+distribute the Software for non-commercial purposes only, subject to the 
+following conditions:
+
+1. Any modified versions of the Software, or derivative works based on the 
+   Software, must be distributed under the same license terms as this license 
+   ("Non-Commercial Share-Alike").
+2. This license notice must be included in all copies or substantial portions 
+   of the Software and documentation.
+3. Commercial use of the Software, in whole or in part, is prohibited without
+   a separate commercial license from the copyright holder. To inquire about
+   commercial licensing, please contact: [your email/contact].
+
+For the purposes of this license, "commercial use" means use that is intended 
+for or directed toward commercial advantage, monetary compensation, or any 
+use in a product or service that is sold, licensed, or otherwise monetised.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS 
+IN THE SOFTWARE.
+EOF

@@ -1,0 +1,415 @@
+//
+//  ofxLaserViewPort.cpp
+//
+//
+//  Created by Seb Lee-Delisle on 13/01/2023.
+//
+//
+
+#include "ofxLaserScrollableView.h"
+
+using namespace ofxLaser;
+
+ScrollableView :: ScrollableView() {
+    scale = 1;
+    offset = glm::vec2(0,0);
+    outputRect.set(0,0,800,800);
+    sourceRect.set(0,0,800,800);
+    boundingRect.set(0,0,800,800);
+    isVisible = true;
+    isDragging = false;
+}
+
+void ScrollableView :: drawFrame() {
+    // draw frame
+    ofPushStyle();
+    ofNoFill();
+    ofSetColor(selected? 80 : 30);
+    ofDrawRectangle(outputRect);
+    ofPopStyle();
+    
+}
+
+void ScrollableView::beginViewPort(bool clearScreen) {
+
+    if((useFbo) && (!fbo.isAllocated())) {
+        ofLogError("ScrollableView::beginViewPort - FBO not allocated!");
+        initialiseFbo();
+    }
+    
+    if(useFbo) {
+     
+        fbo.begin();
+        if(clearScreen) {
+            ofDisableBlendMode(); 
+            ofBackground(0,0,0);
+        }
+    } else {
+        ofPushView();
+        ofViewport(outputRect);
+        
+        ofSetupScreen();
+    }
+
+    //ofPushStyle();
+    ofPushMatrix();
+
+    ofTranslate(offset);
+    ofScale(scale, scale);
+    if(pixelScale!=1){
+        ofScale(1.0f/pixelScale, 1.0f/pixelScale);
+    }
+
+    
+}
+
+
+void ScrollableView::endViewPort(bool dontDrawFbo) {
+    
+    ofPopMatrix();
+    //ofPopStyle();
+    if(useFbo) {
+        //fbo.clearColorBuffer(ofColor::red);
+        fbo.end();
+        if(!dontDrawFbo) fbo.draw(outputRect.getTopLeft(), outputRect.getWidth(), outputRect.getHeight());
+    } else {
+        ofPopView();
+    }
+    
+    
+}
+
+void ScrollableView :: drawEdges() {
+    
+    
+    // draw edges if visible
+    ofPushMatrix();
+    ofScale(1.0f/scale, 1.0f/scale);
+    ofTranslate(-offset);
+    //ofTranslate(outputRect.getTopLeft());
+    ofPushStyle();
+    ofSetColor(0);
+    ofFill();
+    if(offset.x>0) {
+        ofDrawRectangle(0, 0, offset.x, outputRect.getHeight());
+    }
+   
+    if(offset.y>0) {
+        ofDrawRectangle(0, 0, outputRect.getWidth(), offset.y);
+    }
+    
+    float inputRight = offset.x+(sourceRect.getWidth()*scale);
+    if(inputRight<outputRect.getRight()) {
+        ofDrawRectangle(inputRight, 0, outputRect.getRight()-inputRight, outputRect.getHeight());
+    }
+    
+    float inputBottom = offset.y+(sourceRect.getHeight()*scale);
+    if(inputBottom<outputRect.getBottom()) {
+        ofDrawRectangle(0, inputBottom, outputRect.getWidth(), outputRect.getBottom()-inputBottom);
+    }
+    ofPopStyle();
+    ofPopMatrix();
+
+}
+
+bool ScrollableView::update(){
+    
+    setClickArea(outputRect);
+    if(boundingRect!=sourceRect) {
+        boundingRect = sourceRect;
+        checkEdges();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScrollableView::setIsVisible(bool visible) {
+    if(visible!=isVisible) {
+        isVisible = visible;
+        return true;
+    } else {
+        return false;
+    }
+}
+bool ScrollableView::getIsVisible(){
+    return isVisible;
+}
+
+void ScrollableView::zoom(glm::vec2 anchor, float zoomMultiplier){
+    
+    glm::vec2 clickoffset = anchor-offset;
+    clickoffset-=(clickoffset*zoomMultiplier);
+    offset+=clickoffset;
+    scale*=zoomMultiplier;
+    checkEdges();
+    
+    
+}
+void ScrollableView::setSourceRect(ofRectangle rect) {
+    sourceRect = rect;
+}
+void ScrollableView::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
+    if(outputRect!=rect) {
+        if(updatescaleandoffset) {
+            float relativescale = rect.getWidth()/outputRect.getWidth();
+            offset *=relativescale;
+            scale*=relativescale;
+        }
+        
+        outputRect = rect;
+        if(useFbo) {
+            initialiseFbo();
+        }
+    }
+}
+void ScrollableView::setOutputRectTopLeft(float left, float top) {
+    outputRect.x = left;
+    outputRect.y = top; 
+    
+}
+
+ofRectangle ScrollableView::getOutputRect() {
+    return outputRect;
+}
+
+ofRectangle ScrollableView::getSourceRect() {
+    return sourceRect;
+} 
+
+void ScrollableView::autoFitToOutput(){
+    offset = {0, 0};
+    scale =  MIN(outputRect.getWidth() / boundingRect.getWidth(), outputRect.getHeight() / boundingRect.getHeight());
+}
+
+void ScrollableView::setOffsetAndScale(glm::vec2 newoffset, float newscale){
+    offset = newoffset;
+    scale = newscale;
+    checkEdges();
+}
+void ScrollableView::setOffset(glm::vec2 newoffset){
+    offset = newoffset;
+    checkEdges();
+}
+glm::vec2 ScrollableView::screenPosToLocalPos(glm::vec2 pos) {
+    pos.x-=outputRect.getLeft();
+    pos.y-=outputRect.getTop();
+    
+    pos-=offset;
+    pos/=scale;
+   
+    return pos;
+}
+
+glm::vec2 ScrollableView::localPosToScreenPos(glm::vec2 pos) {
+    pos*=scale;
+    pos+=offset;
+    
+    pos.x+=outputRect.getLeft();
+    pos.y+=outputRect.getTop();
+    
+    return pos;
+}
+
+ofMouseEventArgs ScrollableView::screenPosToLocalPos(ofMouseEventArgs e) {
+    glm::vec2 pos = screenPosToLocalPos(glm::vec2(e));
+    e.x = pos.x;
+    e.y = pos.y;
+    
+    return e;
+}
+
+bool ScrollableView::mousePressed(ofMouseEventArgs &e){
+    
+    if(!getIsVisible()) {
+        setSelected(false);
+        return true;
+    }
+    selectIfHit(e);
+    float clicktime = ofGetElapsedTimef();
+    float clickinterval =clicktime-lastClickTime;
+    lastClickTime =clicktime;
+    if(hitTest(e)) {
+        if(clickinterval < doubleClickMaxInterval) {
+            cancelDrag();
+            return mouseDoubleClicked(e);
+        } else {
+            
+            startDrag(e);
+            return false; // don't propagate
+        }
+    }
+    return true; // propagate
+};
+
+bool ScrollableView::mouseDoubleClicked(ofMouseEventArgs &e){
+    // hit test already done
+    autoFitToOutput();
+    return false; // don't propagate
+    
+}
+
+bool ScrollableView :: cancelDrag() {
+    if(!isDragging) {return false;
+    } else {
+        offset = dragStartPosition;
+        isDragging = false;
+        return true;
+    }
+}
+void ScrollableView:: mouseMoved(ofMouseEventArgs &e){
+    
+}
+
+
+void ScrollableView::mouseDragged(ofMouseEventArgs &e){
+    if(!getIsVisible()) return;
+    updateDrag(e);
+};
+
+void ScrollableView::mouseReleased(ofMouseEventArgs &e){
+    stopDrag();
+};
+
+void ScrollableView::mouseScrolled(ofMouseEventArgs &e){
+    if(!getIsVisible()) return ;
+    if(!zoomEnabled) return; 
+        
+    if(hitTest(e)) {
+        zoom(e-outputRect.getTopLeft(), 1+(e.scrollY * GlobalScale::getMouseWheelSpeed() * 0.02));
+    }
+};
+
+bool ScrollableView :: hitTest(glm::vec2 screenpos) {
+    return outputRect.inside(screenpos);
+    
+}
+bool ScrollableView::startDrag(glm::vec2 mousepos){
+    dragStartPosition = offset;
+    dragOffset = mousepos-offset;
+    isDragging = true;
+    return true;
+    
+}
+bool ScrollableView::updateDrag(glm::vec2 mousepos) {
+    if(isDragging) {
+        offset =  mousepos-dragOffset;
+        checkEdges();
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool ScrollableView :: stopDrag(){
+    if(isDragging) {
+        isDragging = false;
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool ScrollableView :: checkEdges() {
+    bool changed = false;
+
+    float minScale = 0;
+    if(outputRect.getWidth()/outputRect.getHeight() < boundingRect.getWidth()/boundingRect.getHeight()) {
+        minScale = outputRect.getWidth()/boundingRect.getWidth();
+        
+    } else {
+        minScale = outputRect.getHeight()/boundingRect.getHeight();
+    }
+        
+    if(scale<minScale) {
+        scale = minScale;
+    }
+
+    
+    ofRectangle scaledBounds = boundingRect;
+    //scaledBounds.scale(scale);
+    
+    if(offset.x>-scaledBounds.getLeft()*scale) {
+        offset.x = -scaledBounds.getLeft()*scale;
+        changed = true;
+    }
+    if(offset.y>-scaledBounds.getTop()*scale) {
+        offset.y = -scaledBounds.getTop()*scale;
+        changed = true;
+    }
+    
+    if(offset.x<outputRect.getWidth()-scaledBounds.getRight()*scale) {
+        offset.x = outputRect.getWidth()-scaledBounds.getRight()*scale;
+        changed = true;
+    }
+
+    if(offset.y<outputRect.getHeight()-scaledBounds.getBottom()*scale) {
+        offset.y = outputRect.getHeight()-scaledBounds.getBottom()*scale;
+        changed = true;
+    }
+    
+    
+    return changed; 
+}
+
+
+
+bool ScrollableView :: doesUseFbo() {
+    return useFbo; 
+    
+}
+bool ScrollableView :: setUseFbo(bool state) {
+  
+    if(state!=useFbo) {
+        
+        useFbo = state;
+        if(useFbo) {
+            initialiseFbo();
+        }
+        return true;
+    } else {
+        return false;
+    }
+        
+    
+    
+}
+
+bool ScrollableView :: initialiseFbo() {
+    // set up Fbo
+    if(!fbo.isAllocated() || (fbo.getWidth()!=(int)outputRect.width) || (fbo.getHeight()!=(int)outputRect.height)) {
+       
+        int width = outputRect.width;
+        int height = outputRect.height;
+        if((!enableRetinaFbo) && GlobalScale::isHiDPI()) {
+            width/=2;
+            height/=2;
+            pixelScale = 2;
+        } else {
+            pixelScale = 1;
+        }
+        ofFboSettings settings;
+        settings.width = width;
+        settings.height = height;
+        settings.internalformat = GL_RGB;
+        settings.numSamples = 0;
+        settings.useDepth = false;
+        settings.useStencil = false;
+        
+        fbo.allocate(settings);
+        if(!fbo.isAllocated() ) {
+            ofLogError("ScrollableView :: initialiseFbo - allocate FBO failed!");
+        }
+        
+        ofLogNotice("ScrollableView :: initialiseFbo - allocating FBO ") << width << " " << height;
+        
+        return true;
+    } else {
+        fbo.clear();
+        return false; 
+    }
+   
+
+}
+
