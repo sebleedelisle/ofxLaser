@@ -3,8 +3,6 @@
 ofxLaser
 =========
 
-## About ofxLaser
-
 ofxLaser is a core library for sending laser frames to supported DACs (Ether Dream, Helios, LaserCube, AVB, etc).  
 It provides the **low-level building blocks** for laser output: connection management, point optimisation, colour correction, and zone handling.
 
