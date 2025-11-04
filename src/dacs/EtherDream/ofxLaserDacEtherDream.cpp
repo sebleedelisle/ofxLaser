@@ -388,7 +388,7 @@ bool DacEtherDream :: sendPointsToDac(){
                 dacPoint.g = colourPoint.g/255.0f*65535;
                 dacPoint.b = colourPoint.b/255.0f*65535;
             }
-            dacPoint.i = 0;
+            dacPoint.i = 0xFFFF;
             dacPoint.u1 = 0;
             dacPoint.u2 = 0;
          
