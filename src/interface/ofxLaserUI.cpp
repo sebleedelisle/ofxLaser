@@ -64,11 +64,13 @@ void setupGui() {
     ImFontConfig oversampleConfig;
     oversampleConfig.OversampleH = 4;
     oversampleConfig.OversampleV = 4;
-    
+    oversampleConfig.GlyphExtraSpacing.y = 20.0f; 
     static const ImWchar icon_ranges[] = { ICON_MIN_FK, ICON_MAX_FK, 0 };
     
     // merges the symbol font into the default font
     font = io.Fonts->AddFontFromMemoryCompressedTTF(&RobotoMedium_compressed_data, RobotoMedium_compressed_size, 13, &oversampleConfig);
+
+    
     symbolFont = io.Fonts->AddFontFromMemoryCompressedTTF(&ForkAwesome_compressed_data, ForkAwesome_compressed_size, 13, &mergeConfig, icon_ranges);
     
     // merges the symbol font into the medium font
@@ -920,7 +922,7 @@ bool addMultiChoiceInt(string label, int& param, const vector<string>& labels) {
     bool changed = false;
     for(int i = 0; i<labels.size(); i++) {
         
-        ImGui::SameLine();
+        if((label.size()>0) || (i>0)) ImGui::SameLine();
         
         if(param==i) {
             secondaryColourStart();
@@ -1308,21 +1310,57 @@ void addDelayedHover(string str) {
 void toolTip(string& str) {
     toolTip(str.c_str());
 }
+
+
+//    ImColor highlightcolour(218,165,65);
+//    ImColor dimcolour(218,165,65);
+
 void toolTip(const char* desc)
 {
     ImGui::SameLine(0,3);
-    ImGui::TextDisabled(ICON_FK_QUESTION_CIRCLE);
-    if (ImGui::IsItemHovered() )
+    shiftCursorX(2);
+
+    ImColor highlightcolour; //(255, 180, 80);  // brighter
+    ImColor dimcolour; // ((int)(highlightcolour.HSV(<#float h#>, <#float s#>, <#float v#>)*0.7f),(int)(180*0.7f),(int)(80*0.7f));
+
+    highlightcolour.SetHSV(0.08,0.8,1);
+    dimcolour.SetHSV(0.08,0.8,0.7);
+    
+//    const char* icon = ICON_FK_INFO_CIRCLE;
+    const char* icon = ICON_FK_QUESTION_CIRCLE;
+
+    ImGui::PushFont(mediumFont);
+
+    // Measure icon and detect hover before drawing
+    ImVec2 iconSize  = ImGui::CalcTextSize(icon);
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+    ImVec2 mousePos  = ImGui::GetMousePos();
+
+    bool hovered =
+        mousePos.x >= cursorPos.x &&
+        mousePos.x <= cursorPos.x + iconSize.x &&
+        mousePos.y >= cursorPos.y &&
+        mousePos.y <= cursorPos.y + iconSize.y;
+
+    ImGui::PushStyleColor(ImGuiCol_Text, hovered ? (ImVec4)highlightcolour : (ImVec4)dimcolour);
+    ImGui::TextUnformatted(icon);
+    ImGui::PopStyleColor();
+    ImGui::PopFont();
+
+    // Now the item exists, so IsItemHovered works for the tooltip
+    if (ImGui::IsItemHovered())
     {
         ImGui::PushFont(font);
         ImGui::BeginTooltip();
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
+
+        const float wrap_px = ImGui::GetFontSize() * 15.0f;
+        TextWrappedWithSpacing(desc, wrap_px, 0.0f);
+
         ImGui::EndTooltip();
         ImGui::PopFont();
     }
 }
+
 void toolTipWarning(string& str) {
     toolTipWarning(str.c_str());
 }
@@ -1374,6 +1412,68 @@ void addDelayedTooltip(const char* desc) {
     }
     
 }
+
+// Overload that supports printf-style formatting
+void TextWrappedWithSpacing(const char* fmt, ...)
+{
+    // Format the string into a temporary buffer
+    char buf[1024];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    // Use current window width as wrap width
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (!window || window->SkipItems) return;
+
+    float availableWidth = ImGui::GetContentRegionAvail().x;
+
+    // Call the main implementation with wrap width and 0 extra spacing
+    TextWrappedWithSpacing(buf, availableWidth, 0.0f);
+}
+
+void TextWrappedWithSpacing(const char* text, float wrap_width_pixels, float extra_spacing_pixels) {
+    if (!text || !*text) return;
+    
+    ImGuiWindow* window = ImGui::GetCurrentWindow();
+    if (window->SkipItems) return;
+    
+    ImFont* font = ImGui::GetFont();
+    ImGuiContext& g = *ImGui::GetCurrentContext();
+    const float scale = g.Font->Scale;
+    
+    const char* p   = text;
+    const char* end = text + strlen(text);
+    
+    // Use the cursor X as the starting point
+    const float start_x = ImGui::GetCursorPosX();
+    const float wrap_x = start_x + wrap_width_pixels;
+    
+    // ↓↓↓ Reduce the built-in spacing between text lines ↓↓↓
+    const ImGuiStyle& style = ImGui::GetStyle();
+    ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, 2.0f+extra_spacing_pixels));
+    
+    while (p < end)
+    {
+        // Find where the line should wrap
+        const char* line_end = font->CalcWordWrapPositionA(scale, p, end, wrap_x - ImGui::GetCursorPosX());
+        ImGui::TextUnformatted(p, line_end);
+        
+        // Skip trailing spaces/newlines
+        p = line_end;
+        while (p < end && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r')) p++;
+        
+//        // Add the extra gap if we still have text left
+//        if (p < end && extra_spacing_pixels > 0.0f)
+//            ImGui::Dummy(ImVec2(0.0f, extra_spacing_pixels));
+    }
+    
+    ImGui::PopStyleVar(); // restore spacing
+}
+
+
+
 
 const char ColorMarkerStart = '{';
 const char ColorMarkerEnd = '}';

@@ -18,12 +18,16 @@ class GlobalScale {
         ofAppGLFWWindow* glfwWindow = ((ofAppGLFWWindow*)(ofGetWindowPtr()));
         float tmpxscale, tmpyscale;
         glfwGetWindowContentScale(glfwWindow->getGLFWWindow(), &tmpxscale, &tmpyscale);
-        //std::cout << tmpxscale << " " << tmpyscale << endl;
-//        
-        return tmpxscale * multiplier; //  glfwWindow->getPixelScreenCoordScale();
+
+        float scale = tmpxscale*multiplier;
         
+        if (scale <= 0.f || !std::isfinite(scale)) {
+            scale = 1.f; // safe default
+        }
+        return scale; //  glfwWindow->getPixelScreenCoordScale();
         
     }
+    
     static bool isHiDPI() {
         ofAppGLFWWindow* glfwWindow = ((ofAppGLFWWindow*)(ofGetWindowPtr()));
         float tmpxscale, tmpyscale;

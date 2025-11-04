@@ -153,7 +153,9 @@ void addDelayedHover(string str);
 void addHover(const char* desc);
 void addDelayedTooltip(const char* desc);
 
-
+// Draw wrapped text with extra vertical spacing between the wrapped lines.
+void TextWrappedWithSpacing(const char* text, float wrap_width_pixels, float extra_spacing_pixels);
+void TextWrappedWithSpacing(const char* fmt, ...);
 
 void drawDashedLine(glm::vec3 p1, glm::vec3 p2, float spacing = 6, float scale = 1);
 void drawDashedLine(glm::vec2 p1, glm::vec2 p2, float spacing = 6, float scale = 1);

@@ -25,10 +25,10 @@ DacAVBSoundManager::~DacAVBSoundManager() {
    // exit();
 }
 
-bool DacAVBSoundManager::connectToInterface(ofSoundDevice& device) {
+bool DacAVBSoundManager::connectToInterface(ofSoundDevice& device, std::optional<int>samplerate) {
     
     std::shared_ptr<DacAVBSoundInterface> interface = std::make_shared<DacAVBSoundInterface>();
-    if(interface->setup(device)) {
+    if(interface->setup(device, samplerate)) {
         interfaces.push_back(interface);
         const std::vector<std::shared_ptr<DacAVBSound>>& dacs = interface->getDacs();
         
@@ -48,16 +48,29 @@ bool DacAVBSoundManager::connectToInterface(ofSoundDevice& device) {
 }
 
 
-bool DacAVBSoundManager::connectToInterface(const std::string& devicename) {
+bool DacAVBSoundManager::connectToInterface(const std::string& devicename, std::optional<int>samplerate) {
     std::vector<ofSoundDevice> devices = ofSoundStreamListDevices();
     for(ofSoundDevice& device : devices) {
         if (device.name == devicename) {
-            return connectToInterface(device);  // Call the overload that takes an ofSoundDevice
+            return connectToInterface(device, samplerate);  // Call the overload that takes an ofSoundDevice
         }
     }
     return false;
+}
+
+int DacAVBSoundManager::getSampleRate(ofSoundDevice& device) {
+    std::shared_ptr<DacAVBSoundInterface> interface = getInterfaceForDevice(device.name);
+    if(!interface) return -1;
+    else return interface->getSampleRate();
     
 }
+bool DacAVBSoundManager::setSampleRate(ofSoundDevice& device, int newSampleRate) {
+    std::shared_ptr<DacAVBSoundInterface> interface = getInterfaceForDevice(device.name);
+    if(interface) {
+        return interface->setSampleRate(newSampleRate);
+    } else return false;
+}
+
 
 std::shared_ptr<DacAVBSoundInterface> DacAVBSoundManager::getInterfaceForDevice(const std::string& devicename){
     for(std::shared_ptr<DacAVBSoundInterface>& interface : interfaces) {
@@ -75,6 +88,19 @@ bool DacAVBSoundManager::getIsUsingDevice(const std::string& devicename) {
     return getInterfaceForDevice(devicename)!=nullptr;
     
 }
+
+ofColor DacAVBSoundManager:: getStatusForDevice(const std::string& devicename) {
+    
+    std::shared_ptr<DacAVBSoundInterface> device = getInterfaceForDevice(devicename);
+    if(!device) return ofColor::grey;
+    if(device->getConnected()) {
+        return ofColor::green;
+    } else {
+        return ofColor::red;
+    }
+}
+
+
 bool DacAVBSoundManager::disconnectFromInterface(const std::string& devicename) {
     // get interface
     
@@ -105,10 +131,15 @@ bool DacAVBSoundManager::disconnectFromInterface(const std::string& devicename) 
 
 std::vector<DacData> DacAVBSoundManager::updateDacList() {
     std::vector<DacData> daclist;
-    
+
     for(std::shared_ptr<DacAVBSoundInterface>& interface : interfaces) {
+        
+        bool connected = interface->getConnected();
+        
         const std::vector<std::shared_ptr<DacAVBSound>>& dacs = interface->getDacs();
         for(const std::shared_ptr<DacAVBSound>& dac : dacs ) {
+            //connection status
+            dac->setConnected(connected);
             daclist.emplace_back(getType(), dac->getRawId());
             ofLogNotice("adding daclist ") << getType() << " " << daclist.back().getLabel();
         }
@@ -126,6 +157,7 @@ std::shared_ptr<DacBase> DacAVBSoundManager::getAndConnectToDac(const std::strin
         // not really sure why i'm checking, if it's not an AVB dac then something has
         // gone really wrong!
         avbDac->setActive(true);
+        avbDac->setConnected(true);
     }
     return dac;
 }
@@ -157,7 +189,11 @@ bool DacAVBSoundManager::deserialize(ofJson&jsonGroup) {
         for (size_t i = 0; i<jsonInterfaces.size(); i++ ) {
             ofJson& interfacejson =jsonInterfaces[i];
             if(interfacejson.contains("devicename")) {
-                connectToInterface(interfacejson["devicename"].get<string>());
+                std::optional<int> samplerate;
+                if(interfacejson.contains("samplerate")) {
+                    samplerate = interfacejson["samplerate"].get<int>();
+                }
+                connectToInterface(interfacejson["devicename"].get<string>(), samplerate);
             }
             //interfaces[i] = std::make_shared<DacAVBSoundInterface>();
             //interfaces[i]->deserialize(jsonInterfaces[i]);

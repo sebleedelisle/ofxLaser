@@ -110,7 +110,7 @@ void DacManagerLaserDockNet :: threadedFunction() {
 //            std::cout << "Receive took: " << std::chrono::duration_cast<std::chrono::milliseconds>(t1 - t0).count() << " ms\n";
 
             if(numBytesReceived>0) {
-
+ 
                 if(verbose) {
                     ofLogNotice() << "DacManagerLaserDockNet thread ----------------------------------------------------------------------";
 

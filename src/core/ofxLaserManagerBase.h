@@ -58,6 +58,7 @@ class ManagerBase : public TransformationManager {
     ZoneId addCanvasZone(const ofRectangle& zoneRect);
     virtual bool deleteCanvasZone(std::shared_ptr<InputZone> zone);
     
+    bool toggleAltZones();
     bool hasAnyAltZones();
     void setAllAltZones();
     void unSetAllAltZones(); 
@@ -81,7 +82,7 @@ class ManagerBase : public TransformationManager {
     virtual void serialize(ofJson& json);
     virtual bool deserialize(ofJson& json);
     
-    void send();
+    virtual void send();
     void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);
     
     int getLaserPointRate(unsigned int lasernum = 0);

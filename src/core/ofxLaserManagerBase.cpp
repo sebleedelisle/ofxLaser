@@ -368,10 +368,57 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
 std::shared_ptr<ofxLaser::Polyline> ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
     
     tmpPoints = points;
-    for(glm::vec3& v : tmpPoints) {
+//    for(glm::vec3& v : tmpPoints) {
+//        v = getTransformed(v);
+//    }
+//    
+    bool allOnSameHorizontal = true;
+    bool increasingLeftToRight = true;
+
+    float yRef = 0.0f;
+    const float eps = 1e-3f; // tolerance for float comparisons
+    bool first = true;
+    float prevX = 0.0f;
+
+    for (glm::vec3& v : tmpPoints) {
         v = getTransformed(v);
+
+        // some real nasty stuff here to get around what I think is a bug in the
+        // clipping code which seems to break with horizontal lines from left to right
+        // If we detect this, we just reverse the line.
+        if (first) {
+            yRef = v.y;
+            prevX = v.x;
+            first = false;
+            continue;
+        }
+
+        // a) check horizontal alignment
+        if (fabs(v.y - yRef) > eps) {
+            allOnSameHorizontal = false;
+        }
+
+        // b) check left-to-right ordering
+        if (v.x >= prevX + eps) {
+            increasingLeftToRight = false;
+        }
+
+        prevX = v.x;
     }
-    std::shared_ptr<Polyline> p = std::make_shared<Polyline>(tmpPoints, colours, profileName, brightness);
+    
+    std::shared_ptr<Polyline> p;
+    
+    if(allOnSameHorizontal && increasingLeftToRight) {
+        std::reverse(tmpPoints.begin(), tmpPoints.end());
+        auto reversed = colours;
+        std::reverse(reversed.begin(), reversed.end());
+        //std::reverse(colours.begin(), colours.end());
+        p = std::make_shared<Polyline>(tmpPoints, reversed, profileName, brightness);
+    } else {
+        p = std::make_shared<Polyline>(tmpPoints, colours, profileName, brightness);
+    }
+    
+    
     //ofxLaser::Polyline* p =new ofxLaser::Polyline(tmpPoints, colours, profileName, brightness);
     
     p->setFilled(fillOn);
@@ -1018,6 +1065,21 @@ bool ManagerBase::hasAnyAltZones() {
         if(laser->hasAnyAltZones()) return true;
     }
     return false;
+}
+
+
+bool ManagerBase::toggleAltZones() {
+
+    if (lasers.empty()) {
+        return false; // no lasers, nothing toggled
+    }
+
+    bool newState = !lasers.front()->useAlternate;
+    if(newState) setAllAltZones();
+    else unSetAllAltZones();
+    return newState; 
+
+
 }
 
 void ManagerBase::setAllAltZones() {

@@ -13,8 +13,9 @@ DacManagerEtherDream :: DacManagerEtherDream()  {
     ofxUDPSettings settings;
     settings.bindPort = 7654;
     settings.blocking = false;
-
-    udpConnection.Setup(settings);
+    if(!udpConnection.Setup(settings)) {
+        ofLogError("DacManagerEtherDream : udp set up failed");
+    }
     startThread();
     verbose = false;
 }

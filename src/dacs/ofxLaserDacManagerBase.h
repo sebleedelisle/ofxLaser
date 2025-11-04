@@ -23,7 +23,7 @@ class DacManagerBase {
         } else {
             return nullptr;
         }
-    
+     
     };
     
     bool checkDacsChanged() {

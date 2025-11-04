@@ -27,7 +27,7 @@ struct DacAVBSoundPoint {
 
 class DacAVBSound : public DacBase {
 public:
-    DacAVBSound();
+    DacAVBSound(int _pps);
     ~DacAVBSound();
 
     virtual string getType() override { return "AVB/Sound"; };
@@ -61,6 +61,18 @@ public:
         return active;
     }
     
+    virtual bool setConnected(bool state){
+        if(state != connected) {
+            connected= state;
+            return true;
+        } else {
+            return false;
+        }
+    }
+    virtual bool getConnected() {
+        return connected;
+    }
+    
     vector<std::shared_ptr<DacAVBSoundPoint>>  getNextPoints(int numofpoints);
     void releasePoints(vector<std::shared_ptr<DacAVBSoundPoint>> pointstorelease);
 
@@ -70,6 +82,7 @@ public:
     
 protected :
     std::atomic<bool> active =false;
+    std::atomic<bool> connected =false;
     string dacname = "";
     ofThreadChannel<std::shared_ptr<DacFrame>> frameThreadChannel;
     

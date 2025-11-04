@@ -22,6 +22,8 @@
 
 #ifdef _MSC_VER
 #include <Windows.h>
+#include <avrt.h>
+#pragma comment(lib, "Avrt.lib")
 #endif
 
 #define ETHERDREAM_MIN -32768
@@ -194,6 +196,10 @@ protected:
     
     bool isMercury = false; 
      
+    
+#ifdef _MSC_VER
+HANDLE mmcssHandle = nullptr;
+#endif
     
 };
 

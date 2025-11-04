@@ -351,10 +351,17 @@ namespace ofxImGui
 	//--------------------------------------------------------------
 	GLuint Gui::loadTexture(const std::string& imagePath)
 	{
-		ofDisableArbTex();
+        bool isUsingArb = ofGetUsingArbTex();
+        if (isUsingArb)
+        {
+            ofDisableArbTex();
+        }
 		ofTexture* texture = new ofTexture();
 		ofLoadImage(*texture, imagePath);
-		ofEnableArbTex();
+        if (isUsingArb)
+        {
+            ofEnableArbTex();
+        }
 		loadedTextures.push_back(texture);
 		return texture->getTextureData().textureID;
 	}

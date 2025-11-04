@@ -22,11 +22,18 @@ public:
     }
 
     
-    bool connectToInterface(ofSoundDevice& device);
-    bool connectToInterface(const std::string& devicename);
+    bool connectToInterface(ofSoundDevice& device, std::optional<int>samplerate);
+    bool connectToInterface(const std::string& devicename, std::optional<int>samplerate);
+    
+    int getSampleRate(ofSoundDevice& device);
+    bool setSampleRate(ofSoundDevice& device, int newSampleRate);
     
     std::shared_ptr<DacAVBSoundInterface> getInterfaceForDevice(const std::string& devicename); 
     bool getIsUsingDevice(const std::string& devicename);
+    
+    ofColor getStatusForDevice(const std::string& devicename);
+    
+    
     bool disconnectFromInterface(const std::string& devicename);
     
     bool disconnectAllInterfaces(const std::string& devicename); 

@@ -9,6 +9,7 @@
 #include "ofxLaserDacEtherDream.h"
 
 using namespace ofxLaser;
+using namespace std::chrono_literals;
 
 DacEtherDream :: DacEtherDream(){
     // the maximum points in the dac's buffer
@@ -40,7 +41,7 @@ DacEtherDream :: ~DacEtherDream(){
 
 void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
 	
-	pps = 0;
+	
 	pps = newPPS = 30000; // this is always sent on begin
 	queuedPPSChangeMessages = 0;
 	networkConnected = false;
@@ -85,17 +86,27 @@ void DacEtherDream :: setup(string _id, string _ip, EtherDreamData& ed) {
     // TODO update max point rate from dacdata
     dacTotalPointBufferCapacity = ed.bufferCapacity;
  
-	Poco::Timespan timeout( 1 * 1000000); // 1 second timeout
-	
+    Poco::Timespan connectTimeout( 1 * 1000000); // 1 second timeout
+    Poco::Timespan receiveTimeout( 0.1 * 1000000); // 100ms second timeout
+    Poco::Timespan sendTimeout( 0.2 * 1000000); // 200ms second timeout
+    
 	try {
 		// EtherDreams always talk on port 7765
 		Poco::Net::SocketAddress sa(ipAddress, port);
 		//logNotice"TIMEOUT" + ofToString(timeout.totalSeconds()));
         
-		socket.connect(sa, timeout);
-		socket.setSendTimeout(timeout);
-		socket.setReceiveTimeout(timeout);
-		
+		socket.connect(sa, connectTimeout);
+		socket.setSendTimeout(sendTimeout);
+		socket.setReceiveTimeout(receiveTimeout);
+        
+        
+        
+        socket.setNoDelay(true);
+        
+        socket.setSendBufferSize(256 * 1024);
+        socket.setReceiveBufferSize(64 * 1024);
+        socket.setKeepAlive(true);
+        
 		networkConnected = true;
 
 
@@ -318,10 +329,19 @@ void DacEtherDream :: closeWhileRunning() {
 	
 	waitForThread();
 	
-	while(!lock());
-	socket.close();
-	unlock();
-	
+    bool got = false;
+    for (int i = 0; i < 200 && !(got = tryLock()); ++i)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    if (got) {
+        try { socket.close(); } catch(...) {}
+        unlock();
+    }
+    
+#ifdef _MSC_VER
+    // on shutdown (e.g., in close()/destructor after waitForThread())
+    if (mmcssHandle) { AvRevertMmThreadCharacteristics(mmcssHandle); mmcssHandle = nullptr; }
+#endif
 	
 }
 
@@ -332,20 +352,20 @@ bool DacEtherDream :: sendPointsToDac(){
 
     updateFrameQueue();
  
-    int maxEstimatedBufferFullness = calculateBufferFullnessByTimeAcked();
+    int fullnessByAck = calculateBufferFullnessByTimeAcked();
     
-    int maxPointsToAdd = MIN(MAX(0, getDacTotalPointBufferCapacity() - maxEstimatedBufferFullness), ETHERDREAM_MAX_POINTS_IN_PACKET);
-    int numpointstoadd = MIN(bufferedPoints.size(), maxPointsToAdd);
+    int roomInBuffer = MIN(MAX(0, getDacTotalPointBufferCapacity() - fullnessByAck), ETHERDREAM_MAX_POINTS_IN_PACKET);
+    int numToSend = MIN(bufferedPoints.size(), roomInBuffer);
     
-    if(numpointstoadd == 0) return false;
+    if(numToSend == 0) return false;
         
-    dacCommand.setAsDataCommand(numpointstoadd);
+    dacCommand.setAsDataCommand(numToSend);
     	
 	EtherDreamDacPoint& dacPoint = sendPoint;
     
     int colourShiftPointCount =  (float)pps/10000.0f*colourShift ;
     
-	for(int i = 0; i<numpointstoadd; i++) {
+	for(int i = 0; i<numToSend; i++) {
 		
 		if(bufferedPoints.size()>0) {
      
@@ -355,8 +375,8 @@ bool DacEtherDream :: sendPointsToDac(){
             ofxLaser::Point& laserPoint = *bufferedPoints[pointindex];
             ofxLaser::Point& colourPoint = *bufferedPoints[0];
             
-            dacPoint.x = ofMap(armed ? laserPoint.x : 400, 0, 800, ETHERDREAM_MIN, ETHERDREAM_MAX);
-            dacPoint.y = ofMap(armed ? laserPoint.y : 400, 800, 0, ETHERDREAM_MIN, ETHERDREAM_MAX); // Y is UP
+            dacPoint.x = ofMap(armed ? laserPoint.x : 400, 0, 800, ETHERDREAM_MIN, ETHERDREAM_MAX, true);
+            dacPoint.y = ofMap(armed ? laserPoint.y : 400, 800, 0, ETHERDREAM_MIN, ETHERDREAM_MAX, true); // Y is UP
           
             
             if(! armed || blankPointsToSend>0) {
@@ -400,7 +420,7 @@ bool DacEtherDream :: sendPointsToDac(){
 		
 		if(queuedPPSChangeMessages>0) {
 			// bit 15 is a flag to tell the DAC about a new point rate
-            dacPoint.control = 0b1000000000000000;
+            dacPoint.control |= 0x8000;
             logNotice("PPS Change queue "+ofToString(queuedPPSChangeMessages));
 			queuedPPSChangeMessages--;
         } else {
@@ -425,7 +445,7 @@ bool DacEtherDream :: sendPointsToDac(){
 	bool success =  sendCommand(dacCommand);
     if(success) {
         lastDataSentTimeMicros = ofGetElapsedTimeMicros();
-        lastDataSentBufferSize = maxEstimatedBufferFullness + dacCommand.numPoints;
+        lastDataSentBufferSize = fullnessByAck + dacCommand.numPoints;
     }  else {
         logNotice("sendCommand failed!");
         
@@ -801,56 +821,99 @@ bool DacEtherDream :: sendClear(){
     return sendCommand(dacCommand);
 	
 }
-bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(const uint8_t* buffer, int length) {
-	
-    const uint8_t* buffer = command.getBuffer();
-    int length = command.size();
-    
-	int numBytesSent = 0;
-	bool failed = false;
-	bool networkerror = false;
-    lastCommandSendTime = ofGetElapsedTimeMicros();//  count = 0;
 
-	try {
-		numBytesSent = socket.sendBytes(buffer, length);
-        
-    } catch (Poco::TimeoutException& exc) {
-        //Handle your network errors.
-        std::cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
-        networkErrors.send(exc.displayText());
-        //	isOpen = false;
-        failed = true;
-    } catch (Poco::Exception& exc) {
-        //Handle your network errors.
-        std::cerr << "sendBytes : Network error: " << exc.displayText() << endl;
-        networkErrors.send(exc.displayText());
-        networkerror = true;
-        failed = true;
-    } catch (...) {
-        std::cerr << "sendBytes : unspecified error " << endl;
+bool DacEtherDream::sendCommand(DacEtherDreamCommand& command) {
+    const uint8_t* buf = command.getBuffer();
+    const int len = command.size();
+
+    lastCommandSendTime = ofGetElapsedTimeMicros();
+
+    int sent = 0;
+    try {
+        while (sent < len) {
+            const int n = socket.sendBytes(buf + sent, len - sent);
+            if (n <= 0) throw Poco::IOException("short send");
+            sent += n;
+        }
+        return true; // success
     }
-	if(numBytesSent!=length) {
-		//do something!
-        std::cerr << "send fail, fewer bytes sent than expected : "<< numBytesSent << endl;
-		failed = true;
-	} else if (numBytesSent<0) {
-		//do something!
-        std::cerr << "send fail, sendBytes returned : "<< numBytesSent << endl;
-		failed = true;
-	}
-	
-	if(failed) {
-		if(networkerror) {
-            networkConnected = false; 
-			closeWhileRunning();
-			setup(id, ipAddress, etherDreamData);
-		}
-		beginSent = false;
-        
-		return false;
-	}
-	return true;
+    catch (const Poco::TimeoutException& e) {
+        std::cerr << "sendBytes timeout: " << e.displayText() << std::endl;
+        networkErrors.send(e.displayText());
+    }
+    catch (const Poco::Exception& e) {
+        std::cerr << "sendBytes error: " << e.displayText() << std::endl;
+        networkErrors.send(e.displayText());
+    }
+    catch (...) {
+        std::cerr << "sendBytes: unspecified error" << std::endl;
+        networkErrors.send("unspecified send error");
+    }
+
+    // failure path
+    beginSent = false;
+    networkConnected = false;     // let the main loop’s reconnect/backoff handle recovery
+    return false;
 }
+
+//
+//bool DacEtherDream :: sendCommand(DacEtherDreamCommand& command) { // sendBytes(const uint8_t* buffer, int length) {
+//	
+//    const uint8_t* buffer = command.getBuffer();
+//    int length = command.size();
+//    
+//	int numBytesSent = 0;
+//	bool failed = false;
+//	bool networkerror = false;
+//    lastCommandSendTime = ofGetElapsedTimeMicros();//  count = 0;
+//    
+//    int sent = 0;
+//    
+//	try {
+//		//numBytesSent = socket.sendBytes(buffer, length);
+//        while (sent < length) {
+//            int n = socket.sendBytes(buffer + sent, length - sent);
+//            if (n <= 0) throw Poco::IOException("short send");
+//            sent += n;
+//        }
+//        
+//    } catch (Poco::TimeoutException& exc) {
+//        //Handle your network errors.
+//        std::cerr << "sendBytes : Timeout error: " << exc.displayText() << endl;
+//        networkErrors.send(exc.displayText());
+//        //	isOpen = false;
+//        failed = true;
+//    } catch (Poco::Exception& exc) {
+//        //Handle your network errors.
+//        std::cerr << "sendBytes : Network error: " << exc.displayText() << endl;
+//        networkErrors.send(exc.displayText());
+//        networkerror = true;
+//        failed = true;
+//    } catch (...) {
+//        std::cerr << "sendBytes : unspecified error " << endl;
+//    }
+//	if(numBytesSent!=length) {
+//		//do something!
+//        std::cerr << "send fail, fewer bytes sent than expected : "<< numBytesSent << endl;
+//		failed = true;
+//	} else if (numBytesSent<0) {
+//		//do something!
+//        std::cerr << "send fail, sendBytes returned : "<< numBytesSent << endl;
+//		failed = true;
+//	}
+//	
+//	if(failed) {
+//		if(networkerror) {
+//            networkConnected = false; 
+//			closeWhileRunning();
+//			setup(id, ipAddress, etherDreamData);
+//		}
+//		beginSent = false;
+//        
+//		return false;
+//	}
+//	return true;
+//}
 
 void DacEtherDream :: close() {
     

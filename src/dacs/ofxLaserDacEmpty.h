@@ -18,8 +18,8 @@ namespace ofxLaser {
         
         virtual bool sendFrame(const vector<Point>& points) override { return true; } ;
         //virtual bool sendPoints(const vector<Point>& points) override { return true; } ;
-        virtual bool setPointsPerSecond(uint32_t pps) override { return true; };
-        virtual uint32_t getPointsPerSecond() override { return 30000; };
+        virtual bool setPointsPerSecond(uint32_t pps) override { this->pps = pps; return true; };
+        virtual uint32_t getPointsPerSecond() override { return pps; };
         virtual bool setColourShift(float shiftSeconds) override { return true; };
         virtual string getType() override { return "DacEmpty"; };
 
@@ -50,6 +50,7 @@ namespace ofxLaser {
         vector<ofAbstractParameter*> displayData;
         bool resetFlag = false;
         bool armed = false;
+        uint32_t pps = 30000;
 
     };
 

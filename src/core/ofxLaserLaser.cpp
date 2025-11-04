@@ -120,7 +120,7 @@ void Laser :: init() {
     ofParameterGroup laserparams;
     laserparams.setName("Laser settings");
     
-    laserparams.add(speedMultiplier.set("Speed", 1,0.12,2));
+    laserparams.add(speed.set("Speed", 1,0.12,2));
     
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,12));
     
@@ -144,6 +144,7 @@ void Laser :: init() {
     advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
     advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
     advanced.add(syncShift.set("Sync shift", 0, -50, 50));
+    //advanced.add(disableSpeedCompensation.set("Disable speed compensation",false));
     
     laserparams.add(advanced);
     
@@ -201,7 +202,9 @@ void Laser:: ppsChanged(int& e){
     pps=round(pps/100)*100;
     if(pps<=100) pps =100;
     dac->setPointsPerSecond(pps);
+
     pps = dac->getPointsPerSecond(); // in case the dac can't do it
+    
 }
 void Laser:: colourShiftChanged(float& e){
     //ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
@@ -766,7 +769,7 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
     vector<PointsForShape> allzoneshapepoints;
     
     // TODO add speed multiplier to getPointsForMove function
-    getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, speedMultiplier);
+    getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, getSpeedMultiplier());
     
     vector<PointsForShape*> sortedshapes;
     
@@ -1326,7 +1329,7 @@ void Laser :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint 
     
     ofPoint v = target-start;
     
-    float blanknum = (v.length()/scannerSettings.moveSpeed)/speedMultiplier;// + movePointsPadding;
+    float blanknum = (v.length()/scannerSettings.moveSpeed)/getSpeedMultiplier();// + movePointsPadding;
     
     for(int j = 0; j<blanknum; j++) {
         
@@ -1735,5 +1738,19 @@ vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputAltZones() {
         return a->getZoneId().getUid() < b->getZoneId().getUid();
     });
     return sortedzones;
+    
+}
+
+
+float Laser :: getSpeedMultiplier() {
+    if(disableSpeedCompensation) {
+        return speed.get();
+    } else {
+        float newmultiplier = 30000.0f/(float)pps * speed.get();
+       //ofLogNotice() << newmultiplier;
+        return newmultiplier;
+    }
+    
+    
     
 }

@@ -176,13 +176,14 @@ vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipShapeToMask(std::sh
 bool ClipperUtils ::  pointWithinMask(glm::vec3 vertex, ofxLaserClipper::Paths& clipperMasks){
 
     clipper.Clear();
+    bool inside = false;
     
     ofxLaserClipper::IntPoint p = ofxLaserClipper::IntPoint(vertex.x * ofx::Clipper::DEFAULT_CLIPPER_SCALE, vertex.y * ofx::Clipper::DEFAULT_CLIPPER_SCALE);
 
     for(ofxLaserClipper::Path& path : clipperMasks)  {
-        if(PointInPolygon(p, path)!=0) return true;
+        if(PointInPolygon(p, path)!=0) inside = !inside;
     }
-    return false;
+    return inside;
 
 }
 

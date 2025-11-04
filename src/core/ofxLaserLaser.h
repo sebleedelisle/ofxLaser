@@ -143,6 +143,8 @@ class Laser {
 
     float getMoveDistanceForShapes(vector<PointsForShape>& shapes);
     float getMoveDistanceForShapes(vector<PointsForShape*>& shapes);
+    
+    float getSpeedMultiplier();
 
 
     //-----------------------------------------------
@@ -158,7 +160,7 @@ class Laser {
     ofParameterGroup params;
     ofParameter<bool> armed;
     ofParameter<int> pps;
-    ofParameter<float> speedMultiplier;
+    ofParameter<float> speed;
     ofParameter<float>intensity;
     
     ofParameter<bool> paused; // pause frame
@@ -206,6 +208,7 @@ class Laser {
     ofParameter<bool> alwaysClockwise;
     ofParameter<bool> smoothHomePosition;
     ofParameter<bool> laserOnWhileMoving = false;
+    ofParameter<bool> disableSpeedCompensation = false; 
  
     MaskManager maskManager;
 

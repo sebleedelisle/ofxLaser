@@ -2,8 +2,9 @@
 
 namespace ofxLaser {
 
-DacAVBSound::DacAVBSound() {
-    pps = 48000; // TODO set with sound card, maybe an init?
+DacAVBSound::DacAVBSound(int _pps) {
+    pps = _pps; // TODO set with sound card, maybe an init?
+    
 }
 
 DacAVBSound::~DacAVBSound() {
@@ -42,7 +43,9 @@ vector<std::shared_ptr<DacAVBSoundPoint>> DacAVBSound::getNextPoints(int numofpo
     for(int i =0; i<numofpoints; i++) {
         
         std::shared_ptr<ofxLaser::Point> bufferedPoint;
-        
+        if(bufferedPoints.size()==0) {
+            updateFrameQueue();
+        }
         if(bufferedPoints.size()>0) {
             bufferedPoint = bufferedPoints.front();
             bufferedPoints.pop_front();
@@ -59,7 +62,8 @@ vector<std::shared_ptr<DacAVBSoundPoint>> DacAVBSound::getNextPoints(int numofpo
             ));
             
         } else {
-            ofLogNotice("DacAVBSound::getNextPoints : run out of buffered points!");
+            
+            if(getActive()) ofLogNotice("DacAVBSound::getNextPoints : run out of buffered points!");
             break;
         }
     }
@@ -236,7 +240,10 @@ string DacAVBSound::getRawId() {
 }
 
 int DacAVBSound::getStatus() {
-    return getActive() ? OFXLASER_DACSTATUS_GOOD : OFXLASER_DACSTATUS_NO_DAC; // todo probably also send the soundstream status
+    if(!getActive()) return OFXLASER_DACSTATUS_NO_DAC;
+    if (!getConnected()) return OFXLASER_DACSTATUS_ERROR;
+    return OFXLASER_DACSTATUS_GOOD;
+    //return (getActive()&&getConnected()) ? OFXLASER_DACSTATUS_GOOD : OFXLASER_DACSTATUS_NO_DAC; // todo probably also send the soundstream status
 }
 
 void DacAVBSound::reset() {
