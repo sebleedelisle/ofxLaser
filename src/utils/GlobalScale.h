@@ -21,9 +21,10 @@ class GlobalScale {
 
         float scale = tmpxscale*multiplier;
         
-        if (scale <= 0.f || !std::isfinite(scale)) {
+        if (scale <= 0.f) {
             scale = 1.f; // safe default
         }
+        scale = ofClamp(scale, 0, 1); 
         return scale; //  glfwWindow->getPixelScreenCoordScale();
         
     }

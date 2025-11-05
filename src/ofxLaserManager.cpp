@@ -1729,7 +1729,7 @@ void Manager :: guiLaserSettings(std::shared_ptr<Laser>& laser) {
         ImGui::Text("Scanner settings");
         UI::largeItemStart();
         ImGui::PushItemWidth(190);
-        UI::addFloatAsIntPercentage(laser->speedMultiplier);
+        UI::addFloatAsIntPercentage(laser->speed);
         UI::toolTip("Scanner speed adjustment (NB this works mathematically, it doesn't change the point rate)");
         ImGui::PopItemWidth();
         ImGui::PushItemWidth(170);
@@ -2461,7 +2461,7 @@ void Manager :: guiCopyLaserSettings() {
                 std::shared_ptr<Laser>& targetLaser = getLaser(i);
                 
                 if(copyScannerSettings) {
-                    targetLaser->speedMultiplier = sourceLaser->speedMultiplier;
+                    targetLaser->speed = sourceLaser->speed;
                     ofJson scannerjson;
                     sourceLaser->scannerSettings.serialize(scannerjson);
                     targetLaser->scannerSettings.deserialize(scannerjson);
