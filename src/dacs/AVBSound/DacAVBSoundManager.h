@@ -3,6 +3,7 @@
 #include "ofxLaserDacManagerBase.h"
 #include "DacAVBSoundInterface.h"
 
+
 // Settings :
 // List of sound interface names
 // is it just a list of serialized sound interfaces ?
@@ -20,10 +21,9 @@ public:
     std::string getType() override {
         return "AVB/Sound";
     }
-
     
     bool connectToInterface(ofSoundDevice& device, std::optional<int>samplerate);
-    bool connectToInterface(const std::string& devicename, std::optional<int>samplerate);
+    bool connectToInterface(const std::string& devicename, std::optional<int>samplerate = {});
     
     int getSampleRate(ofSoundDevice& device);
     bool setSampleRate(ofSoundDevice& device, int newSampleRate);
@@ -33,12 +33,13 @@ public:
     
     ofColor getStatusForDevice(const std::string& devicename);
     
-    
     bool disconnectFromInterface(const std::string& devicename);
     
     bool disconnectAllInterfaces(const std::string& devicename); 
     
     void exit() override;
+
+    
     
     virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;

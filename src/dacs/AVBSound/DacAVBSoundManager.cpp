@@ -1,5 +1,6 @@
 #include "DacAVBSoundManager.h"
 #include "DacAVBSound.h"
+#include "RtAudio.h"
 
 namespace ofxLaser {
 
@@ -201,6 +202,10 @@ bool DacAVBSoundManager::deserialize(ofJson&jsonGroup) {
     }
     return true;
 }
+
+
+
+
 
 
 }

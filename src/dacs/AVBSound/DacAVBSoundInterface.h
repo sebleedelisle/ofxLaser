@@ -3,8 +3,6 @@
 #include "ofMain.h"
 #include <vector>
 #include <memory>
-//#include "DacAVBSound.h"
-#include "SoundInputManager.h"
 #include <optional>
 
 // the sound interface owns the dacs! 

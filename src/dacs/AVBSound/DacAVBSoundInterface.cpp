@@ -1,5 +1,6 @@
 #include "DacAVBSoundInterface.h"
 #include "DacAVBSound.h"
+#include "DacAVBUtils.h"
 
 namespace ofxLaser {
 
@@ -26,7 +27,7 @@ bool DacAVBSoundInterface::setup(ofSoundDevice& sounddevice, std::optional<int> 
     }
     
 
-    int preferredRate = SoundInputManager :: getPreferredSampleRateForDevice(device);
+    int preferredRate = ofxLaser :: DacAVBUtils :: getPreferredSampleRateForDevice(device);
     if(samplerate) preferredRate = samplerate.value();
         
     ofSoundStreamSettings settings;
