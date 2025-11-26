@@ -2581,7 +2581,7 @@ void Manager::guiDacAnalytics(int dacIndex) {
                 ImGui::Text("Mac Address : %s", ed.macAddress.c_str());
                 ImGui::Text("Software : %d Hardware %d", ed.softwareRevision, ed.hardwareRevision);
                 ImGui::Text("Buffer capacity : %d", ed.bufferCapacity);
-                ImGui::Text("Current buffer size : %d", dacEtherDream->getLastReportedBufferFullness());
+                ImGui::Text("Current buffer size : n/a");
                 
                 ImGui::NextColumn();
                 ImGui::Text("%s", dacEtherDream->getEtherDreamStateString().c_str());

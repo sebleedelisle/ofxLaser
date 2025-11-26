@@ -6,6 +6,7 @@
 //
 
 #include "ofxLaserDacManagerEtherDream.h"
+#include "ByteStreamUtils.h"
 
 using namespace ofxLaser;
 
@@ -103,10 +104,7 @@ void DacManagerEtherDream :: threadedFunction() {
                 
                 
                 //unsigned char* buffer = byteaddress-2;
-                DacEtherDreamStatus status;
-                status.deserialize(byteaddress);
-                
-                if(verbose) ofLogNotice() << status.toString();
+                // Legacy status parsing removed; we only care about discovery here.
                 
 //                            cout << "Hardware version :" << hardwareRevision << endl;
 //                            cout << "Software version :" << softwareRevision << endl;
@@ -129,11 +127,8 @@ void DacManagerEtherDream :: threadedFunction() {
                     
                     // ********************* REMOVE IN-USE CHECK FOR DUSTIN
                     EtherDreamData ed;
-                    if(checkInUse) {
-                        ed  = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, (status.playback_state!=0), ofGetElapsedTimef()};
-                    } else {
-                        ed = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, false, ofGetElapsedTimef()};
-                    }
+                    const bool inUse = false;
+                    ed = {hardwareRevision, softwareRevision, bufferCapacity, (int) maxPointRate, id, address, inUse, ofGetElapsedTimef()};
                     
                     if(verbose) {
                         ofLogNotice("Adding etherdreamData "+ id)<< " " << hardwareRevision << " " << softwareRevision << " " << id << " in use : " << ed.inUse;
@@ -150,12 +145,7 @@ void DacManagerEtherDream :: threadedFunction() {
                         EtherDreamData& ed = etherdreamDataByMacAddress[id];
                         
                         ed.lastUpdateTime = now;
-                        bool inUse = (status.playback_state!=0);
-                        if(ed.inUse != inUse) {
-                            
-                           ed.inUse = inUse;
-                           dacsChanged = true;
-                        }
+                        // no live playback status tracking with libera-only path
                         if(verbose) {
                             ofLogNotice("Updating etherdreamData "+ id)<< " " << hardwareRevision << " " << softwareRevision << " " << id << " in use : " << ed.inUse;
                         }
