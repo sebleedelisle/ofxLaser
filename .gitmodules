@@ -1,0 +1,3 @@
+[submodule "libs/libera-core"]
+	path = libs/libera-core
+	url = https://sebleedelisle@github.com/sebleedelisle/libera-core.git
