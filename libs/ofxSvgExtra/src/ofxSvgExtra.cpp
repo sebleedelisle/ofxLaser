@@ -1,5 +1,6 @@
 #include "ofxSvgExtra.h"
 #include "ofConstants.h"
+#include "ofUtils.h"
 #include <regex>
 
 using namespace std;
@@ -217,6 +218,161 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 		}
 		
 	}
+	
+
+    auto parseOpacity = [](const std::string& value) -> float {
+        if(value.empty()) return 1.f;
+        std::string trimmed = ofTrim(value);
+        if(trimmed.empty()) return 1.f;
+        std::string cleaned = trimmed;
+        ofStringReplace(cleaned, "%", "");
+        try {
+            return ofToFloat(cleaned);
+        } catch(...) {
+            return 1.f;
+        }
+    };
+    
+    auto removeElementsWithZeroOpacityAttribute = [&](const std::string& attributeName){
+        bool removed = true;
+        while(removed) {
+            removed = false;
+            ofXml::Search elements = xml.find("//*[@" + attributeName + "]");
+            for(ofXml & element : elements){
+                float opacityValue = parseOpacity(element.getAttribute(attributeName).getValue());
+                if(opacityValue <= 0.f) {
+                    ofXml parent = element.getParent();
+                    if(parent && element){
+                        parent.removeChild(element);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+        }
+    };
+    
+    auto styleHasZeroOpacity = [&](const std::string& style) -> bool {
+        if(style.empty()) return false;
+        vector<string> styleEntries = ofSplitString(style, ";", true, true);
+        for(std::string entry : styleEntries) {
+            vector<string> parts = ofSplitString(entry, ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "opacity") {
+                if(parseOpacity(parts[1]) <= 0.f) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    
+    auto removeStyleOpacityElements = [&](){
+        bool removed = true;
+        while(removed) {
+            removed = false;
+            ofXml::Search styleElements = xml.find("//*[@style]");
+            for(ofXml & element : styleElements){
+                std::string style = element.getAttribute("style").getValue();
+                if(styleHasZeroOpacity(style)) {
+                    ofXml parent = element.getParent();
+                    if(parent && element){
+                        parent.removeChild(element);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+        }
+    };
+    
+    removeStyleOpacityElements();
+    removeElementsWithZeroOpacityAttribute("opacity");
+    
+    auto disableStrokeOnElement = [&](ofXml &element){
+        element.setAttribute("stroke", "none");
+        if(element.getAttribute("stroke-width")) {
+            element.setAttribute("stroke-width", "0");
+        }
+        if(element.getAttribute("stroke-opacity")) {
+            element.removeAttribute("stroke-opacity");
+        }
+    };
+    
+    auto styleHasZeroStrokeOpacity = [&](const std::string& style, bool &disableStroke) -> std::vector<std::string> {
+        disableStroke = false;
+        vector<string> entries = ofSplitString(style, ";", true, true);
+        for(std::string & entry : entries) {
+            vector<string> parts = ofSplitString(entry, ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "stroke-opacity") {
+                if(parseOpacity(parts[1]) <= 0.f) {
+                    disableStroke = true;
+                }
+            }
+        }
+        return entries;
+    };
+    
+    auto applyDisableStrokeToStyleEntries = [&](std::vector<std::string>& entries){
+        int strokeIndex = -1;
+        for(size_t i = 0; i<entries.size(); ++i) {
+            vector<string> parts = ofSplitString(entries[i], ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "stroke") {
+                strokeIndex = static_cast<int>(i);
+            } else if(key == "stroke-opacity") {
+                entries.erase(entries.begin() + i);
+                --i;
+            }
+        }
+        if(strokeIndex>=0) {
+            entries[strokeIndex] = "stroke:none";
+        } else {
+            entries.push_back("stroke:none");
+        }
+    };
+    
+    auto removeStrokeUsingOpacityAttributes = [&](){
+        bool modified = true;
+        while(modified) {
+            modified = false;
+            ofXml::Search strokeOpacityElements = xml.find("//*[@stroke-opacity]");
+            for(ofXml & element : strokeOpacityElements){
+                if(parseOpacity(element.getAttribute("stroke-opacity").getValue()) <= 0.f) {
+                    disableStrokeOnElement(element);
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    };
+    
+    auto removeStrokeUsingStyleOpacity = [&](){
+        bool modified = true;
+        while(modified) {
+            modified = false;
+            ofXml::Search styleElements = xml.find("//*[@style]");
+            for(ofXml & element : styleElements){
+                std::string style = element.getAttribute("style").getValue();
+                bool disableStroke = false;
+                auto entries = styleHasZeroStrokeOpacity(style, disableStroke);
+                if(disableStroke) {
+                    applyDisableStrokeToStyleEntries(entries);
+                    element.setAttribute("style", ofJoinString(entries, ";"));
+                    disableStrokeOnElement(element);
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    };
+    
+    removeStrokeUsingOpacityAttributes();
+    removeStrokeUsingStyleOpacity();
 	
 	// implement the SVG "use" element by expanding out those elements into
 	// XML that svgtiny will parse correctly.

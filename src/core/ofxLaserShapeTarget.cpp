@@ -130,7 +130,7 @@ void ShapeTarget ::  processShapes() {
             
         }
         
-        std::sort(sortedShapeContainers.begin(), sortedShapeContainers.end(), [](const vector<std::shared_ptr<Shape>>& a, const vector<std::shared_ptr<Shape>>& b) -> bool {
+        std::stable_sort(sortedShapeContainers.begin(), sortedShapeContainers.end(), [](const vector<std::shared_ptr<Shape>>& a, const vector<std::shared_ptr<Shape>>& b) -> bool {
            
             float d1 = a.front()->getMedianZDepth();
             float d2 = b.front()->getMedianZDepth();

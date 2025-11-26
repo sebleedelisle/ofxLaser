@@ -24,7 +24,8 @@ class GlobalScale {
         if (scale <= 0.f) {
             scale = 1.f; // safe default
         }
-        scale = ofClamp(scale, 0, 1); 
+        scale = ofClamp(scale, 0, 10);  // to clamp out of scale values
+        
         return scale; //  glfwWindow->getPixelScreenCoordScale();
         
     }
