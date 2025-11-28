@@ -149,6 +149,15 @@ bool DacEtherDream::setPointsPerSecond(uint32_t newpps){
     return true;
 }
 
+void DacEtherDream::setArmed(bool armed) {
+    if (liberaDevice) {
+        DacBase::setArmed(armed); 
+        liberaDevice->setArmed(armed);
+    }
+    
+}
+
+
 bool DacEtherDream::setColourShift(float shiftSeconds) {
     // colourShift in ofxLaser is expressed in 1/10,000s (same units as libera scanner sync)
     const double tenThousandths = std::max(0.0, static_cast<double>(shiftSeconds));

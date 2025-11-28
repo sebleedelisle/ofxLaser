@@ -29,7 +29,8 @@ public:
     bool setPointsPerSecond(uint32_t newpps) override;
     uint32_t getPointsPerSecond() override { return pps; }
     bool setColourShift(float shiftSeconds) override;
-
+    void setArmed(bool armed) override;
+    
     virtual string getType() override { return "EtherDream"; };
     
     string getRawId() override;
