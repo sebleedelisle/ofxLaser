@@ -126,6 +126,10 @@ string DacEtherDream::getEdId() {
 }
 
 int DacEtherDream::getStatus() {
+    // Keep status in sync with the underlying libera device connection state.
+    if (liberaDevice) {
+        networkConnected = liberaDevice->hasActiveConnection();
+    }
     return networkConnected ? OFXLASER_DACSTATUS_GOOD : OFXLASER_DACSTATUS_ERROR;
 }
 
@@ -138,6 +142,9 @@ EtherDreamData DacEtherDream::getEtherDreamData() {
 }
 
 string DacEtherDream::getEtherDreamStateString() {
+    if (liberaDevice) {
+        networkConnected = liberaDevice->hasActiveConnection();
+    }
     return networkConnected ? "Connected (libera)" : "Disconnected";
 }
 

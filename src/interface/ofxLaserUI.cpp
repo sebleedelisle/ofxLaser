@@ -112,6 +112,12 @@ void updateGui() {
     ImGuiIO& io = ImGui::GetIO();
     io.DeltaTime = ofGetLastFrameTime();
     
+#ifdef TARGET_OSX
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_COMMAND);
+#else
+    io.KeyCtrl = ofGetKeyPressed(OF_KEY_CONTROL);
+#endif
+    
 }
 
 void startGui() {
