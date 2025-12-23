@@ -183,6 +183,8 @@ void DacHelios :: threadedFunction(){
     std::shared_ptr<DacHeliosFrame> currentFrame = nullptr;
     std::shared_ptr<DacHeliosFrame> nextFrame = nullptr;
     std::shared_ptr<DacHeliosFrame> newFrame = nullptr;
+    int consecutiveNotReady = 0;
+    uint64_t lastStatusLogTime = 0;
 	
 	while(isThreadRunning()) {
 	
@@ -249,6 +251,19 @@ void DacHelios :: threadedFunction(){
                 // Is the dac ready for a new frame?
 				//if(dacDevice!=nullptr)
                 status = dacDevice->GetStatus();
+
+                if (status == 1) {
+                    consecutiveNotReady = 0;
+                } else {
+                    consecutiveNotReady++;
+                }
+                uint64_t nowMs = ofGetElapsedTimeMillis();
+                if ((status < 0 || consecutiveNotReady > 5) && (nowMs - lastStatusLogTime > 1000)) {
+                    ofLogNotice("HeliosDac") << "GetStatus result: " << status
+                                             << " consecutiveNotReady: " << consecutiveNotReady
+                                             << " armed: " << armed;
+                    lastStatusLogTime = nowMs;
+                }
 				
                 sleep(1);
 				dacReady = (status == 1);
@@ -389,4 +404,3 @@ void DacHelios :: deleteFrame(std::shared_ptr<DacHeliosFrame> frame){
 	//ofLogNotice("DacHelios :: releaseFrame() - added frame to channel "+ofToString(frame->numSamples));
 	//return nullptr;
 }
-

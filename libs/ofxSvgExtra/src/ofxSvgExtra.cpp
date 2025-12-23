@@ -235,17 +235,21 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
     
     auto removeElementsWithZeroOpacityAttribute = [&](const std::string& attributeName){
         bool removed = true;
-        while(removed) {
+        while (removed) {
             removed = false;
+
             ofXml::Search elements = xml.find("//*[@" + attributeName + "]");
-            for(ofXml & element : elements){
-                float opacityValue = parseOpacity(element.getAttribute(attributeName).getValue());
-                if(opacityValue <= 0.f) {
+            for (ofXml element : elements) { // <-- copy, not reference
+                float opacityValue = parseOpacity(
+                    element.getAttribute(attributeName).getValue()
+                );
+
+                if (opacityValue <= 0.f) {
                     ofXml parent = element.getParent();
-                    if(parent && element){
+                    if (parent && element) {
                         parent.removeChild(element);
                         removed = true;
-                        break;
+                        break; // restart search safely
                     }
                 }
             }

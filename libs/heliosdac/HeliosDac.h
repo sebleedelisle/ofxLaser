@@ -38,7 +38,7 @@ cannot receive a new frame until the currently playing frame finishes, freeing u
 #include <chrono>
 #include <ofMain.h>
 
-#define HELIOS_SDK_VERSION	6
+#define HELIOS_SDK_VERSION	11
 
 #define HELIOS_MAX_POINTS	0x1000
 #define HELIOS_MAX_RATE		0xFFFF
