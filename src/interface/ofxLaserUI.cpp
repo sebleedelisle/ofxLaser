@@ -1016,7 +1016,34 @@ bool startWindow(string name, ImVec2 pos, ImVec2 size, ImGuiWindowFlags flags, b
     ImGui::SetNextWindowPos(pos, resetPosition ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
     
     // start the main window!
-    return ImGui::Begin(name.c_str(), openstate, window_flags);
+    bool windowOpen = ImGui::Begin(name.c_str(), openstate, window_flags);
+    if(windowOpen && ImGui::IsWindowAppearing()) {
+        const ImVec2 display = ImGui::GetIO().DisplaySize;
+        const ImVec2 pos = ImGui::GetWindowPos();
+        const ImVec2 size = ImGui::GetWindowSize();
+        const float margin = 10.0f;
+        ImVec2 clamped = pos;
+        const float maxX = display.x - margin;
+        const float maxY = display.y - margin;
+
+        if(size.x > (maxX - margin)) {
+            clamped.x = margin;
+        } else {
+            if(clamped.x + size.x > maxX) clamped.x = maxX - size.x;
+            if(clamped.x < margin) clamped.x = margin;
+        }
+        if(size.y > (maxY - margin)) {
+            clamped.y = margin;
+        } else {
+            if(clamped.y + size.y > maxY) clamped.y = maxY - size.y;
+            if(clamped.y < margin) clamped.y = margin;
+        }
+
+        if(clamped.x != pos.x || clamped.y != pos.y) {
+            ImGui::SetWindowPos(clamped);
+        }
+    }
+    return windowOpen;
     
 }
 
