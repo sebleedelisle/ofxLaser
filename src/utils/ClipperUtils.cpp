@@ -69,6 +69,7 @@ void ClipperUtils :: addShapesToMasks(vector<std::shared_ptr<ofxLaser::Shape>> e
     try {
 
         ofxLaserClipper::Paths clipperElements;
+        clipperElements.reserve(elements.size());
         for(std::shared_ptr<ofxLaser::Shape>& element : elements) {
             if(!element->isEmpty()) {
                 clipperElements.push_back(shapeToClipper(element));
@@ -175,12 +176,12 @@ vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipShapeToMask(std::sh
 
 bool ClipperUtils ::  pointWithinMask(glm::vec3 vertex, ofxLaserClipper::Paths& clipperMasks){
 
-    clipper.Clear();
     bool inside = false;
-    
-    ofxLaserClipper::IntPoint p = ofxLaserClipper::IntPoint(vertex.x * ofx::Clipper::DEFAULT_CLIPPER_SCALE, vertex.y * ofx::Clipper::DEFAULT_CLIPPER_SCALE);
+    const auto scale = ofx::Clipper::DEFAULT_CLIPPER_SCALE;
 
-    for(ofxLaserClipper::Path& path : clipperMasks)  {
+    const ofxLaserClipper::IntPoint p(vertex.x * scale, vertex.y * scale);
+
+    for(const ofxLaserClipper::Path& path : clipperMasks)  {
         if(PointInPolygon(p, path)!=0) inside = !inside;
     }
     return inside;
@@ -194,27 +195,27 @@ ofxLaserClipper::Path ClipperUtils :: shapeToClipper(std::shared_ptr<ofxLaser::S
     // TODO check shape is closed
     
     ofxLaserClipper::Path path;
-
-    ofxLaserClipper::IntPoint p(0,0, 0xffffff);
-
-    // not sure why we're going backwards, don't think it makes a difference?
-    //for(int i = shape->getNumPoints()-1; i>=0; i--) {
-    //    glm::vec3 vertex = shape->getPointAt(i);
     vector<glm::vec3>& points = shape->getPoints();
-    int numpoints = shape->isClosed()? points.size()+1 : points.size();
-    for(int i = 0; i<numpoints; i++)  {
-        glm::vec3& vertex = points.at(i%points.size());
-        
-        ofColor c = shape->getColourAtPoint(i%points.size());
-        long long hexvalue = c.getHex();
-        
+    if(points.empty()) {
+        return path;
+    }
+
+    const auto scale = ofx::Clipper::DEFAULT_CLIPPER_SCALE;
+    const size_t pointCount = points.size();
+    const size_t numpoints = shape->isClosed() ? pointCount + 1 : pointCount;
+    path.reserve(numpoints);
+
+    for(size_t i = 0; i<numpoints; i++)  {
+        const size_t pointIndex = (i < pointCount) ? i : 0;
+        const glm::vec3& vertex = points[pointIndex];
+
+        long long hexvalue = shape->getColourAtPoint(static_cast<int>(pointIndex)).getHex();
+
         // storing a bit code !
         if(i==0) hexvalue |= 0x01000000; // bit 25 for start point
         else if(i==numpoints-1) hexvalue |= 0x02000000; // bit 26 for end point
-        
-        p = ofxLaserClipper::IntPoint(vertex.x * ofx::Clipper::DEFAULT_CLIPPER_SCALE, vertex.y * ofx::Clipper::DEFAULT_CLIPPER_SCALE, hexvalue);
 
-       path.push_back(p);
+        path.emplace_back(vertex.x * scale, vertex.y * scale, hexvalue);
     }
     
     // open closed paths
@@ -264,38 +265,41 @@ ofxLaserClipper::Path ClipperUtils :: shapeToClipper(std::shared_ptr<ofxLaser::S
 std::shared_ptr<ofxLaser::Shape> ClipperUtils :: clipperPathToShape(ofxLaserClipper::Path& path, std::shared_ptr<ofxLaser::Shape> originalElement) {
 
     std::shared_ptr<ofxLaser::Shape> newelement = originalElement->clone();
-    newelement->clear();
-    
-    
-    if(!originalElement->isMultiColoured()) {
-        newelement->setColour(originalElement->getColour());
-    }
-    newelement->setClipRectangle(originalElement->getClipRectangle()); 
 
     bool pathclosed = (path.front()==path.back());
-    int numpoints = pathclosed?path.size()-1 : path.size();
-    
-    for(int i = 0; i<numpoints; i++) {
-        ofxLaserClipper :: IntPoint cp = path.at(i);
-        glm::vec3 p ((float)cp.X/ofx::Clipper::DEFAULT_CLIPPER_SCALE, (float)cp.Y/ofx::Clipper::DEFAULT_CLIPPER_SCALE, 0);
-        ofFloatColor c = ofColor::fromHex(cp.Z);
-        if(originalElement->isMultiColoured()) {
-            newelement->addPoint(p, c);
-        } else {
-            newelement->addPoint(p);
-        } 
+    const int numpoints = pathclosed ? static_cast<int>(path.size()) - 1 : static_cast<int>(path.size());
+    const bool multiColoured = originalElement->isMultiColoured();
+    const float invScale = 1.0f / static_cast<float>(ofx::Clipper::DEFAULT_CLIPPER_SCALE);
 
-
+    vector<glm::vec3> points;
+    points.reserve(numpoints);
+    vector<ofFloatColor> colours;
+    if(multiColoured) {
+        colours.reserve(numpoints);
     }
-    
-    newelement->setClosed(pathclosed);
+
+    for(int i = 0; i<numpoints; i++) {
+        const ofxLaserClipper::IntPoint& cp = path[i];
+        points.emplace_back(static_cast<float>(cp.X) * invScale, static_cast<float>(cp.Y) * invScale, 0);
+        if(multiColoured) {
+            colours.emplace_back(ofColor::fromHex(cp.Z));
+        }
+    }
+
+    newelement->setPoints(points, pathclosed);
+    if(multiColoured) {
+        newelement->setColours(colours);
+    } else {
+        newelement->setColour(originalElement->getColour());
+    }
+    newelement->setClipRectangle(originalElement->getClipRectangle());
     
     return newelement;
 }
 
 
 vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipperPathsToShapes(vector<ofxLaserClipper::Path>& paths, std::shared_ptr<ofxLaser::Shape> originalElement) {
-    if(paths.size()==0) return {};
+    if(paths.empty()) return {};
     
         int startIndex = -1;
         int endIndex = -1;
@@ -344,6 +348,7 @@ vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipperPathsToShapes(ve
             }
             
             ofxLaserClipper::Path newPath;
+            newPath.reserve(startPath.size() + (endPath.size()>1 ? endPath.size()-1 : 0));
             newPath.insert(newPath.end(), startPath.begin(), startPath.end());
             if(endPath.size()>1) {
                 newPath.insert(newPath.end(), endPath.begin()+1, endPath.end());
@@ -362,6 +367,7 @@ vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipperPathsToShapes(ve
     }
     
     vector<std::shared_ptr<ofxLaser::Shape>> newelements;
+    newelements.reserve(paths.size());
     for(int i = 0; i<paths.size(); i++) {
         if((i==startIndex) || (i==endIndex)) continue;
         ofxLaserClipper::Path& path = paths.at(i);

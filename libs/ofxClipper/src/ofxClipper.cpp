@@ -139,9 +139,14 @@ bool Clipper::addPolyline(const ofPolyline& polyline,
                           bool autoClose,
                           ofxLaserClipper::cInt scale)
 {
-    auto _polyline = polyline;
-    if (autoClose) close(_polyline);
-    return AddPath(toClipper(_polyline, scale), PolyTyp, _polyline.isClosed());
+    if (autoClose)
+    {
+        auto _polyline = polyline;
+        close(_polyline);
+        return AddPath(toClipper(_polyline, scale), PolyTyp, true);
+    }
+
+    return AddPath(toClipper(polyline, scale), PolyTyp, polyline.isClosed());
 }
 
 bool Clipper::addPolylines(const std::vector<ofPolyline>& polylines,
@@ -149,16 +154,14 @@ bool Clipper::addPolylines(const std::vector<ofPolyline>& polylines,
                            bool autoClose,
                            ofxLaserClipper::cInt scale)
 {
-    auto _polylines = polylines;
-
     if (autoClose)
     {
+        auto _polylines = polylines;
         close(_polylines);
+        return AddPaths(toClipper(_polylines, scale), PolyTyp, true);
     }
 
-    bool isClosed = autoClose ? true : areAllClosed(_polylines);
-
-    return AddPaths(toClipper(_polylines, scale), PolyTyp, isClosed);
+    return AddPaths(toClipper(polylines, scale), PolyTyp, areAllClosed(polylines));
 }
 
     
@@ -213,6 +216,7 @@ ofxLaserClipper::Path Clipper::toClipper(const ofPolyline& polyline,
                                     ofxLaserClipper::cInt scale)
 {
     ofxLaserClipper::Path path;
+    path.reserve(polyline.size());
 
     for (auto& vertex: polyline.getVertices())
     {
@@ -227,6 +231,7 @@ ofxLaserClipper::Paths Clipper::toClipper(const std::vector<ofPolyline>& polylin
                                      ofxLaserClipper::cInt scale)
 {
     ofxLaserClipper::Paths paths;
+    paths.reserve(polylines.size());
     for (auto& polyline: polylines) paths.push_back(toClipper(polyline, scale));
     return paths;
 }
@@ -242,18 +247,20 @@ ofDefaultVertexType Clipper::toOf(const ofxLaserClipper::IntPoint& point,
                                   ofxLaserClipper::cInt scale)
 {
     ofDefaultVertexType vertex;
-    vertex.x = point.X / scale;
-    vertex.y = point.Y / scale;
+    const float invScale = 1.0f / static_cast<float>(scale);
+    vertex.x = static_cast<float>(point.X) * invScale;
+    vertex.y = static_cast<float>(point.Y) * invScale;
     return vertex;
 }
 
 
 ofRectangle Clipper::toOf(const ofxLaserClipper::IntRect& rectangle, ofxLaserClipper::cInt scale)
 {
-    return ofRectangle(rectangle.left / scale,
-                       rectangle.top / scale,
-                       (rectangle.right - rectangle.left) / scale,
-                       (rectangle.bottom - rectangle.top) / scale);
+    const float invScale = 1.0f / static_cast<float>(scale);
+    return ofRectangle(static_cast<float>(rectangle.left) * invScale,
+                       static_cast<float>(rectangle.top) * invScale,
+                       static_cast<float>(rectangle.right - rectangle.left) * invScale,
+                       static_cast<float>(rectangle.bottom - rectangle.top) * invScale);
 }
 
 
@@ -262,6 +269,7 @@ ofPolyline Clipper::toOf(const ofxLaserClipper::Path& path,
                          ofxLaserClipper::cInt scale)
 {
     ofPolyline polyline;
+    polyline.getVertices().reserve(path.size());
     for (auto& point: path) polyline.addVertex(toOf(point, scale));
     if (isClosed) polyline.close();
     return polyline;
@@ -273,6 +281,7 @@ std::vector<ofPolyline> Clipper::toOf(const ofxLaserClipper::Paths& paths,
                                       ofxLaserClipper::cInt scale)
 {
     std::vector<ofPolyline> results;
+    results.reserve(paths.size());
     for (auto& path: paths) results.push_back(toOf(path, isClosed, scale));
     return results;
 }
