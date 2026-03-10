@@ -6,11 +6,154 @@
 //
 
 #include <ClipperUtils.h>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <utility>
 
 
 
 
 ofx::Clipper ClipperUtils::clipper;
+
+namespace {
+
+constexpr float clipIntervalEpsilon = 1e-6f;
+constexpr float pointMergeEpsilon = 5e-4f;
+
+struct SegmentInterval {
+    float startT = 0.0f;
+    float endT = 0.0f;
+};
+
+struct ShapePieceData {
+    vector<glm::vec3> points;
+    vector<ofFloatColor> colours;
+};
+
+bool pointsAreNear(const glm::vec3& a, const glm::vec3& b) {
+    return glm::distance2(a, b) <= (pointMergeEpsilon * pointMergeEpsilon);
+}
+
+float pointToSegmentT(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& point) {
+    const glm::vec3 direction = p1 - p0;
+    const float denominator = glm::dot(direction, direction);
+    if(denominator <= std::numeric_limits<float>::epsilon()) {
+        return 0.0f;
+    }
+    return glm::dot(point - p0, direction) / denominator;
+}
+
+void addUniqueTValue(vector<float>& tValues, float t) {
+    t = ofClamp(t, 0.0f, 1.0f);
+    for(const float existing : tValues) {
+        if(std::abs(existing - t) <= clipIntervalEpsilon) {
+            return;
+        }
+    }
+    tValues.push_back(t);
+}
+
+vector<vector<glm::vec3>> convertMasksToFloatPolygons(const ofxLaserClipper::Paths& clipperMasks) {
+    vector<vector<glm::vec3>> maskPolygons;
+    maskPolygons.reserve(clipperMasks.size());
+
+    const float invScale = 1.0f / static_cast<float>(ofx::Clipper::DEFAULT_CLIPPER_SCALE);
+
+    for(const ofxLaserClipper::Path& path : clipperMasks) {
+        if(path.size() < 2) {
+            continue;
+        }
+
+        vector<glm::vec3> polygon;
+        polygon.reserve(path.size());
+        for(const ofxLaserClipper::IntPoint& p : path) {
+            polygon.emplace_back(static_cast<float>(p.X) * invScale, static_cast<float>(p.Y) * invScale, 0.0f);
+        }
+
+        if(polygon.size() > 2 && pointsAreNear(polygon.front(), polygon.back())) {
+            polygon.pop_back();
+        }
+        if(polygon.size() >= 2) {
+            maskPolygons.push_back(std::move(polygon));
+        }
+    }
+
+    return maskPolygons;
+}
+
+vector<SegmentInterval> subtractMasksFromSegment(const glm::vec3& p0,
+                                                 const glm::vec3& p1,
+                                                 const vector<vector<glm::vec3>>& maskPolygons,
+                                                 const ofxLaserClipper::Paths& clipperMasks) {
+    if(pointsAreNear(p0, p1)) {
+        return {};
+    }
+
+    vector<float> tValues = {0.0f, 1.0f};
+    for(const vector<glm::vec3>& polygon : maskPolygons) {
+        if(polygon.size() < 2) {
+            continue;
+        }
+
+        for(size_t i = 0; i < polygon.size(); ++i) {
+            const glm::vec3& edgeStart = polygon[i];
+            const glm::vec3& edgeEnd = polygon[(i + 1) % polygon.size()];
+
+            glm::vec3 intersection;
+            if(ofLineSegmentIntersection(p0, p1, edgeStart, edgeEnd, intersection)) {
+                addUniqueTValue(tValues, pointToSegmentT(p0, p1, intersection));
+            }
+        }
+    }
+
+    std::sort(tValues.begin(), tValues.end());
+
+    vector<SegmentInterval> outsideIntervals;
+    outsideIntervals.reserve(tValues.size());
+
+    for(size_t i = 1; i < tValues.size(); ++i) {
+        const float t0 = tValues[i - 1];
+        const float t1 = tValues[i];
+        if((t1 - t0) <= clipIntervalEpsilon) {
+            continue;
+        }
+
+        const float midpointT = (t0 + t1) * 0.5f;
+        const glm::vec3 midpoint = glm::mix(p0, p1, midpointT);
+        if(!ClipperUtils::pointWithinMask(midpoint, clipperMasks)) {
+            outsideIntervals.push_back({t0, t1});
+        }
+    }
+
+    return outsideIntervals;
+}
+
+void appendPointToPiece(ShapePieceData& piece,
+                        const glm::vec3& point,
+                        const ofFloatColor& colour,
+                        bool multiColoured) {
+    if(piece.points.empty() || !pointsAreNear(piece.points.back(), point)) {
+        piece.points.push_back(point);
+        if(multiColoured) {
+            piece.colours.push_back(colour);
+        }
+        return;
+    }
+
+    if(multiColoured && !piece.colours.empty()) {
+        piece.colours.back() = colour;
+    }
+}
+
+void flushPieceIfValid(ShapePieceData& currentPiece, vector<ShapePieceData>& pieces) {
+    if(currentPiece.points.size() >= 2) {
+        pieces.push_back(std::move(currentPiece));
+    }
+    currentPiece = ShapePieceData{};
+}
+
+} // namespace
 
 void ClipperUtils :: addShapeToMasks(std::shared_ptr<ofxLaser::Shape> element, ofxLaserClipper::Paths& clipperMasks){
 
@@ -104,18 +247,16 @@ void ClipperUtils :: addShapesToMasks(vector<std::shared_ptr<ofxLaser::Shape>> e
 
 
 vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipShapeToMask(std::shared_ptr<ofxLaser::Shape> shape, ofxLaserClipper::Paths& clipperMasks) {
-    
     if(shape->isEmpty()) {
         return {};
     }
 
-    if(clipperMasks.size()==0) {
+    if(clipperMasks.empty()) {
         return { shape->clone() };
     }
 
     // IF IT'S a POINT :
-   
-    if(shape->getPoints().size()==1) {
+    if(shape->getPoints().size() == 1) {
 
         if(pointWithinMask(shape->getStartPos(), clipperMasks)) {
             return { } ;
@@ -125,56 +266,125 @@ vector<std::shared_ptr<ofxLaser::Shape>> ClipperUtils :: clipShapeToMask(std::sh
 
     }
     // otherwise ...
-
-    vector<std::shared_ptr<ofxLaser::Shape>> clippedElements;
-
-    clipper.Clear();
-
-    try {
-        //clipper.addPolyline(elementToPolyline(element), ClipperLib::ptSubject, false);
-        ofxLaserClipper::Path elementpath = shapeToClipper(shape);
-        clipper.AddPath(elementpath, ofxLaserClipper::ptSubject, false);
-
-        clipper.AddPaths(clipperMasks, ofxLaserClipper::ptClip, true);
-
-        try {
-            ofxLaserClipper::PolyTree out;
-
-            bool success = clipper.Execute(ofxLaserClipper::ctDifference,
-                                out,
-                                clipper.toClipper(OF_POLY_WINDING_ODD),
-                                clipper.toClipper(OF_POLY_WINDING_ODD));
-
-
-
-            if (!success) {
-                ofLogError("Clipper::getClipped") << "Failed to create clipped paths.";
-            } else {
-                ofxLaserClipper:: Paths paths;
-                OpenPathsFromPolyTree(out, paths);
-                clippedElements = clipperPathsToShapes(paths, shape );
-            }
-
-        } catch (const std::exception& exc) {
-
-            ofLogError("Clipper::getClipped") << exc.what();
-
-        }
-
-        
-        
-        return clippedElements;
-
-
-    } catch(...) {
-        ofLogError("Clipper error!");
-
+    const vector<glm::vec3>& shapePoints = shape->getPoints();
+    if(shapePoints.size() < 2) {
         return {};
     }
 
+    const bool closed = shape->isClosed();
+    const bool multiColoured = shape->isMultiColoured();
+    const size_t pointCount = shapePoints.size();
+    const size_t segmentCount = closed ? pointCount : pointCount - 1;
+
+    const vector<vector<glm::vec3>> maskPolygons = convertMasksToFloatPolygons(clipperMasks);
+
+    vector<ShapePieceData> pieceData;
+    pieceData.reserve(segmentCount);
+    ShapePieceData currentPiece;
+    if(multiColoured) {
+        currentPiece.colours.reserve(pointCount);
+    }
+
+    for(size_t segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
+        const glm::vec3& p0 = shapePoints[segmentIndex];
+        const glm::vec3& p1 = shapePoints[(segmentIndex + 1) % pointCount];
+
+        const vector<SegmentInterval> outsideIntervals = subtractMasksFromSegment(p0, p1, maskPolygons, clipperMasks);
+
+        if(outsideIntervals.empty()) {
+            flushPieceIfValid(currentPiece, pieceData);
+            continue;
+        }
+
+        if(outsideIntervals.front().startT > clipIntervalEpsilon) {
+            flushPieceIfValid(currentPiece, pieceData);
+        }
+
+        for(size_t intervalIndex = 0; intervalIndex < outsideIntervals.size(); ++intervalIndex) {
+            const SegmentInterval& interval = outsideIntervals[intervalIndex];
+            const glm::vec3 startPoint = glm::mix(p0, p1, interval.startT);
+            const glm::vec3 endPoint = glm::mix(p0, p1, interval.endT);
+
+            const float startIndex = static_cast<float>(segmentIndex) + interval.startT;
+            const float endIndex = static_cast<float>(segmentIndex) + interval.endT;
+            const ofFloatColor startColour = shape->getColourAtFloatIndex(startIndex);
+            const ofFloatColor endColour = shape->getColourAtFloatIndex(endIndex);
+
+            appendPointToPiece(currentPiece, startPoint, startColour, multiColoured);
+            appendPointToPiece(currentPiece, endPoint, endColour, multiColoured);
+
+            const bool hasGapAfter = (intervalIndex + 1 < outsideIntervals.size()) &&
+                                     ((outsideIntervals[intervalIndex + 1].startT - interval.endT) > clipIntervalEpsilon);
+            if(hasGapAfter) {
+                flushPieceIfValid(currentPiece, pieceData);
+            }
+        }
+
+        if(outsideIntervals.back().endT < (1.0f - clipIntervalEpsilon)) {
+            flushPieceIfValid(currentPiece, pieceData);
+        }
+    }
+
+    flushPieceIfValid(currentPiece, pieceData);
+
+    // Closed strokes are cyclic, so if we split at the arbitrary index-0 seam
+    // we can safely stitch back when first/last piece meet there.
+    if(closed && pieceData.size() > 1) {
+        ShapePieceData& firstPiece = pieceData.front();
+        ShapePieceData& lastPiece = pieceData.back();
+        if(!firstPiece.points.empty() && !lastPiece.points.empty() &&
+           pointsAreNear(lastPiece.points.back(), firstPiece.points.front())) {
+            ShapePieceData mergedPiece;
+            mergedPiece.points.reserve(lastPiece.points.size() + firstPiece.points.size() - 1);
+            mergedPiece.points.insert(mergedPiece.points.end(), lastPiece.points.begin(), lastPiece.points.end());
+            mergedPiece.points.insert(mergedPiece.points.end(), firstPiece.points.begin() + 1, firstPiece.points.end());
+
+            if(multiColoured) {
+                mergedPiece.colours.reserve(lastPiece.colours.size() + firstPiece.colours.size() - 1);
+                mergedPiece.colours.insert(mergedPiece.colours.end(), lastPiece.colours.begin(), lastPiece.colours.end());
+                if(firstPiece.colours.size() > 1) {
+                    mergedPiece.colours.insert(mergedPiece.colours.end(), firstPiece.colours.begin() + 1, firstPiece.colours.end());
+                }
+            }
+
+            firstPiece = std::move(mergedPiece);
+            pieceData.pop_back();
+        }
+    }
+
+    vector<std::shared_ptr<ofxLaser::Shape>> clippedElements;
+    clippedElements.reserve(pieceData.size());
+
+    for(ShapePieceData& piece : pieceData) {
+        bool pieceClosed = closed &&
+                           (piece.points.size() > 2) &&
+                           pointsAreNear(piece.points.front(), piece.points.back());
+        if(pieceClosed) {
+            piece.points.pop_back();
+            if(multiColoured && !piece.colours.empty()) {
+                piece.colours.pop_back();
+            }
+        }
+
+        if(piece.points.size() < 2) {
+            continue;
+        }
+
+        std::shared_ptr<ofxLaser::Shape> newShape = shape->clone();
+        newShape->setPoints(piece.points, pieceClosed);
+        if(multiColoured) {
+            newShape->setColours(piece.colours);
+        } else {
+            newShape->setColour(shape->getColour());
+        }
+        newShape->setClipRectangle(shape->getClipRectangle());
+        clippedElements.push_back(newShape);
+    }
+
+    return clippedElements;
 }
 
-bool ClipperUtils ::  pointWithinMask(glm::vec3 vertex, ofxLaserClipper::Paths& clipperMasks){
+bool ClipperUtils ::  pointWithinMask(glm::vec3 vertex, const ofxLaserClipper::Paths& clipperMasks){
 
     bool inside = false;
     const auto scale = ofx::Clipper::DEFAULT_CLIPPER_SCALE;

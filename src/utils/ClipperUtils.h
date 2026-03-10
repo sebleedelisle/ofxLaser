@@ -25,7 +25,7 @@ class ClipperUtils {
     static void addShapesToMasks(vector<std::shared_ptr<ofxLaser::Shape>> elements, ofxLaserClipper::Paths& clipperMasks);
     static vector<std::shared_ptr<ofxLaser::Shape>> clipShapeToMask(std::shared_ptr<ofxLaser::Shape> shape, ofxLaserClipper::Paths& clipperMasks);
     
-    static bool pointWithinMask(glm::vec3 point, ofxLaserClipper::Paths& clipperMasks);
+    static bool pointWithinMask(glm::vec3 point, const ofxLaserClipper::Paths& clipperMasks);
     
     static ofxLaserClipper::Path shapeToClipper(std::shared_ptr<ofxLaser::Shape> shape);
 
@@ -59,4 +59,3 @@ class ClipperUtils {
     
     
 };
-
