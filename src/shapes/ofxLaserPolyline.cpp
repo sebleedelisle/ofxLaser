@@ -84,9 +84,6 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, c
 //	}
 
 //	cachedProfile = &profile;
-    vector<ofxLaser::Point> newPoints;
-	
-    
 	float acceleration = profile.acceleration;
 	float speed = profile.speed;
 	float cornerThresholdAngle = profile.cornerThreshold;
@@ -111,33 +108,31 @@ void Polyline::appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, c
 		
 		float length = enddistance - startdistance;
 		
-		glm::vec3 lastpoint;
-        ofColor c;
-		
-        if(length>0) {
-            
-            vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
- 
-            for(size_t i = 0; i<unitDistances.size(); i++) {
-                
-                float distanceAlongPoly = (unitDistances[i]*0.999* length) + startdistance;
-                
-                glm::vec3 p = getPointAtDistance(distanceAlongPoly);
-                ofFloatColor colour = getColourAtDistance(distanceAlongPoly);
+	        if(length>0) {
+	            
+	            vector<float>& unitDistances = getPointsAlongDistance(length, acceleration, speed, speedMultiplier);
+	            // Pre-grow destination capacity per segment. This keeps push_back()
+	            // amortized O(1) even for large sampled polylines.
+	            pointsToAppendTo.reserve(pointsToAppendTo.size() + unitDistances.size());
+	 
+	            for(size_t i = 0; i<unitDistances.size(); i++) {
+	                
+	                float distanceAlongPoly = (unitDistances[i]*0.999* length) + startdistance;
 
-                newPoints.push_back(ofxLaser::Point(p, colour));
-         
-                lastpoint = p;
-                
-            }
-            
-        }
+	                // Compute the interpolated poly index once and reuse it for both
+	                // position and colour sampling. This avoids duplicate index scans.
+	                const float floatIndex = getFloatIndexAtDistance(distanceAlongPoly);
+	                const glm::vec3 p = getPointAtFloatIndex(floatIndex);
+	                const ofFloatColor colour = getColourAtFloatIndex(floatIndex);
+
+	                pointsToAppendTo.push_back(ofxLaser::Point(p, colour));
+	            }
+	            
+	        }
         
         startpoint=endpoint;
         
 	}
-    pointsToAppendTo.insert(pointsToAppendTo.end(), newPoints.begin(), newPoints.end());
-	
 }
 
 void Polyline :: addPreviewToMesh(ofMesh& mesh){

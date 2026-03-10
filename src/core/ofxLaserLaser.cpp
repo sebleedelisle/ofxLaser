@@ -7,6 +7,9 @@
 //
 
 #include "ofxLaserLaser.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 using namespace ofxLaser;
 
@@ -140,10 +143,16 @@ void Laser :: init() {
     advanced.add(smoothHomePosition.set("Smooth home position", true));
     advanced.add(sortShapes.set("Optimise shape draw order", true));
     advanced.add(newShapeSortMethod.set("Experimental shape sorting", true));
+    advanced.add(coherentShapeSort.set("Use coherent shape sorting", false));
+    advanced.add(coherentSortMemoryStrength.set("Coherent sort memory", 0.35f, 0.0f, 1.0f));
     //advanced.add(alwaysClockwise.set("Always clockwise sorting", true));
     advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
     advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
     advanced.add(syncShift.set("Sync shift", 0, -50, 50));
+    // Preview mesh generation is useful in UI mode, but it is significant work in
+    // high-point scenes. Keeping this toggle in advanced settings lets us disable
+    // that cost without affecting real laser output.
+    advanced.add(buildPreviewPathMeshes.set("Build preview path mesh", true));
     //advanced.add(disableSpeedCompensation.set("Disable speed compensation",false));
     
     laserparams.add(advanced);
@@ -710,6 +719,410 @@ void Laser :: clearPoints() {
     previewPathColoured.clear();
 }
 
+void Laser::sortShapePointsLegacy(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes) {
+    sortedShapes.clear();
+    if(allShapePoints.empty()) {
+        return;
+    }
+
+    // Legacy sorter:
+    // 1) Build a route greedily by always taking the nearest unvisited shape endpoint.
+    // 2) Optionally run a second insertion-style pass (`newShapeSortMethod`) to reduce travel.
+    // 3) If total travel improvement is too small, keep original order to avoid pointless churn.
+    for(PointsForShape& shape : allShapePoints) {
+        shape.tested = false;
+        shape.reversed = false;
+    }
+
+    bool reversed = false;
+    float shortestDistance = INFINITY;
+    PointsForShape* currentShape = nullptr;
+    PointsForShape* nextShape = nullptr;
+    ofPoint position = laserHomePosition;
+
+    const float moveDistanceForUnSortedShapes = getMoveDistanceForShapes(allShapePoints);
+
+    do {
+        if(currentShape != nullptr) {
+            PointsForShape& shape1 = *currentShape;
+            shape1.tested = true;
+            sortedShapes.push_back(&shape1);
+            shape1.reversed = reversed;
+            position = shape1.getEnd();
+            shortestDistance = INFINITY;
+            nextShape = nullptr;
+        }
+
+        // Evaluate every unvisited shape and pick whichever start/end endpoint is closest.
+        // We use squared distance here (no sqrt) because only relative ordering matters.
+        for(size_t i = 0; i < allShapePoints.size(); i++) {
+            PointsForShape& shape2 = allShapePoints[i];
+            if((currentShape == &shape2) || shape2.tested) {
+                continue;
+            }
+
+            shape2.reversed = false;
+            const float distanceToStart = position.squareDistance(shape2.getStart());
+            if(distanceToStart < shortestDistance) {
+                shortestDistance = distanceToStart;
+                nextShape = &shape2;
+                reversed = false;
+            }
+
+            if(shape2.reversable) {
+                const float distanceToEnd = position.squareDistance(shape2.getEnd());
+                if(distanceToEnd < shortestDistance) {
+                    shortestDistance = distanceToEnd;
+                    nextShape = &shape2;
+                    reversed = true;
+                }
+            }
+        }
+        currentShape = nextShape;
+    } while(currentShape != nullptr);
+
+    if(newShapeSortMethod) {
+        // Experimental second pass:
+        // for each element (backwards), test whether moving it earlier lowers local bridge cost.
+        for(PointsForShape* shape : sortedShapes) {
+            shape->tested = false;
+        }
+
+        int currentIndex = static_cast<int>(sortedShapes.size()) - 1;
+        while(currentIndex > 1) {
+            PointsForShape& shape = *sortedShapes[currentIndex];
+            if(shape.tested) {
+                currentIndex--;
+                continue;
+            }
+
+            int targetIndex = currentIndex;
+            PointsForShape& neighbourAfter = *sortedShapes[(currentIndex + 1) % sortedShapes.size()];
+            PointsForShape& neighbourBefore = *sortedShapes[currentIndex - 1];
+
+            // Local bridge-delta cost: "if shape stays here", how much connector travel does it add?
+            float distanceToBeat =
+                neighbourAfter.getStart().distance(shape.getEnd()) +
+                shape.getStart().distance(neighbourBefore.getEnd()) -
+                neighbourBefore.getEnd().distance(neighbourAfter.getStart());
+            // Require a minimum improvement margin to avoid tiny oscillatory edits.
+            distanceToBeat *= 0.95f;
+
+            for(int i = currentIndex - 1; i > 0; i--) {
+                const int shapeIndexBefore = (i == 0) ? static_cast<int>(sortedShapes.size()) - 1 : i - 1;
+                const int shapeIndexAfter = i;
+                PointsForShape& shapeBefore = *sortedShapes[shapeIndexBefore];
+                PointsForShape& shapeAfter = *sortedShapes[shapeIndexAfter];
+
+                const float distanceToCompare =
+                    shapeBefore.getEnd().distance(shape.getStart()) +
+                    shape.getEnd().distance(shapeAfter.getStart()) -
+                    shapeBefore.getEnd().distance(shapeAfter.getStart());
+
+                if(distanceToCompare < distanceToBeat) {
+                    targetIndex = i;
+                    distanceToBeat = distanceToCompare;
+                }
+            }
+
+            shape.tested = true;
+            if(targetIndex != currentIndex) {
+                sortedShapes.erase(sortedShapes.begin() + currentIndex);
+                sortedShapes.insert(sortedShapes.begin() + targetIndex, &shape);
+            } else {
+                currentIndex--;
+            }
+        }
+    }
+
+    if((moveDistanceForUnSortedShapes > 0) && (!sortedShapes.empty())) {
+        // Keep original order if sorting barely helps:
+        // 0.9 means the sorted route must save >10% travel to be accepted.
+        const float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedShapes);
+        if((moveDistanceForSortedShapes / moveDistanceForUnSortedShapes) > 0.9f) {
+            sortedShapes.clear();
+            for(size_t j = 0; j < allShapePoints.size(); j++) {
+                allShapePoints[j].reversed = false;
+                sortedShapes.push_back(&allShapePoints[j]);
+            }
+        }
+    }
+}
+
+void Laser::pruneCoherentSortMemory(const std::unordered_set<std::string>& activeZoneUids) {
+    for(auto it = coherentSortMemoryByZoneUid.begin(); it != coherentSortMemoryByZoneUid.end();) {
+        if(activeZoneUids.find(it->first) == activeZoneUids.end()) {
+            it = coherentSortMemoryByZoneUid.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void Laser::sortShapePointsCoherent(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes) {
+    sortedShapes.clear();
+    if(allShapePoints.empty()) {
+        return;
+    }
+
+    struct ShapeDescriptor {
+        PointsForShape* shape = nullptr;
+        glm::vec2 start;
+        glm::vec2 end;
+        glm::vec2 center;
+        float length = 0.0f;
+        bool reversable = false;
+        int prevOrder = -1;
+        bool preferredReversed = false;
+        bool selected = false;
+    };
+
+    struct MatchCandidate {
+        int currentIndex = -1;
+        int prevIndex = -1;
+        float score = INFINITY;
+        bool preferredReversed = false;
+    };
+
+    // Coherent sorter parameters.
+    // - matchGate: max geometry mismatch allowed when linking current shape to prior-frame entry.
+    // - matchWeightCenter / matchWeightLength: how much center drift and length drift matter in matching.
+    // - orderPenalty / orientationPenalty / unmatchedPenalty: coherence costs added in route scoring.
+    // - lowMatchRatioThreshold: if too few shapes match prior frame, disable memory for quick adaptation.
+    constexpr float matchGate = 220.0f;
+    constexpr float matchWeightCenter = 0.35f;
+    constexpr float matchWeightLength = 0.20f;
+    constexpr float orderPenalty = 40.0f;
+    constexpr float orientationPenalty = 18.0f;
+    constexpr float unmatchedPenalty = 22.0f;
+    constexpr float lowMatchRatioThreshold = 0.45f;
+
+    for(PointsForShape& shape : allShapePoints) {
+        shape.reversed = false;
+        shape.tested = false;
+    }
+
+    // Memory is maintained per output-zone UID (per laser instance).
+    std::unordered_map<std::string, vector<PointsForShape*>> shapesByZoneUid;
+    shapesByZoneUid.reserve(allShapePoints.size());
+    vector<std::string> zoneOrder;
+    zoneOrder.reserve(allShapePoints.size());
+
+    for(PointsForShape& shape : allShapePoints) {
+        const std::string zoneUid = shape.zoneUid.empty() ? std::string("__global__") : shape.zoneUid;
+        auto found = shapesByZoneUid.find(zoneUid);
+        if(found == shapesByZoneUid.end()) {
+            zoneOrder.push_back(zoneUid);
+            found = shapesByZoneUid.insert({zoneUid, {}}).first;
+        }
+        found->second.push_back(&shape);
+    }
+
+    std::unordered_set<std::string> activeZoneUids;
+    activeZoneUids.reserve(zoneOrder.size());
+    for(const std::string& zoneUid : zoneOrder) {
+        activeZoneUids.insert(zoneUid);
+    }
+    pruneCoherentSortMemory(activeZoneUids);
+
+    ofPoint currentPosition = laserHomePosition;
+    // User slider: 0 => pure travel greedy, 1 => full configured coherence penalties.
+    const float memoryStrength = ofClamp(coherentSortMemoryStrength.get(), 0.0f, 1.0f);
+
+    for(const std::string& zoneUid : zoneOrder) {
+        vector<PointsForShape*>& zoneShapes = shapesByZoneUid[zoneUid];
+        if(zoneShapes.empty()) {
+            continue;
+        }
+
+        vector<ShapeDescriptor> descriptors;
+        descriptors.reserve(zoneShapes.size());
+        for(PointsForShape* shape : zoneShapes) {
+            if((shape == nullptr) || shape->empty()) {
+                continue;
+            }
+
+            ShapeDescriptor descriptor;
+            descriptor.shape = shape;
+            const Point& first = shape->front();
+            const Point& last = shape->back();
+            descriptor.start = glm::vec2(first.x, first.y);
+            descriptor.end = glm::vec2(last.x, last.y);
+            descriptor.center = (descriptor.start + descriptor.end) * 0.5f;
+            descriptor.length = glm::distance(descriptor.start, descriptor.end);
+            descriptor.reversable = shape->reversable;
+            descriptors.push_back(descriptor);
+        }
+
+        if(descriptors.empty()) {
+            coherentSortMemoryByZoneUid[zoneUid].route.clear();
+            continue;
+        }
+
+        size_t matchedCount = 0;
+        float effectiveMemory = memoryStrength;
+        const auto previousMemory = coherentSortMemoryByZoneUid.find(zoneUid);
+        if((previousMemory != coherentSortMemoryByZoneUid.end()) && (!previousMemory->second.route.empty())) {
+            const vector<CoherentShapeMemoryEntry>& previousRoute = previousMemory->second.route;
+            vector<MatchCandidate> candidates;
+            candidates.reserve(descriptors.size() * previousRoute.size());
+
+            // Step 1: Match current shapes to prior route entries by geometry only (no IDs).
+            // We compare endpoint alignment, center movement, and length change.
+            for(size_t i = 0; i < descriptors.size(); i++) {
+                const ShapeDescriptor& current = descriptors[i];
+                for(size_t j = 0; j < previousRoute.size(); j++) {
+                    const CoherentShapeMemoryEntry& prev = previousRoute[j];
+
+                    const float directEndpointCost =
+                        glm::distance(current.start, prev.start) + glm::distance(current.end, prev.end);
+                    float reversedEndpointCost = std::numeric_limits<float>::max();
+                    if(current.reversable) {
+                        reversedEndpointCost =
+                            glm::distance(current.start, prev.end) + glm::distance(current.end, prev.start);
+                    }
+
+                    const bool preferReversed = reversedEndpointCost < directEndpointCost;
+                    const float endpointCost = preferReversed ? reversedEndpointCost : directEndpointCost;
+                    const float centerCost = glm::distance(current.center, prev.center);
+                    const float lengthCost = std::abs(current.length - prev.length);
+                    const float score =
+                        endpointCost + (centerCost * matchWeightCenter) + (lengthCost * matchWeightLength);
+                    // Reject weak/ambiguous matches so bad history links don't inject jitter.
+                    if(score > matchGate) {
+                        continue;
+                    }
+
+                    MatchCandidate candidate;
+                    candidate.currentIndex = static_cast<int>(i);
+                    candidate.prevIndex = static_cast<int>(j);
+                    candidate.score = score;
+                    candidate.preferredReversed = preferReversed;
+                    candidates.push_back(candidate);
+                }
+            }
+
+            std::sort(candidates.begin(), candidates.end(), [](const MatchCandidate& a, const MatchCandidate& b) {
+                return a.score < b.score;
+            });
+
+            vector<bool> currentTaken(descriptors.size(), false);
+            vector<bool> prevTaken(previousRoute.size(), false);
+            for(const MatchCandidate& candidate : candidates) {
+                if(currentTaken[candidate.currentIndex] || prevTaken[candidate.prevIndex]) {
+                    continue;
+                }
+                currentTaken[candidate.currentIndex] = true;
+                prevTaken[candidate.prevIndex] = true;
+                descriptors[candidate.currentIndex].prevOrder = candidate.prevIndex;
+                descriptors[candidate.currentIndex].preferredReversed = candidate.preferredReversed;
+                matchedCount++;
+            }
+
+            const float matchRatio = static_cast<float>(matchedCount) / static_cast<float>(descriptors.size());
+            if(matchRatio < lowMatchRatioThreshold) {
+                // Scene changed significantly: prioritise fast adaptation over memory.
+                effectiveMemory = 0.0f;
+            }
+        }
+
+        vector<PointsForShape*> sortedZoneShapes;
+        sortedZoneShapes.reserve(descriptors.size());
+        int lastPrevOrder = -1;
+
+        for(size_t placed = 0; placed < descriptors.size(); placed++) {
+            int bestIndex = -1;
+            bool bestReversed = false;
+            float bestScore = std::numeric_limits<float>::max();
+            float bestTravel = std::numeric_limits<float>::max();
+
+            // Step 2: Build route greedily with coherence-aware scoring:
+            // score = travelDistance + memoryStrength * coherencePenalty
+            // When memoryStrength is 0, this becomes pure distance greedy.
+            for(size_t i = 0; i < descriptors.size(); i++) {
+                ShapeDescriptor& candidate = descriptors[i];
+                if(candidate.selected) {
+                    continue;
+                }
+
+                auto evaluateOrientation = [&](bool candidateReversed) {
+                    if(candidateReversed && !candidate.reversable) {
+                        return;
+                    }
+
+                    const glm::vec2 candidateStart = candidateReversed ? candidate.end : candidate.start;
+                    const float travelDistance = glm::distance(glm::vec2(currentPosition.x, currentPosition.y), candidateStart);
+
+                    float coherencePenalty = 0.0f;
+                    if(effectiveMemory > 0.0f) {
+                        if((lastPrevOrder >= 0) && (candidate.prevOrder >= 0)) {
+                            const int expectedPrevOrder = lastPrevOrder + 1;
+                            // Penalise jumps away from prior-frame order continuity.
+                            coherencePenalty += std::abs(candidate.prevOrder - expectedPrevOrder) * orderPenalty;
+                        } else if((lastPrevOrder >= 0) && (candidate.prevOrder < 0)) {
+                            // Penalise injecting unmatched shapes in the middle of a matched sequence.
+                            coherencePenalty += unmatchedPenalty;
+                        }
+
+                        if((candidate.prevOrder >= 0) && (candidateReversed != candidate.preferredReversed)) {
+                            // Penalise direction flips relative to the previous-frame correspondence.
+                            coherencePenalty += orientationPenalty;
+                        }
+                    }
+
+                    const float totalScore = travelDistance + (effectiveMemory * coherencePenalty);
+                    if((totalScore < bestScore) || ((totalScore == bestScore) && (travelDistance < bestTravel))) {
+                        bestScore = totalScore;
+                        bestTravel = travelDistance;
+                        bestIndex = static_cast<int>(i);
+                        bestReversed = candidateReversed;
+                    }
+                };
+
+                evaluateOrientation(false);
+                evaluateOrientation(true);
+            }
+
+            if(bestIndex < 0) {
+                break;
+            }
+
+            ShapeDescriptor& selected = descriptors[bestIndex];
+            selected.selected = true;
+            selected.shape->reversed = bestReversed;
+            selected.shape->tested = true;
+            sortedZoneShapes.push_back(selected.shape);
+
+            currentPosition = selected.shape->getEnd();
+            if(selected.prevOrder >= 0) {
+                lastPrevOrder = selected.prevOrder;
+            }
+        }
+
+        // Step 3: Store this zone's final route as next frame's memory seed.
+        CoherentZoneMemory& zoneMemory = coherentSortMemoryByZoneUid[zoneUid];
+        zoneMemory.route.clear();
+        zoneMemory.route.reserve(sortedZoneShapes.size());
+        for(PointsForShape* sortedShape : sortedZoneShapes) {
+            if((sortedShape == nullptr) || sortedShape->empty()) {
+                continue;
+            }
+            CoherentShapeMemoryEntry memoryEntry;
+            const Point& start = sortedShape->getStart();
+            const Point& end = sortedShape->getEnd();
+            memoryEntry.start = glm::vec2(start.x, start.y);
+            memoryEntry.end = glm::vec2(end.x, end.y);
+            memoryEntry.center = (memoryEntry.start + memoryEntry.end) * 0.5f;
+            memoryEntry.length = glm::distance(memoryEntry.start, memoryEntry.end);
+            memoryEntry.reversed = sortedShape->reversed;
+            memoryEntry.reversable = sortedShape->reversable;
+            zoneMemory.route.push_back(memoryEntry);
+        }
+
+        sortedShapes.insert(sortedShapes.end(), sortedZoneShapes.begin(), sortedZoneShapes.end());
+    }
+}
+
 
 void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity, ofPixels* pixelmask) {
     
@@ -722,17 +1135,29 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
         // register skipped frame
         return;
     }
-    
-    //update the source rectangles
-    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        // if the zoneContent exists for this zone then update the source rectangle
-        int idindex = findZoneContentIndexForId(laserZone->getZoneId(), zonesContent);
-        if(idindex>=0) {
-            const ZoneContent& zoneContent = zonesContent[idindex];
-            laserZone->setSourceRect(zoneContent.sourceRectangle);
+
+    // Build a one-frame lookup table for zone content by UID.
+    // The old path repeatedly performed linear scans for every output zone.
+    std::unordered_map<std::string, const ZoneContent*> zoneContentLookup;
+    zoneContentLookup.reserve(zonesContent.size());
+    for(const ZoneContent& zoneContent : zonesContent) {
+        zoneContentLookup[zoneContent.zoneId.getUid()] = &zoneContent;
+    }
+
+    auto getZoneContent = [&zoneContentLookup](const ZoneId& zoneId) -> const ZoneContent* {
+        const auto lookup = zoneContentLookup.find(zoneId.getUid());
+        if(lookup == zoneContentLookup.end()) {
+            return nullptr;
         }
-        
-        
+        return lookup->second;
+    };
+    
+    // Keep per-output-zone source rectangles in sync with current content layout.
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        const ZoneContent* zoneContent = getZoneContent(laserZone->getZoneId());
+        if(zoneContent != nullptr) {
+            laserZone->setSourceRect(zoneContent->sourceRectangle);
+        }
     }
     
     // PAUSE FUNCTION
@@ -745,10 +1170,9 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
                 
                 
                 if(laserZone->getIsAlternate()) continue; // to ensure we don't get two sets of shapes
-                int idindex = findZoneContentIndexForId(laserZone->getZoneId(), zonesContent);
-                if(idindex>=0) {
-                    const ZoneContent& zoneContent = zonesContent[idindex];
-                    const vector<std::shared_ptr<Shape>>& zoneShapes = zoneContent.shapes;
+                const ZoneContent* zoneContent = getZoneContent(laserZone->getZoneId());
+                if(zoneContent != nullptr) {
+                    const vector<std::shared_ptr<Shape>>& zoneShapes = zoneContent->shapes;
                     vector<std::shared_ptr<Shape>>& shapes = pauseShapesByZoneUid[laserZone->getZoneId().getUid()];
                     for(std::shared_ptr<Shape> shape : zoneShapes) {
                         shapes.push_back(shape->clone());
@@ -769,199 +1193,27 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
     vector<PointsForShape> allzoneshapepoints;
     
     // TODO add speed multiplier to getPointsForMove function
-    getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, getSpeedMultiplier());
+    getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, getSpeedMultiplier(), &zoneContentLookup);
     
     vector<PointsForShape*> sortedshapes;
     
     // sort the point objects
     if(allzoneshapepoints.size()>0) {
-        bool reversed = false;
-        float shortestDistance = INFINITY;
-        
-        PointsForShape* currentShape = nullptr;
-        PointsForShape* nextShape = nullptr;
-        ofPoint position = laserHomePosition;
-        
         if(sortShapes) {
-            
-            float moveDistanceForUnSortedShapes = getMoveDistanceForShapes(allzoneshapepoints);
-            
-            do {
-                
-                if(currentShape!=nullptr) {
-                    // get the shape object at the current index
-                    PointsForShape& shape1 = *currentShape; // allzoneshapes[currentIndex];
-                    
-                    // set its tested flag to say we've checked it
-                    shape1.tested = true;
-                    // add it to the list
-                    sortedshapes.push_back(&shape1);
-                    // set its reversed flag - this is set during the
-                    // previous iterative process to find the next shape
-                    shape1.reversed = reversed;
-                    
-                    position = shape1.getEnd();
-                    
-                    // set the distance to infinity
-                    shortestDistance = INFINITY;
-                    // reset the next shape in case we don't find any
-                    nextShape = nullptr;
-                }
-                
-                
-                // go through all the shapes
-                for(size_t i = 0; i<allzoneshapepoints.size(); i++) {
-                    
-                    // get the shape at j
-                    PointsForShape& shape2 = allzoneshapepoints[i];
-                    // if it's the same shape as this one or we've already checked it skip this one
-                    if((currentShape==&shape2) || (shape2.tested)) continue;
-                    
-                    // check non-reversed first
-                    shape2.reversed = false;
-                    
-                    // if the distance between our first shape and the second shape is
-                    // the shortest we've found...
-                    if(position.squareDistance(shape2.getStart()) < shortestDistance) {
-                        // set the new shortest distance...
-                        shortestDistance = position.squareDistance(shape2.getStart());
-                        // set this as the next shape to check
-                        nextShape = &shape2;
-                        // set reversed to be false (this is set the next time around
-                        reversed = false;
-                    }
-                    
-                    // now do the same thing but with the next shape reversed
-                    if((shape2.reversable) && (position.squareDistance(shape2.getEnd()) < shortestDistance)) {
-                        shortestDistance = position.squareDistance(shape2.getEnd());
-                        nextShape = &shape2;
-                        reversed = true;
-                    }
-                    
-                }
-                currentShape = nextShape;
-                
-            } while (currentShape!=nullptr);
-            
-            
-            if(newShapeSortMethod) {
-                
-                //cout << " NEW SHAPE SORT START -------------- " <<sortedshapes.size()<<  endl;
-                
-                // reset the tested flags
-                for (PointsForShape* shape : sortedshapes) shape->tested = false;
-                
-                // start at the end
-                int currentIndex = sortedshapes.size()-1;
-                
-                while(currentIndex>1) { // don't think we need to do this process for 0 and 1
-                    
-                    PointsForShape& shape = *sortedshapes[currentIndex];
-                    if(shape.tested) {
-                        currentIndex--;
-                        continue;
-                    }
-                    // position to move this shape to
-                    int targetIndex = currentIndex;
-                    
-                    // get the distance between this and its two neighbours
-                    PointsForShape& neighbourAfter = *sortedshapes[(currentIndex+1) % sortedshapes.size()];
-                    PointsForShape& neighbourBefore = *sortedshapes[currentIndex-1]; // should always be >0
-                    
-                    float distanceToBeat = neighbourAfter.getStart().distance(shape.getEnd()) + shape.getStart().distance(neighbourBefore.getEnd()) - neighbourBefore.getEnd().distance(neighbourAfter.getStart());
-                    distanceToBeat *= 0.95; // so close calls do nothing
-                    
-                    // now iterate back to the first shape
-                    for(int i = currentIndex-1; i>0; i--) { // don't think we need to go all the way back to 0
-                        // check the distance if we were to insert the shape between i and i-1
-                        int shapeIndexBefore = (i==0) ? sortedshapes.size()-1 : i-1 ;
-                        int shapeIndexAfter = i;
-                        
-                        PointsForShape& shapeBefore = *sortedshapes[shapeIndexBefore];
-                        PointsForShape& shapeAfter = *sortedshapes[shapeIndexAfter];
-                        
-                        float distanceToCompare = shapeBefore.getEnd().distance(shape.getStart()) + shape.getEnd().distance(shapeAfter.getStart()) -                            shapeBefore.getEnd().distance(shapeAfter.getStart());
-                        
-                        // if((shape.getStart()!=shape.getEnd()) && (shapeBefore.getEnd().squareDistance(shapeAfter.getStart()) < 1)) continue; // if the shapes are connected don't insert a new one here unless it starts and ends at the same place
-                        
-                        if(distanceToCompare<distanceToBeat) {
-                            // set target position of this shape to be i
-                            targetIndex = i;
-                            distanceToBeat = distanceToCompare; 
-                        }
-                        
-                    }
-                    
-                    shape.tested = true;
-                    // if the target position != currentIndex then move it there
-                    if(targetIndex!=currentIndex) {
-                        sortedshapes.erase(sortedshapes.begin() + currentIndex);
-                        //if(targetIndex == 0 ) targetIndex = sortedshapes.size();
-                        sortedshapes.insert(sortedshapes.begin() +targetIndex, &shape);
-                        //ofLogNotice("moving shape at ") << currentIndex << " to " << targetIndex;
-                    } else {
-                        // else subtract 1 from the currentIndex
-                        currentIndex--;
-                    }
-                }
-                
-                //cout << "----------------------------------- " << endl;
-                
-                
-                
+            // Coherent mode keeps per-zone route memory across frames.
+            // Legacy mode is stateless and only minimises this-frame travel.
+            if(coherentShapeSort) {
+                sortShapePointsCoherent(allzoneshapepoints, sortedshapes);
+            } else {
+                coherentSortMemoryByZoneUid.clear();
+                sortShapePointsLegacy(allzoneshapepoints, sortedshapes);
             }
-            
-            //  if(alwaysClockwise) {
-            
-            // TODO this algorithm doesn't seem to work right now :/
-            //
-            //                // CHECK HANDEDNESS
-            //                float sum = 0;
-            //                ofPoint p1 = sortedshapes[0]->getStart();
-            //                ofPoint p2 = p1;
-            //                for(size_t i = 0; i< sortedshapes.size(); i++) {
-            //
-            //                    PointsForShape& shape = *sortedshapes[i];
-            //                    p1 = p2;
-            //                    p2 = shape.getStart();
-            //
-            //                    float value = (p2.x-p1.x) * (p2.y+p1.y);
-            //                    sum+=value;
-            //
-            //                    if(shape.getStart()!=shape.getEnd()) {
-            //                        p1 = p2;
-            //                        p2 = shape.getEnd();
-            //                        value = (p2.x-p1.x) * (p2.y+p1.y);
-            //                        sum+=value;
-            //                    }
-            //
-            //
-            //                }
-            //
-            //                //cout << sum << ((sum>0) ? "RIGHT" : "LEFT") << endl;
-            //
-            //                if(sum<0) {
-            //                    reverse(sortedshapes.begin(),sortedshapes.end());
-            //                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
-            //
-            //                }
-            //  }
-            float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedshapes);
-            // if the sorted shapes don't save much then don't bother sorting them!
-            if(moveDistanceForSortedShapes/moveDistanceForUnSortedShapes > 0.9) {
-                sortedshapes.clear();
-                for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
-                    allzoneshapepoints[j].reversed = false;
-                    sortedshapes.push_back(&allzoneshapepoints[j]);
-                }
-                
-            }
-            
         } else {
             for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
+                allzoneshapepoints[j].reversed = false;
                 sortedshapes.push_back(&allzoneshapepoints[j]);
             }
-            
+            coherentSortMemoryByZoneUid.clear();
         }
         
         
@@ -1070,7 +1322,8 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
 float Laser ::getMoveDistanceForShapes(vector<PointsForShape>& shapes){
     float distance = 0;
     ofPoint position = laserHomePosition;
-    for(PointsForShape shape : shapes) {
+    // Iterate by const-reference to avoid copying each shape's full point stream.
+    for(const PointsForShape& shape : shapes) {
         distance+= shape.getStart().distance(position);
         position = shape.getEnd();
     }
@@ -1099,11 +1352,18 @@ bool Laser ::isLaserZoneActive(std::shared_ptr<OutputZone>& outputZone) {
     }
 }
 
-void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
+void Laser ::getAllShapePoints(
+    const vector<ZoneContent>& zonesContent,
+    vector<PointsForShape>* shapepointscontainer,
+    ofPixels* pixels,
+    float speedmultiplier,
+    const std::unordered_map<std::string, const ZoneContent*>* zoneContentLookup
+) {
     
     vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
     
-    // temp vectors for storing the shapes in
+    // Temporary vectors reused for every zone in this frame.
+    // Keeping them outside inner loops avoids repeated allocations.
     vector<PointsForShape> zonePointsForShapes;
     vector<Point> shapePointBuffer;
     
@@ -1120,16 +1380,41 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
            ((muteOnAlternate) ||
             ((!outputZone->getIsAlternate()) && (hasAltZone(outputZone->getZoneId()))))) continue;
         
-        if(!hasZoneContentForId(outputZone->getZoneId(), zonesContent)) {
-            //ofLogError("missing zone content for zone!");
+        // Resolve zone content through a precomputed UID->ZoneContent table when available.
+        // Fallback to the legacy linear lookup so call sites remain backwards-compatible.
+        const ZoneContent* zoneContentPtr = nullptr;
+        if(zoneContentLookup != nullptr) {
+            const auto foundZone = zoneContentLookup->find(outputZone->getZoneId().getUid());
+            if(foundZone != zoneContentLookup->end()) {
+                zoneContentPtr = foundZone->second;
+            }
+        } else {
+            const int idindex = findZoneContentIndexForId(outputZone->getZoneId(), zonesContent);
+            if(idindex >= 0) {
+                zoneContentPtr = &zonesContent[idindex];
+            }
+        }
+        if(zoneContentPtr == nullptr) {
             continue;
         }
-        int idindex = findZoneContentIndexForId(outputZone->getZoneId(), zonesContent);
-        if(idindex<0) continue;
+        const ZoneContent& zoneContent = *zoneContentPtr;
 
-        const ZoneContent& zoneContent = zonesContent[idindex];
-        
-        vector<std::shared_ptr<ofxLaser::Shape>> zoneshapes = (paused ? pauseShapesByZoneUid[outputZone->getZoneId().getUid()] : zoneContent.shapes);
+        // Keep a pointer to the active shape list so we can avoid copying zone shapes
+        // in the common non-test-pattern path.
+        const vector<std::shared_ptr<ofxLaser::Shape>>* zoneShapesPtr = nullptr;
+        vector<std::shared_ptr<ofxLaser::Shape>> zoneShapesStorage;
+        const string zoneUid = outputZone->getZoneId().getUid();
+        if(paused) {
+            const auto pausedShapesIt = pauseShapesByZoneUid.find(zoneUid);
+            if(pausedShapesIt != pauseShapesByZoneUid.end()) {
+                zoneShapesPtr = &pausedShapesIt->second;
+            } else {
+                static const vector<std::shared_ptr<ofxLaser::Shape>> emptyShapes;
+                zoneShapesPtr = &emptyShapes;
+            }
+        } else {
+            zoneShapesPtr = &zoneContent.shapes;
+        }
         
         ofRectangle maskRectangle = zoneContent.sourceRectangle;
         
@@ -1147,22 +1432,25 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
         
         // define this here so we don't lose scope
         vector<std::shared_ptr<Shape>> zoneShapesWithTestPatternShapes;
-        
+
         if(testPatternActive || testPatternGlobalActive) {
-            // copy zone shapes into it
-            if(!hideContentDuringTestPattern) zoneShapesWithTestPatternShapes = zoneshapes; // should copy
-            
-            // add testpattern points for this zone...
+            // Merge content + test pattern only when needed.
+            if(!hideContentDuringTestPattern) {
+                zoneShapesWithTestPatternShapes = *zoneShapesPtr;
+            }
             zoneShapesWithTestPatternShapes.insert(zoneShapesWithTestPatternShapes.end(), testPatternShapes.begin(), testPatternShapes.end());
-            zoneshapes = zoneShapesWithTestPatternShapes;
+            zoneShapesStorage = std::move(zoneShapesWithTestPatternShapes);
+            zoneShapesPtr = &zoneShapesStorage;
         }
         
-        // so this is either going to be the test pattern shapes or
-        // a reference to the zone shapes
-        const vector<std::shared_ptr<Shape>>& shapesInZone = zoneshapes;
+        // This points at either:
+        // - the original zone shapes (no copy), or
+        // - a merged vector containing test-pattern overlays.
+        const vector<std::shared_ptr<Shape>>& shapesInZone = *zoneShapesPtr;
         
         // reuse the last vector of shapepoints
         zonePointsForShapes.clear();
+        zonePointsForShapes.reserve(shapesInZone.size());
         
         // go through each shape in the zone
         
@@ -1185,6 +1473,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
             bool offScreen = true;
             PointsForShape segmentPoints;
             segmentPoints.reversable = shape.getReversable();
+            segmentPoints.zoneUid = zoneUid;
             
             //iterate through the points
             for(int k = 0; k<shapePointBuffer.size(); k++) {
@@ -1216,11 +1505,14 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
                             
                             segmentPoints.push_back(pointOnEdge);
                             
-                            // add this bunch to the collection for this zone
-                            zonePointsForShapes.push_back(segmentPoints); // should copy
-                            
-                            //clear the vector and start again
-                            segmentPoints.clear();
+                            // Move the finished segment into the zone container.
+                            // With move-enabled PointsForShape this transfers the point buffer.
+                            zonePointsForShapes.push_back(std::move(segmentPoints));
+
+                            // Reset state for the next segment while preserving behaviour.
+                            segmentPoints = PointsForShape();
+                            segmentPoints.reversable = shape.getReversable();
+                            segmentPoints.zoneUid = zoneUid;
                             
                         }
                     }
@@ -1263,7 +1555,7 @@ void Laser ::getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<P
             }
             // add the final segment points to zone points
             if(segmentPoints.size()>0) {
-                zonePointsForShapes.push_back(segmentPoints);
+                zonePointsForShapes.push_back(std::move(segmentPoints));
             }
             
         } // end zoneshapes
@@ -1363,10 +1655,14 @@ void Laser :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
 void Laser :: addPoint(ofxLaser::Point p) {
     
     laserPoints.push_back(p);
-    
-    previewPathMesh.addVertex(ofPoint(p.x, p.y));
-    previewPathColoured.addVertex(ofPoint(p.x, p.y));
-    previewPathColoured.addColor(p.getColour());
+
+    // Preview meshes are editor-only visual aids. They are not part of DAC output,
+    // so we can skip this work in performance-focused runs.
+    if(buildPreviewPathMeshes) {
+        previewPathMesh.addVertex(ofPoint(p.x, p.y));
+        previewPathColoured.addVertex(ofPoint(p.x, p.y));
+        previewPathColoured.addColor(p.getColour());
+    }
     
 }
 
@@ -1498,6 +1794,9 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
 
 
 void Laser::paramsChanged(ofAbstractParameter& e){
+    if((e.getName() == sortShapes.getName()) || (e.getName() == coherentShapeSort.getName())) {
+        coherentSortMemoryByZoneUid.clear();
+    }
     if(ignoreParamChange) return;
     else saveSettings();
 }

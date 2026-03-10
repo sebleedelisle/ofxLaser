@@ -6,6 +6,7 @@
 //
 
 #include "ofxLaserShape.h"
+#include <algorithm>
 
 using namespace ofxLaser;
 
@@ -302,27 +303,28 @@ float Shape :: getFloatIndexAtDistance(float distance) {
     
     if(distance>=totalLength) return lengths.size();
     else if(distance<=0) return 0;
-    
-//    int lastPointIndex = closed? points.size() : points.size()-1;
-    
-    
-    int i = 0;
-    // lengths should automatically contain enough lengths whether the line
-    // is open or closed
-    
-    while(lengths.at(i)<distance && i<lengths.size()) i++;
-    
-//    while((segmentEndLength<distance) && (i<lengths.size())) {
-//        segmentStartLength = segmentEndLength;
-//        segmentEndLength=lengths[i];
-//        i++;
-//    }
-//
-    float segmentEndLength = lengths.at(i);
-    float segmentStartLength = lengths.at(i-1);
 
-    
-    return i-1 + ofMap(distance, segmentStartLength, segmentEndLength, 0, 1);
+    // lengths is monotonically increasing, so binary search gets the segment
+    // in O(log n) instead of scanning from the start for every sample.
+    const auto upper = std::lower_bound(lengths.begin() + 1, lengths.end(), distance);
+    if(upper == lengths.end()) {
+        return lengths.size();
+    }
+
+    const size_t upperIndex = static_cast<size_t>(std::distance(lengths.begin(), upper));
+    if(upperIndex == 0) {
+        return 0.0f;
+    }
+
+    const float segmentEndLength = *upper;
+    const float segmentStartLength = lengths[upperIndex - 1];
+    const float segmentLength = segmentEndLength - segmentStartLength;
+    if(segmentLength <= 0.0f) {
+        return static_cast<float>(upperIndex - 1);
+    }
+
+    const float segmentT = (distance - segmentStartLength) / segmentLength;
+    return static_cast<float>(upperIndex - 1) + segmentT;
     
 }
 

@@ -32,6 +32,8 @@
 #include "ofxLaserTestPatternGenerator.h"
 #include "ofxLaserObjectWithZoneId.h"
 #include "SebUtils.h"
+#include <unordered_map>
+#include <unordered_set>
 
 namespace ofxLaser {
 
@@ -72,7 +74,13 @@ class Laser {
     bool toggleArmed(); 
    
     // adds all the shape points to the vector passed in
-    void getAllShapePoints(const vector<ZoneContent>& zonesContent, vector<PointsForShape>* allzoneshapepoints, ofPixels*pixels, float speedmultiplier);
+    void getAllShapePoints(
+        const vector<ZoneContent>& zonesContent,
+        vector<PointsForShape>* allzoneshapepoints,
+        ofPixels* pixels,
+        float speedmultiplier,
+        const std::unordered_map<std::string, const ZoneContent*>* zoneContentLookup = nullptr
+    );
 
     void sendRawPoints(const vector<Point>& points, ZoneId* zoneId = nullptr, float masterIntensity =1);
     int getPointRate();
@@ -205,9 +213,16 @@ class Laser {
     ofParameter<int> syncShift;
     ofParameter<bool> sortShapes;
     ofParameter<bool> newShapeSortMethod;
+    // If enabled, use the temporal-coherent shape sorter instead of legacy sort.
+    ofParameter<bool> coherentShapeSort;
+    // 0..1 blend between pure travel distance (0) and memory-biased ordering (1).
+    ofParameter<float> coherentSortMemoryStrength;
     ofParameter<bool> alwaysClockwise;
     ofParameter<bool> smoothHomePosition;
     ofParameter<bool> laserOnWhileMoving = false;
+    // If disabled, we skip building per-point preview meshes in the render hot path.
+    // This leaves laser output unchanged and only affects editor/preview drawing.
+    ofParameter<bool> buildPreviewPathMeshes;
     ofParameter<bool> disableSpeedCompensation = false; 
  
     MaskManager maskManager;
@@ -230,6 +245,27 @@ class Laser {
     protected :
     
     map<string, string> laserZonesLastSavedMap;
+
+    struct CoherentShapeMemoryEntry {
+        glm::vec2 start;
+        glm::vec2 end;
+        glm::vec2 center;
+        float length = 0.0f;
+        bool reversed = false;
+        bool reversable = false;
+    };
+
+    struct CoherentZoneMemory {
+        vector<CoherentShapeMemoryEntry> route;
+    };
+
+    std::unordered_map<std::string, CoherentZoneMemory> coherentSortMemoryByZoneUid;
+
+    // Stateless nearest-neighbour sorter with optional insertion refinement.
+    void sortShapePointsLegacy(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes);
+    // Geometry-matched temporal sorter that blends travel cost with prior-frame route continuity.
+    void sortShapePointsCoherent(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes);
+    void pruneCoherentSortMemory(const std::unordered_set<std::string>& activeZoneUids);
   
     void setDacArmed(bool& armed);
 
@@ -249,4 +285,3 @@ class Laser {
 };
 
 }
-

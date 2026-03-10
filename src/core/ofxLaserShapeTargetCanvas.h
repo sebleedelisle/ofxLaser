@@ -11,6 +11,7 @@
 #include "ofxLaserInputZone.h"
 #include "ofxLaserZoneIdContainer.h"
 #include "SebUtils.h"
+#include <unordered_set>
 
 namespace ofxLaser {
 
@@ -126,6 +127,10 @@ class ShapeTargetCanvas : public ShapeTarget, public ZoneIdContainer {
     //void clearZones();
     ZoneId addInputZone(float x, float y, float w, float h);
     bool addGuideImage(string filename);
+    // Override shape mutation entry points so we can invalidate the spatial
+    // lookup cache whenever content changes.
+    virtual void deleteShapes() override;
+    virtual bool addShape(std::shared_ptr<Shape> shapetoadd, bool useClipRectangle, ofRectangle clipRectangle = ofRectangle()) override;
     
     virtual bool addZoneByJson(ofJson& json) override;
     
@@ -148,8 +153,30 @@ class ShapeTargetCanvas : public ShapeTarget, public ZoneIdContainer {
     bool lockZones = false;
     
     int zoneBrightness =255;
+
+    private:
+    // Rebuilds a coarse spatial index over current shapes so zone queries can
+    // test far fewer candidate shapes. The index is rebuilt lazily on demand.
+    void markSpatialIndexDirty();
+    void rebuildSpatialIndexIfNeeded();
+    void gatherCandidateShapeIndices(const ofRectangle& rect, vector<int>& outIndices);
+
+    // Spatial index configuration.
+    static constexpr int kSpatialGridResolution = 12;
+
+    bool spatialIndexDirty = true;
+    ofRectangle spatialIndexedBounds;
+    size_t spatialIndexedSourceShapeCount = 0;
+    float spatialCellWidth = 1.0f;
+    float spatialCellHeight = 1.0f;
+
+    // Indexed shape storage (parallel arrays).
+    vector<std::shared_ptr<Shape>> spatialIndexedShapes;
+    vector<ofRectangle> spatialIndexedShapeBounds;
+
+    // Flattened grid of cell -> shape indices.
+    vector<vector<int>> spatialGridCells;
     
     
 };
 }
-

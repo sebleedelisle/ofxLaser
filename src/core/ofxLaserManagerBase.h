@@ -121,6 +121,12 @@ class ManagerBase : public TransformationManager {
     
     void drawPolys(const vector<ofPolyline>& polys, vector<vector<ofColor>>&colours, string profileName = OFXLASER_PROFILE_DEFAULT, float brightness =1);
     void drawPolysFromPoints(const vector<vector<glm::vec3>>& allPoints, vector<vector<ofColor>>&allColours, string profileName, float brightness);
+    // Pointer-based variant used by high-volume callers to avoid deep-copying
+    // nested point/colour vectors before they enter ofxLaser.
+    void drawPolysFromPointRefs(const vector<const vector<glm::vec3>*>& allPointRefs,
+                                const vector<const vector<ofColor>*>& allColourRefs,
+                                string profileName,
+                                float brightness);
     
     void drawCircle(const float& x, const float& y, const float& radius,const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
     void drawCircle(const glm::vec3& centre, const float& radius, const ofColor& col, string profileName= OFXLASER_PROFILE_DEFAULT);
@@ -249,4 +255,3 @@ class ManagerBase : public TransformationManager {
     private:
 };
 }
-

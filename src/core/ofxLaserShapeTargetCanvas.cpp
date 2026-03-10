@@ -6,6 +6,7 @@
 //
 
 #include "ofxLaserShapeTargetCanvas.h"
+#include <algorithm>
 
 using namespace ofxLaser;
 
@@ -13,6 +14,132 @@ ShapeTargetCanvas :: ShapeTargetCanvas() {
     zoneGroup = 0;
     type = ZoneId::CANVAS;
 } 
+
+void ShapeTargetCanvas::markSpatialIndexDirty() {
+    spatialIndexDirty = true;
+}
+
+void ShapeTargetCanvas::deleteShapes() {
+    ShapeTarget::deleteShapes();
+    markSpatialIndexDirty();
+}
+
+bool ShapeTargetCanvas::addShape(std::shared_ptr<Shape> shapetoadd, bool useClipRectangle, ofRectangle clipRectangle) {
+    const bool added = ShapeTarget::addShape(shapetoadd, useClipRectangle, clipRectangle);
+    if(added) {
+        markSpatialIndexDirty();
+    }
+    return added;
+}
+
+void ShapeTargetCanvas::rebuildSpatialIndexIfNeeded() {
+    const ofRectangle currentBounds = getBounds();
+    if((!spatialIndexDirty) &&
+       (spatialIndexedBounds == currentBounds) &&
+       (spatialIndexedSourceShapeCount == shapes.size())) {
+        return;
+    }
+
+    // Full rebuild: clear all indexed state first.
+    spatialIndexedBounds = currentBounds;
+    spatialIndexedShapes.clear();
+    spatialIndexedShapeBounds.clear();
+    spatialGridCells.clear();
+    spatialGridCells.resize(kSpatialGridResolution * kSpatialGridResolution);
+    spatialIndexedSourceShapeCount = shapes.size();
+
+    const float boundsWidth = std::max(1.0f, spatialIndexedBounds.getWidth());
+    const float boundsHeight = std::max(1.0f, spatialIndexedBounds.getHeight());
+    spatialCellWidth = boundsWidth / static_cast<float>(kSpatialGridResolution);
+    spatialCellHeight = boundsHeight / static_cast<float>(kSpatialGridResolution);
+
+    spatialIndexedShapes.reserve(shapes.size());
+    spatialIndexedShapeBounds.reserve(shapes.size());
+
+    // Index each non-empty shape by its axis-aligned bounds into overlapping cells.
+    for(const std::shared_ptr<Shape>& shape : shapes) {
+        if(shape == nullptr || shape->isEmpty()) {
+            continue;
+        }
+
+        const vector<glm::vec3>& shapePoints = shape->getPoints();
+        if(shapePoints.empty()) {
+            continue;
+        }
+
+        float minX = shapePoints.front().x;
+        float maxX = shapePoints.front().x;
+        float minY = shapePoints.front().y;
+        float maxY = shapePoints.front().y;
+        for(const glm::vec3& point : shapePoints) {
+            if(point.x < minX) minX = point.x;
+            if(point.x > maxX) maxX = point.x;
+            if(point.y < minY) minY = point.y;
+            if(point.y > maxY) maxY = point.y;
+        }
+
+        ofRectangle shapeBounds(minX, minY, maxX - minX, maxY - minY);
+        const int shapeIndex = static_cast<int>(spatialIndexedShapes.size());
+        spatialIndexedShapes.push_back(shape);
+        spatialIndexedShapeBounds.push_back(shapeBounds);
+
+        auto getCellX = [&](float x) -> int {
+            return ofClamp(static_cast<int>((x - spatialIndexedBounds.getLeft()) / spatialCellWidth), 0, kSpatialGridResolution - 1);
+        };
+        auto getCellY = [&](float y) -> int {
+            return ofClamp(static_cast<int>((y - spatialIndexedBounds.getTop()) / spatialCellHeight), 0, kSpatialGridResolution - 1);
+        };
+
+        const int minCellX = getCellX(shapeBounds.getLeft());
+        const int maxCellX = getCellX(shapeBounds.getRight());
+        const int minCellY = getCellY(shapeBounds.getTop());
+        const int maxCellY = getCellY(shapeBounds.getBottom());
+
+        for(int y = minCellY; y <= maxCellY; y++) {
+            for(int x = minCellX; x <= maxCellX; x++) {
+                spatialGridCells[(y * kSpatialGridResolution) + x].push_back(shapeIndex);
+            }
+        }
+    }
+
+    spatialIndexDirty = false;
+}
+
+void ShapeTargetCanvas::gatherCandidateShapeIndices(const ofRectangle& rect, vector<int>& outIndices) {
+    outIndices.clear();
+    if(spatialIndexedShapes.empty()) {
+        return;
+    }
+
+    auto getCellX = [&](float x) -> int {
+        return ofClamp(static_cast<int>((x - spatialIndexedBounds.getLeft()) / spatialCellWidth), 0, kSpatialGridResolution - 1);
+    };
+    auto getCellY = [&](float y) -> int {
+        return ofClamp(static_cast<int>((y - spatialIndexedBounds.getTop()) / spatialCellHeight), 0, kSpatialGridResolution - 1);
+    };
+
+    const int minCellX = getCellX(rect.getLeft());
+    const int maxCellX = getCellX(rect.getRight());
+    const int minCellY = getCellY(rect.getTop());
+    const int maxCellY = getCellY(rect.getBottom());
+
+    // Deduplicate candidates gathered from multiple overlapping cells.
+    std::unordered_set<int> uniqueCandidates;
+    uniqueCandidates.reserve(spatialIndexedShapes.size());
+    for(int y = minCellY; y <= maxCellY; y++) {
+        for(int x = minCellX; x <= maxCellX; x++) {
+            const vector<int>& cell = spatialGridCells[(y * kSpatialGridResolution) + x];
+            for(int shapeIndex : cell) {
+                uniqueCandidates.insert(shapeIndex);
+            }
+        }
+    }
+
+    outIndices.reserve(uniqueCandidates.size());
+    for(int shapeIndex : uniqueCandidates) {
+        outIndices.push_back(shapeIndex);
+    }
+}
 
 ZoneId ShapeTargetCanvas :: addInputZone(float x, float y, float w, float h){
     std::shared_ptr<InputZone> newcanvaszone = std::make_shared<InputZone>( x, y, w, h);
@@ -59,11 +186,19 @@ vector<std::shared_ptr<Shape>> ShapeTargetCanvas :: getShapesForZoneId(ZoneId& z
     vector<std::shared_ptr<Shape>> newshapes;
     
     if(inputZone) {
+        // Build/reuse a spatial index once, then only test likely shapes.
+        rebuildSpatialIndexIfNeeded();
 
-        for(std::shared_ptr<Shape>& shape : shapes) { //size_t i= 0; i<shapes.size(); i++) {
-            
-            // if (zone should have shape) then
-            if((!shape->isEmpty()) && shape->intersectsRect(inputZone->getRect())) {
+        vector<int> candidateShapeIndices;
+        gatherCandidateShapeIndices(inputZone->getRect(), candidateShapeIndices);
+        newshapes.reserve(candidateShapeIndices.size());
+
+        for(int shapeIndex : candidateShapeIndices) {
+            if((shapeIndex < 0) || (static_cast<size_t>(shapeIndex) >= spatialIndexedShapes.size())) {
+                continue;
+            }
+            const std::shared_ptr<Shape>& shape = spatialIndexedShapes[shapeIndex];
+            if((shape != nullptr) && (!shape->isEmpty()) && shape->intersectsRect(inputZone->getRect())) {
                 newshapes.push_back(shape);
             }
         }

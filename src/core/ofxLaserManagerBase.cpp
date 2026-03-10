@@ -480,6 +480,36 @@ void ManagerBase::drawPolysFromPoints(const vector<vector<glm::vec3>>& allPoints
     
 }
 
+void ManagerBase::drawPolysFromPointRefs(const vector<const vector<glm::vec3>*>& allPointRefs,
+                                         const vector<const vector<ofColor>*>& allColourRefs,
+                                         string profileName,
+                                         float brightness) {
+    if(allPointRefs.size() != allColourRefs.size()) {
+        ofLogError("ManagerBase::drawPolysFromPointRefs - mismatched polys / colours lengths");
+        return;
+    }
+
+    // TODO - vector of closed!
+    const bool closed = false;
+    const int id = getNextId();
+
+    for(size_t i = 0; i < allPointRefs.size(); i++) {
+        const vector<glm::vec3>* points = allPointRefs[i];
+        const vector<ofColor>* colours = allColourRefs[i];
+        if(points == nullptr || colours == nullptr || points->empty() || colours->empty()) {
+            continue;
+        }
+
+        // This uses the existing poly conversion/render path, but avoids creating
+        // temporary deep-copied vector<vector<...>> wrappers at the call site.
+        std::shared_ptr<Polyline> poly = getPolyFromPoints(*points, *colours, closed, profileName, brightness);
+        poly->id = id;
+        if(poly->getLength() > 0.1f) {
+            currentShapeTarget->addShape(poly, useClipRectangle, clipRectangle);
+        }
+    }
+}
+
 
 
 void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string renderProfile) {
