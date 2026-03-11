@@ -220,6 +220,7 @@ class Laser {
     ofParameter<bool> alwaysClockwise;
     ofParameter<bool> smoothHomePosition;
     ofParameter<bool> laserOnWhileMoving = false;
+    ofColor laserMoveCol = ofColor::red; 
     // If disabled, we skip building per-point preview meshes in the render hot path.
     // This leaves laser output unchanged and only affects editor/preview drawing.
     ofParameter<bool> buildPreviewPathMeshes;

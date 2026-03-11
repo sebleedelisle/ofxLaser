@@ -1227,6 +1227,12 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
             PointsForShape& shapepoints = *sortedshapes[j];
             if(shapepoints.size()==0) continue;
             
+            if(laserOnWhileMoving) { 
+                laserMoveCol = ofColor::green;
+                laserMoveCol.lerp( ofColor::red, (float)j/(float)sortedshapes.size());
+
+            }
+
             if(currentPosition.distance(shapepoints.getStart())>2){
                 addPointsForMoveTo(currentPosition, shapepoints.getStart());
                 
@@ -1628,7 +1634,7 @@ void Laser :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint 
         float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
         
         ofPoint c = (v* t) + start;
-        addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor(0));
+        addPoint(c, (laserOnWhileMoving && j%2==0) ? laserMoveCol : ofColor(0));
         
     }
     

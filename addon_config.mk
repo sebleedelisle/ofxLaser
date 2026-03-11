@@ -65,6 +65,16 @@ common:
 	# avoid pulling in bundled app/test sources from libera-core
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/apps/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/tests/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-core/examples/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-core/src/helios/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-core/src/idn/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/%
+
+	# avoid pulling in libera-core helios/idn headers and helios SDK payload
+	ADDON_INCLUDES_EXCLUDE += libs/libera-core/include/libera/helios/%
+	ADDON_INCLUDES_EXCLUDE += libs/libera-core/include/libera/idn/%
+	ADDON_INCLUDES_EXCLUDE += libs/libera-core/libs/helios_dac/%
+	ADDON_LIBS_EXCLUDE += libs/libera-core/libs/helios_dac/%
 
 	linux64:
 		# binary libraries, these will be usually parsed from the file system but some 
