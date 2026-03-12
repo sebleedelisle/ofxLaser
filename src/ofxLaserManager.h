@@ -227,6 +227,3 @@ class Manager : public ManagerBase {
 
 };
 }
-
-
-

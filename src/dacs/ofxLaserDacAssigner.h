@@ -31,15 +31,8 @@
 #include "ofxLaserLaser.h"
 #include "ofxLaserDacData.h"
 #include "ofxLaserDacManagerBase.h"
-#include "ofxLaserDacManagerLaserdock.h"
-#include "ofxLaserDacManagerLaserDockNet.h"
-#include "ofxLaserDacManagerEtherDream.h"
-#include "ofxLaserDacManagerHelios.h"
+#include "ofxLaserDacManagerLibera.h"
 #include "ofxLaserDacAliasManager.h"
-
-#ifdef TARGET_OSX
-#include "DacAVBSoundManager.h"
-#endif
 
 namespace ofxLaser {
 
@@ -81,10 +74,7 @@ class DacAssigner {
     DacAliasManager dacAliasManager;
     
     private:
-    
-   
-    
-    
+    void stopAndClearManagers();
+    void configureManagers();
 };
 }
-

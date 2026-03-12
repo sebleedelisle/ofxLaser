@@ -6,6 +6,9 @@
 //
 
 #include "ofxLaserManager.h"
+#ifdef TARGET_OSX
+#include <set>
+#endif
 
 using namespace ofxLaser;
 
@@ -47,7 +50,7 @@ Manager :: Manager(bool hidecanvas) {
     guiSpacing = 8;
     
     showAVBWindow = false; 
-     
+    
     setDefaultPreviewOffsetAndScale();
     
     dacSettingsTimeSlice.set("Magnification", 0.5, 0.1, 20);
@@ -2258,47 +2261,43 @@ void Manager :: guiDacAssignment() {
         }
         UI::endWindow();
     }
+
 #ifdef TARGET_OSX
     if(showAVBWindow) {
         if(UI::startWindow("AVB Setup", ImVec2(100, 100), ImVec2(400,0), ImGuiWindowFlags_None, false, &showAVBWindow)) {
             ImGui::Text("Select the AVB sound interface : ");
-            std::shared_ptr<DacAVBSoundManager> avbManager = std::dynamic_pointer_cast<DacAVBSoundManager>(dacAssigner.getManagerForType("AVB/Sound"));
             int numSuitableInterfaces = 0;
-            
-            if(avbManager) { // < should always be true but just in case
-                // todo cache these because of fucking windows!
-                std::vector<ofSoundDevice> devices = ofSoundStream().getDeviceList();
-                
-                for(ofSoundDevice& device : devices) {
-                    if(device.outputChannels>=8) {
-                        numSuitableInterfaces++;
-                        bool usedevice = avbManager->getIsUsingDevice(device.name);
-                        if(ImGui::Checkbox(device.name.c_str(), &usedevice)) {
-                            if(usedevice) {
-                                avbManager->connectToInterface(device.name);
-                            } else {
-                                
-                                // todo - remove dac from laser!
-                                //dacAssigner.disconnectDacFromLaser(laser);
-                                //laser->dacLabel.set(daclabel);
-                                avbManager->disconnectFromInterface(device.name);
-                            }
-                            scheduleSaveSettings();
-                        }
-                    }
 
-                }
-                if(numSuitableInterfaces == 0) {
-                    ImGui::Text("No suitable sound interfaces found");
+            // Placeholder strategy:
+            // keep the AVB setup UI identical to the historical flow, but do not
+            // create/connect any AVB backend objects while the AVB implementation
+            // is parked during the Libera migration.
+            static std::set<std::string> placeholderSelectedDevices;
+
+            // todo cache these because of fucking windows!
+            std::vector<ofSoundDevice> devices = ofSoundStream().getDeviceList();
+
+            for(ofSoundDevice& device : devices) {
+                if(device.outputChannels>=8) {
+                    numSuitableInterfaces++;
+                    bool usedevice = placeholderSelectedDevices.count(device.name) > 0;
+                    if(ImGui::Checkbox(device.name.c_str(), &usedevice)) {
+                        if(usedevice) {
+                            placeholderSelectedDevices.insert(device.name);
+                        } else {
+                            placeholderSelectedDevices.erase(device.name);
+                        }
+                        scheduleSaveSettings();
+                    }
                 }
             }
-            
-                  
+            if(numSuitableInterfaces == 0) {
+                ImGui::Text("No suitable sound interfaces found");
+            }
         }
         UI::endWindow();
     }
 #endif // _TARGET_OSX
-
 }
 
 void Manager :: guiEditDacAliasButtonAndPopup(string daclabel) {
@@ -2571,25 +2570,9 @@ void Manager::guiDacAnalytics(int dacIndex) {
         if(dac!=nullptr) {
             
             
-            std::shared_ptr<DacEtherDream> dacEtherDream =  std::dynamic_pointer_cast<DacEtherDream> (dac);
-            
-            if(dacEtherDream!=nullptr) {
-              
-                ImGui::Columns(2);
-                EtherDreamData ed = dacEtherDream->getEtherDreamData();
-                ImGui::Text("IP Address : %s", ed.ipAddress.c_str());
-                ImGui::Text("Mac Address : %s", ed.macAddress.c_str());
-                ImGui::Text("Software : %d Hardware %d", ed.softwareRevision, ed.hardwareRevision);
-                ImGui::Text("Buffer capacity : %d", ed.bufferCapacity);
-                ImGui::Text("Current buffer size : n/a");
-                
-                ImGui::NextColumn();
-                ImGui::Text("%s", dacEtherDream->getEtherDreamStateString().c_str());
-                
-//                ImGui::Text(
-                ImGui::Columns(1);
-                ImGui::Separator();
-            }
+            // Libera-only branch strategy:
+            // keep analytics transport-agnostic so this panel still works when
+            // protocol-specific DAC classes are removed from the build.
             
             uint64_t visibledurationmicros = dacSettingsTimeSlice * 1000000; // seconds * million
             uint64_t endTimeMicros = ofGetElapsedTimeMicros();

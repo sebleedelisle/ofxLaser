@@ -1809,8 +1809,19 @@ void Laser::paramsChanged(ofAbstractParameter& e){
 
 
 bool Laser::loadSettings(){
-    
-    ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
+    // Strategy:
+    // loading should fail soft. If filesystem state is broken (for example a
+    // missing/invalid working directory), return false and keep the app alive.
+    ofJson json;
+    try {
+        json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
+    } catch(const std::exception& e) {
+        ofLogError("Laser::loadSettings") << "laser " << laserIndex << " load failed : " << e.what();
+        return false;
+    } catch(...) {
+        ofLogError("Laser::loadSettings") << "laser " << laserIndex << " load failed : unknown exception";
+        return false;
+    }
     // new format
     if(!json.contains("laserzones")) {
         return deserialize(json); 
@@ -1897,7 +1908,16 @@ bool Laser::saveSettings(){
     ofLogNotice("Laser::saveSettings() - dacLabel : ") << dacLabel;
     ofJson json;
     serialize(json);
-    bool success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
+    bool success = false;
+    try {
+        success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
+    } catch(const std::exception& e) {
+        ofLogError("Laser::saveSettings") << "laser " << laserIndex << " save failed : " << e.what();
+        success = false;
+    } catch(...) {
+        ofLogError("Laser::saveSettings") << "laser " << laserIndex << " save failed : unknown exception";
+        success = false;
+    }
     
     lastSaveTime = ofGetElapsedTimef();
     return success;

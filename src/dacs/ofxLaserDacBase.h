@@ -17,10 +17,12 @@
 
 namespace ofxLaser {
 
-	class DacBase {
-	public:
-		DacBase() {};
-        ~DacBase() {}; 
+		class DacBase {
+		public:
+			DacBase() {};
+	        // DacBase instances are owned through base-class pointers/shared_ptrs,
+	        // so the destructor must be virtual to guarantee derived cleanup runs.
+	        virtual ~DacBase() = default; 
 		
 		virtual bool sendFrame(const vector<Point>& points)  = 0;
 		//virtual bool sendPoints(const vector<Point>& points)  = 0;

@@ -31,10 +31,18 @@ bool DacAliasManager :: addAliasForLabel(string alias, const string& daclabel, b
 bool DacAliasManager :: load() {
     
     string filename ="ofxLaser/dacAliases.json";
-    if(!ofFile(filename).exists()) return false;
-    
-    ofJson json = ofLoadJson(filename);
-    return deserialize(json);
+    try {
+        if(!ofFile(filename).exists()) return false;
+        
+        ofJson json = ofLoadJson(filename);
+        return deserialize(json);
+    } catch(const std::exception& e) {
+        ofLogError("DacAliasManager::load") << "failed to read " << filename << " : " << e.what();
+        return false;
+    } catch(...) {
+        ofLogError("DacAliasManager::load") << "failed to read " << filename << " : unknown exception";
+        return false;
+    }
 //
 //    for (auto it : json.items()) {
 //        string value = it.value(); 
@@ -45,13 +53,21 @@ bool DacAliasManager :: load() {
 }
 
 bool DacAliasManager :: save() {
-    ofJson json;
-    serialize(json);
+    try {
+        ofJson json;
+        serialize(json);
 //    for(auto it : aliasByLabel) {
 //        json[it.first] =  // label
 //            it.second; // alias
 //    }
-    return ofSavePrettyJson("ofxLaser/dacAliases.json", json);
+        return ofSavePrettyJson("ofxLaser/dacAliases.json", json);
+    } catch(const std::exception& e) {
+        ofLogError("DacAliasManager::save") << "failed to write ofxLaser/dacAliases.json : " << e.what();
+        return false;
+    } catch(...) {
+        ofLogError("DacAliasManager::save") << "failed to write ofxLaser/dacAliases.json : unknown exception";
+        return false;
+    }
     
 }
 

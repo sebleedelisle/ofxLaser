@@ -757,9 +757,21 @@ void ManagerBase::hideContentDuringTestPatternChanged(bool& state) {
 bool ManagerBase::loadSettings() {
     
     ofJson& json = loadedJson;
-    string filename ="ofxLaser/laserSettings.json";
-    if(ofFile(filename).exists()) {
-        json = ofLoadJson(filename);
+    const string filename ="ofxLaser/laserSettings.json";
+    // General strategy:
+    // settings I/O must never crash the render/update thread. On some launch
+    // paths the process working directory can become invalid, which makes
+    // ofToDataPath() throw from inside ofFile/ofLoadJson.
+    try {
+        if(ofFile(filename).exists()) {
+            json = ofLoadJson(filename);
+        }
+    } catch(const std::exception& e) {
+        ofLogError("ManagerBase::loadSettings") << "failed to read " << filename << " : " << e.what();
+        json = ofJson{};
+    } catch(...) {
+        ofLogError("ManagerBase::loadSettings") << "failed to read " << filename << " : unknown exception";
+        json = ofJson{};
     }
     // if the json didn't load then this shouldn't do anything
     ofDeserialize(json, params);
@@ -865,13 +877,42 @@ bool ManagerBase::saveSettings() {
     canvasTarget->serialize(json["canvastarget"]);
     dacAssigner.serialize(json["dacassigner"]);
     
-    bool savesuccess = ofSaveJson("ofxLaser/laserSettings.json", json);
-    
-    for(size_t i= 0; i<lasers.size(); i++) {
-        savesuccess &= lasers[i]->saveSettings();
+    bool savesuccess = true;
+    // Strategy:
+    // wrap every file operation so transient filesystem issues (for example
+    // invalid current working directory) are reported and retried later instead
+    // of aborting the whole app from an uncaught filesystem exception.
+    try {
+        savesuccess &= ofSaveJson("ofxLaser/laserSettings.json", json);
+    } catch(const std::exception& e) {
+        savesuccess = false;
+        ofLogError("ManagerBase::saveSettings") << "failed to write ofxLaser/laserSettings.json : " << e.what();
+    } catch(...) {
+        savesuccess = false;
+        ofLogError("ManagerBase::saveSettings") << "failed to write ofxLaser/laserSettings.json : unknown exception";
     }
     
-    dacAssigner.dacAliasManager.save();
+    for(size_t i= 0; i<lasers.size(); i++) {
+        try {
+            savesuccess &= lasers[i]->saveSettings();
+        } catch(const std::exception& e) {
+            savesuccess = false;
+            ofLogError("ManagerBase::saveSettings") << "laser " << i << " save failed : " << e.what();
+        } catch(...) {
+            savesuccess = false;
+            ofLogError("ManagerBase::saveSettings") << "laser " << i << " save failed : unknown exception";
+        }
+    }
+    
+    try {
+        savesuccess &= dacAssigner.dacAliasManager.save();
+    } catch(const std::exception& e) {
+        savesuccess = false;
+        ofLogError("ManagerBase::saveSettings") << "DAC alias save failed : " << e.what();
+    } catch(...) {
+        savesuccess = false;
+        ofLogError("ManagerBase::saveSettings") << "DAC alias save failed : unknown exception";
+    }
    
     
     // TODO add laserMask saving to laser settings
@@ -890,7 +931,9 @@ bool ManagerBase::saveSettings() {
 //    ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
     
     lastSaveTime = ofGetElapsedTimef();
-    settingsNeedSave = false;
+    // Only clear pending-save when everything succeeded.
+    // On failure we keep it queued so a later save attempt can recover.
+    settingsNeedSave = !savesuccess;
     
     return savesuccess;
     

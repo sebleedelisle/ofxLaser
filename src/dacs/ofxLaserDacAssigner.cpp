@@ -24,6 +24,24 @@ void DacAssigner::destroy() {
     
 }
 
+void DacAssigner::stopAndClearManagers() {
+    // Managers can own threads/sockets/devices, so always ask them to exit
+    // before releasing shared_ptr references.
+    for(std::shared_ptr<DacManagerBase>& manager : dacManagers) {
+        if(manager != nullptr) {
+            manager->exit();
+        }
+    }
+    dacManagers.clear();
+}
+
+void DacAssigner::configureManagers() {
+    stopAndClearManagers();
+    // Libera-only branch strategy:
+    // keep protocol-specific discovery/connection inside libera for hardware DACs.
+    dacManagers.push_back(std::make_shared<DacManagerLibera>());
+}
+
 
 DacAssigner :: DacAssigner() {
 
@@ -34,20 +52,14 @@ DacAssigner :: DacAssigner() {
         throw;
 	}
     dacAliasManager.load();
-    
-    dacManagers.push_back(std::unique_ptr<DacManagerBase>(new DacManagerLaserDock()));
-    dacManagers.push_back(std::unique_ptr<DacManagerBase>(new DacManagerHelios()));
-    dacManagers.push_back(std::unique_ptr<DacManagerBase>(new DacManagerEtherDream()));
-    dacManagers.push_back(std::unique_ptr<DacManagerBase>(new DacManagerLaserDockNet()));
-#ifdef TARGET_OSX
-    dacManagers.push_back(std::unique_ptr<DacManagerBase>(new DacAVBSoundManager()));
-#endif
+
+    configureManagers();
     updateDacList();
 	
 }
 
 DacAssigner :: ~DacAssigner() {
-    dacManagers.clear();
+    stopAndClearManagers();
 }
 
 
