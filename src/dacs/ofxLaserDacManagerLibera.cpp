@@ -38,10 +38,10 @@ std::vector<string> extractSortedStableIds(const TInfoList& infos) {
 } // namespace
 
 DacManagerLibera::DacManagerLibera() {
-    // Register all builtin protocol managers before constructing the global
-    // discovery object that snapshots the manager factory list.
+    // Register all builtin protocol managers before constructing the libera
+    // system that snapshots the manager factory list.
     ensureLiberaRegistrarsLinked();
-    liberaManager = std::make_unique<libera::core::GlobalDacManager>();
+    liberaSystem = std::make_unique<libera::System>();
     verbose = false;
 
     // Discovery can block (IDN scans may take ~600ms), so run it off the UI
@@ -56,7 +56,7 @@ DacManagerLibera::~DacManagerLibera() {
     exit();
 }
 
-string DacManagerLibera::makeStableId(const libera::core::DacInfo& info) const {
+string DacManagerLibera::makeStableId(const libera::core::ControllerInfo& info) const {
     // Stable ID format keeps one manager type ("Libera") while preserving
     // source-type uniqueness in case different backends expose the same raw ID.
     return info.type() + "::" + info.idValue();
@@ -65,15 +65,16 @@ string DacManagerLibera::makeStableId(const libera::core::DacInfo& info) const {
 std::vector<DacManagerLibera::DiscoveredInfo> DacManagerLibera::discoverInfosBlocking() {
     std::vector<DiscoveredInfo> result;
     {
-        std::scoped_lock<std::mutex> lock(liberaManagerMutex);
-        if (!liberaManager) {
+        std::scoped_lock<std::mutex> lock(liberaSystemMutex);
+        if (!liberaSystem) {
             return result;
         }
 
-        std::vector<std::unique_ptr<libera::core::DacInfo>> discovered = liberaManager->discoverAll();
+        std::vector<std::unique_ptr<libera::core::ControllerInfo>> discovered =
+            liberaSystem->discoverControllers();
         result.reserve(discovered.size());
 
-        for (const std::unique_ptr<libera::core::DacInfo>& info : discovered) {
+        for (const std::unique_ptr<libera::core::ControllerInfo>& info : discovered) {
             if (!info) {
                 continue;
             }
@@ -146,18 +147,19 @@ DacManagerLibera::findOrConnectController(const string& stableId) {
     {
         // Discover again at connection-time so we operate on fresh device metadata
         // and keep the manager independent from cached snapshot state.
-        std::scoped_lock<std::mutex> lock(liberaManagerMutex);
-        if (!liberaManager) {
+        std::scoped_lock<std::mutex> lock(liberaSystemMutex);
+        if (!liberaSystem) {
             return nullptr;
         }
 
-        std::vector<std::unique_ptr<libera::core::DacInfo>> discovered = liberaManager->discoverAll();
-        for (const std::unique_ptr<libera::core::DacInfo>& info : discovered) {
+        std::vector<std::unique_ptr<libera::core::ControllerInfo>> discovered =
+            liberaSystem->discoverControllers();
+        for (const std::unique_ptr<libera::core::ControllerInfo>& info : discovered) {
             if (!info || makeStableId(*info) != stableId) {
                 continue;
             }
 
-            controller = liberaManager->getAndConnectToDac(*info);
+            controller = liberaSystem->connectController(*info);
             break;
         }
     }
@@ -313,11 +315,10 @@ void DacManagerLibera::exit() {
     }
 
     {
-        std::scoped_lock<std::mutex> lock(liberaManagerMutex);
-        if (liberaManager) {
-            // GlobalDacManager destructor already calls close().
-            // Reset directly to avoid double-close of all protocol managers.
-            liberaManager.reset();
+        std::scoped_lock<std::mutex> lock(liberaSystemMutex);
+        if (liberaSystem) {
+            // libera::System destructor already calls shutdown().
+            liberaSystem.reset();
         }
     }
 }

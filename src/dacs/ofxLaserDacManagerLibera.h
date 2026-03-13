@@ -16,7 +16,7 @@
 #include "ofxLaserDacLibera.h"
 #include "ofxLaserDacManagerBase.h"
 
-#include "libera/core/GlobalDacManager.hpp"
+#include "libera/System.hpp"
 // Register built-in managers that are already part of the current addon build.
 #include "libera/etherdream/EtherDreamManager.hpp"
 #include "libera/helios/HeliosManager.hpp"
@@ -57,7 +57,7 @@ private:
         uint32_t maxPointRate = 0;
     };
 
-    string makeStableId(const libera::core::DacInfo& info) const;
+    string makeStableId(const libera::core::ControllerInfo& info) const;
     std::vector<DiscoveredInfo> discoverInfosBlocking();
     std::vector<DiscoveredInfo> getCachedInfos();
     void refreshDiscoveryCache();
@@ -68,10 +68,10 @@ private:
 
     // Lazily allocated after we force-link protocol registrars.
     // Keeping this as a pointer lets constructor code control creation order.
-    std::unique_ptr<libera::core::GlobalDacManager> liberaManager;
+    std::unique_ptr<libera::System> liberaSystem;
     // Serialize access to libera's manager stack; discovery and connection both
     // touch the same manager instances.
-    std::mutex liberaManagerMutex;
+    std::mutex liberaSystemMutex;
 
     // Discovery cache is produced asynchronously so UI thread reads are cheap.
     std::atomic<bool> discoveryRunning{false};

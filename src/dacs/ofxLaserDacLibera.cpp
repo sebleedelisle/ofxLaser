@@ -119,8 +119,25 @@ string DacLibera::getRawId() {
 }
 
 int DacLibera::getStatus() {
-    std::scoped_lock<std::mutex> lock(controllerMutex);
-    return lockController() ? OFXLASER_DACSTATUS_GOOD : OFXLASER_DACSTATUS_ERROR;
+    std::shared_ptr<libera::core::LaserController> controller;
+    {
+        std::scoped_lock<std::mutex> lock(controllerMutex);
+        controller = lockController();
+    }
+    if (!controller) {
+        return OFXLASER_DACSTATUS_ERROR;
+    }
+
+    switch (controller->getStatus()) {
+        case libera::core::ControllerStatus::Good:
+            return OFXLASER_DACSTATUS_GOOD;
+        case libera::core::ControllerStatus::Issues:
+            return OFXLASER_DACSTATUS_WARNING;
+        case libera::core::ControllerStatus::Error:
+            return OFXLASER_DACSTATUS_ERROR;
+    }
+
+    return OFXLASER_DACSTATUS_ERROR;
 }
 
 void DacLibera::reset() {
