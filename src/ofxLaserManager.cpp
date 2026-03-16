@@ -158,7 +158,7 @@ void Manager :: initAndLoadSettings() {
     params.add(canvasGridSize.set("Canvas grid size", 20,1,50));
     params.add(canvasGridVisible.set("Canvas grid visible", true));
     
-    params.add(globalLatency.set("Latency (ms)", 150,30,400));
+    params.add(globalLatency.set("Latency (ms)", 100,30,400));
 
     params.add(showCustomParametersWindow.set("showCustomParametersWindow", true));
     params.add(showLaserOverviewWindow.set("showLaserManagementWindow", true));

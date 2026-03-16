@@ -128,7 +128,7 @@ void Laser :: init() {
     laserparams.add(colourChangeShift.set("Colour shift", 2,0,12));
     
     //laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
-    maxLatencyMS = 150;
+    maxLatencyMS = 100;
     
     laserparams.add(flipX.set("Flip Horizontal", false));
     laserparams.add(flipY.set("Flip Vertical",false));

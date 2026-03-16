@@ -95,7 +95,7 @@ void DacEtherDream::setup(string _id, string _ip, EtherDreamData& ed) {
         return;
     }
 
-    libera::core::LaserController::setTargetRenderLatency(
+    libera::core::LaserController::setTargetLatency(
         std::chrono::milliseconds(std::max(0, maxLatencyMS.load(std::memory_order_relaxed))));
     liberaDevice->start();
     networkConnected = true;
@@ -186,7 +186,7 @@ bool DacEtherDream::isReadyForFrame(int maxLatencyMS) {
         return false;
     }
 
-    libera::core::LaserController::setTargetRenderLatency(
+    libera::core::LaserController::setTargetLatency(
         std::chrono::milliseconds(std::max(0, maxLatencyMS)));
     return liberaDevice->isReadyForNewFrame();
 }
