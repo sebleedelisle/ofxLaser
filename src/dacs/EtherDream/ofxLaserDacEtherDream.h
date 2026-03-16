@@ -30,6 +30,7 @@ public:
     uint32_t getPointsPerSecond() override { return pps; }
     bool setColourShift(float shiftSeconds) override;
     void setArmed(bool armed) override;
+    bool isReadyForFrame(int maxLatencyMS) override;
     
     virtual string getType() override { return "EtherDream"; };
     

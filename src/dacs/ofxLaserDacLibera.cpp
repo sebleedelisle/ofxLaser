@@ -43,6 +43,10 @@ void DacLibera::applyRuntimeStateToController(libera::core::LaserController& con
     controller.setPointRate(configuredPointRate.load(std::memory_order_relaxed));
     controller.setScannerSync(std::max(0.0, static_cast<double>(colourShift.load(std::memory_order_relaxed))));
     controller.setArmed(armed);
+    // Keep ofxLaser's existing latency setting as the source of truth for
+    // libera frame scheduling whenever a controller is attached/rebound.
+    libera::core::LaserController::setTargetRenderLatency(
+        std::chrono::milliseconds(std::max(0, maxLatencyMS.load(std::memory_order_relaxed))));
 }
 
 bool DacLibera::sendFrame(const vector<Point>& points) {
@@ -62,7 +66,8 @@ bool DacLibera::sendFrame(const vector<Point>& points) {
 
     libera::core::Frame frame;
     PointConverter::convertPoints(points, frame.points, descriptor.pointPolicy);
-    frame.time = std::chrono::steady_clock::now();
+    // Leave the presentation time unset so libera can stamp it using the
+    // current targetRenderLatency configured via isReadyForFrame().
 
     return controller->sendFrame(std::move(frame));
 }

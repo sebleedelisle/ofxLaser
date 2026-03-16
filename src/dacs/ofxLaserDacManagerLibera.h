@@ -55,6 +55,9 @@ private:
         string sourceId;        // Original source ID from libera
         string sourceLabel;     // Human-readable label from libera
         uint32_t maxPointRate = 0;
+        // Keep the backend-specific controller info alive so connection can
+        // reuse async discovery results instead of re-running a blocking scan.
+        std::shared_ptr<libera::core::ControllerInfo> controllerInfo;
     };
 
     string makeStableId(const libera::core::ControllerInfo& info) const;
@@ -62,7 +65,7 @@ private:
     std::vector<DiscoveredInfo> getCachedInfos();
     void refreshDiscoveryCache();
     void discoveryLoop();
-    std::shared_ptr<libera::core::LaserController> findOrConnectController(const string& stableId);
+    std::shared_ptr<libera::core::LaserController> findOrConnectController(const DiscoveredInfo& info);
     std::shared_ptr<DacLibera> createWrapper(const DiscoveredInfo& info,
                                              const std::shared_ptr<libera::core::LaserController>& controller);
 

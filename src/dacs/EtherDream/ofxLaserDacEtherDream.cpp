@@ -38,7 +38,6 @@ libera::core::Frame DacEtherDream::makeLiberaFrame(const vector<Point>& points) 
         lp.i = std::max({lp.r, lp.g, lp.b});
         frame.points.push_back(lp);
     }
-    frame.time = std::chrono::steady_clock::now();
     return frame;
 }
 
@@ -46,6 +45,9 @@ bool DacEtherDream::sendFrame(const vector<Point>& points) {
     if (liberaDevice) {
         if (!liberaDevice->frameModeEnabled()) {
             liberaDevice->startFrameMode();
+        }
+        if (!liberaDevice->isReadyForNewFrame()) {
+            return false;
         }
         return liberaDevice->sendFrame(makeLiberaFrame(points));
     }
@@ -93,6 +95,8 @@ void DacEtherDream::setup(string _id, string _ip, EtherDreamData& ed) {
         return;
     }
 
+    libera::core::LaserController::setTargetRenderLatency(
+        std::chrono::milliseconds(std::max(0, maxLatencyMS.load(std::memory_order_relaxed))));
     liberaDevice->start();
     networkConnected = true;
 }
@@ -174,4 +178,15 @@ bool DacEtherDream::setColourShift(float shiftSeconds) {
     colourShift = shiftSeconds;
     colourShiftImplemented = true;
     return true;
+}
+
+bool DacEtherDream::isReadyForFrame(int maxLatencyMS) {
+    this->maxLatencyMS = maxLatencyMS;
+    if (!liberaDevice) {
+        return false;
+    }
+
+    libera::core::LaserController::setTargetRenderLatency(
+        std::chrono::milliseconds(std::max(0, maxLatencyMS)));
+    return liberaDevice->isReadyForNewFrame();
 }

@@ -1595,7 +1595,9 @@ void Manager :: guiLaserOverview() {
             ImGui::SetWindowCollapsed("Controller Assignment", false);
             ImGui::SetWindowFocus("Controller Assignment");
         }
-        //UI::addIntSlider(globalLatency);
+        ImGui::Separator();
+        UI::addIntSlider(globalLatency);
+        UI::toolTip("Shared frame latency target for all lasers. This feeds libera frame scheduling and the legacy frame queue.");
         
         
     }

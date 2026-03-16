@@ -74,7 +74,7 @@ std::vector<DacManagerLibera::DiscoveredInfo> DacManagerLibera::discoverInfosBlo
             liberaSystem->discoverControllers();
         result.reserve(discovered.size());
 
-        for (const std::unique_ptr<libera::core::ControllerInfo>& info : discovered) {
+        for (std::unique_ptr<libera::core::ControllerInfo>& info : discovered) {
             if (!info) {
                 continue;
             }
@@ -85,6 +85,7 @@ std::vector<DacManagerLibera::DiscoveredInfo> DacManagerLibera::discoverInfosBlo
             out.sourceId = info->idValue();
             out.sourceLabel = info->labelValue();
             out.maxPointRate = info->maxPointRate();
+            out.controllerInfo = std::shared_ptr<libera::core::ControllerInfo>(std::move(info));
             result.push_back(std::move(out));
         }
     }
@@ -134,10 +135,10 @@ void DacManagerLibera::discoveryLoop() {
 }
 
 std::shared_ptr<libera::core::LaserController>
-DacManagerLibera::findOrConnectController(const string& stableId) {
+DacManagerLibera::findOrConnectController(const DiscoveredInfo& info) {
     {
         std::scoped_lock<std::mutex> lock(controllerMutex);
-        const auto existing = controllerByStableId.find(stableId);
+        const auto existing = controllerByStableId.find(info.stableId);
         if (existing != controllerByStableId.end()) {
             return existing->second;
         }
@@ -145,23 +146,17 @@ DacManagerLibera::findOrConnectController(const string& stableId) {
 
     std::shared_ptr<libera::core::LaserController> controller;
     {
-        // Discover again at connection-time so we operate on fresh device metadata
-        // and keep the manager independent from cached snapshot state.
         std::scoped_lock<std::mutex> lock(liberaSystemMutex);
-        if (!liberaSystem) {
+        if (!liberaSystem || !info.controllerInfo) {
             return nullptr;
         }
 
-        std::vector<std::unique_ptr<libera::core::ControllerInfo>> discovered =
-            liberaSystem->discoverControllers();
-        for (const std::unique_ptr<libera::core::ControllerInfo>& info : discovered) {
-            if (!info || makeStableId(*info) != stableId) {
-                continue;
-            }
-
-            controller = liberaSystem->connectController(*info);
-            break;
-        }
+        // Connection strategy:
+        // discovery already ran on the background thread and produced the
+        // backend-specific ControllerInfo instance for this stable id.
+        // Reuse that cached object here so startup reassignment does not
+        // trigger another blocking discoverControllers() on the UI thread.
+        controller = liberaSystem->connectController(*info.controllerInfo);
     }
 
     if (!controller) {
@@ -169,7 +164,7 @@ DacManagerLibera::findOrConnectController(const string& stableId) {
     }
 
     std::scoped_lock<std::mutex> lock(controllerMutex);
-    controllerByStableId[stableId] = controller;
+    controllerByStableId[info.stableId] = controller;
     return controller;
 }
 
@@ -213,33 +208,17 @@ std::shared_ptr<DacBase> DacManagerLibera::getAndConnectToDac(const string& id) 
     }
 
     std::vector<DiscoveredInfo> infos = getCachedInfos();
-    if (infos.empty()) {
-        // If cache is still cold (e.g. app just launched), do one direct scan.
-        infos = discoverInfosBlocking();
-        {
-            std::scoped_lock<std::mutex> lock(discoveryCacheMutex);
-            cachedInfos = infos;
-        }
-    }
     auto it = std::find_if(infos.begin(), infos.end(), [&id](const DiscoveredInfo& info) {
         return info.stableId == id;
     });
     if (it == infos.end()) {
-        // Device may have appeared after the last cache refresh.
-        infos = discoverInfosBlocking();
-        {
-            std::scoped_lock<std::mutex> lock(discoveryCacheMutex);
-            cachedInfos = infos;
-        }
-        it = std::find_if(infos.begin(), infos.end(), [&id](const DiscoveredInfo& info) {
-            return info.stableId == id;
-        });
-    }
-    if (it == infos.end()) {
+        // Keep connection non-blocking on the caller thread. If discovery has
+        // not produced this device yet, the assigner will retry after the next
+        // background cache refresh.
         return nullptr;
     }
 
-    std::shared_ptr<libera::core::LaserController> controller = findOrConnectController(id);
+    std::shared_ptr<libera::core::LaserController> controller = findOrConnectController(*it);
     if (!controller) {
         return nullptr;
     }
