@@ -221,8 +221,7 @@ DearImGui
 libusb
 libsvgtiny
 clipperlib
-heliosdac
-laserdocklib
+libera-core
 ofxHersheyFont by Tobias Zimmer
 
 Compatibility

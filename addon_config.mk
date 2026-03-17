@@ -70,6 +70,9 @@ common:
 	# Helios is enabled, but only its host-side SDK is relevant for desktop builds.
 	# Exclude firmware, hardware assets and utility/tool projects so the parser
 	# doesn't try to compile embedded/device-side C sources.
+	# Also exclude the older top-level Helios SDK copy; the addon now uses the
+	# libera-core bundled SDK instead.
+	ADDON_SOURCES_EXCLUDE += libs/heliosdac/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/firmware/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/hardware/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/utility/%

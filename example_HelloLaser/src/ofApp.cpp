@@ -9,8 +9,8 @@ void ofApp::setup(){
     // If you want to change the size of the laser area, use
     laser.setCanvasSize(900, 800); //  - default is 800 x 800.
     ofSetVerticalSync(false);
-    starPoly = makeStarPolyline(4, 100);
-    starPolyInner = makeStarPolyline(4, 50);
+    starPoly = makeStarPolyline(4, 200);
+    starPolyInner = makeStarPolyline(4, 100);
 
     auto vertices = starPoly.getVertices();
     int hue = 0;
@@ -18,7 +18,7 @@ void ofApp::setup(){
         starPolyColours.push_back(ofColor::fromHsb(hue%255, 255,255));
         hue+=20;
     }
-    laser.globalLatency = 300;
+//    laser.globalLatency = 300;
 
 }
 
