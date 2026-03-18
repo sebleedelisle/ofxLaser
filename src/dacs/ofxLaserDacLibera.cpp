@@ -17,6 +17,23 @@
 
 using namespace ofxLaser;
 
+namespace {
+
+const char* controllerStatusLabel(libera::core::ControllerStatus status) {
+    switch (status) {
+        case libera::core::ControllerStatus::Good:
+            return "Good";
+        case libera::core::ControllerStatus::Issues:
+            return "Warning";
+        case libera::core::ControllerStatus::Error:
+            return "Error";
+    }
+
+    return "Unknown";
+}
+
+} // namespace
+
 DacLibera::DacLibera(Descriptor descriptor,
                      const std::shared_ptr<libera::core::LaserController>& controller)
 : descriptor(std::move(descriptor))
@@ -152,6 +169,29 @@ int DacLibera::getStatus() {
     }
 
     return OFXLASER_DACSTATUS_ERROR;
+}
+
+string DacLibera::getStatusSummary() {
+    std::shared_ptr<libera::core::LaserController> controller;
+    {
+        std::scoped_lock<std::mutex> lock(controllerMutex);
+        controller = lockController();
+    }
+    if (!controller) {
+        return "Status: Error\nController missing";
+    }
+
+    std::string summary =
+        std::string("Status: ") + controllerStatusLabel(controller->getStatus());
+    const std::vector<libera::core::ControllerErrorInfo> errors = controller->getErrors();
+    if (!errors.empty()) {
+        summary += "\nErrors:";
+        for (const auto& error : errors) {
+            summary += "\n- " + error.label + " x" + std::to_string(error.count);
+        }
+    }
+
+    return summary;
 }
 
 void DacLibera::reset() {

@@ -54,6 +54,8 @@ class DacAssigner {
     
     void updateDacList();
     string getAliasForLabel(const string& label);
+    string getDefaultDisplayLabelForLabel(const string& label);
+    string getDisplayLabelForLabel(const string& label);
     bool addAliasForLabel(string alias, const string& daclabel, bool force); 
 
     bool assignToLaser(const string& label, std::shared_ptr<Laser>& laser);

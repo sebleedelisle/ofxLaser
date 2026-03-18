@@ -10,6 +10,32 @@
 
 using namespace ofxLaser;
 
+namespace {
+
+string makeDefaultDisplayLabel(const string& daclabel) {
+    const string liberaPrefix = "Libera ";
+    if (daclabel.rfind(liberaPrefix, 0) == 0) {
+        return daclabel.substr(liberaPrefix.size());
+    }
+    return daclabel;
+}
+
+string chooseDisplayLabel(const DacData& dacdata,
+                          DacAliasManager& aliasManager) {
+    const string explicitAlias = aliasManager.getAliasForLabel(dacdata.getLabel());
+    if (explicitAlias != dacdata.getLabel()) {
+        return explicitAlias;
+    }
+
+    if (!dacdata.defaultDisplayLabel.empty()) {
+        return dacdata.defaultDisplayLabel;
+    }
+
+    return makeDefaultDisplayLabel(dacdata.getLabel());
+}
+
+} // namespace
+
 DacAssigner * DacAssigner :: dacAssigner = NULL;
 
 DacAssigner * DacAssigner::instance() {
@@ -93,7 +119,7 @@ void DacAssigner ::updateDacList(){
     }
     
     for(DacData& newdacdata : newdaclist) {
-        newdacdata.alias = dacAliasManager.getAliasForLabel(newdacdata.getLabel());
+        newdacdata.alias = chooseDisplayLabel(newdacdata, dacAliasManager);
 
         ofLogNotice(" DacAssigner ::updateDacList " ) << newdacdata.getLabel() << " " << newdacdata.alias;
         if(newdacdata.alias==" ") {
@@ -161,6 +187,8 @@ void DacAssigner ::updateDacList(){
                 // trying this because sometimes the ip address is lost when
                 // passing back and forth
                 dacdata->address = newdacdata.address;
+                dacdata->defaultDisplayLabel = newdacdata.defaultDisplayLabel;
+                dacdata->alias = newdacdata.alias;
                 // update state in case it's changed
                 dacdata->unavailable = newdacdata.unavailable;
                 isnew = false;
@@ -197,6 +225,25 @@ string DacAssigner :: getAliasForLabel(const string& daclabel) {
     return dacAliasManager.getAliasForLabel(daclabel);
     
 }
+
+string DacAssigner :: getDefaultDisplayLabelForLabel(const string& daclabel) {
+    std::shared_ptr<DacData> dacdata = getDacDataForLabel(daclabel);
+    if (dacdata != nullptr && !dacdata->defaultDisplayLabel.empty()) {
+        return dacdata->defaultDisplayLabel;
+    }
+
+    return makeDefaultDisplayLabel(daclabel);
+}
+
+string DacAssigner :: getDisplayLabelForLabel(const string& daclabel) {
+    const string alias = dacAliasManager.getAliasForLabel(daclabel);
+    if (alias != daclabel) {
+        return alias;
+    }
+
+    return getDefaultDisplayLabelForLabel(daclabel);
+}
+
 bool DacAssigner :: addAliasForLabel(string alias, const string& daclabel, bool force) {
     return dacAliasManager.addAliasForLabel(alias, daclabel, force);
     
@@ -221,7 +268,7 @@ bool DacAssigner ::assignToLaser(const string& daclabel, std::shared_ptr<Laser>&
         dacdata = std::make_shared<DacData>(dactype, dacid, "", false, laser);
         dacDataList.push_back(dacdata);
         
-        dacdata->alias = dacAliasManager.getAliasForLabel(dacdata->getLabel());
+        dacdata->alias = getDisplayLabelForLabel(dacdata->getLabel());
         dacdata->available = false;
 
         return false;

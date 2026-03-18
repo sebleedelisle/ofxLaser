@@ -46,6 +46,19 @@ namespace ofxLaser {
         
         
         virtual int getStatus() = 0;
+        virtual string getStatusSummary() {
+            switch (getStatus()) {
+                case OFXLASER_DACSTATUS_GOOD:
+                    return "Status: Good";
+                case OFXLASER_DACSTATUS_WARNING:
+                    return "Status: Warning";
+                case OFXLASER_DACSTATUS_ERROR:
+                    return "Status: Error";
+                case OFXLASER_DACSTATUS_NO_DAC:
+                default:
+                    return "Status: No controller assigned";
+            }
+        }
         bool hasStatusChanged() {
             int currentstatus =getStatus();
             if(lastStatus!=currentstatus) {

@@ -20,6 +20,7 @@ class DacData {
         //label = "EMPTY";
         available = false;
         id = "" ;
+        defaultDisplayLabel = "";
         assignedLaser = nullptr;
         alias = "";
         unavailable = false; 
@@ -32,6 +33,7 @@ class DacData {
         address = _address;
         assignedLaser = laser;
         //label = type + " " + id;
+        defaultDisplayLabel = getLabel();
         available = true;
         alias = "";
         
@@ -59,6 +61,7 @@ class DacData {
     string type;    // type ie "EtherDream", "Helios" etc - should this be a class?
     string id;      // id is the Mac address or the serial number
     string address; // IP address for network DACs
+    string defaultDisplayLabel;
     string alias;
     bool available; // is it still available? Useful for if a dac connects and then becomes unavailable
     bool unavailable; // is the DAC in use? Useful to see if someone else is using it
@@ -66,8 +69,9 @@ class DacData {
     private :
     //string label;   // display label ie "Ether Dream #efbd59" - maybe not necessary as we can compile this
     const string getAlias() const {
-        if(alias=="") return getLabel();
-        else return alias;
+        if(alias!="") return alias;
+        if(!defaultDisplayLabel.empty()) return defaultDisplayLabel;
+        return getLabel();
     }
 };
 }

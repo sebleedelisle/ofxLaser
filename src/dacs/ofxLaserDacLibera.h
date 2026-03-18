@@ -49,6 +49,7 @@ public:
     string getType() override;
     string getRawId() override;
     int getStatus() override;
+    string getStatusSummary() override;
 
     void reset() override;
     void close() override;

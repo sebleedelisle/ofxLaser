@@ -260,6 +260,12 @@ vector<DacData> DacManagerLibera::updateDacList() {
     for (const DiscoveredInfo& info : infos) {
         // Expose one ofxLaser DAC type ("Libera"), with composite stable IDs.
         list.emplace_back(getType(), info.stableId);
+        // Keep the stable ID for assignment/reconnect, but surface the human
+        // readable libera label as the default UI name when no explicit alias
+        // has been set by the user.
+        if (!info.sourceLabel.empty()) {
+            list.back().defaultDisplayLabel = info.sourceLabel;
+        }
     }
 
     return list;

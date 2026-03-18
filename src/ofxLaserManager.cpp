@@ -40,6 +40,19 @@ ofJson makeLegacyAvbManagerJson(const ofJson& json) {
     return liberaJson;
 }
 
+std::string getLaserStatusSummary(const std::shared_ptr<ofxLaser::Laser>& laser) {
+    if (!laser || !laser->hasDac()) {
+        return "Status: No controller assigned";
+    }
+
+    std::shared_ptr<ofxLaser::DacBase> dac = laser->getDac();
+    if (!dac) {
+        return "Status: No controller assigned";
+    }
+
+    return dac->getStatusSummary();
+}
+
 } // namespace
 
 Manager * Manager :: laserManager = NULL;
@@ -1613,6 +1626,8 @@ void Manager :: guiLaserOverview() {
               
             draw_list->AddRectFilled(p, ImVec2(p.x + size.x, p.y + size.y), col, 2.0f);
             ImGui::InvisibleButton("##gradient2", size - ImVec2(0,2));
+            std::string statusSummary = getLaserStatusSummary(laserobject);
+            UI::addHover(statusSummary);
 
             if (lasers.size() > 1) {
                 ImGui::SameLine();
@@ -2122,6 +2137,8 @@ void Manager :: guiDacAssignment() {
                 //draw_list->AddText(p, ImU32(0xffffff), "1");
                 // ImGui::Text("%s", "11.45");
                 ImGui::InvisibleButton("##gradient2", size - ImVec2(2,2));
+                std::string statusSummary = getLaserStatusSummary(laser);
+                UI::addHover(statusSummary);
                 //ImGui::SetCursorPosX(ImGui::GetCursorPosX()+size.x-2);
                 ImGui::SameLine();
                 
@@ -2142,7 +2159,7 @@ void Manager :: guiDacAssignment() {
                 
                 string label;
                 if(!laser->hasDac() ) {
-                    label = dacAssigner.getAliasForLabel(laser->dacLabel.get());
+                    label = dacAssigner.getDisplayLabelForLabel(laser->dacLabel.get());
                     //if(!laser->hasDac()) label = "";
                     //UI::startGhosted();
                     ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_Disabled, ImVec2(160,19) );
@@ -2150,7 +2167,7 @@ void Manager :: guiDacAssignment() {
                     
                 } else {
                     
-                    label = dacAssigner.getAliasForLabel(laser->getDacLabel());
+                    label = dacAssigner.getDisplayLabelForLabel(laser->getDacLabel());
                     ImGui::Selectable(label.c_str(), false, ImGuiSelectableFlags_None, ImVec2(160,19) );
                     std::shared_ptr<DacData> dacdata = dacAssigner.getDacDataForLabel(laser->getDacLabel()) ;
                     if(dacdata!=nullptr) {
@@ -2250,7 +2267,7 @@ void Manager :: guiDacAssignment() {
                 if(dacdata->assignedLaser==nullptr) {
                     int id =lasers.size()+i;
                     ImGui::PushID(id);
-                    string label = dacAssigner.getAliasForLabel(dacdata->getLabel()); // dacdata.alias; // ->getDacLabel();
+                    string label = dacAssigner.getDisplayLabelForLabel(dacdata->getLabel());
                     label = label;
                     
                     ImGuiSelectableFlags selectableflags = ImGuiSelectableFlags_AllowDoubleClick;
@@ -2419,7 +2436,7 @@ void Manager :: guiEditDacAliasButtonAndPopup(string daclabel) {
     ImGui::PushID(id.c_str());
     string label;
     static char newDacAlias[255];
-    string alias = dacAssigner.getAliasForLabel(daclabel);
+    string alias = dacAssigner.getDisplayLabelForLabel(daclabel);
     label = "Rename "+alias;
     if(ImGui::Button(ICON_FK_PENCIL)) {
         strcpy(newDacAlias, alias.c_str());
@@ -2436,9 +2453,11 @@ void Manager :: guiEditDacAliasButtonAndPopup(string daclabel) {
         }
         ImGui::SameLine();
         if(ImGui::Button(ICON_FK_UNDO)) {
-            strcpy(newDacAlias, daclabel.c_str());
+            const string defaultLabel = dacAssigner.getDefaultDisplayLabelForLabel(daclabel);
+            strcpy(newDacAlias, defaultLabel.c_str());
         }
-        UI::addDelayedHover("Reset to default name : "+daclabel);
+        UI::addDelayedHover(
+            "Reset to default name : " + dacAssigner.getDefaultDisplayLabelForLabel(daclabel));
         ImGui::Separator();
         label = "RENAME## "+daclabel;
         if(alias == newDacAlias) UI::startDisabled();
