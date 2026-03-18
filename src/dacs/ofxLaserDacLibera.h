@@ -67,7 +67,7 @@ private:
     mutable std::mutex controllerMutex;
     Descriptor descriptor;
     std::weak_ptr<libera::core::LaserController> controllerWeak;
-    std::atomic<uint32_t> configuredPointRate{30000};
+    mutable std::atomic<uint32_t> configuredPointRate{30000};
 };
 
 } // namespace ofxLaser

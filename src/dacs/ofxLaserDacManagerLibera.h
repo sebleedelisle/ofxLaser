@@ -18,6 +18,7 @@
 
 #include "libera/System.hpp"
 // Register built-in managers that are already part of the current addon build.
+#include "libera/avb/AvbManager.hpp"
 #include "libera/etherdream/EtherDreamManager.hpp"
 #include "libera/helios/HeliosManager.hpp"
 #include "libera/idn/IdnManager.hpp"
@@ -42,6 +43,8 @@ public:
     vector<DacData> updateDacList() override;
     std::shared_ptr<DacBase> getAndConnectToDac(const string& id) override;
     bool disconnectAndDeleteDac(const string& id) override;
+    void serialize(ofJson& json) const override;
+    bool deserialize(ofJson& json) override;
 
     string getType() override {
         return "Libera";

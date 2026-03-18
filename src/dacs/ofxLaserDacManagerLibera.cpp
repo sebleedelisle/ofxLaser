@@ -17,6 +17,7 @@ void ensureLiberaRegistrarsLinked() {
     // General strategy:
     // reference each static registrar explicitly so the linker cannot discard
     // manager registration side-effects when dead-stripping unused symbols.
+    (void)&libera::avb::AvbManager::registrar;
     (void)&libera::etherdream::EtherDreamManager::registrar;
     (void)&libera::helios::HeliosManager::registrar;
     (void)&libera::idn::IdnManager::registrar;
@@ -33,6 +34,70 @@ std::vector<string> extractSortedStableIds(const TInfoList& infos) {
     }
     std::sort(ids.begin(), ids.end());
     return ids;
+}
+
+std::vector<libera::avb::AvbDeviceConfiguration>
+parseAvbDeviceConfigurations(const ofJson& json) {
+    std::vector<libera::avb::AvbDeviceConfiguration> configs;
+    if (!json.is_array()) {
+        return configs;
+    }
+
+    for (const auto& entry : json) {
+        if (!entry.is_object()) {
+            continue;
+        }
+
+        libera::avb::AvbDeviceConfiguration config;
+        if (entry.contains("deviceUid") && entry["deviceUid"].is_string()) {
+            config.deviceUid = entry["deviceUid"].get<std::string>();
+        }
+        if (entry.contains("preferredPointRate") && entry["preferredPointRate"].is_number_unsigned()) {
+            config.preferredPointRate = entry["preferredPointRate"].get<std::uint32_t>();
+        }
+
+        if (!config.deviceUid.empty()) {
+            configs.push_back(std::move(config));
+        }
+    }
+
+    return configs;
+}
+
+std::vector<string> parseHalfXYOutputControllers(const ofJson& json) {
+    std::vector<string> controllerIds;
+    if (!json.is_array()) {
+        return controllerIds;
+    }
+
+    for (const auto& entry : json) {
+        if (entry.is_string()) {
+            controllerIds.push_back(entry.get<string>());
+            continue;
+        }
+
+        // Compatibility strategy:
+        // older AVB settings stored one object per controller with an explicit
+        // halfXYOutput flag. Keep reading that format so existing projects do
+        // not lose the workaround when migrated into DacManagerLibera.
+        if (!entry.is_object()) {
+            continue;
+        }
+
+        if (!entry.contains("controllerId") || !entry["controllerId"].is_string()) {
+            continue;
+        }
+        if (!entry.contains("halfXYOutput") || !entry["halfXYOutput"].is_boolean()) {
+            continue;
+        }
+        if (!entry["halfXYOutput"].get<bool>()) {
+            continue;
+        }
+
+        controllerIds.push_back(entry["controllerId"].get<string>());
+    }
+
+    return controllerIds;
 }
 
 } // namespace
@@ -252,6 +317,46 @@ bool DacManagerLibera::disconnectAndDeleteDac(const string& id) {
         controller->stop();
     }
 
+    return true;
+}
+
+void DacManagerLibera::serialize(ofJson& json) const {
+    ofJson avbJson;
+    avbJson["devices"] = ofJson::array();
+    for (const auto& config : libera::avb::AvbManager::configuredDevices()) {
+        ofJson entry;
+        entry["deviceUid"] = config.deviceUid;
+        entry["preferredPointRate"] = config.preferredPointRate;
+        avbJson["devices"].push_back(std::move(entry));
+    }
+
+    avbJson["halfXYOutputControllers"] = ofJson::array();
+    for (const auto& controllerId : libera::avb::AvbManager::halfXYOutputControllers()) {
+        avbJson["halfXYOutputControllers"].push_back(controllerId);
+    }
+
+    json["avb"] = std::move(avbJson);
+}
+
+bool DacManagerLibera::deserialize(ofJson& json) {
+    std::vector<libera::avb::AvbDeviceConfiguration> avbConfigs;
+    std::vector<string> halfXYOutputControllers;
+
+    if (json.is_object() && json.contains("avb") && json["avb"].is_object()) {
+        const ofJson& avbJson = json["avb"];
+        avbConfigs = parseAvbDeviceConfigurations(avbJson["devices"]);
+        halfXYOutputControllers = parseHalfXYOutputControllers(avbJson["halfXYOutputControllers"]);
+    }
+
+    // AVB manager state is app-level DAC config, so deserializing a new
+    // project must replace the configured interfaces and per-bank Half X/Y
+    // Output flags rather than merging with whatever was already active.
+    libera::avb::AvbManager::setConfiguredDevices(avbConfigs);
+    libera::avb::AvbManager::setHalfXYOutputControllers(halfXYOutputControllers);
+
+    // Refresh the discovery snapshot immediately so startup reassignment sees
+    // the saved AVB bank IDs before the background discovery loop wakes up.
+    refreshDiscoveryCache();
     return true;
 }
 

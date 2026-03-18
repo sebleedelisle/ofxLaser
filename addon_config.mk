@@ -109,6 +109,9 @@ common:
 		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
+	osx:
+		ADDON_FRAMEWORKS += AudioToolbox CoreAudio CoreFoundation
+
 
 	#win_cb:
 

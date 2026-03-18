@@ -6,11 +6,41 @@
 //
 
 #include "ofxLaserManager.h"
+#include "libera/avb/AvbManager.hpp"
 #ifdef TARGET_OSX
-#include <set>
+#include <unordered_map>
 #endif
 
 using namespace ofxLaser;
+
+namespace {
+
+bool hasEmbeddedAvbSettings(const ofJson& json) {
+    if (!json.contains("dacassigner") || !json["dacassigner"].is_object()) {
+        return false;
+    }
+    if (!json["dacassigner"].contains("Libera") || !json["dacassigner"]["Libera"].is_object()) {
+        return false;
+    }
+
+    const ofJson& liberaJson = json["dacassigner"]["Libera"];
+    return liberaJson.contains("avb") && liberaJson["avb"].is_object();
+}
+
+ofJson makeLegacyAvbManagerJson(const ofJson& json) {
+    ofJson liberaJson;
+    liberaJson["avb"] = ofJson::object();
+    liberaJson["avb"]["devices"] = json.contains("avb") && json["avb"].is_array()
+        ? json["avb"]
+        : ofJson::array();
+    liberaJson["avb"]["halfXYOutputControllers"] =
+        json.contains("avbControllers") && json["avbControllers"].is_array()
+            ? json["avbControllers"]
+            : ofJson::array();
+    return liberaJson;
+}
+
+} // namespace
 
 Manager * Manager :: laserManager = NULL;
 
@@ -246,14 +276,14 @@ void Manager :: initAndLoadSettings() {
 
 void Manager :: serialize(ofJson& json) {
     ManagerBase::serialize(json);
-    
+
     scannerPresetManager.serialize(json["scannerpresets"]);
     colourPresetManager.serialize(json["colourpresets"]);
-    
 }
 
 bool Manager :: deserialize(ofJson& json) {
     bool success = ManagerBase::deserialize(json);
+    loadAdditionalSettings(json);
     //cout << json.dump(3) << endl; 
     
     selectedLaserIndex = 0;
@@ -271,6 +301,30 @@ bool Manager :: deserialize(ofJson& json) {
     
     return success;
     
+}
+
+void Manager::loadAdditionalSettings(const ofJson& json) {
+    // Compatibility strategy:
+    // AVB settings now live under dacassigner/Libera so they are persisted as
+    // DAC-manager state with the rest of the app. Keep this legacy importer so
+    // older projects that saved top-level "avb" keys still migrate cleanly.
+    if (hasEmbeddedAvbSettings(json)) {
+        return;
+    }
+
+    auto liberaManager = dacAssigner.getManagerForType("Libera");
+    if (!liberaManager) {
+        return;
+    }
+
+    if (!json.contains("avb") && !json.contains("avbControllers")) {
+        ofJson emptyLiberaJson;
+        liberaManager->deserialize(emptyLiberaJson);
+        return;
+    }
+
+    ofJson legacyLiberaJson = makeLegacyAvbManagerJson(json);
+    liberaManager->deserialize(legacyLiberaJson);
 }
 
 
@@ -2268,33 +2322,90 @@ void Manager :: guiDacAssignment() {
     if(showAVBWindow) {
         if(UI::startWindow("AVB Setup", ImVec2(100, 100), ImVec2(400,0), ImGuiWindowFlags_None, false, &showAVBWindow)) {
             ImGui::Text("Select the AVB sound interface : ");
-            int numSuitableInterfaces = 0;
-
-            // Placeholder strategy:
-            // keep the AVB setup UI identical to the historical flow, but do not
-            // create/connect any AVB backend objects while the AVB implementation
-            // is parked during the Libera migration.
-            static std::set<std::string> placeholderSelectedDevices;
-
-            // todo cache these because of fucking windows!
-            std::vector<ofSoundDevice> devices = ofSoundStream().getDeviceList();
-
-            for(ofSoundDevice& device : devices) {
-                if(device.outputChannels>=8) {
-                    numSuitableInterfaces++;
-                    bool usedevice = placeholderSelectedDevices.count(device.name) > 0;
-                    if(ImGui::Checkbox(device.name.c_str(), &usedevice)) {
-                        if(usedevice) {
-                            placeholderSelectedDevices.insert(device.name);
-                        } else {
-                            placeholderSelectedDevices.erase(device.name);
-                        }
-                        scheduleSaveSettings();
-                    }
-                }
+            const auto devices = libera::avb::AvbManager::availableDevices();
+            const auto controllers = libera::avb::AvbManager::configuredControllers();
+            std::unordered_map<std::string, libera::avb::AvbDeviceConfiguration> configByUid;
+            for (const auto& config : libera::avb::AvbManager::configuredDevices()) {
+                configByUid.insert_or_assign(config.deviceUid, config);
             }
-            if(numSuitableInterfaces == 0) {
+
+            if(devices.empty()) {
                 ImGui::Text("No suitable sound interfaces found");
+            } else {
+                for(const auto& device : devices) {
+                    ImGui::PushID(device.uid.c_str());
+
+                    bool useDevice = configByUid.find(device.uid) != configByUid.end();
+                    if(ImGui::Checkbox(device.label.c_str(), &useDevice)) {
+                        if (libera::avb::AvbManager::setDeviceEnabled(device.uid, useDevice)) {
+                            scheduleSaveSettings();
+                            configByUid.clear();
+                            for (const auto& config : libera::avb::AvbManager::configuredDevices()) {
+                                configByUid.insert_or_assign(config.deviceUid, config);
+                            }
+                        }
+                    }
+
+                    ImGui::SameLine();
+                    ImGui::TextDisabled("(%u ch)", device.outputChannels);
+
+                    if (useDevice && !device.supportedPointRates.empty()) {
+                        auto configIt = configByUid.find(device.uid);
+                        std::uint32_t selectedPointRate =
+                            configIt != configByUid.end() && configIt->second.preferredPointRate > 0
+                                ? configIt->second.preferredPointRate
+                                : device.defaultPointRate;
+
+                        const std::string comboPreview = ofToString(selectedPointRate) + " pps";
+                        if (ImGui::BeginCombo("Point rate", comboPreview.c_str())) {
+                            for (const auto pointRateValue : device.supportedPointRates) {
+                                const bool selected = pointRateValue == selectedPointRate;
+                                const std::string optionLabel = ofToString(pointRateValue) + " pps";
+                                if (ImGui::Selectable(optionLabel.c_str(), selected)) {
+                                    if (libera::avb::AvbManager::setPreferredPointRate(device.uid, pointRateValue)) {
+                                        scheduleSaveSettings();
+                                    }
+                                }
+                                if (selected) {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                            ImGui::EndCombo();
+                        }
+                    }
+
+                    if (useDevice) {
+                        // This AVB-only section exposes per-bank quirks that are
+                        // not generic laser-controller capabilities. Half X/Y
+                        // Output exists specifically to compensate for AVB-to-ILDA
+                        // chains that otherwise scan at double size.
+                        ImGui::Indent();
+                        for (const auto& controller : controllers) {
+                            if (controller.deviceUid() != device.uid) {
+                                continue;
+                            }
+
+                            bool halfXYOutput =
+                                libera::avb::AvbManager::halfXYOutputEnabled(controller.idValue());
+                            const std::string checkboxLabel =
+                                "Half X/Y Output##" + controller.idValue();
+                            if (ImGui::Checkbox(checkboxLabel.c_str(), &halfXYOutput)) {
+                                if (libera::avb::AvbManager::setHalfXYOutput(
+                                        controller.idValue(),
+                                        halfXYOutput)) {
+                                    scheduleSaveSettings();
+                                }
+                            }
+                            ImGui::SameLine();
+                            ImGui::Text("%s", controller.labelValue().c_str());
+                            UI::toolTip(
+                                "Halves X/Y output for AVB-to-ILDA chains where both ends fake differential signalling by grounding one side, which otherwise doubles the scan size.");
+                        }
+                        ImGui::Unindent();
+                    }
+
+                    ImGui::PopID();
+                }
             }
         }
         UI::endWindow();

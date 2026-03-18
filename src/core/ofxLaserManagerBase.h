@@ -81,6 +81,14 @@ class ManagerBase : public TransformationManager {
     
     virtual void serialize(ofJson& json);
     virtual bool deserialize(ofJson& json);
+
+protected:
+    // Subclasses can persist extra manager-owned state alongside the shared
+    // laser settings file without replacing the core save/load implementation.
+    virtual void loadAdditionalSettings(const ofJson& json) {}
+    virtual void saveAdditionalSettings(ofJson& json) const {}
+
+public:
     
     virtual void send();
     void sendRawPoints(const std::vector<ofxLaser::Point>& points, int lasernum = 0, ZoneId* zoneId = nullptr);

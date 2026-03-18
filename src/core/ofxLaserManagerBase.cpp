@@ -786,6 +786,7 @@ bool ManagerBase::loadSettings() {
         beamZoneContainer.deserialize(json["beamZones"]);
     }
     canvasTarget->deserialize(json["canvastarget"]);
+    loadAdditionalSettings(json);
     
     
     // reset the global brightness setting, despite what was in the settings.
@@ -876,6 +877,7 @@ bool ManagerBase::saveSettings() {
     beamZoneContainer.serialize(json["beamzones"]);
     canvasTarget->serialize(json["canvastarget"]);
     dacAssigner.serialize(json["dacassigner"]);
+    saveAdditionalSettings(json);
     
     bool savesuccess = true;
     // Strategy:

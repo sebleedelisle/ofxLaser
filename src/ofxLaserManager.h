@@ -223,6 +223,8 @@ class Manager : public ManagerBase {
     
     
     IconSVGs iconSVGs; 
+
+    void loadAdditionalSettings(const ofJson& json) override;
    
 
 };

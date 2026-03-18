@@ -41,6 +41,7 @@ void DacLibera::applyRuntimeStateToController(libera::core::LaserController& con
     // When a wrapper is rebound to a new controller, we immediately mirror
     // the user-facing DAC settings so output behavior stays consistent.
     controller.setPointRate(configuredPointRate.load(std::memory_order_relaxed));
+    configuredPointRate.store(controller.getPointRate(), std::memory_order_relaxed);
     controller.setScannerSync(std::max(0.0, static_cast<double>(colourShift.load(std::memory_order_relaxed))));
     controller.setArmed(armed);
     // Keep ofxLaser's existing latency setting as the source of truth for
@@ -79,11 +80,22 @@ bool DacLibera::setPointsPerSecond(uint32_t newpps) {
     std::shared_ptr<libera::core::LaserController> controller = lockController();
     if (controller) {
         controller->setPointRate(newpps);
+        configuredPointRate.store(controller->getPointRate(), std::memory_order_relaxed);
     }
     return true;
 }
 
 uint32_t DacLibera::getPointsPerSecond() {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        const auto controllerPointRate = controller->getPointRate();
+        if (controllerPointRate > 0) {
+            configuredPointRate.store(controllerPointRate, std::memory_order_relaxed);
+            return controllerPointRate;
+        }
+    }
+
     return configuredPointRate.load(std::memory_order_relaxed);
 }
 
