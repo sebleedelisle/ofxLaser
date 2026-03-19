@@ -25,17 +25,6 @@ void ensureLiberaRegistrarsLinked() {
     (void)&libera::lasercubeusb::LaserCubeUsbManager::registrar;
 }
 
-template <typename TInfoList>
-std::vector<string> extractSortedStableIds(const TInfoList& infos) {
-    std::vector<string> ids;
-    ids.reserve(infos.size());
-    for (const auto& info : infos) {
-        ids.push_back(info.stableId);
-    }
-    std::sort(ids.begin(), ids.end());
-    return ids;
-}
-
 std::vector<libera::avb::AvbDeviceConfiguration>
 parseAvbDeviceConfigurations(const ofJson& json) {
     std::vector<libera::avb::AvbDeviceConfiguration> configs;
@@ -100,6 +89,37 @@ std::vector<string> parseHalfXYOutputControllers(const ofJson& json) {
     return controllerIds;
 }
 
+std::string makeFriendlySourceLabel(const std::string& sourceType,
+                                    const std::string& sourceLabel) {
+    // IDN devices often advertise a default "Main" service. Keep the full
+    // SDK/service label for stable matching, but hide that suffix in the
+    // fallback UI label so Helios PRO names stay concise.
+    if (sourceType == "IDN") {
+        static constexpr std::string_view mainServiceSuffix = " - Main";
+        if (sourceLabel.size() > mainServiceSuffix.size() &&
+            sourceLabel.compare(sourceLabel.size() - mainServiceSuffix.size(),
+                                mainServiceSuffix.size(),
+                                mainServiceSuffix) == 0) {
+            return sourceLabel.substr(0, sourceLabel.size() - mainServiceSuffix.size());
+        }
+    }
+
+    return sourceLabel;
+}
+
+bool usageStateImpliesUnavailable(libera::core::ControllerUsageState usageState) {
+    switch (usageState) {
+        case libera::core::ControllerUsageState::Active:
+        case libera::core::ControllerUsageState::BusyExclusive:
+            return true;
+        case libera::core::ControllerUsageState::Unknown:
+        case libera::core::ControllerUsageState::Idle:
+            return false;
+    }
+
+    return false;
+}
+
 } // namespace
 
 DacManagerLibera::DacManagerLibera() {
@@ -150,6 +170,7 @@ std::vector<DacManagerLibera::DiscoveredInfo> DacManagerLibera::discoverInfosBlo
             out.sourceId = info->idValue();
             out.sourceLabel = info->labelValue();
             out.maxPointRate = info->maxPointRate();
+            out.usageState = info->usageState();
             out.controllerInfo = std::shared_ptr<libera::core::ControllerInfo>(std::move(info));
             result.push_back(std::move(out));
         }
@@ -169,13 +190,22 @@ void DacManagerLibera::refreshDiscoveryCache() {
     bool changed = false;
     {
         std::scoped_lock<std::mutex> lock(discoveryCacheMutex);
+        const auto makeDiscoverySignature = [](const std::vector<DiscoveredInfo>& infos) {
+            std::vector<std::pair<string, libera::core::ControllerUsageState>> signature;
+            signature.reserve(infos.size());
+            for (const DiscoveredInfo& info : infos) {
+                signature.emplace_back(info.stableId, info.usageState);
+            }
+            std::sort(signature.begin(), signature.end(), [](const auto& a, const auto& b) {
+                return a.first < b.first;
+            });
+            return signature;
+        };
+
         // Strategy:
-        // only raise dacsChanged when the device identity set changes.
-        // Metadata changes are still updated in cache but do not trigger list
-        // churn in the assigner UI.
-        const std::vector<string> oldIds = extractSortedStableIds(cachedInfos);
-        const std::vector<string> newIds = extractSortedStableIds(freshInfos);
-        changed = (oldIds != newIds);
+        // keep the old "device list changed" trigger, but also refresh when a
+        // discovery-time usage flag changes so "(in use)" stays current.
+        changed = makeDiscoverySignature(cachedInfos) != makeDiscoverySignature(freshInfos);
         cachedInfos = std::move(freshInfos);
     }
 
@@ -259,12 +289,16 @@ vector<DacData> DacManagerLibera::updateDacList() {
 
     for (const DiscoveredInfo& info : infos) {
         // Expose one ofxLaser DAC type ("Libera"), with composite stable IDs.
-        list.emplace_back(getType(), info.stableId);
+        list.emplace_back(getType(),
+                          info.stableId,
+                          "",
+                          usageStateImpliesUnavailable(info.usageState));
         // Keep the stable ID for assignment/reconnect, but surface the human
         // readable libera label as the default UI name when no explicit alias
         // has been set by the user.
         if (!info.sourceLabel.empty()) {
-            list.back().defaultDisplayLabel = info.sourceLabel;
+            list.back().defaultDisplayLabel =
+                makeFriendlySourceLabel(info.sourceType, info.sourceLabel);
         }
     }
 

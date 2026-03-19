@@ -58,6 +58,8 @@ private:
         string sourceId;        // Original source ID from libera
         string sourceLabel;     // Human-readable label from libera
         uint32_t maxPointRate = 0;
+        libera::core::ControllerUsageState usageState =
+            libera::core::ControllerUsageState::Unknown;
         // Keep the backend-specific controller info alive so connection can
         // reuse async discovery results instead of re-running a blocking scan.
         std::shared_ptr<libera::core::ControllerInfo> controllerInfo;
