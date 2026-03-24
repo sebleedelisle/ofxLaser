@@ -9,9 +9,7 @@
 #pragma once
 
 #include "ofxLaserZoneTransformBase.h"
-#include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
-#include "opencv2/calib3d/calib3d.hpp"
 #include "ofxLaserWarper.h"
 #include <glm/gtx/closest_point.hpp>
 
@@ -86,16 +84,6 @@ class ZoneTransformQuadData : public ZoneTransformBase {
     vector<glm::vec2*> getCornerPointsClockwise();
     bool isCorner(int index);
       
-    cv::Point2f toCv(glm::vec3 p) {
-        return cv::Point2f(p.x, p.y);
-    }
-    cv::Point2f toCv(glm::vec2 p) {
-        return cv::Point2f(p.x, p.y);
-    }
-    glm::vec3 toOf(cv::Point2f p) {
-        return glm::vec3(p.x, p.y,0);
-    }
-
     bool isConvex;
     
     bool initialised = false;

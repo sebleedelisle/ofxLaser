@@ -212,7 +212,6 @@ Legacy versions (no longer supported):
 Dependencies
 ------------
 addons : 
-ofxOpenCv (comes with oF)  
 ofxNetwork (comes with oF)  
 ofxPoco (comes with oF)  
 

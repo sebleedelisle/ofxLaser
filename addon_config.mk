@@ -26,7 +26,7 @@ common:
 	# or use += in several lines
 	# NOTE - we only include ofxKinect as it's the easiest way to ensure libusb
 	# is included cross platform
-	ADDON_DEPENDENCIES = ofxOpenCv ofxNetwork ofxPoco 
+	ADDON_DEPENDENCIES = ofxNetwork ofxPoco 
 	
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
@@ -62,12 +62,13 @@ common:
 	# a specific platform
 	# ADDON_LIBS_EXCLUDE =
 
-	# avoid pulling in bundled app/test sources from libera-core
-	ADDON_SOURCES_EXCLUDE += libs/libera-core/apps/%
-	ADDON_SOURCES_EXCLUDE += libs/libera-core/tests/%
-	ADDON_SOURCES_EXCLUDE += libs/libera-core/examples/%
+		# avoid pulling in bundled app/test sources from libera-core
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/apps/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/tests/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/examples/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/build/%
 
-	# Helios is enabled, but only its host-side SDK is relevant for desktop builds.
+		# Helios is enabled, but only its host-side SDK is relevant for desktop builds.
 	# Exclude firmware, hardware assets and utility/tool projects so the parser
 	# doesn't try to compile embedded/device-side C sources.
 	# Also exclude the older top-level Helios SDK copy; the addon now uses the

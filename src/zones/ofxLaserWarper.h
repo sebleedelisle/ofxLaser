@@ -12,9 +12,8 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxOpenCv.h"
 #include "ofxLaserPoint.h"
-#include "opencv2/calib3d/calib3d.hpp"
+#include <array>
 
 
 namespace ofxLaser {
@@ -26,31 +25,24 @@ class Warper {
 
 	glm::vec3 getWarpedPoint(const glm::vec3& p, bool useHomography = true);
 	Point getWarpedPoint(const Point& p, bool useHomography = true);
-	cv::Point2f getWarpedPoint(float x, float y, bool useHomography = true);
+	glm::vec2 getWarpedPoint(float x, float y, bool useHomography = true);
 
 	Point getUnWarpedPoint(const Point& p, bool useHomography = true);
 	glm::vec3 getUnWarpedPoint(const glm::vec3& p, bool useHomography = true);
-	
-	cv::Point2f toCv(glm::vec3 p) {
-		return cv::Point2f(p.x, p.y);
-	}
-    cv::Point2f toCv(glm::vec2 p) {
-        return cv::Point2f(p.x, p.y);
-    }
-	glm::vec3 toOf(cv::Point2f p) {
-		return glm::vec3(p.x, p.y,0);
-	}
 
 	
-	cv::Mat homography;
-	cv::Mat inverseHomography;
+	glm::mat3 homography = glm::mat3(1.0f);
+	glm::mat3 inverseHomography = glm::mat3(1.0f);
+	bool homographyValid = false;
 	
 	protected:
 	
-	vector<cv::Point2f> pre, post;
-	vector<cv::Point2f> srcCVPoints, dstCVPoints;
+	std::array<glm::vec2, 4> srcPoints{};
+	std::array<glm::vec2, 4> dstPoints{};
 
 private:
+	glm::vec2 applyHomography(const glm::mat3& matrix, const glm::vec2& point) const;
+	glm::vec2 getWarpedBilinearPoint(float x, float y) const;
 
 };
 	

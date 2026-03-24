@@ -1,5 +1,4 @@
 ofxAssimpModelLoader
-ofxOpenCv
 ofxNetwork
 ofxPoco
 ofxLaser
