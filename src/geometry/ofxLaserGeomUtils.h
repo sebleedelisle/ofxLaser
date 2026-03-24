@@ -167,29 +167,60 @@ class GeomUtils {
         
     }
     
-    static bool isConvex(const vector<glm::vec2*>& points){
-        bool concave = true;
-        for(size_t i = 0; i<4; i++) {
-        
-            ofVec2f p1 = *points[i%4];
-            ofVec2f p2 = *points[(i+1)%4];
-            ofVec2f p3 = *points[(i+2)%4];
-            ofVec2f v1 = p2-p1;
-            ofVec2f v2 = p3-p2;
-            v2.rotate(90);
-            if(v2.dot(v1)>=0) concave = false;
-        }
-        
-        if(concave) {
-            for(int i =0; i<3; i++) {
-                for(int j = i+1; j<4; j++) {
-                    if(points[i] == points[j]) {
-                        concave = false;
-                    }
+    static bool isConvex(const vector<glm::vec2*>& points, float minAngleDegrees = 0.0f){
+        if(points.size() < 3) return false;
+
+        float winding = 0.0f;
+        const float epsilon = 0.0001f;
+        const float minTurnSine = sin(ofDegToRad(minAngleDegrees));
+
+        for(size_t i = 0; i < points.size(); i++) {
+            const glm::vec2& p1 = *points[i];
+            const glm::vec2& p2 = *points[(i + 1) % points.size()];
+            const glm::vec2& p3 = *points[(i + 2) % points.size()];
+
+            if((p1 == p2) || (p2 == p3) || (p1 == p3)) {
+                return false;
+            }
+
+            glm::vec2 v1 = p2 - p1;
+            glm::vec2 v2 = p3 - p2;
+            float len1 = glm::length(v1);
+            float len2 = glm::length(v2);
+            if((len1 <= epsilon) || (len2 <= epsilon)) {
+                return false;
+            }
+
+            float cross = (v1.x * v2.y) - (v1.y * v2.x);
+
+            if(fabs(cross) <= epsilon) {
+                glm::vec2 segment = p3 - p1;
+                float segmentLengthSq = glm::dot(segment, segment);
+                if(segmentLengthSq <= (epsilon * epsilon)) {
+                    return false;
                 }
+
+                float t = glm::dot(p2 - p1, segment) / segmentLengthSq;
+                if((t >= 0.0f) && (t <= 1.0f)) {
+                    return false;
+                }
+
+                continue;
+            }
+
+            float turnSine = fabs(cross) / (len1 * len2);
+            if(turnSine < minTurnSine) {
+                return false;
+            }
+
+            if(winding == 0.0f) {
+                winding = cross;
+            } else if((winding > 0.0f) != (cross > 0.0f)) {
+                return false;
             }
         }
-        return !concave;
+
+        return winding != 0.0f;
     }
         
     

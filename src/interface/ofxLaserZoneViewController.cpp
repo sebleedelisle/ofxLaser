@@ -641,7 +641,10 @@ void LaserZoneViewController :: drawImGui() {
         
         std::shared_ptr<OutputZone> outputZone = getOutputZoneForZoneUI(zoneUi);
         
-        if(!outputZone) continue;
+        if(!outputZone) {
+            ImGui::PopID();
+            continue;
+        }
                 
         bool updateOutputZone = false;
        
@@ -807,7 +810,10 @@ void LaserZoneViewController :: drawImGui() {
                 UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
                 
                 //UI::addParameterGroup(ztq->transformParams, false);
-                ImGui::Checkbox("Perspective correction", (bool*)&ztq->useHomography.get());
+                bool useHomography = ztq->useHomography.get();
+                if(ImGui::Checkbox("Perspective correction", &useHomography)) {
+                    ztq->useHomography.set(useHomography);
+                }
                 UI::toolTip("Undistorts the image using perspective correction (good for graphics), as opposed to bi-linear interpolation (which is better for beams). ");
                 
                 

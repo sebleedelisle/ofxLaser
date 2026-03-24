@@ -25,7 +25,7 @@ OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
     zoneParams.add(muted.set("mute", false));
     zoneParams.add(locked.set("lock", false));
     zoneParams.add(soloed.set("solo", false));
-    zoneParams.add(transformType.set("Transform type", 0,0,1));
+    zoneParams.add(transformType.set("Transform type", 0,0,2));
 
     isDirty = true;
     enabled = true;

@@ -318,17 +318,26 @@ bool Laser :: removeZone(ZoneId zoneId){
 bool Laser :: removeZone(std::shared_ptr<OutputZone>& outputZone){
     
     if(outputZone==nullptr) return false;
+    ZoneId zoneId = outputZone->getZoneId();
+    bool removeAltZoneToo = !outputZone->getIsAlternate();
+    bool changed = false;
+
     deleteSettingsFileForZone(outputZone);
-    
-//    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
-//    
-//    outputZones.erase(it);
-//    delete outputZone;
-  
-    SebUtils::removeElementFromVector(outputZones, outputZone); 
-    saveSettings();
-    
-    return true;
+    changed = SebUtils::removeElementFromVector(outputZones, outputZone) || changed;
+
+    if(removeAltZoneToo) {
+        std::shared_ptr<OutputZone> altZone = getLaserAltZoneForZoneId(zoneId);
+        if(altZone != nullptr) {
+            deleteSettingsFileForZone(altZone);
+            changed = SebUtils::removeElementFromVector(outputZones, altZone) || changed;
+        }
+    }
+
+    if(changed) {
+        saveSettings();
+    }
+
+    return changed;
     
 }
 

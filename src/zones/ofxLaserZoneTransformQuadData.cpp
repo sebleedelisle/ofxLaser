@@ -99,7 +99,7 @@ bool ZoneTransformQuadData :: isAxisAligned() {
 
 ofPoint ZoneTransformQuadData::getWarpedPoint(const ofPoint& p){
     
-    return quadWarper.getWarpedPoint(p, useHomography&&!isConvex);
+    return quadWarper.getWarpedPoint(p, useHomography && isConvex);
     
 };
 
@@ -114,7 +114,7 @@ ofPoint ZoneTransformQuadData::getUnWarpedPoint(const ofPoint& p){
 ofxLaser::Point ZoneTransformQuadData::getWarpedPoint(const ofxLaser::Point& p){
     
  
-    return  quadWarper.getWarpedPoint(p, useHomography&&!isConvex);
+    return  quadWarper.getWarpedPoint(p, useHomography && isConvex);
 
     
 };
@@ -199,6 +199,9 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
     
     int i = handleindex;
     vector<glm::vec2*> points = getCornerPointsClockwise();
+    glm::vec2 originalPoint = *points[i];
+    glm::vec2 originalPointBefore = *points[(i+3)%4];
+    glm::vec2 originalPointAfter = *points[(i+1)%4];
     bool pointchanged = false;
     if((*points[i]!=newpos)) {
         
@@ -209,7 +212,7 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             
             if(!boundaryRect.inside(newpos)) {
                 newpos.x = ofClamp(newpos.x, boundaryRect.getLeft(), boundaryRect.getRight());
-                newpos.y = ofClamp(newpos.y, boundaryRect.getLeft(), boundaryRect.getRight());
+                newpos.y = ofClamp(newpos.y, boundaryRect.getTop(), boundaryRect.getBottom());
             }
             
             
@@ -227,7 +230,7 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             
 
             glm::vec2 afteredge = pointafter - pointopposite;
-            afteredge = glm::rotate(afteredge, float(-minangle*PI/180.0f)); // rotate it one degree
+            afteredge = glm::rotate(afteredge, float(-minangle*PI/180.0f));
             GeomUtils::clampToVector(newpos,  pointafter, pointafter+afteredge, true, false);
             
             *points[i] = newpos;
@@ -237,7 +240,7 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             
             if(!boundaryRect.inside(newpos)) {
                 newpos.x = ofClamp(newpos.x, boundaryRect.getLeft(), boundaryRect.getRight());
-                newpos.y = ofClamp(newpos.y, boundaryRect.getLeft(), boundaryRect.getRight());
+                newpos.y = ofClamp(newpos.y, boundaryRect.getTop(), boundaryRect.getBottom());
             }
             
             float minsize = 2;
@@ -271,7 +274,9 @@ bool ZoneTransformQuadData :: moveHandle(int handleindex, glm::vec2 newpos, bool
             
             
         }
-        pointchanged = (*points[i]==newpos);
+        pointchanged = (*points[i] != originalPoint)
+            || (*points[(i+3)%4] != originalPointBefore)
+            || (*points[(i+1)%4] != originalPointAfter);
         *points[i]=newpos; 
         
     }
@@ -426,7 +431,6 @@ bool ZoneTransformQuadData :: getIsConvex() {
 void ZoneTransformQuadData :: updateConvex() {
 
     vector<glm::vec2*> pointsclockwise = getCornerPointsClockwise();
-    isConvex =  GeomUtils::isConvex(pointsclockwise);
+    isConvex =  GeomUtils::isConvex(pointsclockwise, 2.0f);
     
 }
-
