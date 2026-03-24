@@ -1,3 +1,2 @@
-ofxNetwork
 ofxPoco
 ofxLaser

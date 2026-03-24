@@ -212,7 +212,6 @@ Legacy versions (no longer supported):
 Dependencies
 ------------
 addons : 
-ofxNetwork (comes with oF)  
 ofxPoco (comes with oF)  
 
 Open source libraries (included in source files) 
