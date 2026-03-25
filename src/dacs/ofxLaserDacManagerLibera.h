@@ -25,6 +25,8 @@
 #include "libera/lasercubenet/LaserCubeNetManager.hpp"
 #include "libera/lasercubeusb/LaserCubeUsbManager.hpp"
 
+#include "libera/core/ThreadUtils.hpp"
+
 #include <atomic>
 #include <chrono>
 #include <memory>
@@ -83,6 +85,7 @@ private:
 
     // Discovery cache is produced asynchronously so UI thread reads are cheap.
     std::atomic<bool> discoveryRunning{false};
+    std::atomic<bool> discoveryFinished{false};
     std::atomic<bool> exitStarted{false};
     std::thread discoveryThread;
     std::chrono::milliseconds discoveryInterval{1500};

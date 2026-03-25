@@ -132,8 +132,10 @@ DacManagerLibera::DacManagerLibera() {
     // Discovery can block (IDN scans may take ~600ms), so run it off the UI
     // thread and keep a cached snapshot for fast reads.
     discoveryRunning.store(true);
+    discoveryFinished.store(false, std::memory_order_relaxed);
     discoveryThread = std::thread([this] {
         discoveryLoop();
+        discoveryFinished.store(true, std::memory_order_release);
     });
 }
 
@@ -409,9 +411,9 @@ void DacManagerLibera::exit() {
     }
 
     discoveryRunning.store(false);
-    if (discoveryThread.joinable()) {
-        discoveryThread.join();
-    }
+    libera::core::timedJoin(discoveryThread, discoveryFinished,
+                            std::chrono::milliseconds(3000),
+                            "DacManagerLibera::discoveryThread");
 
     {
         std::scoped_lock<std::mutex> lock(discoveryCacheMutex);
@@ -438,11 +440,18 @@ void DacManagerLibera::exit() {
         }
     }
 
+    // Take ownership of liberaSystem outside the lock so that the (potentially
+    // slow) destructor/shutdown does not hold the mutex and block other threads.
+    std::unique_ptr<libera::System> systemToDestroy;
     {
         std::scoped_lock<std::mutex> lock(liberaSystemMutex);
-        if (liberaSystem) {
-            // libera::System destructor already calls shutdown().
-            liberaSystem.reset();
-        }
+        systemToDestroy = std::move(liberaSystem);
+    }
+    if (systemToDestroy) {
+        ofLogNotice("DacManagerLibera") << "shutting down libera system...";
+        // libera::System destructor calls shutdown() on all protocol managers.
+        // Each manager's closeAll() joins its own threads with timeouts.
+        systemToDestroy.reset();
+        ofLogNotice("DacManagerLibera") << "libera system shutdown complete";
     }
 }

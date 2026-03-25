@@ -289,8 +289,16 @@ bool DacNetworkBaseThreaded::setColourShift(float shift)  {
 }
 
 void DacNetworkBaseThreaded::cleanUpFramesAndPoints() {
+    if (isThreadRunning()) {
+        ofLogWarning("cleanUpFramesAndPoints") << "thread still running, stopping first";
+        stopThread();
+        waitForThread(true, 5000);
+        if (isThreadRunning()) {
+            ofLogError("cleanUpFramesAndPoints") << "thread did not stop within timeout";
+            return;
+        }
+    }
     ofLogNotice("cleanUpFramesAndPoints");
-    // NOTE thread must be stopped by now
     frameThreadChannel.close();
     
     // get rid of frames in the buffer
