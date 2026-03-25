@@ -36,15 +36,17 @@
 #include "ofMain.h"
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserViewWithMoveables.h"
+#include "ofxLaserBaseView.h"
+#include "ofxLaserBaseController.h"
 #include "ofxLaserZoneUiQuad.h"
 #include "ofxLaserZoneUiQuadComplex.h"
 #include "ofxLaserZoneUiLine.h"
 #include "ofxLaserMaskUiQuad.h"
 #ifdef OFXLASER_USE_FONT_MANAGER
 #include "ofxFontManager.h"
-#endif 
+#endif
 namespace ofxLaser {
-class LaserZoneViewController : public ViewWithMoveables {
+class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, public LaserBaseController {
     
     public :
     // initialise :
@@ -80,6 +82,12 @@ class LaserZoneViewController : public ViewWithMoveables {
     }
     void resetUiElements();
     void moveMasksToBack();
+
+    // ============================================================
+    // LaserBaseView signal overrides
+    // ============================================================
+    void onZonesChanged() override;
+    void onMasksChanged() override;
 
     protected :
     

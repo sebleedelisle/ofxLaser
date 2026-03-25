@@ -92,6 +92,18 @@ namespace LaserMsg {
     // --- DAC assignment ---
     struct AssignDac            { std::string dacLabel; int laserIndex; };
     struct DisconnectDac        { int laserIndex; };
+
+    // --- Per-laser settings ---
+    struct SetLaserArmed        { int laserIndex; bool armed; };
+    struct SetLaserTestPattern  { int laserIndex; int pattern; bool active; };
+    struct SetLaserFlipX        { int laserIndex; bool flip; };
+    struct SetLaserFlipY        { int laserIndex; bool flip; };
+    struct ResetLaserRotation   { int laserIndex; };
+    struct ResetLaserOffset     { int laserIndex; };
+    struct SetHideContentDuringTestPattern { bool hide; };
+
+    // --- Zone assignment on a laser ---
+    struct RemoveZoneFromLaser  { std::string zoneUid; int laserIndex; };
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +152,16 @@ using LaserAppMsg = std::variant<
     LaserMsg::ResetAllLasers,
 
     LaserMsg::AssignDac,
-    LaserMsg::DisconnectDac
+    LaserMsg::DisconnectDac,
+
+    LaserMsg::SetLaserArmed,
+    LaserMsg::SetLaserTestPattern,
+    LaserMsg::SetLaserFlipX,
+    LaserMsg::SetLaserFlipY,
+    LaserMsg::ResetLaserRotation,
+    LaserMsg::ResetLaserOffset,
+    LaserMsg::SetHideContentDuringTestPattern,
+    LaserMsg::RemoveZoneFromLaser
 >;
 
 // ---------------------------------------------------------------------------

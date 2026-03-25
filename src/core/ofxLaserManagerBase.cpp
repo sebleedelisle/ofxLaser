@@ -1290,8 +1290,14 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         },
         [&](LaserMsg::DeleteLaser& m) {
             if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
-                deleteLaser(lasers[m.laserIndex]);
-                fireLasersChanged();
+                // Take a copy — deleteLaser erases from the vector,
+                // invalidating the reference if passed by ref.
+                auto laserCopy = lasers[m.laserIndex];
+                deleteLaser(laserCopy);
+                // Don't fire signals synchronously — deleteLaser does
+                // complex teardown (deleteBeamZone, renumbering, saves).
+                // Views poll on next update().
+                scheduleSaveSettings();
             }
         },
         [&](LaserMsg::SelectLaser&) {
@@ -1305,16 +1311,8 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             fireZonesChanged();
         },
         [&](LaserMsg::DeleteBeamZone& m) {
-            // Find beam zone by UID and delete
-            for(int i = 0; i < beamZoneContainer.getNumBeamZones(); i++) {
-                auto bz = beamZoneContainer.getBeamZoneAtIndex(i);
-                if(bz && bz->zoneId.getUid() == m.zoneUid) {
-                    // Need to get as OutputZone for deletion
-                    // For now, use the existing deletion path
-                    break;
-                }
-            }
-            fireZonesChanged();
+            // Use DeleteOutputZone for actual beam zone deletion.
+            // This handler is kept for direct beam-zone-by-UID deletion if needed.
         },
         [&](LaserMsg::MoveBeamZone& m) {
             moveBeamZoneToIndex(m.sourceIndex, m.targetIndex);
@@ -1341,7 +1339,9 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
             if(zone) {
                 deleteCanvasZone(zone);
-                fireCanvasChanged();
+                // Don't fire signals synchronously — deleteCanvasZone
+                // renumbers zones and modifies laser references.
+                scheduleSaveSettings();
             }
         },
         [&](LaserMsg::CanvasZoneMoved& m) {
@@ -1448,18 +1448,29 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             }
         },
         [&](LaserMsg::DeleteOutputZone& m) {
+            // Find the matching zone first, then delete outside the iterator
+            std::shared_ptr<OutputZone> found = nullptr;
+            std::shared_ptr<Laser> ownerLaser = nullptr;
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
                     if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
-                        if(oz->getZoneId().getType() == ZoneId::ZoneType::CANVAS) {
-                            laser->removeZone(oz);
-                        } else {
-                            deleteBeamZone(oz);
-                        }
-                        fireZonesChanged();
-                        return;
+                        found = oz;
+                        ownerLaser = laser;
+                        break;
                     }
                 }
+                if(found) break;
+            }
+            if(found && ownerLaser) {
+                if(found->getZoneId().getType() == ZoneId::ZoneType::CANVAS) {
+                    ownerLaser->removeZone(found);
+                } else {
+                    deleteBeamZone(found);
+                }
+                // Don't fire signals synchronously after destructive zone operations.
+                // deleteBeamZone does complex renumbering + saves that leave intermediate state.
+                // Views already poll for zone changes in their update() loop.
+                scheduleSaveSettings();
             }
         },
 
@@ -1469,10 +1480,13 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         },
         [&](LaserMsg::DeleteMask& m) {
             if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
-                auto& masks = lasers[m.laserIndex]->maskManager.quads;
-                if(m.maskIndex >= 0 && m.maskIndex < (int)masks.size()) {
-                    lasers[m.laserIndex]->maskManager.deleteQuadMask(masks[m.maskIndex]);
-                    fireMasksChanged();
+                auto& maskMgr = lasers[m.laserIndex]->maskManager;
+                if(m.maskIndex >= 0 && m.maskIndex < (int)maskMgr.quads.size()) {
+                    // Take a copy — deleteQuadMask erases from the vector
+                    auto maskCopy = maskMgr.quads[m.maskIndex];
+                    maskMgr.deleteQuadMask(maskCopy);
+                    // Don't fire synchronously — views poll next frame.
+                    scheduleSaveSettings();
                 }
             }
         },
@@ -1494,9 +1508,9 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         },
         [&](LaserMsg::ResetAllLasers&) {
             resetAllLasersToDefault();
-            fireLasersChanged();
-            fireZonesChanged();
-            fireCanvasChanged();
+            // Don't fire signals synchronously — resetAllLasersToDefault
+            // tears down and rebuilds the entire model. Views poll next frame.
+            scheduleSaveSettings();
         },
 
         // --- DAC assignment ---
@@ -1508,8 +1522,76 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         },
         [&](LaserMsg::DisconnectDac& m) {
             if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
-                dacAssigner.disconnectDacFromLaser(lasers[m.laserIndex]);
+                auto& laser = lasers[m.laserIndex];
+                string savedLabel = laser->dacLabel;
+                dacAssigner.disconnectDacFromLaser(laser);
+                // Preserve the label so reconnect can find it again
+                if(!savedLabel.empty()) laser->dacLabel = savedLabel;
                 fireDacStatusChanged();
+            }
+        },
+
+        // --- Per-laser settings ---
+        [&](LaserMsg::SetLaserArmed& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->armed = m.armed;
+                fireGlobalSettingsChanged();
+            }
+        },
+        [&](LaserMsg::SetLaserTestPattern& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->testPatternActive = m.active;
+                lasers[m.laserIndex]->testPattern = m.pattern;
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::SetLaserFlipX& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->flipX = m.flip;
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::SetLaserFlipY& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->flipY = m.flip;
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::ResetLaserRotation& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->rotation = 0;
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::ResetLaserOffset& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                lasers[m.laserIndex]->outputOffset.set(glm::vec2(0,0));
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::SetHideContentDuringTestPattern& m) {
+            hideContentDuringTestPattern = m.hide;
+            for(auto& laser : lasers) {
+                laser->hideContentDuringTestPattern = m.hide;
+            }
+            scheduleSaveSettings();
+            fireGlobalSettingsChanged();
+        },
+
+        // --- Zone assignment on a laser ---
+        [&](LaserMsg::RemoveZoneFromLaser& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                ZoneId zoneId;
+                for(auto& oz : lasers[m.laserIndex]->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
+                        zoneId = oz->getZoneId();
+                        break;
+                    }
+                }
+                lasers[m.laserIndex]->removeZone(zoneId);
+                // Don't fire synchronously — removeZone modifies outputZones
+                // and calls saveSettings. Views poll next frame.
+                scheduleSaveSettings();
             }
         }
 

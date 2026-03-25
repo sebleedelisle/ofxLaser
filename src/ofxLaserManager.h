@@ -21,7 +21,7 @@
 
 namespace ofxLaser {
 
-class Manager : public ManagerBase {
+class Manager : public ManagerBase, public LaserBaseController {
     
     public :
     

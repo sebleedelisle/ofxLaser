@@ -8,6 +8,8 @@
 #pragma once
 
 #include "ofxLaserViewWithMoveables.h"
+#include "ofxLaserBaseView.h"
+#include "ofxLaserBaseController.h"
 #include "ofxLaserUI.h"
 #include "ofxLaserShapeTargetCanvas.h"
 #include "ofxLaserGuideImageUiQuad.h"
@@ -16,18 +18,18 @@
 namespace ofxLaser {
 
 class CanvasInputZoneQuad : public MoveablePoly  {
-    
+
     public :
-    
+
     CanvasInputZoneQuad() {
         setHue(0);
         setBrightness(180);
-        
+
     }
-    
+
 };
 
-class CanvasViewController : public ViewWithMoveables {
+class CanvasViewController : public ViewWithMoveables, public LaserBaseView, public LaserBaseController {
     
     public :
     void drawImGui();
@@ -61,8 +63,13 @@ class CanvasViewController : public ViewWithMoveables {
     }
     
     virtual void drawMoveables() override;
-    
-    bool zonesChangedFlag = false; 
+
+    // ============================================================
+    // LaserBaseView signal overrides
+    // ============================================================
+    void onCanvasChanged() override;
+
+    bool zonesChangedFlag = false;
     
     
 };

@@ -726,19 +726,21 @@ void LaserZoneViewController :: drawImGui() {
            
             if(UI::Button(ICON_FK_BAN, false, zoneUi->muted, ImVec2(25,25))) {
                 zoneUi->muted = !zoneUi->muted;
-                updateOutputZone = true;
+                sendLaserMessage(LaserMsg::ZoneMuteChanged{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, zoneUi->muted});
             }
             ImGui::SameLine();
-            
+
             UI::addDelayedTooltip("Disable output");
             UI::toolTip("Disables output to this zone");
-            
+
             ImGui::SameLine();
-            
+
             if(UI::Button(ICON_FK_LOCK, false, zoneUi->locked, ImVec2(25,25))) {
                 zoneUi->locked = !zoneUi->locked;
                 zoneUi->setSelected(!zoneUi->locked);
-                updateOutputZone = true;
+                sendLaserMessage(LaserMsg::ZoneLockChanged{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, zoneUi->locked});
             }
             UI::addDelayedTooltip("Lock zone");
             UI::toolTip("Prevents the zone from being moved");
@@ -752,27 +754,30 @@ void LaserZoneViewController :: drawImGui() {
             
             if(zoneTransformQuad) UI::secondaryColourStart();
             if(ImGui::Button("QUAD")) {
-                outputZone->transformType = 0;
+                sendLaserMessage(LaserMsg::ZoneTypeChanged{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 0});
                 zoneUi->setSelected(true);
             }
-            
+
             UI::secondaryColourEnd();
             UI::toolTip("Standard rectangular zone. Alt-click corners to remove the constraints.");
-            
+
             ImGui::SameLine();
             if(zoneTransformLine)  UI::secondaryColourStart();
             if(ImGui::Button("LINE / CURVE")) {
-                outputZone->transformType = 1;
+                sendLaserMessage(LaserMsg::ZoneTypeChanged{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 1});
                 zoneUi->setSelected(true);
             }
             UI::secondaryColourEnd();
             UI::toolTip("Line/curve zone. Great for very thin zones. Add points to create complex bezier curve zones.");
-            
-            
+
+
             ImGui::SameLine();
             if(zoneTransformQuadComplex)  UI::secondaryColourStart();
             if(ImGui::Button("SEGMENTED")) {
-                outputZone->transformType = 2;
+                sendLaserMessage(LaserMsg::ZoneTypeChanged{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 2});
                 zoneUi->setSelected(true);
             }
             UI::secondaryColourEnd();
@@ -787,7 +792,8 @@ void LaserZoneViewController :: drawImGui() {
             
             //ImGui::SameLine();
             if(UI::Button("RESET TO DEFAULT"))  {
-                outputZone->resetAllTransforms();
+                sendLaserMessage(LaserMsg::ZoneResetTransform{
+                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt});
             }
             UI::toolTip("Reset zone to default position, size and shape");
             
@@ -933,7 +939,8 @@ void LaserZoneViewController :: drawImGui() {
             if((!zoneUi->inputZoneAlt) && (!doesAltZoneExistForZoneIndex(zoneUi->zoneId))) {
                 ImGui::SameLine();
                 if(UI::Button("ADD ALT ZONE")) {
-                    laser->addAltZone(zoneUi->zoneId);
+                    sendLaserMessage(LaserMsg::AddAltZone{
+                        zoneUi->zoneId.getUid(), getLaserIndex()});
                     zoneUi->setSelected(false);
                     ImGui::CloseCurrentPopup();
                 }
@@ -987,9 +994,8 @@ void LaserZoneViewController :: drawImGui() {
             ImGui::EndPopup();
         }
         
-        if(updateOutputZone) {
-            zoneUi->updateDataFromUi(outputZone);
-        }
+        // Mute/lock changes now go through the message bus (LaserMsg::ZoneMuteChanged/ZoneLockChanged)
+        // Continuous drag updates still use the direct updateDataFromUi path in update()
         ImGui::PopID();
     }
     
@@ -1018,12 +1024,9 @@ void LaserZoneViewController :: drawImGui() {
             string buttonlabel = "DELETE MASK";
            
             if(UI::DangerButton(buttonlabel.c_str())) {
-                
-                laser->maskManager.deleteQuadMask(laser->maskManager.quads[i]);
+                sendLaserMessage(LaserMsg::DeleteMask{getLaserIndex(), (int)i});
                 deselectAll();
                 ImGui::CloseCurrentPopup();
-                //ImGui::OpenPopup("DELETE MASK");
-                
             }
             ImGui::Text("%s %s click a corner point to make it non-uniform", ICON_FK_INFO_CIRCLE, altKey.c_str());
             
@@ -1033,11 +1036,9 @@ void LaserZoneViewController :: drawImGui() {
     }
             
     if(outputZoneToDelete!=nullptr) {
-        if(outputZoneToDelete->getZoneId().getType()==ZoneId::ZoneType::CANVAS) {
-            laser->removeZone(outputZoneToDelete);
-        } else {
-            ManagerBase::instance()->deleteBeamZone(outputZoneToDelete);
-        }
+        sendLaserMessage(LaserMsg::DeleteOutputZone{
+            outputZoneToDelete->getZoneId().getUid(),
+            outputZoneToDelete->getIsAlternate()});
     }
     if(openRenameZoneId!="") {
         string popupname = "Edit zone name##" + openRenameZoneId;
@@ -1048,10 +1049,33 @@ void LaserZoneViewController :: drawImGui() {
   
 }
 void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize, bool visible) {
-    
+
     ViewWithMoveables::setGrid(snaptogrid, gridsize, visible);
     for(std::shared_ptr<MaskUiQuad>& mask : maskUis) {
         mask->setGrid(false, 1);
     }
-    
+
+}
+
+
+// ============================================================
+// Signal: zones changed — rebuild zone UIs from model
+// ============================================================
+void LaserZoneViewController::onZonesChanged() {
+    // The existing updateZones() / resetUiElements() pattern handles this.
+    // When signals fire, we refresh from the laser's authoritative zone data.
+    bool changed = updateZones();
+    if(changed) {
+        resetUiElements();
+    }
+}
+
+// ============================================================
+// Signal: masks changed — rebuild mask UIs from model
+// ============================================================
+void LaserZoneViewController::onMasksChanged() {
+    bool changed = updateMasks();
+    if(changed) {
+        resetUiElements();
+    }
 }

@@ -267,3 +267,13 @@ void CanvasViewController :: drawMoveables() {
 void CanvasViewController::setOutputRect(ofRectangle rect, bool updatescaleandoffset){
     ScrollableView::setOutputRect(rect, updatescaleandoffset);
 }
+
+
+// ============================================================
+// Signal: model changed — rebuild UI elements from LaserState
+// ============================================================
+void CanvasViewController::onCanvasChanged() {
+    if(!laserState) return;
+    // Delegate to existing method using the canvas target from LaserState
+    updateUIFromZones(laserState->canvasTarget);
+}
