@@ -34,6 +34,8 @@
 #include "ofxLaserDacManagerLibera.h"
 #include "ofxLaserDacAliasManager.h"
 
+#include <atomic>
+
 namespace ofxLaser {
 
 class DacAssigner {
@@ -47,6 +49,8 @@ class DacAssigner {
     
     DacAssigner() ;
     ~DacAssigner();
+
+    void shutdown();
     
     bool update(); 
     
@@ -76,6 +80,8 @@ class DacAssigner {
     DacAliasManager dacAliasManager;
     
     private:
+    void handleCoreExit(ofEventArgs& args);
+    std::atomic<bool> shutdownStarted{false};
     void stopAndClearManagers();
     void configureManagers();
 };

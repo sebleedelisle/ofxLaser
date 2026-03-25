@@ -50,6 +50,24 @@ void DacAssigner::destroy() {
     
 }
 
+void DacAssigner::shutdown() {
+    if (shutdownStarted.exchange(true)) {
+        return;
+    }
+
+    // The laser manager singleton is intentionally long-lived, so app exit
+    // must stop manager-owned discovery threads explicitly instead of waiting
+    // for process teardown.
+    stopAndClearManagers();
+    dacDataList.clear();
+    availableDacDataList.clear();
+}
+
+void DacAssigner::handleCoreExit(ofEventArgs& args) {
+    (void)args;
+    shutdown();
+}
+
 void DacAssigner::stopAndClearManagers() {
     // Managers can own threads/sockets/devices, so always ask them to exit
     // before releasing shared_ptr references.
@@ -70,13 +88,16 @@ void DacAssigner::configureManagers() {
 
 
 DacAssigner :: DacAssigner() {
-
     if(dacAssigner == NULL) {
 		dacAssigner = this;
 	} else {
 		ofLog(OF_LOG_ERROR, "Multiple ofxLaser::DacManager instances created");
         throw;
 	}
+
+    // Run manager shutdown during the normal openFrameworks exit event, after
+    // the app's own exit callback but before static teardown starts.
+    ofAddListener(ofEvents().exit, this, &DacAssigner::handleCoreExit, OF_EVENT_ORDER_AFTER_APP);
     dacAliasManager.load();
 
     configureManagers();
@@ -85,11 +106,16 @@ DacAssigner :: DacAssigner() {
 }
 
 DacAssigner :: ~DacAssigner() {
-    stopAndClearManagers();
+    ofRemoveListener(ofEvents().exit, this, &DacAssigner::handleCoreExit, OF_EVENT_ORDER_AFTER_APP);
+    shutdown();
 }
 
 
 bool DacAssigner :: update() {
+    if (shutdownStarted.load()) {
+        return false;
+    }
+
     bool changed = false;
     for(std::shared_ptr<DacManagerBase>& dacManager : dacManagers) {
         if(dacManager->checkDacsChanged()) changed = true;
@@ -107,6 +133,12 @@ const vector<std::shared_ptr<DacData>>& DacAssigner ::getAvailableDacList(){
 
 
 void DacAssigner ::updateDacList(){
+    if (shutdownStarted.load()) {
+        availableDacDataList.clear();
+        dacDataList.clear();
+        return;
+    }
+
     
     // get a new list of dacdata
     vector<DacData> newdaclist;
