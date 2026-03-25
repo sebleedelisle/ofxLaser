@@ -94,7 +94,13 @@ void setupGui() {
     ImGui::GetIO().ConfigDockingWithShift = true;
     
     ImGui::GetIO().MouseDrawCursor = false;
-    
+
+    // Disable input event trickling. When enabled (the default), ImGui processes
+    // only one mouse position update per frame if other input types (keys, buttons,
+    // scroll) are also queued. At low frame rates (e.g. 30 FPS idle), this causes
+    // the mouse position to lag behind and gradually "catch up" over many frames.
+    ImGui::GetIO().ConfigInputTrickleEventQueue = false;
+
     io.Fonts->Build();
     imGuiOfx.engine.updateFontsTexture();
     //imGuiOfx.engine.
@@ -1426,7 +1432,7 @@ void addHover(const char* desc) {
     }
 }
 void addDelayedTooltip(const char* desc) {
-    if (ImGui::IsItemHovered() && (GImGui->HoveredIdNotActiveTimer >1)) {
+    if (ImGui::IsItemHovered() && (GImGui->HoveredIdNotActiveTimer > 0.5f)) {
         ImGui::PushFont(font);
         ImGui::BeginTooltip();
         ImGui::PushTextWrapPos(ImGui::GetFontSize() * 15.0f);

@@ -445,11 +445,9 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
     ImGui_ImplGlfw_SetContextFor(window);
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     
-    // NOTE!!! I added this myself. I don't understand it but without it,
-    // the interface scaling doesn't work properly!
-    if(bd->MouseWindow != window) {
-        bd->MouseWindow = window;
-    }
+    // MouseWindow is managed by CursorEnterCallback, don't override it here.
+    // The fallback polling path in UpdateMouseData now applies the same
+    // coordinate scaling, so it no longer breaks interface scaling.
     
     
     if (bd->PrevUserCallbackCursorPos != NULL && window == bd->Window)
@@ -718,10 +716,16 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
-                // OK SO THIS CODE ONLY RUNS WHEN THE MOUSE IS OUTSIDE THE WINDOW! 
+                // Apply the same coordinate scaling as CursorPosCallback
+#ifndef TARGET_OSX
+                mouse_x /= io.DisplayFramebufferScale.x;
+                mouse_y /= io.DisplayFramebufferScale.y;
+#else
+                mouse_x /= GlobalScale::multiplier;
+                mouse_y /= GlobalScale::multiplier;
+#endif
 
                 bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
-            
                 io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
             }
         }

@@ -28,6 +28,9 @@
 #include "ofxLaserBeamZoneContainer.h"
 #include "ClipperUtils.h"
 #include "SebUtils.h"
+#include "ofxLaserState.h"
+#include "ofxLaserMsg.h"
+#include "ofxLaserBaseView.h"
 
 namespace ofxLaser {
 
@@ -185,8 +188,25 @@ public:
     
     
     int getNextId();
+
+    // ============================================================
+    // View registration (Step 4 — Liberation-style signals)
+    // ============================================================
+    void addLaserView(LaserBaseView* view);
+    bool removeLaserView(LaserBaseView* view);
+
+    // ============================================================
+    // Message bus receiver (Step 2 — Liberation-style messages)
+    // ============================================================
+    void receiveLaserMessage(LaserMsgEnvelope& env);
+
+    // ============================================================
+    // Read-only state snapshot (Step 1 — Liberation-style AppState)
+    // ============================================================
+    const LaserState& getLaserState() const { return laserState; }
+
     //--------------------------------------------------------
-    
+
     DacAssigner& dacAssigner;
     
     //ofParameter<int> canvasWidth, canvasHeight;
@@ -220,8 +240,29 @@ public:
   
     
     protected :
-    
-    
+
+    // ============================================================
+    // LaserState — read-only snapshot for views
+    // ============================================================
+    LaserState laserState;
+    void syncLaserState();
+
+    // ============================================================
+    // Registered views
+    // ============================================================
+    std::vector<LaserBaseView*> laserViews;
+
+    // ============================================================
+    // Signal-firing helpers — call syncLaserState() then notify views
+    // ============================================================
+    void fireLasersChanged();
+    void fireZonesChanged();
+    void fireCanvasChanged();
+    void fireDacStatusChanged();
+    void fireGlobalSettingsChanged();
+    void fireTestPatternChanged();
+    void fireMasksChanged();
+
     int currentId = 0;
     
 //    template<typename T>

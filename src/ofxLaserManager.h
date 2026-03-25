@@ -7,6 +7,8 @@
 #pragma once
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUI.h"
+#include "ofxLaserUIState.h"
+#include "ofxLaserBaseController.h"
 #include "ofxLaserZoneViewController.h"
 #include "ofxLaserCanvasViewController.h"
 #include "ofxLaserIconSVGs.h"
@@ -16,12 +18,6 @@
 #ifdef OFXLASER_USE_OFXNATIVE
 #include "ofxNative.h"
 #endif
-
-enum ofxLaserViewMode {
-    OFXLASER_VIEW_CANVAS, // show default canvas view
-    OFXLASER_VIEW_OUTPUT, // show laser output system
-    
-};
 
 namespace ofxLaser {
 
@@ -183,11 +179,18 @@ class Manager : public ManagerBase {
     ofxLaserViewMode viewMode;
    
     ofEvent<bool> armEvent;
-    
+
     bool autoSizeToScreen = true;
-  
+
     vector<std::shared_ptr<LaserZoneViewController>> laserZoneViews;
     std::shared_ptr<CanvasViewController> canvasViewController;
+
+    // ============================================================
+    // UI state — extracted presentation state (Step 3)
+    // Fields above are kept for backward compatibility during migration.
+    // New code should prefer uiState.fieldName.
+    // ============================================================
+    UIState uiState;
    
     protected :
     

@@ -20,9 +20,12 @@ ManagerBase * ManagerBase::instance() {
 }
 
 
-ManagerBase :: ManagerBase() : dacAssigner(*DacAssigner::instance()) {
+ManagerBase :: ManagerBase()
+    : dacAssigner(*DacAssigner::instance())
+    , laserState{ lasers, beamZoneContainer, canvasTarget, dacAssigner, laserMask }
+{
 
-    
+
     canvasTarget = std::make_shared<ShapeTargetCanvas>();
     
     if(laserManager == NULL) {
@@ -1189,4 +1192,326 @@ void ManagerBase::addProjector() {
 void ManagerBase::initGui(bool showAdvanced) {
     ofLogError("ManagerBase::initGui(bool showAdvanced) initGui is no longer required");
     throw;
+}
+
+
+// ============================================================
+// LaserState sync — copies scalar state before notifying views
+// ============================================================
+void ManagerBase::syncLaserState() {
+    laserState.globalBrightness       = globalBrightness;
+    laserState.testPatternGlobalActive = testPatternGlobalActive;
+    laserState.testPatternGlobal      = testPatternGlobal;
+    laserState.useAltZones            = useAltZones;
+    laserState.allLasersArmed         = areAllLasersArmed();
+    laserState.numLasers              = (int)lasers.size();
+    laserState.numBeamZones           = (int)beamZoneContainer.getNumZoneIds();
+}
+
+
+// ============================================================
+// View registration
+// ============================================================
+void ManagerBase::addLaserView(LaserBaseView* view) {
+    view->laserState = &laserState;
+    laserViews.push_back(view);
+    syncLaserState();
+    // Fire all signals so the new view has a complete initial state
+    view->onLasersChanged();
+    view->onZonesChanged();
+    view->onCanvasChanged();
+    view->onGlobalSettingsChanged();
+    view->onDacStatusChanged();
+    view->onTestPatternChanged();
+    view->onMasksChanged();
+}
+
+bool ManagerBase::removeLaserView(LaserBaseView* view) {
+    auto it = std::find(laserViews.begin(), laserViews.end(), view);
+    if(it != laserViews.end()) {
+        (*it)->laserState = nullptr;
+        laserViews.erase(it);
+        return true;
+    }
+    return false;
+}
+
+
+// ============================================================
+// Signal-firing helpers
+// ============================================================
+void ManagerBase::fireLasersChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onLasersChanged();
+}
+
+void ManagerBase::fireZonesChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onZonesChanged();
+}
+
+void ManagerBase::fireCanvasChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onCanvasChanged();
+}
+
+void ManagerBase::fireDacStatusChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onDacStatusChanged();
+}
+
+void ManagerBase::fireGlobalSettingsChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onGlobalSettingsChanged();
+}
+
+void ManagerBase::fireTestPatternChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onTestPatternChanged();
+}
+
+void ManagerBase::fireMasksChanged() {
+    syncLaserState();
+    for(auto* v : laserViews) v->onMasksChanged();
+}
+
+
+// ============================================================
+// Message bus receiver — dispatch via std::visit
+// ============================================================
+void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
+
+    std::visit(overloaded{
+
+        // --- Laser management ---
+        [&](LaserMsg::AddLaser&) {
+            createAndAddLaser();
+            fireLasersChanged();
+        },
+        [&](LaserMsg::DeleteLaser& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                deleteLaser(lasers[m.laserIndex]);
+                fireLasersChanged();
+            }
+        },
+        [&](LaserMsg::SelectLaser&) {
+            // Selection is a UI concern — Manager subclass handles this
+            // via its own override or signal
+        },
+
+        // --- Beam zone management ---
+        [&](LaserMsg::CreateBeamZone&) {
+            createNewBeamZone();
+            fireZonesChanged();
+        },
+        [&](LaserMsg::DeleteBeamZone& m) {
+            // Find beam zone by UID and delete
+            for(int i = 0; i < beamZoneContainer.getNumBeamZones(); i++) {
+                auto bz = beamZoneContainer.getBeamZoneAtIndex(i);
+                if(bz && bz->zoneId.getUid() == m.zoneUid) {
+                    // Need to get as OutputZone for deletion
+                    // For now, use the existing deletion path
+                    break;
+                }
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::MoveBeamZone& m) {
+            moveBeamZoneToIndex(m.sourceIndex, m.targetIndex);
+            fireZonesChanged();
+        },
+        [&](LaserMsg::AddZoneToLaser& m) {
+            // Find the ZoneId by uid
+            for(int i = 0; i < beamZoneContainer.getNumBeamZones(); i++) {
+                auto bz = beamZoneContainer.getBeamZoneAtIndex(i);
+                if(bz && bz->zoneId.getUid() == m.zoneUid) {
+                    addZoneToLaser(bz->zoneId, m.laserIndex);
+                    break;
+                }
+            }
+            fireZonesChanged();
+        },
+
+        // --- Canvas zone management ---
+        [&](LaserMsg::AddCanvasZone& m) {
+            addCanvasZone(m.x, m.y, m.w, m.h);
+            fireCanvasChanged();
+        },
+        [&](LaserMsg::DeleteCanvasZone& m) {
+            auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
+            if(zone) {
+                deleteCanvasZone(zone);
+                fireCanvasChanged();
+            }
+        },
+        [&](LaserMsg::CanvasZoneMoved& m) {
+            auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
+            if(zone) {
+                zone->set(m.rect.x, m.rect.y, m.rect.width, m.rect.height);
+                fireCanvasChanged();
+            }
+        },
+        [&](LaserMsg::SetCanvasSize& m) {
+            setCanvasSize(m.width, m.height);
+            fireCanvasChanged();
+        },
+
+        // --- Global settings ---
+        [&](LaserMsg::SetGlobalBrightness& m) {
+            globalBrightness = m.value;
+            fireGlobalSettingsChanged();
+        },
+        [&](LaserMsg::SetTestPattern& m) {
+            testPatternGlobal = m.pattern;
+            testPatternGlobalActive = m.active;
+            updateGlobalTestPattern();
+            fireTestPatternChanged();
+        },
+        [&](LaserMsg::SetUseAltZones& m) {
+            useAltZones = m.state;
+            fireGlobalSettingsChanged();
+        },
+        [&](LaserMsg::ToggleAltZones&) {
+            toggleAltZones();
+            fireGlobalSettingsChanged();
+        },
+        [&](LaserMsg::SetGlobalLatency&) {
+            // Latency is managed by Manager subclass (it's an ofParameter)
+            fireGlobalSettingsChanged();
+        },
+
+        // --- Arm / disarm ---
+        [&](LaserMsg::ArmAllLasers&) {
+            armAllLasers();
+            fireGlobalSettingsChanged();
+        },
+        [&](LaserMsg::DisarmAllLasers&) {
+            disarmAllLasers();
+            fireGlobalSettingsChanged();
+        },
+
+        // --- Zone transform changes ---
+        [&](LaserMsg::ZoneTransformChanged&) {
+            // Complex zone transform updates — handled by Manager override
+            fireZonesChanged();
+        },
+        [&](LaserMsg::ZoneMuteChanged& m) {
+            for(auto& laser : lasers) {
+                for(auto& oz : laser->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                        oz->muted = m.muted;
+                    }
+                }
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::ZoneLockChanged& m) {
+            for(auto& laser : lasers) {
+                for(auto& oz : laser->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                        oz->locked = m.locked;
+                    }
+                }
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::ZoneTypeChanged& m) {
+            for(auto& laser : lasers) {
+                for(auto& oz : laser->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                        oz->transformType = m.transformType;
+                    }
+                }
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::ZoneResetTransform& m) {
+            for(auto& laser : lasers) {
+                for(auto& oz : laser->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                        oz->resetAllTransforms();
+                    }
+                }
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::AddAltZone& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                // Find matching ZoneId by UID from the laser's existing zones
+                for(auto& oz : lasers[m.laserIndex]->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && !oz->getIsAlternate()) {
+                        lasers[m.laserIndex]->addAltZone(oz->getZoneId());
+                        break;
+                    }
+                }
+                fireZonesChanged();
+            }
+        },
+        [&](LaserMsg::DeleteOutputZone& m) {
+            for(auto& laser : lasers) {
+                for(auto& oz : laser->outputZones) {
+                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                        if(oz->getZoneId().getType() == ZoneId::ZoneType::CANVAS) {
+                            laser->removeZone(oz);
+                        } else {
+                            deleteBeamZone(oz);
+                        }
+                        fireZonesChanged();
+                        return;
+                    }
+                }
+            }
+        },
+
+        // --- Mask management ---
+        [&](LaserMsg::MaskChanged&) {
+            fireMasksChanged();
+        },
+        [&](LaserMsg::DeleteMask& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                auto& masks = lasers[m.laserIndex]->maskManager.quads;
+                if(m.maskIndex >= 0 && m.maskIndex < (int)masks.size()) {
+                    lasers[m.laserIndex]->maskManager.deleteQuadMask(masks[m.maskIndex]);
+                    fireMasksChanged();
+                }
+            }
+        },
+
+        // --- View mode / GUI ---
+        [&](LaserMsg::SetViewMode&) {
+            // Handled by Manager subclass
+        },
+        [&](LaserMsg::ToggleGui&) {
+            // Handled by Manager subclass
+        },
+        [&](LaserMsg::SetGuiVisible&) {
+            // Handled by Manager subclass
+        },
+
+        // --- Settings persistence ---
+        [&](LaserMsg::SaveSettings&) {
+            saveSettings();
+        },
+        [&](LaserMsg::ResetAllLasers&) {
+            resetAllLasersToDefault();
+            fireLasersChanged();
+            fireZonesChanged();
+            fireCanvasChanged();
+        },
+
+        // --- DAC assignment ---
+        [&](LaserMsg::AssignDac& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                dacAssigner.assignToLaser(m.dacLabel, lasers[m.laserIndex]);
+                fireDacStatusChanged();
+            }
+        },
+        [&](LaserMsg::DisconnectDac& m) {
+            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
+                dacAssigner.disconnectDacFromLaser(lasers[m.laserIndex]);
+                fireDacStatusChanged();
+            }
+        }
+
+    }, env.payload);
 }
