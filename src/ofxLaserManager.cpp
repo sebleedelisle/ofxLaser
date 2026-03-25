@@ -119,9 +119,9 @@ Manager :: Manager(bool hidecanvas) {
     addLaserView(canvasViewController.get());
     canvasViewController->setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
 
-    // Register existing laser zone view controllers
+    // Zone views are already registered inside createAndAddLaser() during initAndLoadSettings.
+    // Just set the message callbacks on any that were created before this point.
     for(auto& lzv : laserZoneViews) {
-        addLaserView(lzv.get());
         lzv->setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
     }
 
@@ -405,12 +405,8 @@ void Manager :: update() {
     if(canvasViewController->update()) {
         canvasViewController->updateZonesFromUI(canvasTarget);
         scheduleSaveSettings();
-        // Notify views that canvas changed (signal-driven model→UI)
-        fireCanvasChanged();
     }
-    // Model→UI sync is now signal-driven via onCanvasChanged()
-    // (called by fireCanvasChanged above, and on zone add/delete/etc.)
-    // We still call it here for external model changes not going through messages yet
+    // Model→UI sync — still called for external model changes not going through messages yet
     canvasViewController->updateUIFromZones(canvasTarget);
 
 }
