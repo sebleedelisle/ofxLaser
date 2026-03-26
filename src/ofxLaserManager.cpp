@@ -385,7 +385,7 @@ void Manager :: updateGridSettings() {
         laserview->setGrid(zoneGridSnap, zoneGridSize, zoneGridVisible);
         
     }
-    canvasViewController->setGrid(canvasGridSnap, canvasGridSize, canvasGridVisible);
+    canvasViewController->setGrid(canvasGridSnap, canvasGridSize, canvasGridSnap);
     
 }
 
@@ -867,15 +867,13 @@ void Manager::drawLaserGui() {
   
                 ImGui::PushFont(UI::mediumFont);
 
-                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false, ImVec2(buttonwidth, 0))) {
+                if(UI::Button(ofToString(ICON_FK_PLUS_SQUARE) + "##AddCanvasZone", false, false, ImVec2(buttonwidth, 0))) {
                     // MAKE NEW ZONE panel
                     ImGui::OpenPopup("Add canvas zone");
                 }
                 UI::addDelayedTooltip("Add existing canvas zone");
-                
-            
-                
-                if(UI::Button(ICON_FK_LIB_ADDMASK, false, false, ImVec2(buttonwidth, 0))) {
+
+                if(UI::Button(ICON_FK_OBJECT_UNGROUP, false, false, ImVec2(buttonwidth, 0))) {
                     
                     // MAKE NEW MASK panel
                     currentLaser->maskManager.addQuadMask();
@@ -905,18 +903,16 @@ void Manager::drawLaserGui() {
                 
                 ImGui::PopItemWidth();
                 
-                if(UI::Button(ICON_FK_PLUS_SQUARE_O, false, zoneGridSnap.get(), ImVec2(buttonwidth, 0))) {
+                if(UI::Button(ICON_FK_TH, false, zoneGridSnap.get(), ImVec2(buttonwidth, 0))) {
                     zoneGridSnap.set(!zoneGridSnap.get());
-                    // choose test pattern
-                    
                 }
                 UI::addDelayedTooltip("Snap to Grid");
-                
+
                 ImGui::PushItemWidth(buttonwidth);
                 if(!zoneGridSnap.get()) {
                     UI::startGhosted();
                 }
-                int gridExponent = 0; //zoneGridSize.get();
+                int gridExponent = 0;
                 while(pow(2,gridExponent) < zoneGridSize.get())
                     gridExponent++;
                 if(ImGui::DragInt("##gridexponent", &gridExponent, 0.3, 0, 8)) {
@@ -924,7 +920,7 @@ void Manager::drawLaserGui() {
                 }
                 UI::stopGhosted();
                 UI::addDelayedTooltip("Grid size");
-                
+
                 ImGui::PopFont();
                 
             }
@@ -979,14 +975,14 @@ void Manager::drawLaserGui() {
 //                UI::secondaryColourEnd();
 //                UI::addDelayedTooltip("Open canvas settings window");
                 
-                if(UI::Button(ofToString(ICON_FK_LIB_ADDZONE) + "##AddCanvasZone", false, false, ImVec2(buttonwidth, 0))) {
+                if(UI::Button(ofToString(ICON_FK_SIGN_OUT) + "##AddCanvasZone", false, false, ImVec2(buttonwidth, 0))) {
                     int numZones = canvasTarget->getNumZoneIds();
                     sendLaserMessage(LaserMsg::AddCanvasZone{
                         (float)(numZones*20), (float)(numZones*20), 100, 100});
                 }
                 UI::addDelayedTooltip("Add new canvas zone");
-                
-                if(UI::Button(ofToString(ICON_FK_PICTURE_O) + "##AddGuideImage", false, false, ImVec2(buttonwidth, 0))) {
+
+                if(UI::Button(ofToString(ICON_FK_FILE_IMAGE_O) + "##AddGuideImage", false, false, ImVec2(buttonwidth, 0))) {
 #ifdef OFXLASER_USE_OFXNATIVE
                     ofFileDialogResult result = ofxNative::systemLoadDialog("Choose guide image file", false, "", {"png", "jpg", "gif", "jpeg", "bmp"});
 #else
@@ -1001,10 +997,8 @@ void Manager::drawLaserGui() {
                 }
                 UI::addDelayedTooltip("Add new guide image");
                 
-                if(UI::Button(ICON_FK_PLUS_SQUARE_O, false, canvasGridSnap.get(), ImVec2(buttonwidth, 0))) {
+                if(UI::Button(ICON_FK_TH, false, canvasGridSnap.get(), ImVec2(buttonwidth, 0))) {
                     canvasGridSnap.set(!canvasGridSnap.get());
-                    // choose test pattern
-                    
                 }
                 UI::addDelayedTooltip("Snap to Grid");
                 
@@ -1020,18 +1014,8 @@ void Manager::drawLaserGui() {
                 }
                 UI::stopGhosted();
                 UI::addDelayedTooltip("Grid size");
-                
-                
-                if(canvasGridVisible.get()) {
-                    UI::secondaryColourStart();
-                }
-                if(UI::Button(ICON_FK_EYE, false, canvasGridVisible.get(), ImVec2(buttonwidth, 0))) {
-                    canvasGridVisible.set(!canvasGridVisible.get());
-                    canvasViewController->updateUIFromZones(canvasTarget);
-                }
-                UI::secondaryColourEnd();
-                UI::addDelayedTooltip("Grid visible");
-                
+                ImGui::PopItemWidth();
+
                 ImGui::PopFont();
                 
             }

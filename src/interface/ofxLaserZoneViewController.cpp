@@ -330,11 +330,9 @@ bool LaserZoneViewController :: updateZones()  {
             changed = true;
         } else {
             // if we do have one let's make sure it's current
-            // Skip if user is actively dragging this zone — the drag
-            // owns the position; model→UI sync resumes on release.
-            if(!zoneUi->getIsDragging()) {
-                zoneUi->updateFromData(outputZone);
-            }
+            // NOTE This only works because we call it after we have
+            // updated the data from the UI components
+            zoneUi->updateFromData(outputZone);
         }
     }
     
@@ -419,10 +417,7 @@ bool LaserZoneViewController :: updateMasks() {
         }
         std::shared_ptr<QuadMask>& mask = laser->maskManager.quads[i];
 
-        // Skip if user is actively dragging this mask
-        if(!maskUi->getIsDragging()) {
-            changed|=maskUi->updateFromData(mask);
-        }
+        changed|=maskUi->updateFromData(mask);
         
     }
     

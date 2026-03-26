@@ -68,6 +68,14 @@ class MoveablePoly {
     bool getDisabled();
     bool setDisabled(bool v);
     bool getIsDragging() const { return isDragging; }
+    bool isExternallyManaged = false;
+    bool getIsAnyHandleDragging() const {
+        if(isDragging) return true;
+        for(const DragHandle& h : handles) {
+            if(h.isDragging) return true;
+        }
+        return false;
+    }
     
     void setDirty(){
         isDirty = true;

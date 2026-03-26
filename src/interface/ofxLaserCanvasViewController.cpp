@@ -23,9 +23,11 @@ bool CanvasViewController :: update() {
 bool CanvasViewController :: updateZonesFromUI(std::shared_ptr<ShapeTargetCanvas> canvasTarget){
     // TODO check if changed
     for(int i = 0; i<uiElementsSorted.size(); i++) {
-        
+
         MoveablePoly& poly = *uiElementsSorted[i];
-        
+
+        if(poly.isExternallyManaged) continue;
+
         std::shared_ptr<GuideImage> guideImage = getGuideImageForUiElement(canvasTarget, &poly);
         
         if(guideImage!=nullptr) {
@@ -36,15 +38,15 @@ bool CanvasViewController :: updateZonesFromUI(std::shared_ptr<ShapeTargetCanvas
             guideImage->colour = guideImageUiQuad->colour;
             
         } else {
-            
+
             std::shared_ptr<InputZone> zonepointer = canvasTarget->getInputZoneForZoneIdUid(poly.getUid());
             if(zonepointer) {
-                
                 ofRectangle rect = poly.getBoundingBox();
-
                 zonepointer->set( rect.x, rect.y, rect.width, rect.height);
+                zonepointer->locked = poly.getDisabled();
             }
-            zonepointer->locked = poly.getDisabled();
+            // UIDs not matching a guide image or input zone (e.g. "target0")
+            // are managed externally — skip them silently
         }
     }
     
@@ -106,8 +108,9 @@ void CanvasViewController :: updateUIFromZones( std::shared_ptr<ShapeTargetCanva
     // and update the other interface elemnts with their counterparts
     
     for(std::shared_ptr<MoveablePoly>& uiElement : uiElementsSorted) {
-       
-        
+
+        if(uiElement->isExternallyManaged) continue;
+
         std::shared_ptr<GuideImageUiQuad> guideImageUiQuad = std::dynamic_pointer_cast<GuideImageUiQuad>(uiElement);
         std::shared_ptr<GuideImage> targetGuideImage;
         
