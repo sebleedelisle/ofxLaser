@@ -530,11 +530,15 @@ void ManagerBase::drawLaserGraphic(Graphic& graphic, float brightness, string re
 }
 
 void ManagerBase:: update(){
+
+    // Flush any deferred signals from the previous frame's message handlers.
+    flushPendingSignals();
+
     // bit of a hack to check dacs that may take a little while to appear
     if(ofGetFrameNum()==1000) {
         dacAssigner.updateDacList();
     }
-    
+
     // resets transformations
     resetTransformations();
     
@@ -1238,41 +1242,39 @@ bool ManagerBase::removeLaserView(LaserBaseView* view) {
 
 
 // ============================================================
-// Signal-firing helpers
+// Deferred signal queue — fire*() sets a bit, flushPendingSignals()
+// delivers on the next update() frame.
 // ============================================================
-void ManagerBase::fireLasersChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onLasersChanged();
-}
-
-void ManagerBase::fireZonesChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onZonesChanged();
-}
-
-void ManagerBase::fireCanvasChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onCanvasChanged();
-}
-
-void ManagerBase::fireDacStatusChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onDacStatusChanged();
-}
-
-void ManagerBase::fireGlobalSettingsChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onGlobalSettingsChanged();
-}
-
-void ManagerBase::fireTestPatternChanged() {
-    syncLaserState();
-    for(auto* v : laserViews) v->onTestPatternChanged();
-}
+void ManagerBase::fireLasersChanged()       { pendingSignals |= SIG_LASERS; }
+void ManagerBase::fireZonesChanged()        { pendingSignals |= SIG_ZONES; }
+void ManagerBase::fireCanvasChanged()       { pendingSignals |= SIG_CANVAS; }
+void ManagerBase::fireDacStatusChanged()    { pendingSignals |= SIG_DAC_STATUS; }
+void ManagerBase::fireGlobalSettingsChanged() { pendingSignals |= SIG_GLOBAL_SETTINGS; }
+void ManagerBase::fireTestPatternChanged()  { pendingSignals |= SIG_TEST_PATTERN; }
 
 void ManagerBase::fireMasksChanged() {
+    pendingSignals |= SIG_MASKS;
+}
+
+void ManagerBase::flushPendingSignals() {
+    if(pendingSignals == 0) return;
+
+    // Snapshot and clear before dispatching — if a signal handler
+    // triggers another fire*(), those accumulate for the NEXT flush.
+    uint32_t signals = pendingSignals;
+    pendingSignals = 0;
+
     syncLaserState();
-    for(auto* v : laserViews) v->onMasksChanged();
+
+    for(auto* v : laserViews) {
+        if(signals & SIG_LASERS)          v->onLasersChanged();
+        if(signals & SIG_ZONES)           v->onZonesChanged();
+        if(signals & SIG_CANVAS)          v->onCanvasChanged();
+        if(signals & SIG_DAC_STATUS)      v->onDacStatusChanged();
+        if(signals & SIG_GLOBAL_SETTINGS) v->onGlobalSettingsChanged();
+        if(signals & SIG_TEST_PATTERN)    v->onTestPatternChanged();
+        if(signals & SIG_MASKS)           v->onMasksChanged();
+    }
 }
 
 
@@ -1294,10 +1296,8 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
                 // invalidating the reference if passed by ref.
                 auto laserCopy = lasers[m.laserIndex];
                 deleteLaser(laserCopy);
-                // Don't fire signals synchronously — deleteLaser does
-                // complex teardown (deleteBeamZone, renumbering, saves).
-                // Views poll on next update().
-                scheduleSaveSettings();
+                fireLasersChanged();
+                fireZonesChanged();
             }
         },
         [&](LaserMsg::SelectLaser&) {
@@ -1339,9 +1339,8 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
             if(zone) {
                 deleteCanvasZone(zone);
-                // Don't fire signals synchronously — deleteCanvasZone
-                // renumbers zones and modifies laser references.
-                scheduleSaveSettings();
+                fireCanvasChanged();
+                fireZonesChanged();
             }
         },
         [&](LaserMsg::CanvasZoneMoved& m) {
@@ -1467,10 +1466,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
                 } else {
                     deleteBeamZone(found);
                 }
-                // Don't fire signals synchronously after destructive zone operations.
-                // deleteBeamZone does complex renumbering + saves that leave intermediate state.
-                // Views already poll for zone changes in their update() loop.
-                scheduleSaveSettings();
+                fireZonesChanged();
             }
         },
 
@@ -1485,8 +1481,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
                     // Take a copy — deleteQuadMask erases from the vector
                     auto maskCopy = maskMgr.quads[m.maskIndex];
                     maskMgr.deleteQuadMask(maskCopy);
-                    // Don't fire synchronously — views poll next frame.
-                    scheduleSaveSettings();
+                    fireMasksChanged();
                 }
             }
         },
@@ -1508,9 +1503,9 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         },
         [&](LaserMsg::ResetAllLasers&) {
             resetAllLasersToDefault();
-            // Don't fire signals synchronously — resetAllLasersToDefault
-            // tears down and rebuilds the entire model. Views poll next frame.
-            scheduleSaveSettings();
+            fireLasersChanged();
+            fireZonesChanged();
+            fireCanvasChanged();
         },
 
         // --- DAC assignment ---
@@ -1589,9 +1584,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
                     }
                 }
                 lasers[m.laserIndex]->removeZone(zoneId);
-                // Don't fire synchronously — removeZone modifies outputZones
-                // and calls saveSettings. Views poll next frame.
-                scheduleSaveSettings();
+                fireZonesChanged();
             }
         }
 

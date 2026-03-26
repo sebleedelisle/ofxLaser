@@ -401,13 +401,13 @@ void Manager :: update() {
 
     updateDisplayRectangle();
 
-    // Canvas UI→model: when user drags zones, push changes to model
+    // Canvas UI↔model: when user drags zones, push to model then pull back
+    // to enforce rectangular constraint (setFromRect snaps all 4 corners)
     if(canvasViewController->update()) {
         canvasViewController->updateZonesFromUI(canvasTarget);
+        canvasViewController->updateUIFromZones(canvasTarget);
         scheduleSaveSettings();
     }
-    // Model→UI sync — still called for external model changes not going through messages yet
-    canvasViewController->updateUIFromZones(canvasTarget);
 
 }
 
@@ -996,6 +996,7 @@ void Manager::drawLaserGui() {
                     if(result.bSuccess) {
                         canvasTarget->addGuideImage(result.filePath);
                         scheduleSaveSettings();
+                        fireCanvasChanged();
                     }
                 }
                 UI::addDelayedTooltip("Add new guide image");
@@ -1169,7 +1170,7 @@ void Manager::drawLaserGui() {
                             
                             canvasTarget->deleteGuideImage(guideimage);
                             scheduleSaveSettings();
-                            
+                            fireCanvasChanged();
                         }
                     }
                     

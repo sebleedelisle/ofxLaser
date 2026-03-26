@@ -253,8 +253,21 @@ public:
     std::vector<LaserBaseView*> laserViews;
 
     // ============================================================
-    // Signal-firing helpers — call syncLaserState() then notify views
+    // Deferred signal queue — fire*() sets a bit, flushPendingSignals()
+    // delivers them at the start of the next update().
+    // This eliminates re-entrancy and intermediate-state risks.
     // ============================================================
+    enum SignalFlag : uint32_t {
+        SIG_LASERS          = 1 << 0,
+        SIG_ZONES           = 1 << 1,
+        SIG_CANVAS          = 1 << 2,
+        SIG_DAC_STATUS      = 1 << 3,
+        SIG_GLOBAL_SETTINGS = 1 << 4,
+        SIG_TEST_PATTERN    = 1 << 5,
+        SIG_MASKS           = 1 << 6,
+    };
+    uint32_t pendingSignals = 0;
+
     void fireLasersChanged();
     void fireZonesChanged();
     void fireCanvasChanged();
@@ -262,6 +275,8 @@ public:
     void fireGlobalSettingsChanged();
     void fireTestPatternChanged();
     void fireMasksChanged();
+
+    void flushPendingSignals();
 
     int currentId = 0;
     

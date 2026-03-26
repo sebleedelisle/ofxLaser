@@ -151,8 +151,6 @@ void CanvasViewController :: updateUIFromZones( std::shared_ptr<ShapeTargetCanva
             
             // if the uiElement doesn't have an input zone then delete it
             if(targetInputZone) {
-          
-                // otherwise update it
                 uiElement->setFromRect(targetInputZone->getRect());
                 uiElement->setGrid(snapToGrid, gridSize);
                 uiElement->setHue(220);

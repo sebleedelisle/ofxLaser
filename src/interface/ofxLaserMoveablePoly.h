@@ -67,6 +67,7 @@ class MoveablePoly {
     bool setSelected(bool v);
     bool getDisabled();
     bool setDisabled(bool v);
+    bool getIsDragging() const { return isDragging; }
     
     void setDirty(){
         isDirty = true;
