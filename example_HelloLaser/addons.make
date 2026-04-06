@@ -1,4 +1,2 @@
-ofxAssimpModelLoader
 ofxPoco
 ofxLaser
-ofxSvg

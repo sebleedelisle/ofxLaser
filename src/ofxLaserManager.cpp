@@ -6,6 +6,10 @@
 //
 
 #include "ofxLaserManager.h"
+#include "ofxLaserCanvasViewController.h"
+#include "ofxLaserIconSVGs.h"
+#include "ofxLaserUI.h"
+#include "ofxLaserZoneViewController.h"
 #include "libera/avb/AvbManager.hpp"
 #ifdef TARGET_OSX
 #include <unordered_map>
@@ -53,6 +57,14 @@ std::string getLaserStatusSummary(const std::shared_ptr<ofxLaser::Laser>& laser)
     return dac->getStatusSummary();
 }
 
+void clearZoneViewHoverStates(const std::vector<std::shared_ptr<ofxLaser::LaserZoneViewController>>& laserZoneViews) {
+    for(const std::shared_ptr<ofxLaser::LaserZoneViewController>& zoneView : laserZoneViews) {
+        if(zoneView) {
+            zoneView->clearHoverAndCursorState();
+        }
+    }
+}
+
 } // namespace
 
 Manager * Manager :: laserManager = NULL;
@@ -66,6 +78,7 @@ Manager * Manager::instance() {
 
 Manager :: Manager(bool hidecanvas) {
     canvasViewController = std::make_shared<CanvasViewController>();
+    iconSVGs = std::make_unique<IconSVGs>();
     updateDisplayRectangle();
     
     if(laserManager == NULL) {
@@ -113,16 +126,16 @@ Manager :: Manager(bool hidecanvas) {
     ofAddListener(ofEvents().keyPressed, this, &Manager::keyPressed, OF_EVENT_ORDER_BEFORE_APP);
 
     // Manager itself is a LaserBaseController — route messages to own receiveLaserMessage
-    setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
+    setLaserMessageCallback(this, &Manager::receiveLaserMessage);
 
     // Register canvas view controller as a LaserBaseView and set message callback
     addLaserView(canvasViewController.get());
-    canvasViewController->setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
+    canvasViewController->setLaserMessageCallback(this, &Manager::receiveLaserMessage);
 
     // Zone views are already registered inside createAndAddLaser() during initAndLoadSettings.
     // Just set the message callbacks on any that were created before this point.
     for(auto& lzv : laserZoneViews) {
-        lzv->setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
+        lzv->setLaserMessageCallback(this, &Manager::receiveLaserMessage);
     }
 
 }
@@ -152,6 +165,10 @@ Manager::~Manager() {
     laserZoneViews.clear();
     canvasViewController = nullptr; 
 
+}
+
+void Manager::receiveLaserMessage(LaserMsgEnvelope& env) {
+    ManagerBase::receiveLaserMessage(env);
 }
 
 
@@ -187,7 +204,7 @@ void Manager :: createAndAddLaser()  {
 
     // Register new zone view controller with the signal/message system
     addLaserView(newView.get());
-    newView->setLaserMessageCallback(this, &ManagerBase::receiveLaserMessage);
+    newView->setLaserMessageCallback(this, &Manager::receiveLaserMessage);
 
     setSelectedLaserIndex(laserindex);
     showDacDiagnostics.resize(lasers.size());
@@ -436,7 +453,10 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
         return false;
     }
     
-    if(ImGui::GetIO().WantCaptureMouse) return false;
+    if(ImGui::GetIO().WantCaptureMouse) {
+        clearZoneViewHoverStates(laserZoneViews);
+        return false;
+    }
     if(!isGuiVisible()) return false;
     if(isGuiMouseDisabled()) return false;
     
@@ -458,6 +478,11 @@ bool Manager :: mousePressed(ofMouseEventArgs &e){
 
 bool Manager :: mouseReleased(ofMouseEventArgs &e){
     if(!windowActive) return false;
+
+    if(ImGui::GetIO().WantCaptureMouse) {
+        clearZoneViewHoverStates(laserZoneViews);
+        return false;
+    }
     
     for(std::shared_ptr<LaserZoneViewController>& zoneView : laserZoneViews) {
         zoneView->mouseReleased(e);
@@ -470,6 +495,11 @@ bool Manager :: mouseReleased(ofMouseEventArgs &e){
 
 void Manager :: mouseMoved(ofMouseEventArgs &e) {
     if(!windowActive) return;
+
+    if(ImGui::GetIO().WantCaptureMouse) {
+        clearZoneViewHoverStates(laserZoneViews);
+        return;
+    }
     
     for(std::shared_ptr<LaserZoneViewController>& zoneView : laserZoneViews) {
         zoneView->mouseMoved(e);
@@ -481,6 +511,11 @@ void Manager :: mouseMoved(ofMouseEventArgs &e) {
 
 bool Manager :: mouseDragged(ofMouseEventArgs &e){
     if(!windowActive) return false;
+
+    if(ImGui::GetIO().WantCaptureMouse) {
+        clearZoneViewHoverStates(laserZoneViews);
+        return false;
+    }
     
     for(std::shared_ptr<LaserZoneViewController>& zoneView : laserZoneViews) {
         zoneView->mouseDragged(e);
@@ -2810,10 +2845,10 @@ void Manager :: drawBigNumber(int number) {
     ofTranslate(20,170);
     ofScale(0.1,-0.1);
     if((number+1)>9) {
-        iconSVGs.numberSVGs[(number+1)/10].draw(false);
+        iconSVGs->numberSVGs[(number+1)/10].draw(false);
         ofTranslate(1100,0);
     }
-    iconSVGs.numberSVGs[(number+1)%10].draw(false);
+    iconSVGs->numberSVGs[(number+1)%10].draw(false);
     ofPopMatrix();
     ofPopStyle();
     

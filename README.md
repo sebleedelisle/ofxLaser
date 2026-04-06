@@ -218,6 +218,19 @@ Open source libraries (included in source files)
 DearImGui
 libusb
 libsvgtiny
+
+Example smoke check
+-------------------
+
+To compile every example without relying on checked-in project files, run:
+
+```sh
+./scripts/smoke-check-examples.sh
+```
+
+The script builds openFrameworks once in `Release`, generates temporary
+makefile-based wrappers for each `example_*` folder, and then compiles each
+example in turn.
 clipperlib
 libera-core
 ofxHersheyFont by Tobias Zimmer

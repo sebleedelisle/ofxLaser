@@ -6,20 +6,21 @@
 
 #pragma once
 #include "ofxLaserManagerBase.h"
-#include "ofxLaserUI.h"
 #include "ofxLaserUIState.h"
 #include "ofxLaserBaseController.h"
-#include "ofxLaserZoneViewController.h"
-#include "ofxLaserCanvasViewController.h"
-#include "ofxLaserIconSVGs.h"
 #include "GlobalScale.h"
 #include "ofxLaserPresetManager.h"
+#include <memory>
 
 #ifdef OFXLASER_USE_OFXNATIVE
 #include "ofxNative.h"
 #endif
 
 namespace ofxLaser {
+
+class CanvasViewController;
+class IconSVGs;
+class LaserZoneViewController;
 
 class Manager : public ManagerBase, public LaserBaseController {
     
@@ -37,6 +38,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     virtual void initAndLoadSettings();
     virtual void update() override;
     virtual void createAndAddLaser() override;
+    void receiveLaserMessage(LaserMsgEnvelope& env);
     
     void paramChanged(ofAbstractParameter& e) ;
     void updateLatencyToLasers();
@@ -225,7 +227,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     ofRectangle windowRectangle;
     
     
-    IconSVGs iconSVGs; 
+    std::unique_ptr<IconSVGs> iconSVGs;
 
     void loadAdditionalSettings(const ofJson& json) override;
    

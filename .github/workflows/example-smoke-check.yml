@@ -1,0 +1,43 @@
+name: Example Smoke Check
+
+on:
+  push:
+    paths:
+      - ".github/workflows/example-smoke-check.yml"
+      - "addon_config.mk"
+      - "example_*/**"
+      - "libs/**"
+      - "scripts/**"
+      - "src/**"
+  pull_request:
+    paths:
+      - ".github/workflows/example-smoke-check.yml"
+      - "addon_config.mk"
+      - "example_*/**"
+      - "libs/**"
+      - "scripts/**"
+      - "src/**"
+  workflow_dispatch:
+
+jobs:
+  smoke-check:
+    runs-on: macos-14
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout openFrameworks
+        uses: actions/checkout@v4
+        with:
+          repository: openframeworks/openFrameworks
+          path: openFrameworks
+          submodules: recursive
+
+      - name: Checkout ofxLaser
+        uses: actions/checkout@v4
+        with:
+          path: openFrameworks/addons/ofxLaser
+          submodules: recursive
+
+      - name: Build examples
+        working-directory: openFrameworks/addons/ofxLaser
+        run: /bin/zsh ./scripts/smoke-check-examples.sh
