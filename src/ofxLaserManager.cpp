@@ -1241,7 +1241,6 @@ void Manager::onSelectedZoneMuteChanged(bool& value) {
     }
     sendLaserMessage(LaserMsg::ZoneMuteChanged{
         outputZone->getZoneId().getUid(),
-        outputZone->getIsAlternate(),
         value});
 }
 
@@ -1254,7 +1253,6 @@ void Manager::onSelectedZoneLockChanged(bool& value) {
 
     sendLaserMessage(LaserMsg::ZoneLockChanged{
         outputZone->getZoneId().getUid(),
-        outputZone->getIsAlternate(),
         value});
 
     if (laserView) {
@@ -1270,19 +1268,19 @@ void Manager::onSelectedZoneLockChanged(bool& value) {
 void Manager::onSelectedZoneQuadPressed() {
     std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
     if (!outputZone) return;
-    sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), outputZone->getIsAlternate(), 0});
+    sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), 0});
 }
 
 void Manager::onSelectedZoneSegmentedPressed() {
     std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
     if (!outputZone) return;
-    sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), outputZone->getIsAlternate(), 2});
+    sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), 2});
 }
 
 void Manager::onSelectedZoneResetPressed() {
     std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
     if (!outputZone) return;
-    sendLaserMessage(LaserMsg::ZoneResetTransform{outputZone->getZoneId().getUid(), outputZone->getIsAlternate()});
+    sendLaserMessage(LaserMsg::ZoneResetTransform{outputZone->getZoneId().getUid()});
 }
 
 void Manager::onSelectedZoneDeletePressed() {
@@ -1293,8 +1291,7 @@ void Manager::onSelectedZoneDeletePressed() {
         laserView->deselectAll();
     }
     sendLaserMessage(LaserMsg::DeleteOutputZone{
-        outputZone->getZoneId().getUid(),
-        outputZone->getIsAlternate()});
+        outputZone->getZoneId().getUid()});
     guiPanelSelectedZoneUid = "__refresh__";
     guiPanelSelectedZoneType = -2;
 }

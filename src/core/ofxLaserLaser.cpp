@@ -71,11 +71,9 @@ bool Laser::hasDac() {
 }
 
 void Laser::setDacDiagnostics(bool state) {
-    std::shared_ptr<DacNetworkBaseThreaded> dac = std::dynamic_pointer_cast<DacNetworkBaseThreaded> (getDac());
-    if(dac!=nullptr) {
-        dac->setDiagnosticsRecording(state); 
-    }
-    
+    // DAC diagnostics recording was removed with the legacy threaded network DACs.
+    // Keep this as a no-op so older callers still build against the current API.
+    (void)state;
 }
 
 

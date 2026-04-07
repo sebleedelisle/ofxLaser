@@ -29,9 +29,6 @@ class OutputZone {
     ZoneId getZoneId() const;
     bool setZoneId(ZoneId& zoneid); 
     
-    bool getIsAlternate();
-    void setIsAlternate(bool v);
-    
     ofxLaser::Point getWarpedPoint(const ofxLaser::Point& p);
     ofxLaser::Point getUnWarpedPoint(const ofxLaser::Point& p);
     ofPoint getWarpedPoint(const ofPoint& p);

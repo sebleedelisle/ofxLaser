@@ -97,11 +97,6 @@ ofPoint OutputZone::getUnWarpedPoint(const ofPoint& p){
     
 }
 
-bool OutputZone::getIsAlternate() {
-    return false;
-}
-void OutputZone::setIsAlternate(bool v){
-}
 
 bool OutputZone ::setSourceRect(const ofRectangle & rect) {
     if(zoneTransformQuad.srcRect!=rect) {
