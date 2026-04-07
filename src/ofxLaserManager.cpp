@@ -787,7 +787,7 @@ void Manager::setupOfxGuiPanels() {
     globalTestPatternToggle.addListener(this, &Manager::onGlobalTestPatternChanged);
     globalTestPatternIndex.addListener(this, &Manager::onGlobalTestPatternIndexChanged);
     laserArmedToggle.addListener(this, &Manager::onLaserArmedChanged);
-    hideContentDuringTestPattern.addListener(this, &Manager::hideContentDuringTestPatternChanged);
+    hideContentDuringTestPattern.addListener(static_cast<ManagerBase*>(this), &ManagerBase::hideContentDuringTestPatternChanged);
 }
 
 void Manager::refreshGlobalPanel() {
@@ -880,7 +880,7 @@ void Manager::refreshLaserSettingsPanel() {
 
         // Speed and scanner sync are prominent controls
         laserSettingsPanel.add(laser->speed);
-        laserSettingsPanel.add(laser->colourChangeShift);
+        laserSettingsPanel.add(laser->scannerSync);
 
         ofxGuiSetDefaultHeight(20);
 
@@ -1625,10 +1625,10 @@ ofRectangle Manager :: getCanvasPreviewRect() {
 
 void Manager :: drawBigNumber(int number) {
     ofPushStyle();
-    ofSetColor(60);
     const ofRectangle previewRect = getZonePreviewRect();
-    const glm::vec2 labelPos = previewRect.getTopLeft() + glm::vec2(20, 170) * GlobalScale::getScale();
-    ofDrawBitmapStringHighlight("Laser " + ofToString(number + 1), labelPos);
+    float scale = GlobalScale::getScale();
+    const glm::vec2 labelPos = previewRect.getTopLeft() + glm::vec2(8, 16) * scale;
+    ofDrawBitmapStringHighlight("Laser " + ofToString(number + 1), labelPos, ofColor(0, 180), ofColor(255));
     ofPopStyle();
 }
 

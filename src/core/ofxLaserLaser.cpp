@@ -54,7 +54,7 @@ void Laser::setDac(std::shared_ptr<DacBase>  newdac){
         dac = newdac;
         newdac->setPointsPerSecond(pps);
         pps = newdac->getPointsPerSecond();
-        newdac->setColourShift(colourChangeShift);
+        newdac->setColourShift(scannerSync);
         newdac->maxLatencyMS = maxLatencyMS;
         dacLabel = dac->getFullId();
 
@@ -122,7 +122,7 @@ void Laser :: init() {
     
     laserparams.add(speed.set("Speed", 1,0.12,2));
     
-    laserparams.add(colourChangeShift.set("Scanner sync", 2,0,12));
+    laserparams.add(scannerSync.set("Scanner sync", 2,0,12));
     
     //laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
     maxLatencyMS = 100;
@@ -164,12 +164,12 @@ void Laser :: init() {
     
     armed.addListener(this, &ofxLaser::Laser::setDacArmed);
     pps.addListener(this, &Laser::ppsChanged);
-    colourChangeShift.addListener(this, &Laser::colourShiftChanged);
+    scannerSync.addListener(this, &Laser::colourShiftChanged);
     
  
     dac->setPointsPerSecond(pps);
     // error checking on blank shift for older config files
-    if(colourChangeShift<0) colourChangeShift = 0;
+    if(scannerSync<0) scannerSync = 0;
     
     
     armed = false;
@@ -1616,7 +1616,7 @@ void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
         // the offset value is in time, so we convert it to a number of points.
         // this way we can change the PPS and this should still work
         // TODO do we need to take into account the speed multiplier?
-        int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeShift ;
+        int colourChangeIndexOffset = (float)pps/10000.0f*scannerSync ;
         
         // we switch the front and rear buffers every frame, so we copy the
         // rear points to the front

@@ -3,6 +3,8 @@
 ofxLaser
 =========
 
+[![Example Smoke Check](https://github.com/sebleedelisle/ofxLaser/actions/workflows/example-smoke-check.yml/badge.svg?branch=libera-major-refactor)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/example-smoke-check.yml)
+
 ofxLaser is a core library for sending laser frames to supported DACs (Ether Dream, Helios, LaserCube, AVB, etc).  
 It provides the **low-level building blocks** for laser output: connection management, point optimisation, colour correction, and zone handling.
 
