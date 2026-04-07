@@ -8,47 +8,46 @@
 
 #pragma once
 #include "ofMain.h"
-#include "Poco/ObjectPool.h"
+#include <vector>
+#include <mutex>
 
 namespace ofxLaser {
 class Factory {
-	
-	public:
-	
-	static Poco::ObjectPool<ofPolyline> polylineObjectPool;
-	
-	
-	static void releasePolyline(ofPolyline* polyToRelease) {
 
-		polylineObjectPool.returnObject( polyToRelease);
-		
+	public:
+
+	static void releasePolyline(ofPolyline* polyToRelease) {
+		std::lock_guard<std::mutex> lock(poolMutex);
+		pool.push_back(polyToRelease);
 	}
 	static ofPolyline* getPolyline(const ofPolyline& polyToClone) {
-		return Factory::getPolyline(&polyToClone); 
+		return Factory::getPolyline(&polyToClone);
 	}
 	static ofPolyline* getPolyline(const ofPolyline* polyToClone) {
-
-		ofPolyline* poly;
-
-		poly = polylineObjectPool.borrowObject();
-		
+		ofPolyline* poly = borrowObject();
         *poly = *polyToClone;
-	
 		return poly;
 	}
     static ofPolyline* getPolyline(bool clear = true) {
-
-        ofPolyline* poly;
-
-        poly = polylineObjectPool.borrowObject();
-        
+        ofPolyline* poly = borrowObject();
         if(clear) poly->clear();
-        
         return poly;
     }
 
-	
+
 	protected:
+	static ofPolyline* borrowObject() {
+		std::lock_guard<std::mutex> lock(poolMutex);
+		if(!pool.empty()) {
+			ofPolyline* obj = pool.back();
+			pool.pop_back();
+			return obj;
+		}
+		return new ofPolyline();
+	}
+
+	static std::vector<ofPolyline*> pool;
+	static std::mutex poolMutex;
 
 	private:
 

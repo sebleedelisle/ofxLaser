@@ -1,3 +1,2 @@
 ofxGui
-ofxPoco
 ofxLaser

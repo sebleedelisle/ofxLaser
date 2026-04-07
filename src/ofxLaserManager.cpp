@@ -708,7 +708,8 @@ void Manager::setupOfxGuiPanels() {
     ofxGuiSetDefaultWidth(220);
     ofxGuiSetDefaultHeight(20);
 
-    globalPanel.setup("Global", "", 10, 10);
+    globalPanel.setup("Laser", "", 10, 10);
+    viewPanel.setup("View", "", 10, 10);
     laserSettingsPanel.setup("Laser Settings", "", 360, 10);
     selectedZonePanel.setup("Selected Zone", "", 810, 10);
     editorPanel.setup("Editor", "", 1160, 10);
@@ -716,8 +717,8 @@ void Manager::setupOfxGuiPanels() {
 
     armAllButton.setup("ARM ALL", 220, 40);
     disarmAllButton.setup("DISARM ALL", 220, 40);
-    canvasViewToggle.setup("Canvas", viewMode == OFXLASER_VIEW_CANVAS);
-    outputViewToggle.setup("Output", viewMode == OFXLASER_VIEW_OUTPUT);
+    canvasViewToggle.setup("Canvas", viewMode == OFXLASER_VIEW_CANVAS, 220, 40);
+    outputViewToggle.setup("Output", viewMode == OFXLASER_VIEW_OUTPUT, 220, 40);
     previousLaserButton.setup("Previous Laser");
     nextLaserButton.setup("Next Laser");
     addLaserButton.setup("Add Laser");
@@ -786,6 +787,7 @@ void Manager::setupOfxGuiPanels() {
     globalTestPatternToggle.addListener(this, &Manager::onGlobalTestPatternChanged);
     globalTestPatternIndex.addListener(this, &Manager::onGlobalTestPatternIndexChanged);
     laserArmedToggle.addListener(this, &Manager::onLaserArmedChanged);
+    hideContentDuringTestPattern.addListener(this, &Manager::hideContentDuringTestPatternChanged);
 }
 
 void Manager::refreshGlobalPanel() {
@@ -808,12 +810,6 @@ void Manager::refreshGlobalPanel() {
 
     globalPanel.setDefaultHeight(20);
     globalPanel.add(globalLatency);
-    static_cast<ofParameter<bool>&>(canvasViewToggle.getParameter())
-        .setWithoutEventNotifications(viewMode == OFXLASER_VIEW_CANVAS);
-    static_cast<ofParameter<bool>&>(outputViewToggle.getParameter())
-        .setWithoutEventNotifications(viewMode == OFXLASER_VIEW_OUTPUT);
-    globalPanel.add(&canvasViewToggle);
-    globalPanel.add(&outputViewToggle);
 
     selectedLaserDisplay.setMax(std::max(1, getNumLasers()));
     selectedLaserDisplay.set(getNumLasers() > 0 ? getSelectedLaserIndex() + 1 : 1);
@@ -835,6 +831,22 @@ void Manager::refreshGlobalPanel() {
     guiPanelLaserCount = getNumLasers();
 }
 
+void Manager::refreshViewPanel() {
+    float panelX = globalPanel.getPosition().x;
+    float panelY = globalPanel.getPosition().y + globalPanel.getHeight() + 8;
+
+    viewPanel.clear();
+    viewPanel.setup("View", "", panelX, panelY);
+    viewPanel.setWidthElements(220);
+
+    static_cast<ofParameter<bool>&>(canvasViewToggle.getParameter())
+        .setWithoutEventNotifications(viewMode == OFXLASER_VIEW_CANVAS);
+    static_cast<ofParameter<bool>&>(outputViewToggle.getParameter())
+        .setWithoutEventNotifications(viewMode == OFXLASER_VIEW_OUTPUT);
+    viewPanel.add(&canvasViewToggle);
+    viewPanel.add(&outputViewToggle);
+}
+
 void Manager::refreshLaserSettingsPanel() {
     glm::vec3 position = laserSettingsPanel.getPosition();
     float panelX = position.x;
@@ -854,6 +866,7 @@ void Manager::refreshLaserSettingsPanel() {
 
     std::shared_ptr<Laser> laser = getSelectedLaser();
     if (laser) {
+        ofxGuiSetDefaultHeight(40);
         laserArmedToggle.setWithoutEventNotifications(laser->armed.get());
         laserSettingsPanel.add(laserArmedToggle);
         laserSettingsPanel.add(laser->intensity);
@@ -865,10 +878,17 @@ void Manager::refreshLaserSettingsPanel() {
             laserSettingsPanel.add(outputTestPatternIndex);
         }
 
+        // Speed and scanner sync are prominent controls
+        laserSettingsPanel.add(laser->speed);
+        laserSettingsPanel.add(laser->colourChangeShift);
+
+        ofxGuiSetDefaultHeight(20);
+
         for (std::size_t i = 0; i < laser->params.size(); ++i) {
             ofAbstractParameter& param = laser->params.get(i);
             // Skip internal fields and params already shown above
-            if (param.getName() == "dacId" || param.getName() == "Brightness") continue;
+            if (param.getName() == "dacId" || param.getName() == "Brightness"
+                || param.getName() == "Speed" || param.getName() == "Scanner sync") continue;
             addLaserSettingParameter(laserSettingsPanel, param, true);
         }
         laserSettingsPanel.minimizeAll();
@@ -1093,6 +1113,7 @@ void Manager::addLaserSettingParameter(ofxGuiGroup& guiGroup, ofAbstractParamete
 
 void Manager::refreshOfxGuiPanels() {
     refreshGlobalPanel();
+    refreshViewPanel();
     refreshLaserSettingsPanel();
     refreshSelectedZonePanel();
     refreshEditorPanel();
@@ -1106,6 +1127,7 @@ bool Manager::isMouseOverOfxGuiPanels(float x, float y) const {
 
     const glm::vec2 point(x, y);
     if (globalPanel.getShape().inside(point)) return true;
+    if (viewPanel.getShape().inside(point)) return true;
     if (laserSettingsPanel.getShape().inside(point)) return true;
     if (viewMode == OFXLASER_VIEW_OUTPUT && !guiPanelSelectedZoneUid.empty() && selectedZonePanel.getShape().inside(point)) return true;
     if (editorPanel.getShape().inside(point)) return true;
@@ -1119,10 +1141,6 @@ void Manager::drawOfxGuiPanels() {
     }
 
     if (guiPanelLaserCount != getNumLasers()) {
-        refreshGlobalPanel();
-    }
-    if (canvasViewToggle != (viewMode == OFXLASER_VIEW_CANVAS) ||
-        outputViewToggle != (viewMode == OFXLASER_VIEW_OUTPUT)) {
         refreshGlobalPanel();
     }
     if (guiPanelSelectedLaserIndex != getSelectedLaserIndex()) {
@@ -1144,6 +1162,8 @@ void Manager::drawOfxGuiPanels() {
     }
 
     globalPanel.draw();
+    refreshViewPanel();
+    viewPanel.draw();
     laserSettingsPanel.draw();
     editorPanel.draw();
     if (viewMode == OFXLASER_VIEW_OUTPUT && !guiPanelSelectedZoneUid.empty()) {

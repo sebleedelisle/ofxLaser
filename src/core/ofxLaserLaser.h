@@ -183,7 +183,7 @@ class Laser {
     // The alias can be anything. 
     //ofParameter<string> dacAlias;
  
-    ofParameter<float> colourChangeShift;
+    ofParameter<float> scannerSync;
     int maxLatencyMS; 
     
     int testPattern;

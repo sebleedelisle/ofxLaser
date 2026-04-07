@@ -90,6 +90,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     void setupOfxGuiPanels();
     void refreshOfxGuiPanels();
     void refreshGlobalPanel();
+    void refreshViewPanel();
     void refreshLaserSettingsPanel();
     void refreshSelectedZonePanel();
     void refreshEditorPanel();
@@ -191,6 +192,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     std::shared_ptr<CanvasViewController> canvasViewController;
     
     ofxPanel globalPanel;
+    ofxPanel viewPanel;
     ofxPanel laserSettingsPanel;
     ofxPanel selectedZonePanel;
     ofxPanel editorPanel;

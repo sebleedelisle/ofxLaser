@@ -10,6 +10,5 @@
 
 using namespace ofxLaser;
 
-// static class members
-
-Poco::ObjectPool<ofPolyline> ofxLaser::Factory::polylineObjectPool(500,10000000);
+std::vector<ofPolyline*> Factory::pool;
+std::mutex Factory::poolMutex;
