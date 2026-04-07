@@ -76,13 +76,42 @@ jobs:
           release: true
           update: true
           msystem: ucrt64
+          pacboy: >-
+            openssl:p
+            python:p
+            gcc:p
+            assimp:p
+            cairo:p
+            curl:p
+            freeglut:p
+            freeimage:p
+            glew:p
+            glfw:p
+            glm:p
+            fmt:p
+            zlib:p
+            brotli:p
+            libpng:p
+            harfbuzz:p
+            libsndfile:p
+            libusb:p
+            libxml2:p
+            mpg123:p
+            nlohmann-json:p
+            openal:p
+            opencv:p
+            pkgconf:p
+            pugixml:p
+            rtaudio:p
+            uriparser:p
+            utf8cpp:p
           install: >-
             unzip
             make
 
-      - name: Install OF MSYS2 dependencies
+      - name: Download OF MSYS2 libs
         working-directory: openFrameworks
-        run: ./scripts/ci/msys2/install.sh --msystem=ucrt64
+        run: ./scripts/msys2/download_libs.sh --silent -a ucrt64
 
       - name: Build examples
         working-directory: openFrameworks/addons/ofxLaser
