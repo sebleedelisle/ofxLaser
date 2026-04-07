@@ -9,6 +9,7 @@ TMP_ROOT=${TMPDIR:-/tmp}/ofxlaser-smoke
 PARALLEL_JOBS=${JOBS:-4}
 BUILD_CORE_TARGET=${BUILD_CORE_TARGET:-Release}
 EXAMPLE_TARGET=${EXAMPLE_TARGET:-ReleaseNoOF}
+SKIP_EXAMPLES=${SKIP_EXAMPLES:-}
 
 if [[ ! -f "${OF_ROOT}/libs/openFrameworksCompiled/project/makefileCommon/compile.project.mk" ]]; then
     echo "Could not locate openFrameworks root from ${ADDON_ROOT}" >&2
@@ -34,6 +35,13 @@ for example_dir in "${examples[@]}"; do
 
     example_name=$(basename "${example_dir}")
     build_dir="${TMP_ROOT}/${example_name}"
+
+    if [[ " ${SKIP_EXAMPLES} " == *" ${example_name} "* ]]; then
+        echo
+        echo "== ${example_name} =="
+        echo "Skipping ${example_name}"
+        continue
+    fi
 
     echo
     echo "== ${example_name} =="

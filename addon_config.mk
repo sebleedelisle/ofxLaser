@@ -103,6 +103,14 @@ common:
 
 	osx:
 		ADDON_FRAMEWORKS += AudioToolbox CoreAudio CoreFoundation
+		ADDON_LIBS += libs/ofxSvgExtra/libs/svgtiny/lib/osx/svgtiny.a
+		ADDON_LIBS += libs/ofxSvgExtra/libs/libxml2/lib/osx/xml2.a
+
+	msys2:
+		# Grix's Helios SDK still uses a few C-style constructs that MSYS2 g++
+		# treats as hard errors unless permissive mode is enabled.
+		ADDON_CFLAGS += -fpermissive
+		ADDON_PKG_CONFIG_LIBRARIES += libxml-2.0
 
 
 	#win_cb:

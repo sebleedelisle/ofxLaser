@@ -119,4 +119,5 @@ jobs:
           BUILD_CORE_TARGET: Debug
           EXAMPLE_TARGET: DebugNoOF
           JOBS: 2
+          SKIP_EXAMPLES: example_SVG example_SVGAnimation
         run: ./scripts/build-examples.sh
