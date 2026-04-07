@@ -3,7 +3,7 @@
 ofxLaser
 =========
 
-[![Build Examples](https://github.com/sebleedelisle/ofxLaser/actions/workflows/example-smoke-check.yml/badge.svg?branch=libera-major-refactor)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/example-smoke-check.yml)
+[![Build Examples](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml/badge.svg?branch=libera-major-refactor)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml)
 
 ofxLaser is a core library for sending laser frames to supported laser controllers (DACs) (Ether Dream, Helios, LaserCube, AVB, etc).  
 
@@ -178,13 +178,20 @@ Installation
 
 The **libera-major-refactor** branch targets [openFrameworks](https://openframeworks.cc) 0.12.x.
 
-Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder. 
-Either clone the source code using git:
+Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder.
+Clone the source code with submodules:
 
 	> cd openFrameworks/addons/
-	> git clone https://github.com/sebleedelisle/ofxLaser.git
+	> git clone --recurse-submodules https://github.com/sebleedelisle/ofxLaser.git
 
-Or download the source from GitHub [here](https://github.com/sebleedelisle/ofxLaser/archive/master.zip), unzip the folder, rename it from `ofxLaser-main` to `ofxLaser` and place it in your `openFrameworks/addons` folder.
+If you already cloned without submodules, run:
+
+	> cd openFrameworks/addons/ofxLaser
+	> git submodule update --init --recursive
+
+The repo depends on the `libs/libera-core` submodule, so a plain `git clone` is not enough.
+
+Downloading the GitHub ZIP is not recommended because it will not fetch submodule contents automatically.
 
 To run the examples, import them into the project generator, create a new project, and open the project file in your IDE.
 
@@ -194,19 +201,19 @@ addons :
 ofxGui (comes with oF)  
 
 Open source libraries (included in source) :
-libera-core
+libera-core (git submodule)
 clipper
 libusb
 ofxSvgExtra
 
 
-Example smoke check
+Example build check
 -------------------
 
 To compile every example without relying on checked-in project files, run:
 
 ```sh
-./scripts/smoke-check-examples.sh
+./scripts/build-examples.sh
 ```
 
 The script builds openFrameworks once in `Release`, generates temporary
@@ -217,5 +224,3 @@ Compatibility
 ------------
 
 openFrameworks 0.12.x 
-
-

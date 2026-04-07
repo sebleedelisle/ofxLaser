@@ -3,7 +3,7 @@ name: Build Examples
 on:
   push:
     paths:
-      - ".github/workflows/example-smoke-check.yml"
+      - ".github/workflows/build-examples.yml"
       - "addon_config.mk"
       - "example_*/**"
       - "libs/**"
@@ -11,7 +11,7 @@ on:
       - "src/**"
   pull_request:
     paths:
-      - ".github/workflows/example-smoke-check.yml"
+      - ".github/workflows/build-examples.yml"
       - "addon_config.mk"
       - "example_*/**"
       - "libs/**"
@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  smoke-check:
+  build-examples-macos:
     runs-on: macos-14
     timeout-minutes: 60
 
@@ -44,4 +44,50 @@ jobs:
 
       - name: Build examples
         working-directory: openFrameworks/addons/ofxLaser
-        run: /bin/zsh ./scripts/smoke-check-examples.sh
+        run: ./scripts/build-examples.sh
+
+  build-examples-windows-msys2:
+    runs-on: windows-latest
+    timeout-minutes: 60
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout openFrameworks
+        uses: actions/checkout@v4
+        with:
+          repository: openframeworks/openFrameworks
+          ref: '0.12.1'
+          path: openFrameworks
+          submodules: recursive
+
+      - name: Checkout ofxLaser
+        uses: actions/checkout@v4
+        with:
+          path: openFrameworks/addons/ofxLaser
+          submodules: recursive
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2.27.0
+        with:
+          cache: true
+          release: true
+          update: true
+          msystem: ucrt64
+          install: >-
+            unzip
+            make
+
+      - name: Install OF MSYS2 dependencies
+        working-directory: openFrameworks
+        run: ./scripts/ci/msys2/install.sh --msystem=ucrt64
+
+      - name: Build examples
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          BUILD_CORE_TARGET: Debug
+          EXAMPLE_TARGET: DebugNoOF
+          JOBS: 2
+        run: ./scripts/build-examples.sh
