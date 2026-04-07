@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ofParameter.h"
+#include "ofPath.h"
+#include "ofVboMesh.h"
 #include "ofxBaseGui.h"
 
 class ofxLaserActionButton : public ofxBaseGui {

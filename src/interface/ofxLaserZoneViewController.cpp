@@ -1,5 +1,5 @@
 //
-//  LaserZoneView.cpp
+//  ofxLaserZoneViewController.cpp
 //  Created by Seb Lee-Delisle on 13/01/2023.
 //
 //
@@ -36,7 +36,7 @@ bool LaserZoneViewController :: update() {
     
     boundingRect = sourceRect;
     
-    for(std::shared_ptr<ZoneUiBase>& zoneUi : zoneUis) {
+    for(std::shared_ptr<ZoneUIBase>& zoneUi : zoneUis) {
         
         zoneUi->setScale(scale); 
         bool zoneupdated =zoneUi->update();
@@ -44,7 +44,7 @@ bool LaserZoneViewController :: update() {
         if(zoneupdated) {
             std::shared_ptr<OutputZone> outputZone = getOutputZoneForZoneUI(zoneUi);
             if(outputZone!=nullptr) {
-                zoneUi->updateDataFromUi(outputZone);
+                zoneUi->updateDataFromUI(outputZone);
                
             } else {
                 ofLogError("missing zone ui for output zone! ");
@@ -57,7 +57,7 @@ bool LaserZoneViewController :: update() {
     
     vector<std::shared_ptr<QuadMask>>& quadMasks = laser->maskManager.quads;
     for(int i = 0; i< maskUis.size(); i++) {
-        std::shared_ptr<MaskUiQuad>& maskUi = maskUis[i];
+        std::shared_ptr<MaskUIQuad>& maskUi = maskUis[i];
         // make sure the handles are resized
         maskUi->setScale(scale);
         bool maskupdated =maskUi->update();
@@ -86,22 +86,22 @@ bool LaserZoneViewController :: update() {
 void LaserZoneViewController :: resetUiElements() {
     uiElementsSorted.clear();
     
-    for(std::shared_ptr<ZoneUiBase>& zoneUi: zoneUisSorted) {
+    for(std::shared_ptr<ZoneUIBase>& zoneUi: zoneUisSorted) {
         uiElementsSorted.push_back(zoneUi);
     }
     
-    for(std::shared_ptr<MaskUiQuad>& maskUi: maskUisSorted) {
+    for(std::shared_ptr<MaskUIQuad>& maskUi: maskUisSorted) {
         uiElementsSorted.push_back(maskUi);
     }
     //uiElementsSorted = uiElements;
 }
 
 void LaserZoneViewController :: moveMasksToBack() {
-    std::shared_ptr<MaskUiQuad> firstMask = nullptr;
+    std::shared_ptr<MaskUIQuad> firstMask = nullptr;
     
     for(int i = 0; i<uiElementsSorted.size(); i++) {
         std::shared_ptr<MoveablePoly>& uiElement = uiElementsSorted[i];
-        std::shared_ptr<MaskUiQuad> mask = std::dynamic_pointer_cast<MaskUiQuad>(uiElement);
+        std::shared_ptr<MaskUIQuad> mask = std::dynamic_pointer_cast<MaskUIQuad>(uiElement);
         
         if(mask!=nullptr) {
             if(firstMask == nullptr) {
@@ -146,72 +146,7 @@ void LaserZoneViewController :: draw() {
     
     drawMoveables();
     ofPushStyle();
-    
-    // draw "add point" option
-    if(ofGetKeyPressed(OF_KEY_ALT) ) {
-        for(std::shared_ptr<ZoneUiBase>& zoneUi: zoneUisSorted) {
-            
-          if(zoneUi->getSelected()) {
-              std::shared_ptr<ZoneUiLine> uiLine = std::dynamic_pointer_cast<ZoneUiLine>(zoneUi);
-              if(uiLine!=nullptr) {
-                    glm::vec2 mousePos(ofGetMouseX(), ofGetMouseY());
-                    
-                    // TODO
-                    
-                    int closestvertexindex = uiLine->getClosestPointIndexToPosition(screenPosToLocalPos(mousePos));
-                    glm::vec2 closestvertex = uiLine->getPointAtIndex(closestvertexindex);
-                    float distance = glm::distance(localPosToScreenPos(closestvertex), mousePos);
-                    if(distance<20 * GlobalScale::getScale()) { // distance to point, if we're close enough...
 
-                        // and if there are more than 2 points in the line
-                        if(uiLine->getNumPoints()>2) {
-                            
-                            ofPushMatrix();
-                            
-                            ofTranslate(closestvertex);
-                            ofScale(1.0/scale, 1.0/scale);
-                            ofSetColor(ofColor::black);
-                            ofFill();
-                            ofDrawCircle(0,0,8*GlobalScale::getScale());
-                            ofSetColor(uiLine->getStrokeColourSelected());
-                            ofDrawBitmapString("-", glm::vec2(-4, 4));
-                           
-                            ofPopMatrix();
-                            // display the minus sign over that point...
-                            
-                            
-                        }
-                        
-                        // otherwise...
-                    } else  {
-                        glm::vec2 closestpoint = uiLine->getClosestPointOnLine(screenPosToLocalPos(mousePos));
-                        glm::vec2 closestpointscreen = localPosToScreenPos(closestpoint);
-                        if(glm::distance(closestpointscreen, mousePos) < 20* GlobalScale::getScale()) {
-                            
-                            //ofNoFill();
-                            
-                            ofPushMatrix();
-                            ofTranslate(closestpoint);
-                            ofScale(1.0/scale, 1.0/scale);
-                            ofSetColor(ofColor::black);
-                            ofFill();
-                            ofDrawCircle(0,0,8*GlobalScale::getScale());
-                            ofSetColor(uiLine->getStrokeColourSelected());
-                            ofDrawBitmapString("+", glm::vec2(-4, 4));
-                            ofPopMatrix();
-                        }
-                        
-                    }
-                    
-                    break;
-                }
-            }
-            
-        }
-    }
-    
-    
-    
     ofPopStyle();
     drawLaserPath();
 
@@ -220,73 +155,13 @@ void LaserZoneViewController :: draw() {
     
     endViewPort();
     
-   // if(getSelected()) {
-//        ofNoFill();
-//        ofSetColor(ofColor::red);
-//        ofDrawRectangle(outputRect);
-    //}
 }
 
 
 
 bool LaserZoneViewController :: mousePressed(ofMouseEventArgs &e){
     
-    bool propagate = true;
-    glm::vec2 mousePos = e;
-    glm::vec2 mouseLocal = screenPosToLocalPos(e);
-    
-    
-    if(ofGetKeyPressed(OF_KEY_ALT) ) {
-        
-        for(std::shared_ptr<ZoneUiBase>& zoneUi: zoneUisSorted) {
-            
-            std::shared_ptr<ZoneUiLine> uiLine = std::dynamic_pointer_cast<ZoneUiLine>(zoneUi);
-            
-            if((uiLine!=nullptr) && zoneUi->getSelected()) {
-                
-                int closestvertexindex = uiLine->getClosestPointIndexToPosition(mouseLocal);
-                
-                glm::vec2 closestvertex = uiLine->getPointAtIndex(closestvertexindex);
-                
-                float distance = glm::distance(localPosToScreenPos(closestvertex), mousePos);
-                if(distance<20 * GlobalScale::getScale()) { // distance to point, if we're close enough...
-
-                    // and if there are more than 2 points in the line
-                    if(uiLine->getNumPoints()>2) {
-                        // delete point at closestvertexindex
-                        //ofLogNotice("LaserZoneViewController :: mousePressed - deleting node at ") << closestvertexindex;
-                        uiLine->deleteVertex(closestvertexindex);
-                        
-                        propagate = false;
-                    }
-                    
-                    // otherwise...
-                } else  {
-                    glm::vec2 closestpoint = uiLine->getClosestPointOnLine(screenPosToLocalPos(mousePos));
-                    glm::vec2 closestpointscreen = localPosToScreenPos(closestpoint);
-                    if(glm::distance(closestpointscreen, mousePos) < 20* GlobalScale::getScale()) {
-                        //ofLogNotice("LaserZoneViewController :: mousePressed - adding node to line");
-                        uiLine->addVertex(closestpoint);
-                    }
-                    //add point at closestpoint
-                    propagate = false;
-                    
-                }
-                
-                
-                
-            }
-        }
-           
-        if(propagate) return  ViewWithMoveables :: mousePressed(e);
-        else return false;
-        
-    } else {
-        
-        return ViewWithMoveables :: mousePressed(e);
-        
-        
-    }
+    return ViewWithMoveables :: mousePressed(e);
 }
 
 
@@ -314,9 +189,9 @@ bool LaserZoneViewController :: updateZones()  {
     
     for(size_t i=0; i<numZones; i++) {
         std::shared_ptr<OutputZone>& outputZone = laser->outputZones[i];
-        std::shared_ptr<ZoneUiBase> zoneUi = getZoneInterfaceForOutputZone(outputZone);
+        std::shared_ptr<ZoneUIBase> zoneUi = getZoneInterfaceForOutputZone(outputZone);
         if(zoneUi==nullptr) {
-            createZoneUiForOutputZone(outputZone);
+            createZoneUIForOutputZone(outputZone);
             changed = true;
         } else {
             // if we do have one let's make sure it's current
@@ -326,10 +201,10 @@ bool LaserZoneViewController :: updateZones()  {
         }
     }
     
-    vector<std::shared_ptr<ZoneUiBase>>::iterator it = zoneUis.begin();
+    vector<std::shared_ptr<ZoneUIBase>>::iterator it = zoneUis.begin();
     while(it != zoneUis.end()) {
         
-        std::shared_ptr<ZoneUiBase>& zoneUi = *it;
+        std::shared_ptr<ZoneUIBase>& zoneUi = *it;
         
         if(getOutputZoneForZoneUI(zoneUi)==nullptr) {
             SebUtils::removeElementFromVector(zoneUisSorted, zoneUi);
@@ -340,47 +215,7 @@ bool LaserZoneViewController :: updateZones()  {
     }
 
     return changed;
-    
-    
-    
-//    
-//    // create dummy output zones in case we don't have a laser
-//    vector<OutputZone*> tempOutputZones;
-//    vector<OutputZone*>* outputZones = &tempOutputZones;
-//    if(laser!=nullptr) outputZones = &laser->outputZones;
-//    
-//    // create UI elements for all the zones
-//    bool changed = false;
-//    for(OutputZone* outputZone : *outputZones) {
-//        std::shared_ptr<ZoneUiBase> zoneUi = getZoneInterfaceForOutputZone(outputZone);
-//        // if we don't have an interface object for the zone then make one
-//        if(zoneUi==nullptr) {
-//            createZoneUiForOutputZone(outputZone);
-//            changed = true;
-//        } else {
-//            // if we do have one let's make sure it's current
-//            // NOTE This only works because we call it after we have
-//            // update the data from the UI components
-//            zoneUi->updateFromData(outputZone);
-//        }
-//    }
-//
-//    // delete no longer existing zones
-//    vector<std::shared_ptr<ZoneUiBase>>::iterator it = zoneUis.begin();
-//    while(it != zoneUis.end()) {
-//        
-//        std::shared_ptr<ZoneUiBase>& zoneUi = *it;
-//        if(getOutputZoneForZoneUI(zoneUi, *outputZones)==nullptr) {
-//            zoneUisSorted.erase(std::remove(zoneUisSorted.begin(), zoneUisSorted.end(), zoneUi), zoneUisSorted.end());
-//            it = zoneUis.erase(it);
-//            //delete zoneUi;
-//            changed = true;
-//        }
-//        else ++it;
-//    }
-//
-//    return changed;
-    
+
 }
 
 
@@ -400,10 +235,10 @@ bool LaserZoneViewController :: updateMasks() {
 
     for(int i = 0; i<numMasks; i++) {
         
-        std::shared_ptr<MaskUiQuad>& maskUi = maskUis[i];
+        std::shared_ptr<MaskUIQuad>& maskUi = maskUis[i];
         
         if(!maskUi) {
-            maskUi = std::make_shared<MaskUiQuad>();
+            maskUi = std::make_shared<MaskUIQuad>();
         }
         std::shared_ptr<QuadMask>& mask = laser->maskManager.quads[i];
 
@@ -414,44 +249,7 @@ bool LaserZoneViewController :: updateMasks() {
     if(changed ) maskUisSorted = maskUis;
     
     return changed;
-//
-//    //for(size_t i = 0; i<quadMasks.size(); i++) {
-//    
-//    
-//    vector<QuadMask*> tempVector;
-//    vector<QuadMask*>* vectorPointer = &tempVector;
-//    if(laser!=nullptr) vectorPointer = &laser->maskManager.quads;
-//    vector<QuadMask*>& quadMasks = *vectorPointer;
-//    
-//    for(size_t i = 0; i<quadMasks.size(); i++) {
-//        QuadMask* mask = quadMasks[i];
-//        
-//        // if we don't have an interface object for the mask then make one
-//        if(maskUis.size()<=i) {
-//            MaskUiQuad* newmask = new MaskUiQuad();
-//            newmask->updateFromData(mask);
-//
-//            maskUis.push_back(newmask);
-//            
-//            changed = true;
-//        } else {
-//            // TODO - compare and set changed!
-//            changed|=maskUis[i]->updateFromData(mask);
-//        }
-//    }
-//
-//    
-//    // delete no longer existing masks
-//    
-//    for(size_t i = quadMasks.size(); i<maskUis.size(); i++) {
-//        delete maskUis[i];
-//        changed = true;
-//    }
-//    maskUis.resize(quadMasks.size());
-//    if(changed ) maskUisSorted = maskUis; // bit nasty should probably do this better, but this should work for now
-//    
-//    return changed;
-    
+
 }
 
 void LaserZoneViewController :: drawLaserPath() {
@@ -506,17 +304,15 @@ void LaserZoneViewController :: deselectAll() {
 }
 
 
-std::shared_ptr<ZoneUiBase> LaserZoneViewController ::  getZoneInterfaceForOutputZone(std::shared_ptr<OutputZone>& outputZone) {
+std::shared_ptr<ZoneUIBase> LaserZoneViewController ::  getZoneInterfaceForOutputZone(std::shared_ptr<OutputZone>& outputZone) {
     
-    for(std::shared_ptr<ZoneUiBase>& zoneUi: zoneUis) {
+    for(std::shared_ptr<ZoneUIBase>& zoneUi: zoneUis) {
         
         if(zoneUi->zoneId.getUid() == outputZone->getZoneId().getUid()) {
             
-            if((std::dynamic_pointer_cast<ZoneUiQuad>(zoneUi)!=nullptr) && (outputZone->transformType==0)) {
+            if((std::dynamic_pointer_cast<ZoneUIQuad>(zoneUi)!=nullptr) && (outputZone->transformType==0)) {
                 return zoneUi;
-            } else if((std::dynamic_pointer_cast<ZoneUiLine>(zoneUi)!=nullptr) && (outputZone->transformType==1)) {
-                return zoneUi;
-            } else if((std::dynamic_pointer_cast<ZoneUiQuadComplex>(zoneUi)!=nullptr) && (outputZone->transformType==2)) {
+            } else if((std::dynamic_pointer_cast<ZoneUIQuadComplex>(zoneUi)!=nullptr) && (outputZone->transformType==2)) {
                 return zoneUi;
             } else {
                 //NB assumes no doubles
@@ -528,16 +324,14 @@ std::shared_ptr<ZoneUiBase> LaserZoneViewController ::  getZoneInterfaceForOutpu
     
 }
 
-std::shared_ptr<OutputZone> LaserZoneViewController ::  getOutputZoneForZoneUI(std::shared_ptr<ZoneUiBase>& zoneUi) {
+std::shared_ptr<OutputZone> LaserZoneViewController ::  getOutputZoneForZoneUI(std::shared_ptr<ZoneUIBase>& zoneUi) {
     
     if(laser==nullptr) return nullptr;
     
     int zoneType;
-    if(std::dynamic_pointer_cast<ZoneUiQuad>(zoneUi)) {
+    if(std::dynamic_pointer_cast<ZoneUIQuad>(zoneUi)) {
         zoneType = 0;
-    } else if(std::dynamic_pointer_cast<ZoneUiLine>(zoneUi)) {
-        zoneType = 1;
-    } else if(std::dynamic_pointer_cast<ZoneUiQuadComplex>(zoneUi)) {
+    } else if(std::dynamic_pointer_cast<ZoneUIQuadComplex>(zoneUi)) {
         zoneType = 2;
     }
     
@@ -550,8 +344,8 @@ std::shared_ptr<OutputZone> LaserZoneViewController ::  getOutputZoneForZoneUI(s
     return nullptr;
 }
 
-std::shared_ptr<ZoneUiBase> LaserZoneViewController::getSelectedZoneUi() {
-    for (std::shared_ptr<ZoneUiBase>& zoneUi : zoneUis) {
+std::shared_ptr<ZoneUIBase> LaserZoneViewController::getSelectedZoneUi() {
+    for (std::shared_ptr<ZoneUIBase>& zoneUi : zoneUis) {
         if (zoneUi && zoneUi->getSelected()) {
             return zoneUi;
         }
@@ -560,7 +354,7 @@ std::shared_ptr<ZoneUiBase> LaserZoneViewController::getSelectedZoneUi() {
 }
 
 std::shared_ptr<OutputZone> LaserZoneViewController::getSelectedOutputZone() {
-    std::shared_ptr<ZoneUiBase> zoneUi = getSelectedZoneUi();
+    std::shared_ptr<ZoneUIBase> zoneUi = getSelectedZoneUi();
     if (!zoneUi) {
         return nullptr;
     }
@@ -568,27 +362,20 @@ std::shared_ptr<OutputZone> LaserZoneViewController::getSelectedOutputZone() {
 }
 
 
-bool LaserZoneViewController :: createZoneUiForOutputZone(std::shared_ptr<OutputZone>& outputZone) {
+bool LaserZoneViewController :: createZoneUIForOutputZone(std::shared_ptr<OutputZone>& outputZone) {
     
-    std::shared_ptr<ZoneUiBase> zoneUi;
+    std::shared_ptr<ZoneUIBase> zoneUi;
     
     if(outputZone->transformType == 0 )  {
         
-        zoneUi = std::make_shared<ZoneUiQuad>();
-        
-        zoneUi->updateFromData(outputZone);
-        zoneUi->setGrid(snapToGrid, gridSize);
-        
-    } else if(outputZone->transformType == 1 )  {
-        
-        zoneUi =  std::make_shared<ZoneUiLine>();
+        zoneUi = std::make_shared<ZoneUIQuad>();
         
         zoneUi->updateFromData(outputZone);
         zoneUi->setGrid(snapToGrid, gridSize);
         
     }  else if(outputZone->transformType == 2 )  {
         
-        zoneUi =  std::make_shared<ZoneUiQuadComplex>();
+        zoneUi =  std::make_shared<ZoneUIQuadComplex>();
         
         zoneUi->updateFromData(outputZone);
         zoneUi->setGrid(snapToGrid, gridSize);
@@ -616,7 +403,7 @@ int LaserZoneViewController :: getLaserIndex() {
 void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize, bool visible) {
 
     ViewWithMoveables::setGrid(snaptogrid, gridsize, visible);
-    for(std::shared_ptr<MaskUiQuad>& mask : maskUis) {
+    for(std::shared_ptr<MaskUIQuad>& mask : maskUis) {
         mask->setGrid(false, 1);
     }
 

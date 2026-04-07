@@ -179,10 +179,6 @@ class TestPatternGenerator {
 
 
              }
-             // WAIT... why am i manually doing the colour calibration, surely
-             // I can just set it to 0, 0.25, 0.5 etc and let the colour calibration
-             // fix it???
-             
              shapes.push_back(std::make_shared<ManualShape>(points, colours, true, OFXLASER_PROFILE_DEFAULT));
 
          } else if(testPattern ==9) {
@@ -198,7 +194,6 @@ class TestPatternGenerator {
              // progress is between 0 and 2
              progress*=PI;
              
-//             float x = (progress<=1) ? (ofMap(progress, 0, 1, rect.getLeft(), rect.getRight())) : (ofMap(progress, 2, 1, rect.getLeft(), rect.getRight()));
              float x = ofMap(sin(progress), -1,1,rect.getLeft(), rect.getRight());
              shapes.push_back(std::make_shared<Line>( glm::vec3(x,rect.getTop(),0), glm::vec3(x, rect.getBottom(),0), ofColor::white, OFXLASER_PROFILE_DEFAULT));
 

@@ -1,5 +1,5 @@
 //
-//  ofxLaserZoneUiQuadComplex.h
+//  ofxLaserZoneUIQuadComplex.h
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.
 //
@@ -7,31 +7,25 @@
 
 #pragma once
 
-#include "ofxLaserZoneUiBase.h"
+#include "ofxLaserZoneUIBase.h"
 #include "ofxLaserZoneTransformQuadData.h"
 
 namespace ofxLaser {
-class ZoneUiQuadComplex : public ZoneUiBase {
+class ZoneUIQuadComplex : public ZoneUIBase {
     
     public :
-    ZoneUiQuadComplex();
+    ZoneUIQuadComplex();
     
     void draw() override;
     
-    bool updateDataFromUi(std::shared_ptr<OutputZone>& outputZone) override;
+    bool updateDataFromUI(std::shared_ptr<OutputZone>& outputZone) override;
     bool updateFromData(std::shared_ptr<OutputZone>& outputZone) override;
-    
-    bool setCorners(const vector<glm::vec2*>& points);
-    
+
     glm::vec2 getPointAtPosition(int x, int y) ;
-    
-   //ofPolyline perimeterPolyline;
-    
+
     protected :
-    
-    
+
     int subdivisionsX, subdivisionsY;
-   //virtual void drawShape() override;
     
     
 };

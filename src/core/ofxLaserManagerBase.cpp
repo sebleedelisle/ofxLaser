@@ -10,10 +10,10 @@
 
 using namespace ofxLaser;
 
-ManagerBase * ManagerBase :: laserManager = NULL;
+ManagerBase * ManagerBase :: laserManager = nullptr;
 
 ManagerBase * ManagerBase::instance() {
-    if(laserManager == NULL) {
+    if(laserManager == nullptr) {
         laserManager = new ManagerBase();
     }
     return laserManager;
@@ -28,7 +28,7 @@ ManagerBase :: ManagerBase()
 
     canvasTarget = std::make_shared<ShapeTargetCanvas>();
     
-    if(laserManager == NULL) {
+    if(laserManager == nullptr) {
         laserManager = this;
     } else {
         ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
@@ -117,14 +117,9 @@ bool ManagerBase :: deleteLaser(std::shared_ptr<Laser>& laser) {
     if(laser == nullptr) return false;
     
     if(!SebUtils::elementInVector(lasers, laser)) return false;
-   // if(find(lasers.begin(), lasers.end(), laser) == lasers.end()) return false;
-    
+
     // disconnect dac
     dacAssigner.disconnectDacFromLaser(laser);
-    
-    //vector<std::shared_ptr<Laser>> :: iterator it = find(lasers.begin(), lasers.end(), laser);
-    //int index = it-lasers.begin();
-    // hopefully should renumber current laser OK
     
     laser->deleteAllSettingsFiles();
     // Remove all output zones from this laser
@@ -288,10 +283,6 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
 std::shared_ptr<ofxLaser::Polyline> ManagerBase::getPolyFromPoints(const vector<glm::vec3>& points, const vector<ofColor>& colours, bool closed, string profileName, float brightness){
     
     tmpPoints = points;
-//    for(glm::vec3& v : tmpPoints) {
-//        v = getTransformed(v);
-//    }
-//    
     bool allOnSameHorizontal = true;
     bool increasingLeftToRight = true;
 
@@ -332,7 +323,6 @@ std::shared_ptr<ofxLaser::Polyline> ManagerBase::getPolyFromPoints(const vector<
         std::reverse(tmpPoints.begin(), tmpPoints.end());
         auto reversed = colours;
         std::reverse(reversed.begin(), reversed.end());
-        //std::reverse(colours.begin(), colours.end());
         p = std::make_shared<Polyline>(tmpPoints, reversed, profileName, brightness);
     } else {
         p = std::make_shared<Polyline>(tmpPoints, colours, profileName, brightness);
@@ -461,25 +451,13 @@ void ManagerBase:: update(){
     
     dacAssigner.update();
     
-//    for(ofxLaser::Laser* laser : lasers) {
-//        laser->emptyDac.dontCalculate = dontCalculateDisconnected.get();
-//    }
-    
-    //if(useBitmapMask) laserMask.update();
     // delete all the shapes - all shape objects need a destructor!
     canvasTarget->deleteShapes();
     
     // updates all the zones. If zone->update returns true, then
     // it means that the zone has changed.
     bool updateZoneRects = false;
-//    for(size_t i= 0; i<zones.size(); i++) {
-//        if(zones[i]->update()) {
-//           updateZoneRects  = true;
-//        }
-//    }
-    
-    
-    
+
     bool dacDisconnected = false;
     // update all the lasers which clears the points,
     // and updates all the zone settings
@@ -495,9 +473,6 @@ void ManagerBase:: update(){
         }
     }
     if(dacDisconnected)  {
-//        if(!beepSound.isPlaying()) {
-//            beepSound.play();
-//        }
     }
      
     if(settingsNeedSave && (ofGetElapsedTimef()-lastSaveTime>1)) {
@@ -527,7 +502,6 @@ void ManagerBase::send(){
     // and send them. When the zones get the shape, they transform them
     // into local zone space.
     
-    //vector<deque<Shape*>> shapesByZoneIndex;
     vector<ZoneContent> zonesContent;
     vector<std::shared_ptr<ObjectWithZoneId>>& zoneIds = canvasTarget->getZoneIds();
     
@@ -578,7 +552,7 @@ void ManagerBase::send(){
         
         Laser& laser = *lasers[i];
         
-        laser.send(zonesContent, globalBrightness, NULL);// useBitmapMask?laserMask.getPixels():NULL);
+        laser.send(zonesContent, globalBrightness, nullptr);
         
         std::this_thread::yield();
         
@@ -603,23 +577,11 @@ void ManagerBase::sendRawPoints(const std::vector<ofxLaser::Point>& points, int 
         return;
     }
     std::shared_ptr<Laser>& laser = lasers.at(lasernum);
-//    if(zonenum>=canvasTarget->zones.size()) {
-//        ofLogError("Invalid zone number sent to ofxLaser::ManagerBase::sendRawPoints");
-//        return;
-//    }
     laser->sendRawPoints(points, zoneId, globalBrightness);
     
 }
 
 
-//
-//void ManagerBase::armAllLasersListener() {
-//    doArmAll = true;
-//}
-//
-//void ManagerBase::disarmAllLasersListener(){
-//    doDisarmAll = true;
-//}
 void ManagerBase::armAllLasers() {
     
     for(size_t i= 0; i<lasers.size(); i++) {
@@ -713,18 +675,6 @@ bool ManagerBase::loadSettings() {
     disarmAllLasers();
     
     
-//
-//
-//    if(zones.size()==0) {
-//
-//    } else {
-//        renumberCanvasZones();
-//    }
-//
-//    json.clear();
-//    serialize(json);
-//    deserialize(json);
-    
     return true;
     
     
@@ -794,18 +744,6 @@ bool ManagerBase::saveSettings() {
     // TODO add laserMask saving to laser settings
     //savesuccess &= laserMask.saveSettings();
     
-    // Save zones :
-//    ofJson zoneJson;
-    //TODO REPLACE THIS WITH canvasTarget->serialize
-//
-//    for(int i = 0; i<canvasTarget->zones.size(); i++) {
-//        ofJson jsonGroup;
-//        canvasTarget->zones[i]->serialize(jsonGroup);
-//        zoneJson.push_back(jsonGroup);
-//    }
-//
-//    ofSavePrettyJson("ofxLaser/zones.json", zoneJson);
-    
     lastSaveTime = ofGetElapsedTimef();
     // Only clear pending-save when everything succeeded.
     // On failure we keep it queued so a later save attempt can recover.
@@ -874,17 +812,7 @@ bool ManagerBase::deserialize(ofJson& json) {
         // tell the dacAssigner about it
         // if the dac isn't available, it'll make the data and store it
         // ready for when it loads
-//        if(!laser->dacLabel->empty()) {
-//            dacAssigner.assignToLaser(laser->dacLabel, laser);
-//        }
-        
     }
-    // if we had more lasers to start with than we needed, then resize
-    // the vector (shouldn't be needed but it doesn't hurt)
-//    while(lasers.size()>numLasers) {
-//        deleteLaser(lasers.back());
-//    }
-    //lasers.resize(numLasers);
     
     
     if(json.contains("canvas")) {
@@ -905,32 +833,6 @@ bool ManagerBase::deserialize(ofJson& json) {
     
     
 }
-//
-//
-//
-//// converts openGL coords to screen coords //
-//template<typename T>
-//T ManagerBase::convert3DTo2D(T p, ofRectangle viewportrect, float fov ) {
-//
-//    T p1 = getTransformed(p);
-//
-//    if(p1.z==0) return p1;
-//
-//    float scale = fov/(-p1.z+fov);
-//    p1.z = 0;
-//    p1-=viewportrect.getCenter();
-//    p1*=scale;
-//    p1+=viewportrect.getCenter();
-//
-//    return p1;
-// 
-//}
-//template<typename T>
-//T ManagerBase::convert3DTo2D(T p) {
-//    return convert3DTo2D(p, canvasTarget->getBounds());
-//
-//}
-//
 
 std::shared_ptr<Laser>& ManagerBase::getLaser(int index){
     return lasers.at(index);
@@ -956,26 +858,6 @@ bool ManagerBase::areAllLasersArmed(){
     }
     return (lasers.size()==0)? false : true;
     
-}
-
-//------------------- DEPRECATED --------------------------
-
-
-void ManagerBase::addProjector(DacBase& dac) {
-    ofLogError("Lasers are no longer set up in code! Add them within the app instead.");
-    throw;
-    
-}
-
-void ManagerBase::addProjector() {
-    ofLogError("Lasers are no longer set up in code! Add them within the app instead.");
-    throw;
-    
-}
-// DEPRECATED, showAdvanced parameter now redundant
-void ManagerBase::initGui(bool showAdvanced) {
-    ofLogError("ManagerBase::initGui(bool showAdvanced) initGui is no longer required");
-    throw;
 }
 
 
@@ -1128,12 +1010,6 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             updateGlobalTestPattern();
             fireTestPatternChanged();
         },
-        [&](LaserMsg::SetUseAltZones&) {
-            fireGlobalSettingsChanged();
-        },
-        [&](LaserMsg::ToggleAltZones&) {
-            fireGlobalSettingsChanged();
-        },
         [&](LaserMsg::SetGlobalLatency&) {
             // Latency is managed by Manager subclass (it's an ofParameter)
             fireGlobalSettingsChanged();
@@ -1192,9 +1068,6 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
                     }
                 }
             }
-            fireZonesChanged();
-        },
-        [&](LaserMsg::AddAltZone&) {
             fireZonesChanged();
         },
         [&](LaserMsg::DeleteOutputZone& m) {

@@ -49,7 +49,6 @@ namespace ofxLaser {
         void startDrag(glm::vec2 clickPos, DragHandle* relativeToHandle = nullptr);
         void startDragProportional(glm::vec2 clickPos, glm::vec2 anchorPos, glm::vec2 dragPoint,  bool dontMoveWhenAltPressed);
         void startDragSymmetrical(glm::vec2 clickPos, glm::vec2 anchorPos, glm::vec2 dragPoint,  bool dontMoveWhenAltPressed);
-    //    void startDrag(glm::vec3 clickPos, bool dragXAxis = true, bool dragYAxis = true, bool dontMoveWhenAltPressed = false) ;
 
         bool updateDrag(glm::vec2 pos);
 
@@ -64,9 +63,6 @@ namespace ofxLaser {
         bool xAxis;
         bool yAxis;
         
-    //	bool xLocked = false;
-    //	bool yLocked = false;
-    //
         bool altKeyDisable;
         bool isCircular = false;
         bool isFilled = true;

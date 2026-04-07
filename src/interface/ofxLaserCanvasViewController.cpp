@@ -141,9 +141,6 @@ void CanvasViewController :: updateUIFromZones( std::shared_ptr<ShapeTargetCanva
                 uiElement->setGrid(snapToGrid, gridSize);
                 guideImageUiQuad->colour = targetGuideImage->colour;
                 guideImageUiQuad->setDisabled(targetGuideImage->locked);
-                //ofLogNotice("copying guide image");
-                //guideImageUiQuad->image = targetGuideImage->image; // should copy, hopefully safer
-                
             } else {
                 elementsToDelete.push_back(uiElement);
             }

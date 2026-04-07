@@ -17,12 +17,6 @@ MaskManager  ::MaskManager  () {
 
 MaskManager  ::~MaskManager  () {
     quads.clear();
-    
-//    while(quads.size()>0) {
-//        delete quads.back();
-//        quads.pop_back();
-//    }
-    
 }
 
 bool MaskManager  ::update() {
@@ -40,15 +34,6 @@ bool MaskManager  ::update() {
     return wasDirty;
 }
 
-//bool MaskManager  ::draw() {
-//
-//    for(int i= 0; i<quads.size(); i++) {
-//        quads[i]->draw();
-//    }
-//    
-//    return true;
-//}
-
 std::shared_ptr<QuadMask>& MaskManager::addQuadMask(int level) {
     
     quads.push_back(std::make_shared<QuadMask>());
@@ -59,7 +44,6 @@ std::shared_ptr<QuadMask>& MaskManager::addQuadMask(int level) {
     //quad->setName(ofToString(quads.size()));
     //quad->lineColour = ofColor::red;
     
-   // quad->setOffsetAndScale(offset, scale);
     return quad;
 }
 
@@ -67,19 +51,6 @@ void MaskManager  ::init(int w, int h){
     width = w;
     height = h;
 }
-//
-//void MaskManager::setOffsetAndScale(glm::vec2 newoffset, float newscale){
-//    if((offset == newoffset) && (newscale==scale)) return;
-//    offset = newoffset;
-//    scale = newscale;
-//    dirty = true;
-//    for(QuadMask* quad : quads) {
-//        quad->setOffsetAndScale(offset, scale);
-//    }
-//
-//}
-
-
 
  bool MaskManager :: deleteQuadMask(std::shared_ptr<QuadMask>& mask) {
     
@@ -90,51 +61,11 @@ void MaskManager  ::init(int w, int h){
      
      quads.erase(it);
      dirty = true;
-     //delete mask;
-     
-//     for(int i = 0; i<(int)quads.size(); i++) {
-//         quads[i]->displayLabel = ofToString(i+1);
-//
-//     }
-     
+
      return true;
     
     
 }
-//
-//void MaskManager  ::enableUI(){
-//    for(QuadMask* quad : quads) {
-//        quad->setEditable(true);
-//    }
-//}
-//void MaskManager  ::disableUI(){
-//    for(QuadMask* quad : quads) {
-//        quad->setEditable(false);
-//    }
-//}
-
-//
-//vector<ofPolyline*>  MaskManager :: getLaserMaskShapes(){
-//    
-//    vector<ofPolyline*> polylines;
-//    for(int i = 0 ;i<quads.size(); i++) {
-////        QuadMask& quad = *quads[i];
-////        ofPolyline* poly = ofxLaser::Factory :: getPolyline();
-////
-////
-////        poly->addVertex(quad.handles[0].vec3());
-////        poly->addVertex(quad.handles[1].vec3());
-////        poly->addVertex(quad.handles[3].vec3());
-////        poly->addVertex(quad.handles[2].vec3());
-////        poly->setClosed(true);
-////        polylines.push_back(poly);
-//        
-//        
-//        
-//    }
-//    return polylines;
-//    
-//}
 
 void MaskManager::serialize(ofJson&json) {
     
@@ -156,11 +87,6 @@ void MaskManager::serialize(ofJson&json) {
 bool MaskManager::deserialize(ofJson& jsonGroup) {
     ofJson maskJson = jsonGroup["maskmanager"];
     quads.clear();
-//    while(quads.size()>0) {
-//        delete quads.back();
-//        quads.pop_back();
-//    }
-   // cout << maskJson.size() << endl;
     bool success = true;
     for(auto quadjson : maskJson) {
         //cout << quadjson.dump(3) << endl;

@@ -7,7 +7,6 @@
 #pragma once
 #include "ofMain.h"
 #include "ofxLaserZoneTransformQuadData.h"
-#include "ofxLaserZoneTransformLineData.h"
 #include "ofxLaserZoneTransformQuadComplexData.h"
 #include "ofxLaserZoneId.h"
 
@@ -52,7 +51,6 @@ class OutputZone {
     ZoneTransformBase& getZoneTransform();
     void resetAllTransforms();
     ZoneTransformQuadData zoneTransformQuad;
-    ZoneTransformLineData zoneTransformLine;
     ZoneTransformQuadComplexData zoneTransformQuadComplex;
 
     ofParameterGroup zoneParams;

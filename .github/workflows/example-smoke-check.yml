@@ -1,4 +1,4 @@
-name: Example Smoke Check
+name: Build Examples
 
 on:
   push:
@@ -29,6 +29,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: openframeworks/openFrameworks
+          ref: '0.12.1'
           path: openFrameworks
           submodules: recursive
 

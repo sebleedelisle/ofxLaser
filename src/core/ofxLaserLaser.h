@@ -68,7 +68,7 @@ class Laser {
     bool deserialize(ofJson& json);
     
     void update();
-    void send(const vector<ZoneContent>& zonesContent, float masterIntensity = 1, ofPixels* pixelmask = NULL);
+    void send(const vector<ZoneContent>& zonesContent, float masterIntensity = 1, ofPixels* pixelmask = nullptr);
     
     bool toggleArmed(); 
    
@@ -94,16 +94,10 @@ class Laser {
     void setGlobalTestPattern(bool active, int pattern); 
     
     // Zones
-    void addZone(ZoneId zoneId,  bool isAlternate = false);
+    void addZone(ZoneId zoneId);
     bool removeZone(ZoneId zoneId);
     bool removeZone(std::shared_ptr<OutputZone>& zone);
     bool hasZone(ZoneId zoneId);
-    
-    void addAltZone(ZoneId zoneId);
-    bool removeAltZone(std::shared_ptr<OutputZone>& zone);
-    bool removeAltZone(ZoneId zoneId);
-    bool hasAltZone(ZoneId zoneId);
-    bool hasAnyAltZones();
     
     bool muteZone(ZoneId zoneId);
     bool unMuteZone(ZoneId zoneId);
@@ -114,15 +108,9 @@ class Laser {
     bool updateZones(map<ZoneId, ZoneId>& changedZones);
     bool updateZoneLabels(vector<std::shared_ptr<ObjectWithZoneId>>& zoneids);
 
-    // gets output zones (but not alt zones) in order
     vector<std::shared_ptr<OutputZone>> getSortedOutputZones();
-    vector<std::shared_ptr<OutputZone>> getSortedOutputAltZones();
-   
-    
+
     std::shared_ptr<OutputZone> getLaserZoneForZoneId(ZoneId zoneId);
-    //InputZone* getLaserInputZoneForZoneIndex(int zoneIndex); // bit nasty
-    //OutputZone* getLaserAltZoneForZone(InputZone* zone);
-    std::shared_ptr<OutputZone> getLaserAltZoneForZoneId(ZoneId zoneId);
     const int findZoneContentIndexForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent );
     bool hasZoneContentForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent );
  
@@ -142,8 +130,6 @@ class Laser {
     void processPoints(float masterIntensity, bool offsetColours = true);
     
     RenderProfile& getRenderProfile(string profilelabel);
-    
-    //void updateZoneMasks();
     
     void ppsChanged(int& e);
     void colourShiftChanged(float& e);
@@ -179,9 +165,8 @@ class Laser {
     ofParameter<string> dacLabel;
     // Keep track of the dac alias, even when it's not connected.
     // The ID is unique so should be used to reference the DAC.
-    // The alias can be anything. 
-    //ofParameter<string> dacAlias;
- 
+    // The alias can be anything.
+
     ofParameter<float> scannerSync;
     int maxLatencyMS; 
     
@@ -193,7 +178,6 @@ class Laser {
 
     ofParameter<bool>hideContentDuringTestPattern;
  
-    //int numTestPatterns;
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
     ofParameter<int> mountOrientation;

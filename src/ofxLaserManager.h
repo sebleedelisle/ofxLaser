@@ -110,7 +110,6 @@ class Manager : public ManagerBase, public LaserBaseController {
     void onSelectedZoneMuteChanged(bool& value);
     void onSelectedZoneLockChanged(bool& value);
     void onSelectedZoneQuadPressed();
-    void onSelectedZoneLinePressed();
     void onSelectedZoneSegmentedPressed();
     void onSelectedZoneResetPressed();
     void onSelectedZoneDeletePressed();
@@ -209,7 +208,6 @@ class Manager : public ManagerBase, public LaserBaseController {
     ofParameter<bool> selectedZoneMuteToggle;
     ofParameter<bool> selectedZoneLockToggle;
     ofxButton selectedZoneQuadButton;
-    ofxButton selectedZoneLineButton;
     ofxButton selectedZoneSegmentedButton;
     ofxButton selectedZoneResetButton;
     ofxButton selectedZoneDeleteButton;

@@ -88,8 +88,7 @@ public:
     void armAllLasers();
     void disarmAllLasers();
     void updateGlobalTestPattern();
-    //void canvasSizeChanged(int&size);
-    void hideContentDuringTestPatternChanged(bool& state); 
+    void hideContentDuringTestPatternChanged(bool& state);
     
     void setStroke(bool strokestate) {
         strokeOn = strokestate;
@@ -134,14 +133,6 @@ public:
     int getNumLasers() { return (int)lasers.size(); };
     int getNumZones() { return canvasTarget->getNumZoneIds(); }
     
-    OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
-    OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
-  
-    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector(DacBase&));
-    OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
-  
-
-    
     
     bool isLaserArmed(unsigned int i);
 	bool areAllLasersArmed();
@@ -181,14 +172,9 @@ public:
 
     DacAssigner& dacAssigner;
     
-    //ofParameter<int> canvasWidth, canvasHeight;
-
     int testPatternGlobal;
     bool testPatternGlobalActive;
     
-    //ofParameter<bool> useBitmapMask;
-    //ofParameter<bool> showBitmapMask;
-    //ofParameter<bool> laserCanvasMaskOutlines;
     ofParameter<int> numLasers; // << not used except for load / save
     
     ofParameter<bool> dontCalculateDisconnected;
@@ -199,9 +185,6 @@ public:
     BitmapMaskManager laserMask;
     
                 
-  //  bool zonesChanged;
-    //std::vector<InputZone*> zones;
-    
     ofParameterGroup params;
  
     ofJson loadedJson;
@@ -250,23 +233,10 @@ public:
     void flushPendingSignals();
 
     int currentId = 0;
-    
-//    template<typename T>
-//    T convert3DTo2D(T p);
-//
-//    template<typename T>
-//    T convert3DTo2D(T p, ofRectangle viewportrect, float fov = 550);
-    
-//    template<typename T>
-//    T convert3DTo2D(float x, float y, float z ); 
-//    //ofPoint convert3DTo2D( float ax, float ay, float az );
-    
+
     virtual void createAndAddLaser();
     
     void createDefaultZone();
-    
-    //ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
-    //int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
     
     std::vector<std::shared_ptr<Laser>> lasers;
     

@@ -1,5 +1,5 @@
 //
-//  ofxLaserViewWithMovables.cpp
+//  ofxLaserViewWithMoveables.cpp
 //
 //  Created by Seb Lee-Delisle on 11/02/2023.
 //

@@ -220,12 +220,7 @@ void Laser:: colourShiftChanged(float& e){
 }
 
 
-void Laser::addZone(ZoneId zoneId, bool isAlternate) {
-    if(isAlternate) {
-        ofLogWarning("Laser::addZone") << "alternate zones are no longer supported";
-        return;
-    }
-
+void Laser::addZone(ZoneId zoneId) {
     if(hasZone(zoneId)) {
         ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
         return;
@@ -235,11 +230,6 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
         
     ofJson laserZoneJson;
     string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + ".json";
-    // not sure if we still need this - does it get called by loadSettings ? I don't think it does.
-    // Comment out for now
-//    if(ofFile(filename).exists()) {
-//        laserZoneJson = ofLoadJson(filename);
-//    }
     if(!laserZoneJson.empty()) {
         outputzone->deserialize(laserZoneJson);
     } else {
@@ -261,14 +251,6 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
 }
 
 
-//void Laser::addAltZone(int zoneIndex) {
-//    addZone(zone, true);
-//}
-
-void Laser::addAltZone(ZoneId zoneId){
-    ofLogWarning("Laser::addAltZone") << "alternate zones are no longer supported";
-}
-
 bool Laser :: hasZone(ZoneId zoneId){
    
     for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
@@ -278,11 +260,6 @@ bool Laser :: hasZone(ZoneId zoneId){
 }
 
 
-bool Laser :: hasAltZone(ZoneId zoneId){ return false; }
-
-bool Laser :: hasAnyAltZones() { return false; }
-
-//
 bool Laser :: removeZone(ZoneId zoneId){
     
     std::shared_ptr<OutputZone> outputZone = getLaserZoneForZoneId(zoneId);
@@ -309,26 +286,10 @@ bool Laser :: removeZone(std::shared_ptr<OutputZone>& outputZone){
 }
 
 
-//bool Laser :: removeAltZone(InputZone* zone){
-//    return removeAltZone(getLaserAltZoneForZone(zone));
-//
-//}
-
-bool Laser :: removeAltZone(std::shared_ptr<OutputZone>& outputZone){ return false; }
-
-bool Laser :: removeAltZone(ZoneId zoneId){ return false; }
-
-
-
 std::shared_ptr<OutputZone> Laser::getLaserZoneForZoneId(ZoneId zoneId) {
     for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
         if(laserZone->getZoneId() == zoneId) return laserZone;
     }
-    return nullptr;
-}
-
-
-std::shared_ptr<OutputZone> Laser::getLaserAltZoneForZoneId(ZoneId zoneId){
     return nullptr;
 }
 
@@ -426,10 +387,6 @@ bool Laser::updateZoneLabels(vector<std::shared_ptr<ObjectWithZoneId>>& zoneids)
 
 
 void Laser::clearOutputZones() {
-//    
-//    for(OutputZone* zone : outputZones) {
-//        delete zone;
-//    }
     outputZones.clear();
 }
 
@@ -527,7 +484,6 @@ int Laser::getDacConnectedState() {
 
 void Laser::update() {
     
-    // bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
     
     // if any of the source rectangles have changed then update all the warps
@@ -566,84 +522,7 @@ void Laser::update() {
 void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, ZoneId* zoneId, float masterIntensity ){
     // TODO FIX THIS
     clearPoints();
-    //    
-    //    OutputZone* laserZone = getLaserZoneForZoneIndex(targetZoneIndex);
-    //    if(laserZone==nullptr) {
-    //        ofLogError("Laser::sendRawPoints(...), zone "+ ofToString(targetZoneIndex+1) + " not added to laser ");
-    //        return;
-    //        
-    //    }
-    //    ofRectangle maskRectangle = laserZone->getSourceRect();
-    //
-    //    bool offScreen = true;
-    //    
-    //    vector<Point>segmentpoints;
-    //    
-    //    //iterate through the points
-    //    for(size_t k = 0; k<points.size(); k++) {
-    //        
-    //        Point p = points[k];
-    //        
-    //        // are we outside the mask? NB can't use inside because I want points on the edge
-    //        //
-    //        
-    //        if(p.x<maskRectangle.getLeft() ||
-    //           p.x>maskRectangle.getRight() ||
-    //           p.y<maskRectangle.getTop() ||
-    //           p.y>maskRectangle.getBottom())  {
-    //            
-    //            if(!offScreen) {
-    //                offScreen = true;
-    //                // if we already have points then add an inbetween point
-    //                if(k>0) {
-    //                    Point lastpoint = p;
-    //                    
-    //                    // TODO better point on edge rather than just clamp
-    //                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-    //                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-    //                    segmentpoints.push_back(lastpoint);
-    //                    
-    //                    
-    //                }
-    //            }
-    //            
-    //        } else {
-    //            // we're on screen!
-    //            if(offScreen) {
-    //
-    //                offScreen = false;
-    //                if(k>0) {
-    //                    Point lastpoint = points[k-1];
-    //                    
-    //                    // TODO better point on edge rather than just clamp
-    //                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-    //                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-    //                    
-    //                    segmentpoints.push_back(lastpoint);
-    //                }
-    //            }
-    //            segmentpoints.push_back(p);
-    //        }
-    //        
-    //        // create a point object for it
-    //        
-    //    } // end shapepoints
-    //    // add the segment points to the points for the zone
-    //
-    //
-    //    
-    //    // go through all the points and warp them into output space
-    //
-    //    for(size_t k= 0; k<segmentpoints.size(); k++) {
-    //        addPoint(laserZone->getWarpedPoint(segmentpoints[k]));
-    //    }
-    //    
-    //    
-    //    
-    //    processPoints(masterIntensity, false);
-    //    dac->sendPoints(laserPoints);
-    //    
-    
+
 }
 
 
@@ -1198,20 +1077,6 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
             
             
         }
-        // NOTE - DISABLED - lasers rarely going in exactly the same place in reverse so we're getting a double line
-        // if we have a really fast frame, let's duplicate it and reverse it
-        // (this helps for things like a single line where we maybe don't want to
-        // jump back to the beginning if we can draw the line again reversed)
-//        if (sortShapes && (((float)laserPoints.size() / (float)pps < 0.01))) {
-//            //if(sortShapes && ((pps/ laserPoints.size()) >100)) {
-//            int numpoints = laserPoints.size();
-//            for(int i = numpoints-1; i>=0; i--) {
-//                addPoint(laserPoints[i]);
-//                
-//            }
-//            currentPosition = laserPoints.back();
-//        }
-        
         addPointsForMoveTo(currentPosition, laserHomePosition);
         
     }
@@ -1497,7 +1362,7 @@ void Laser ::getAllShapePoints(
             for(int k= 0; k<segmentpoints.size(); k++) {
                 
                 // Check against the mask image
-                if(pixels!=NULL) {
+                if(pixels!=nullptr) {
                     Point& p = segmentpoints[k];
                     ofFloatColor c = pixels->getColor(p.x, p.y);
                     float brightness = c.getBrightness();
@@ -1522,11 +1387,6 @@ void Laser ::getAllShapePoints(
 
         std::move(zonePointsForShapes.begin(), zonePointsForShapes.end(), std::back_inserter(allzoneshapepoints));
 
-        // delete all the test pattern shapes
-//        for(size_t j = 0; j<testPatternShapes.size(); j++) {
-//            delete testPatternShapes[j];
-//        }
-        
         testPatternShapes.clear();
         
     } // end zones
@@ -1951,9 +1811,6 @@ vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputZones() {
     
 }
 
-vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputAltZones() {
-    return {};
-}
 
 
 float Laser :: getSpeedMultiplier() {

@@ -43,17 +43,7 @@ namespace ofxLaser {
         
         virtual bool clipNearPlane(float nearPlaneZ) override;
         
-       //ofFloatColor& getColourAt(int index);
-
-        //ofPolyline* polylinePointer = nullptr;
-
 		protected :
-        
-//      void initPoly(const ofPolyline& poly);
-//      void initPoly(const vector<glm::vec3> verticesToCopy);
-        
-//		const RenderProfile* cachedProfile;
-//		std::vector<ofxLaser::Point> cachedPoints;
 
 		
         

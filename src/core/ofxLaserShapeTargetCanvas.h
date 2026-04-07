@@ -108,7 +108,6 @@ class GuideImage {
     // do i need to destroy it? I think ofImage should destroy itself...
     ofImage image;
     string filename;
-    // For now, fuck it let's just use a rectangle
     ofRectangle rect;
 
     ofColor colour;
@@ -160,6 +159,8 @@ class ShapeTargetCanvas : public ShapeTarget, public ZoneIdContainer {
     void markSpatialIndexDirty();
     void rebuildSpatialIndexIfNeeded();
     void gatherCandidateShapeIndices(const ofRectangle& rect, vector<int>& outIndices);
+    int getCellX(float x) const;
+    int getCellY(float y) const;
 
     // Spatial index configuration.
     static constexpr int kSpatialGridResolution = 12;

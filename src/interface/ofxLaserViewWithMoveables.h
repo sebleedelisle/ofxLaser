@@ -41,7 +41,6 @@ class ViewWithMoveables : public ScrollableView  {
     // maybe a reference?
     virtual std::shared_ptr<MoveablePoly> getUiElementByUid(string _uid);
     
-   // vector<MoveablePoly*> uiElements;
     // This is used for the visual order of the elements.
     vector<std::shared_ptr<MoveablePoly>> uiElementsSorted;
     

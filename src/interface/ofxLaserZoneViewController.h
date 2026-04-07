@@ -1,5 +1,5 @@
 //
-//  LaserZoneView.h
+//  ofxLaserZoneViewController.h
 //
 //
 //  Created by Seb Lee-Delisle on 13/01/2023.
@@ -38,10 +38,9 @@
 #include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserBaseView.h"
 #include "ofxLaserBaseController.h"
-#include "ofxLaserZoneUiQuad.h"
-#include "ofxLaserZoneUiQuadComplex.h"
-#include "ofxLaserZoneUiLine.h"
-#include "ofxLaserMaskUiQuad.h"
+#include "ofxLaserZoneUIQuad.h"
+#include "ofxLaserZoneUIQuadComplex.h"
+#include "ofxLaserMaskUIQuad.h"
 namespace ofxLaser {
 class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, public LaserBaseController {
     
@@ -54,12 +53,12 @@ class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, 
     virtual void drawMoveables() override;
     virtual bool mousePressed(ofMouseEventArgs &e) override;
     
-    std::shared_ptr<ZoneUiBase> getZoneInterfaceForOutputZone(std::shared_ptr<OutputZone>& outputZone);
-    std::shared_ptr<OutputZone> getOutputZoneForZoneUI(std::shared_ptr<ZoneUiBase>& zoneUi);
-    std::shared_ptr<ZoneUiBase> getSelectedZoneUi();
+    std::shared_ptr<ZoneUIBase> getZoneInterfaceForOutputZone(std::shared_ptr<OutputZone>& outputZone);
+    std::shared_ptr<OutputZone> getOutputZoneForZoneUI(std::shared_ptr<ZoneUIBase>& zoneUi);
+    std::shared_ptr<ZoneUIBase> getSelectedZoneUi();
     std::shared_ptr<OutputZone> getSelectedOutputZone();
     
-    bool createZoneUiForOutputZone(std::shared_ptr<OutputZone>& outputZone);
+    bool createZoneUIForOutputZone(std::shared_ptr<OutputZone>& outputZone);
     void deselectAllButThis(std::shared_ptr<MoveablePoly>& uielement) override;
     void deselectAll() override;
     bool update() override;
@@ -89,12 +88,11 @@ class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, 
     
     std::shared_ptr<Laser> laser;
     
-    // i think multiple types are built in now, right? TODO refactor
-    vector<std::shared_ptr<ZoneUiBase>> zoneUis;
-    vector<std::shared_ptr<ZoneUiBase>> zoneUisSorted;
+    vector<std::shared_ptr<ZoneUIBase>> zoneUis;
+    vector<std::shared_ptr<ZoneUIBase>> zoneUisSorted;
     
-    vector<std::shared_ptr<MaskUiQuad>> maskUis;
-    vector<std::shared_ptr<MaskUiQuad>> maskUisSorted;
+    vector<std::shared_ptr<MaskUIQuad>> maskUis;
+    vector<std::shared_ptr<MaskUIQuad>> maskUisSorted;
     
     static int objectCount; 
  

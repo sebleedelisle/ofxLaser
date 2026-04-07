@@ -32,6 +32,14 @@ bool ShapeTargetCanvas::addShape(std::shared_ptr<Shape> shapetoadd, bool useClip
     return added;
 }
 
+int ShapeTargetCanvas::getCellX(float x) const {
+    return ofClamp(static_cast<int>((x - spatialIndexedBounds.getLeft()) / spatialCellWidth), 0, kSpatialGridResolution - 1);
+}
+
+int ShapeTargetCanvas::getCellY(float y) const {
+    return ofClamp(static_cast<int>((y - spatialIndexedBounds.getTop()) / spatialCellHeight), 0, kSpatialGridResolution - 1);
+}
+
 void ShapeTargetCanvas::rebuildSpatialIndexIfNeeded() {
     const ofRectangle currentBounds = getBounds();
     if((!spatialIndexDirty) &&
@@ -83,13 +91,6 @@ void ShapeTargetCanvas::rebuildSpatialIndexIfNeeded() {
         spatialIndexedShapes.push_back(shape);
         spatialIndexedShapeBounds.push_back(shapeBounds);
 
-        auto getCellX = [&](float x) -> int {
-            return ofClamp(static_cast<int>((x - spatialIndexedBounds.getLeft()) / spatialCellWidth), 0, kSpatialGridResolution - 1);
-        };
-        auto getCellY = [&](float y) -> int {
-            return ofClamp(static_cast<int>((y - spatialIndexedBounds.getTop()) / spatialCellHeight), 0, kSpatialGridResolution - 1);
-        };
-
         const int minCellX = getCellX(shapeBounds.getLeft());
         const int maxCellX = getCellX(shapeBounds.getRight());
         const int minCellY = getCellY(shapeBounds.getTop());
@@ -110,13 +111,6 @@ void ShapeTargetCanvas::gatherCandidateShapeIndices(const ofRectangle& rect, vec
     if(spatialIndexedShapes.empty()) {
         return;
     }
-
-    auto getCellX = [&](float x) -> int {
-        return ofClamp(static_cast<int>((x - spatialIndexedBounds.getLeft()) / spatialCellWidth), 0, kSpatialGridResolution - 1);
-    };
-    auto getCellY = [&](float y) -> int {
-        return ofClamp(static_cast<int>((y - spatialIndexedBounds.getTop()) / spatialCellHeight), 0, kSpatialGridResolution - 1);
-    };
 
     const int minCellX = getCellX(rect.getLeft());
     const int maxCellX = getCellX(rect.getRight());
@@ -237,16 +231,6 @@ std::shared_ptr<GuideImage> ShapeTargetCanvas :: getGuideImageForUid(string& uid
 
 bool ShapeTargetCanvas :: deleteGuideImage(std::shared_ptr<GuideImage>& guideImage){
     return SebUtils::removeElementFromVector(guideImages, guideImage);
-//    for(int i = 0; i<guideImages.size(); i++) {
-//        if(&guideImages.at(i) == guideImage) {
-//            auto it = guideImages.begin()+i;
-//            guideImages.erase(it);
-//            return true;
-//        }
-//        
-//        
-//    }
-//    return false;
 }
 
 

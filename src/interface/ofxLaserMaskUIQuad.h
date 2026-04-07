@@ -1,5 +1,5 @@
 //
-//  ofxLaserMaskUiQuad.h
+//  ofxLaserMaskUIQuad.h
 //
 //
 //  Created by Seb Lee-Delisle on 07/02/2023.
@@ -13,22 +13,18 @@
 
 namespace ofxLaser {
 
-class MaskUiQuad : public MoveablePoly {
+class MaskUIQuad : public MoveablePoly {
     
     public :
     
-    MaskUiQuad() {
+    MaskUIQuad() {
         setHue(0);
         setBrightness(180);
         
     }
     
     void updateDataFromUI(std::shared_ptr<QuadMask>& mask) {
-        //bool changed = false;
-        //if(maskLevel!=mask->maskLevel){
-            mask->maskLevel = maskLevel;
-        //    changed = true;
-        //}
+        mask->maskLevel = maskLevel;
         mask->setFromPoints(getPoints());
         
         

@@ -89,10 +89,10 @@ void addParameterToGuiGroup(ofxGuiGroup& guiGroup, ofAbstractParameter& paramete
 
 } // namespace
 
-Manager * Manager :: laserManager = NULL;
+Manager * Manager :: laserManager = nullptr;
 
 Manager * Manager::instance() {
-    if(laserManager == NULL) {
+    if(laserManager == nullptr) {
         laserManager = new Manager();
     }
     return laserManager;
@@ -102,7 +102,7 @@ Manager :: Manager(bool hidecanvas) {
     canvasViewController = std::make_shared<CanvasViewController>();
     updateDisplayRectangle();
     
-    if(laserManager == NULL) {
+    if(laserManager == nullptr) {
         laserManager = this;
     } else {
         ofLog(OF_LOG_ERROR, "Multiple ofxLaser::Manager instances created");
@@ -302,7 +302,7 @@ void Manager :: initAndLoadSettings() {
 // This suggests that laser.save is called often. Research!
 // Laser.saveSettings is called :
 //      - when a zone is added
-//      - when a zone/alt zone is removed
+//      - when a zone is removed
 //      - on updateZones, if a zone is in the changed list.
 //          - *** WHEN is this called?
 //          - updateZones is called by the laserManager when a beam zone or canvas
@@ -727,7 +727,6 @@ void Manager::setupOfxGuiPanels() {
     selectedZoneMuteToggle.set("Muted", false);
     selectedZoneLockToggle.set("Locked", false);
     selectedZoneQuadButton.setup("Quad");
-    selectedZoneLineButton.setup("Line / Curve");
     selectedZoneSegmentedButton.setup("Segmented");
     selectedZoneResetButton.setup("Reset To Default");
     selectedZoneDeleteButton.setup("Delete Zone");
@@ -763,7 +762,6 @@ void Manager::setupOfxGuiPanels() {
     selectedZoneMuteToggle.addListener(this, &Manager::onSelectedZoneMuteChanged);
     selectedZoneLockToggle.addListener(this, &Manager::onSelectedZoneLockChanged);
     selectedZoneQuadButton.addListener(this, &Manager::onSelectedZoneQuadPressed);
-    selectedZoneLineButton.addListener(this, &Manager::onSelectedZoneLinePressed);
     selectedZoneSegmentedButton.addListener(this, &Manager::onSelectedZoneSegmentedPressed);
     selectedZoneResetButton.addListener(this, &Manager::onSelectedZoneResetPressed);
     selectedZoneDeleteButton.addListener(this, &Manager::onSelectedZoneDeletePressed);
@@ -941,7 +939,6 @@ void Manager::refreshSelectedZonePanel() {
     selectedZonePanel.add(selectedZoneMuteToggle);
     selectedZonePanel.add(selectedZoneLockToggle);
     selectedZonePanel.add(&selectedZoneQuadButton);
-    selectedZonePanel.add(&selectedZoneLineButton);
     selectedZonePanel.add(&selectedZoneSegmentedButton);
     selectedZonePanel.add(&selectedZoneResetButton);
 
@@ -949,14 +946,6 @@ void Manager::refreshSelectedZonePanel() {
     if (auto* zoneTransformQuad = dynamic_cast<ZoneTransformQuadData*>(zoneTransform)) {
         selectedZonePanel.add(&selectedZoneRemoveDistortionButton);
         addParameterToGuiGroup(selectedZonePanel, zoneTransformQuad->useHomography);
-    } else if (auto* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(zoneTransform)) {
-        addParameterToGuiGroup(selectedZonePanel, zoneTransformLine->zoneWidth);
-        selectedZoneManualBezier.setWithoutEventNotifications(!zoneTransformLine->autoSmooth);
-        selectedZonePanel.add(selectedZoneManualBezier);
-        if (zoneTransformLine->autoSmooth) {
-            selectedZoneSmoothLevel.setWithoutEventNotifications(zoneTransformLine->smoothLevel);
-            selectedZonePanel.add(selectedZoneSmoothLevel);
-        }
     } else if (auto* zoneTransformQuadComplex = dynamic_cast<ZoneTransformQuadComplexData*>(zoneTransform)) {
         selectedZonePanel.add(&selectedZoneSubdivisionDownButton);
         selectedZonePanel.add(&selectedZoneSubdivisionUpButton);
@@ -1269,7 +1258,7 @@ void Manager::onSelectedZoneLockChanged(bool& value) {
         value});
 
     if (laserView) {
-        std::shared_ptr<ZoneUiBase> zoneUi = laserView->getSelectedZoneUi();
+        std::shared_ptr<ZoneUIBase> zoneUi = laserView->getSelectedZoneUi();
         if (zoneUi && value) {
             zoneUi->setSelected(false);
             guiPanelSelectedZoneUid = "__refresh__";
@@ -1282,12 +1271,6 @@ void Manager::onSelectedZoneQuadPressed() {
     std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
     if (!outputZone) return;
     sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), outputZone->getIsAlternate(), 0});
-}
-
-void Manager::onSelectedZoneLinePressed() {
-    std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
-    if (!outputZone) return;
-    sendLaserMessage(LaserMsg::ZoneTypeChanged{outputZone->getZoneId().getUid(), outputZone->getIsAlternate(), 1});
 }
 
 void Manager::onSelectedZoneSegmentedPressed() {
@@ -1341,23 +1324,9 @@ void Manager::onSelectedZoneSubdivisionUpPressed() {
 }
 
 void Manager::onSelectedZoneManualBezierChanged(bool& value) {
-    std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
-    if (!outputZone) return;
-    if (auto* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform())) {
-        zoneTransformLine->autoSmooth = !value;
-        zoneTransformLine->setDirty(true);
-        guiPanelSelectedZoneUid = "__refresh__";
-        guiPanelSelectedZoneType = -2;
-    }
 }
 
 void Manager::onSelectedZoneSmoothLevelChanged(float& value) {
-    std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
-    if (!outputZone) return;
-    if (auto* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(&outputZone->getZoneTransform())) {
-        zoneTransformLine->smoothLevel = value;
-        zoneTransformLine->setDirty(true);
-    }
 }
 
 void Manager::onOutputAddZonePressed() {

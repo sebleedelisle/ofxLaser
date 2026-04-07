@@ -1,5 +1,5 @@
 //
-//  constants.h
+//  ofxLaserConstants.h
 //  ofxLaser
 //
 //  Created by Seb Lee-Delisle on 20/04/2021.

@@ -10,7 +10,7 @@
 using namespace ofxLaser;
 
 
-bool ZoneUIBase::updateDataFromUi(std::shared_ptr<OutputZone>& outputZone) {
+bool ZoneUIBase::updateDataFromUI(std::shared_ptr<OutputZone>& outputZone) {
     bool changed = false;
     if(muted!=outputZone->muted) {
         outputZone->muted = muted ;
@@ -33,13 +33,6 @@ bool ZoneUIBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
     
     if(zoneId!= outputZone->getZoneId()) {
         zoneId= outputZone->getZoneId();
-        changed = true;
-    }
-    
-    if(inputZoneAlt) {
-        inputZoneAlt = false;
-        setHue(140);
-        updateHandleColours();
         changed = true;
     }
     
@@ -71,20 +64,21 @@ bool ZoneUIBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
 void ZoneUIBase :: updateLabel() {
     
     label = ofToString(zoneId.getLabel());
-    if(inputZoneAlt) {
-        label = label + " ALT";
-    }
-//    if(getDisabled()) {
-//        label = label + " (locked)";
-//    }
-//    if(muted) {
-//        label = label + " (muted)";
-//    }
-    
-    
+
 }
 
 
+
+bool ZoneUIBase :: setCorners(const vector<glm::vec2*>& newpoints) {
+    if(newpoints.size()<4) return false;
+    vector<glm::vec2> temppoints;
+    for(int i = 0; i<4; i++) {
+        int handleindex = i;
+        if(i>1) handleindex = 3 - (i%2); // convert to clockwise points
+        temppoints.push_back(*newpoints[handleindex]);
+    }
+    return setFromPoints(temppoints);
+}
 
 void ZoneUIBase :: drawLabel() {
     
@@ -103,11 +97,8 @@ void ZoneUIBase :: drawLabel() {
    
     
     string labeltemp = getLabel();
-    if(muted) labeltemp = labeltemp + (" (DISABLED)");
-    if(locked) labeltemp = labeltemp + (" (LOCKED)");
-//    ofDrawCircle(getCentre()- glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0), 5);
-//    ofTranslate(-ofGetMouseX()/scale, -ofGetMouseY()*scale);
-//    ofLogNotice() << ofGetMouseX() << " " << ofGetMouseY();
+    if(muted) labeltemp = labeltemp + " (DISABLED)";
+    if(locked) labeltemp = labeltemp + " (LOCKED)";
     ofDrawBitmapString(labeltemp, getCentre() - glm::vec3(4.0f*labeltemp.size()/scale,-4.0f/scale, 0));
     
     ofPopMatrix();

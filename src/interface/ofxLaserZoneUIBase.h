@@ -10,10 +10,7 @@
 
 #include "ofMain.h"
 #include "ofxLaserMoveablePoly.h"
-//#include "ofxLaserZoneTransformBase.h"
 #include "ofxLaserOutputZone.h"
-
-class ZoneTransformBase;
 
 namespace ofxLaser {
 
@@ -30,10 +27,10 @@ class ZoneUIBase : public MoveablePoly {
 
     virtual bool updateDataFromUI(std::shared_ptr<OutputZone>& outputZone);
     virtual bool updateFromData(std::shared_ptr<OutputZone>& outputZone);
-    void updateLabel(); 
+    void updateLabel();
+    bool setCorners(const vector<glm::vec2*>& points);
 
     ZoneId zoneId;
-    bool inputZoneAlt = false;
     bool muted = false;
     bool locked = false;
 

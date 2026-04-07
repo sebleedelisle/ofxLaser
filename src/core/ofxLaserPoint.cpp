@@ -14,8 +14,7 @@ ofxLaser :: Point :: Point() {
     x = y = z = 0;
     r = g = b = 0;
     useCalibration = true;
-    //intensity = 1;
-    
+
 }
 ofxLaser :: Point :: Point(ofPoint p, ofColor c, bool usecalibration ) {
     

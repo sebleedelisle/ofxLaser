@@ -58,12 +58,6 @@ void Line::addPreviewToMesh(ofMesh& mesh){
     mesh.addVertex(getEndPos());
 }
 
-//bool Line::intersectsRect(ofRectangle & rect) {
-//    // TODO fix intersection - openFrameworks line intersection has a bug
-//    return rect.intersects(getStartPos(), getEndPos());
-//    
-//}
-
 
 bool Line :: clipNearPlane(float nearPlaneZ) {
     if(isEmpty()) return false; 

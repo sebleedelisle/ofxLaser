@@ -87,7 +87,6 @@ class ScrollableView : public SelectableKeyReceiver {
     glm::vec2 dragOffset;
     glm::vec2 dragStartPosition; 
     
-    //float zoomSpeed = 0.02f;
     bool zoomEnabled = true;
     
    // private :

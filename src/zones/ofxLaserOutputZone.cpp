@@ -17,7 +17,6 @@ OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
 
 //    sourceRect =sourcerect;
     zoneTransformQuad.init();
-    zoneTransformLine.init();
     zoneTransformQuadComplex.init();
     zoneId = zoneid;
     
@@ -109,7 +108,6 @@ bool OutputZone ::setSourceRect(const ofRectangle & rect) {
         //sourceRect = rect;
         zoneTransformQuad.updateSrc(rect);
         zoneTransformQuadComplex.updateSrc(rect);
-        zoneTransformLine.updateSrc(rect);
         return true;
     } else {
         return false;
@@ -163,9 +161,6 @@ void OutputZone :: serialize(ofJson& json) const{
     zoneTransformQuad.serialize(zoneTransformQuadJson);
     json["zonetransformquad"] = zoneTransformQuadJson;
 
-    ofJson zoneTransformLineJson;
-    zoneTransformLine.serialize(zoneTransformLineJson);
-    json["zonetransformline"] = zoneTransformLineJson;
     zoneId.serialize(json);
     
     ofJson zoneTransformQuadComplexJson;
@@ -197,11 +192,6 @@ bool OutputZone :: deserialize(ofJson& json){
         ofJson zoneTransformQuadComplexJson = json["zonetransformquadcomplex"];
         zoneTransformQuadComplex.deserialize(zoneTransformQuadComplexJson);
     }
-    if(json.contains("zonetransformline")) {
-        ofJson zoneTransformLineJson = json["zonetransformline"];
-        zoneTransformLine.deserialize(zoneTransformLineJson);
-    }
-    
     // deprecated, can delete eventually
 //    if(json.contains("zonetransform")) {
 //        ofJson zoneTransformJson = json["zonetransform"];
@@ -213,9 +203,7 @@ bool OutputZone :: deserialize(ofJson& json){
 }
 
 ZoneTransformBase& OutputZone :: getZoneTransform(){
-    if(transformType==1) {
-        return zoneTransformLine;
-    } else if(transformType==2) {
+    if(transformType==2) {
         return zoneTransformQuadComplex;
     } else {
         return zoneTransformQuad;
@@ -225,7 +213,6 @@ ZoneTransformBase& OutputZone :: getZoneTransform(){
 
 void OutputZone :: resetAllTransforms() {
 
-    zoneTransformLine.setDefault();
     zoneTransformQuadComplex.setDefault();
     zoneTransformQuad.setDefault();
 }

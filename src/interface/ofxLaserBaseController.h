@@ -57,9 +57,6 @@ public:
     void requestSetGlobalBrightness(float value) {
         sendLaserMessage(LaserMsg::SetGlobalBrightness{value});
     }
-    void requestToggleAltZones() {
-        sendLaserMessage(LaserMsg::ToggleAltZones{});
-    }
     void requestSetTestPattern(int pattern, bool active) {
         sendLaserMessage(LaserMsg::SetTestPattern{pattern, active});
     }
@@ -81,11 +78,11 @@ public:
     void requestSetGuiVisible(bool visible) {
         sendLaserMessage(LaserMsg::SetGuiVisible{visible});
     }
-    void requestZoneMuteChanged(const std::string& zoneUid, bool isAlt, bool muted) {
-        sendLaserMessage(LaserMsg::ZoneMuteChanged{zoneUid, isAlt, muted});
+    void requestZoneMuteChanged(const std::string& zoneUid, bool muted) {
+        sendLaserMessage(LaserMsg::ZoneMuteChanged{zoneUid, muted});
     }
-    void requestZoneLockChanged(const std::string& zoneUid, bool isAlt, bool locked) {
-        sendLaserMessage(LaserMsg::ZoneLockChanged{zoneUid, isAlt, locked});
+    void requestZoneLockChanged(const std::string& zoneUid, bool locked) {
+        sendLaserMessage(LaserMsg::ZoneLockChanged{zoneUid, locked});
     }
 
 };

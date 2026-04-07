@@ -49,27 +49,23 @@ namespace LaserMsg {
     // --- Global settings ---
     struct SetGlobalBrightness  { float value; };
     struct SetTestPattern       { int pattern; bool active; };
-    struct SetUseAltZones       { bool state; };
-    struct ToggleAltZones       {};
     struct SetGlobalLatency     { int ms; };
 
     // --- Arm / disarm ---
     struct ArmAllLasers         {};
     struct DisarmAllLasers      {};
 
-    // --- Zone transform changes (replaces updateDataFromUi) ---
+    // --- Zone transform changes ---
     struct ZoneTransformChanged {
         std::string laserUid;       // which laser owns this zone
         std::string zoneUid;        // which zone was edited
-        bool isAlt;                 // is this an alt zone?
         ofJson transformData;       // serialised transform state
     };
-    struct ZoneMuteChanged      { std::string zoneUid; bool isAlt; bool muted; };
-    struct ZoneLockChanged      { std::string zoneUid; bool isAlt; bool locked; };
-    struct ZoneTypeChanged      { std::string zoneUid; bool isAlt; int transformType; };
-    struct ZoneResetTransform   { std::string zoneUid; bool isAlt; };
-    struct AddAltZone           { std::string zoneUid; int laserIndex; };
-    struct DeleteOutputZone     { std::string zoneUid; bool isAlt; };
+    struct ZoneMuteChanged      { std::string zoneUid; bool muted; };
+    struct ZoneLockChanged      { std::string zoneUid; bool locked; };
+    struct ZoneTypeChanged      { std::string zoneUid; int transformType; };
+    struct ZoneResetTransform   { std::string zoneUid; };
+    struct DeleteOutputZone     { std::string zoneUid; };
 
     // --- Mask management ---
     struct MaskChanged          { int laserIndex; int maskIndex; ofJson maskData; };
@@ -117,8 +113,6 @@ using LaserAppMsg = std::variant<
 
     LaserMsg::SetGlobalBrightness,
     LaserMsg::SetTestPattern,
-    LaserMsg::SetUseAltZones,
-    LaserMsg::ToggleAltZones,
     LaserMsg::SetGlobalLatency,
 
     LaserMsg::ArmAllLasers,
@@ -129,7 +123,6 @@ using LaserAppMsg = std::variant<
     LaserMsg::ZoneLockChanged,
     LaserMsg::ZoneTypeChanged,
     LaserMsg::ZoneResetTransform,
-    LaserMsg::AddAltZone,
     LaserMsg::DeleteOutputZone,
 
     LaserMsg::MaskChanged,

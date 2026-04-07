@@ -66,10 +66,7 @@ void DragHandle::draw(bool isOver , float scale ) {
     // not sure why ofFloatColor is needed here but otherwise
     // it renders unpredictably on MacOS!
     ofFloatColor floatcolor = ofFloatColor(isOver?overCol:col);
-    //ofColor colour =isOver?overCol:col;
-    
     ofSetColor(floatcolor);
-   //ofLogNotice() << floatcolor << " " << colour;
     
     if(isCircular) {
         ofDrawCircle(*this,size/2/scale);

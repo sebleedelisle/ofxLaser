@@ -36,17 +36,17 @@ string chooseDisplayLabel(const DacData& dacdata,
 
 } // namespace
 
-DacAssigner * DacAssigner :: dacAssigner = NULL;
+DacAssigner * DacAssigner :: dacAssigner = nullptr;
 
 DacAssigner * DacAssigner::instance() {
-	if(dacAssigner == NULL) {
+	if(dacAssigner == nullptr) {
 		dacAssigner = new DacAssigner();
 	}
 	return dacAssigner;
 }
 void DacAssigner::destroy() {
     delete dacAssigner;
-    dacAssigner = NULL;
+    dacAssigner = nullptr;
     
 }
 
@@ -88,7 +88,7 @@ void DacAssigner::configureManagers() {
 
 
 DacAssigner :: DacAssigner() {
-    if(dacAssigner == NULL) {
+    if(dacAssigner == nullptr) {
 		dacAssigner = this;
 	} else {
 		ofLog(OF_LOG_ERROR, "Multiple ofxLaser::DacManager instances created");
