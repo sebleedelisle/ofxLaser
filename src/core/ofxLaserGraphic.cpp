@@ -6,6 +6,9 @@
 //
 
 #include "ofxLaserGraphic.h"
+
+#include <cmath>
+
 using namespace ofxLaser;
 
 // static class members
@@ -337,7 +340,7 @@ void Graphic::breakPolyline(ofPolyline* newPoly) {
 		// and subtract it from the last point
 		vertices.back()-=v; // (vertices.back()+v);
 		
-		if(isnan(v.x)){
+		if(std::isnan(v.x)){
 			ofLog(OF_LOG_NOTICE,ofToString(v));
 		}
 	}
