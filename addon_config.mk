@@ -81,11 +81,11 @@ common:
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/media/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/examples/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/dotnet/%
-	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
-	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/shared_library/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/shared_library/%
 
 
 	linux64:
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		# binary libraries, these will be usually parsed from the file system but some 
 		# libraries need to passed to the linker in a specific order/
 		# 
@@ -99,10 +99,12 @@ common:
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
 	linux:
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
 	osx:
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		ADDON_FRAMEWORKS += AudioToolbox CoreAudio CoreFoundation
 
 	msys2:
@@ -110,6 +112,7 @@ common:
 		# treats as hard errors unless permissive mode is enabled.
 		ADDON_CFLAGS += -fpermissive
 		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
+		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-posix.cpp
 
 
 	#win_cb:
