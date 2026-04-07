@@ -26,7 +26,7 @@ common:
 	# or use += in several lines
 	# NOTE - we only include ofxKinect as it's the easiest way to ensure libusb
 	# is included cross platform
-	ADDON_DEPENDENCIES = ofxGui
+	ADDON_DEPENDENCIES = ofxGui ofxSvg
 	
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
@@ -67,6 +67,7 @@ common:
 		ADDON_SOURCES_EXCLUDE += libs/libera-core/tests/%
 		ADDON_SOURCES_EXCLUDE += libs/libera-core/examples/%
 		ADDON_SOURCES_EXCLUDE += libs/libera-core/build/%
+		ADDON_SOURCES_EXCLUDE += libs/ofxSvgExtra/src/%
 
 		# Helios is enabled, but only its host-side SDK is relevant for desktop builds.
 	# Exclude firmware, hardware assets and utility/tool projects so the parser
@@ -103,23 +104,12 @@ common:
 
 	osx:
 		ADDON_FRAMEWORKS += AudioToolbox CoreAudio CoreFoundation
-		ADDON_LIBS += libs/ofxSvgExtra/libs/svgtiny/lib/osx/svgtiny.a
-		ADDON_LIBS += libs/ofxSvgExtra/libs/libxml2/lib/osx/xml2.a
 
 	msys2:
 		# Grix's Helios SDK still uses a few C-style constructs that MSYS2 g++
 		# treats as hard errors unless permissive mode is enabled.
 		ADDON_CFLAGS += -fpermissive
-		ADDON_CFLAGS += -DOFXLASER_DISABLE_SVG_SUPPORT
-		ADDON_PKG_CONFIG_LIBRARIES += libxml-2.0
 		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
-		# GNU ld cannot consume the vendored svgtiny Windows library, so the
-		# smoke build falls back to a local noop implementation instead.
-		ADDON_SOURCES_EXCLUDE += libs/ofxSvgExtra/src/%
-		# Grix's Helios IDN SDK defines the same log helper in multiple
-		# translation units on Windows. Keep the vendor sources untouched and
-		# let the linker accept the duplicate helper symbol.
-		ADDON_LDFLAGS += -Wl,--allow-multiple-definition
 
 
 	#win_cb:

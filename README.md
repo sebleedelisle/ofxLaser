@@ -199,12 +199,12 @@ Dependencies
 ------------
 addons : 
 ofxGui (comes with oF)  
+ofxSvg (comes with oF)
 
 Open source libraries (included in source) :
 libera-core (git submodule)
 clipper
 libusb
-ofxSvgExtra
 
 
 Example build check
