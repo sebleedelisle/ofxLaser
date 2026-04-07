@@ -116,9 +116,6 @@ void Laser :: init() {
     params.add(dacLabel.set("dacId", ""));
     //params.add(dacAlias.set("dacAlias", ""));
     
-    params.add(useAlternate.set("Use alternate zones", false));
-    params.add(muteOnAlternate.set("Mute instead of alternates", false));
-    
     hideContentDuringTestPattern.set("Test pattern only", true);
     ofParameterGroup laserparams;
     laserparams.setName("Laser settings");
@@ -224,23 +221,20 @@ void Laser:: colourShiftChanged(float& e){
 
 
 void Laser::addZone(ZoneId zoneId, bool isAlternate) {
-    
-    if(hasZone(zoneId) && !isAlternate) {
+    if(isAlternate) {
+        ofLogWarning("Laser::addZone") << "alternate zones are no longer supported";
+        return;
+    }
+
+    if(hasZone(zoneId)) {
         ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
         return;
-    }
-    if(hasAltZone(zoneId) && isAlternate) {
-        ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains alt zone");
-        return;
-    }
-    if((!hasZone(zoneId)) && isAlternate) {
-        ofLog(OF_LOG_ERROR, "Laser :: addZone(...) can only add alt if laser has zone already");
     }
     
     std::shared_ptr<OutputZone> outputzone = std::make_shared<OutputZone>(zoneId);
         
     ofJson laserZoneJson;
-    string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + (isAlternate?"alt.json" : ".json");
+    string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + ".json";
     // not sure if we still need this - does it get called by loadSettings ? I don't think it does.
     // Comment out for now
 //    if(ofFile(filename).exists()) {
@@ -253,13 +247,8 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
         // initialise zoneTransform
         //outputzone->init(sourceRect);
         //outputzone->zoneMask = inputzone->rect;
-        // if it's a canvas zone then set perspective to true by default
-        if(zoneId.getType() == ZoneId :: CANVAS) {
-            outputzone->zoneTransformQuad.useHomography = true;
-        }
+        outputzone->zoneTransformQuad.useHomography = true;
     }
-    outputzone->setIsAlternate(isAlternate);
-
     outputZones.push_back(outputzone);
     
     // sort the zones... oh a fancy lambda check me out
@@ -277,34 +266,21 @@ void Laser::addZone(ZoneId zoneId, bool isAlternate) {
 //}
 
 void Laser::addAltZone(ZoneId zoneId){
-    if(!hasAltZone(zoneId)) addZone(zoneId, true);
+    ofLogWarning("Laser::addAltZone") << "alternate zones are no longer supported";
 }
 
 bool Laser :: hasZone(ZoneId zoneId){
    
     for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-       
-        if((!laserZone->getIsAlternate()) && (zoneId == laserZone->getZoneId())) return true;
+        if(zoneId == laserZone->getZoneId()) return true;
     }
     return false;
 }
 
 
-bool Laser :: hasAltZone(ZoneId zoneId){
-    
-    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        if((laserZone->getIsAlternate()) && (zoneId == laserZone->getZoneId())) return true;
-    }
-    return false;
-}
+bool Laser :: hasAltZone(ZoneId zoneId){ return false; }
 
-bool Laser :: hasAnyAltZones() {
-    
-    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        if(laserZone->getIsAlternate()) return true;
-    }
-    return false;
-}
+bool Laser :: hasAnyAltZones() { return false; }
 
 //
 bool Laser :: removeZone(ZoneId zoneId){
@@ -319,19 +295,10 @@ bool Laser :: removeZone(std::shared_ptr<OutputZone>& outputZone){
     
     if(outputZone==nullptr) return false;
     ZoneId zoneId = outputZone->getZoneId();
-    bool removeAltZoneToo = !outputZone->getIsAlternate();
     bool changed = false;
 
     deleteSettingsFileForZone(outputZone);
     changed = SebUtils::removeElementFromVector(outputZones, outputZone) || changed;
-
-    if(removeAltZoneToo) {
-        std::shared_ptr<OutputZone> altZone = getLaserAltZoneForZoneId(zoneId);
-        if(altZone != nullptr) {
-            deleteSettingsFileForZone(altZone);
-            changed = SebUtils::removeElementFromVector(outputZones, altZone) || changed;
-        }
-    }
 
     if(changed) {
         saveSettings();
@@ -347,58 +314,21 @@ bool Laser :: removeZone(std::shared_ptr<OutputZone>& outputZone){
 //
 //}
 
-bool Laser :: removeAltZone(std::shared_ptr<OutputZone>& outputZone){
-    
-    if(outputZone==nullptr) return false;
-    
-    deleteSettingsFileForZone(outputZone);
-    
-    if(SebUtils::removeElementFromVector(outputZones, outputZone) ) {
-        saveSettings();
-        return true;
-    } else {
-        return false;
-    }
-//    vector<OutputZone*>::iterator it = std::find(outputZones.begin(), outputZones.end(), outputZone);
-//    if(it!=outputZones.end()) {
-//        outputZones.erase(it);
-//        delete outputZone;
-//        
-//        saveSettings();
-//        
-//        return true;
-//    } else {
-//        return false;
-//    }
-    
-}
+bool Laser :: removeAltZone(std::shared_ptr<OutputZone>& outputZone){ return false; }
 
-bool Laser :: removeAltZone(ZoneId zoneId){
-    
-    for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
-        if(outputZone->getIsAlternate() && outputZone->getZoneId()==zoneId) {
-            return removeAltZone(outputZone);
-        }
-        
-    }
-    return false;
-    
-}
+bool Laser :: removeAltZone(ZoneId zoneId){ return false; }
 
 
 
 std::shared_ptr<OutputZone> Laser::getLaserZoneForZoneId(ZoneId zoneId) {
     for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        if((!laserZone->getIsAlternate()) && (laserZone->getZoneId() == zoneId)) return laserZone;
+        if(laserZone->getZoneId() == zoneId) return laserZone;
     }
     return nullptr;
 }
 
 
 std::shared_ptr<OutputZone> Laser::getLaserAltZoneForZoneId(ZoneId zoneId){
-    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        if((laserZone->getIsAlternate()) && (laserZone->getZoneId() == zoneId)) return laserZone;
-    }
     return nullptr;
 }
 
@@ -431,11 +361,6 @@ vector<std::shared_ptr<OutputZone>> Laser::getActiveZones(){
     bool soloActive = areAnyZonesSoloed();
     vector<std::shared_ptr<OutputZone>> activeZones;
     for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
-        
-        if((!useAlternate) && laserZone->getIsAlternate()) continue;
-        if(useAlternate && (!laserZone->getIsAlternate())) continue;
-        
-        if(laserZone->getIsAlternate()) continue;
         if(soloActive && laserZone->soloed) {
             activeZones.push_back(laserZone);
         } else if(!laserZone->muted) {
@@ -1178,7 +1103,6 @@ void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity,
             for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
                 
                 
-                if(laserZone->getIsAlternate()) continue; // to ensure we don't get two sets of shapes
                 const ZoneContent* zoneContent = getZoneContent(laserZone->getZoneId());
                 if(zoneContent != nullptr) {
                     const vector<std::shared_ptr<Shape>>& zoneShapes = zoneContent->shapes;
@@ -1386,14 +1310,6 @@ void Laser ::getAllShapePoints(
     for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
         
         if(!isLaserZoneActive(outputZone)) continue;
-        
-        // if we're not using the alternate zones and this is an alternate zone then skip it
-        if((!useAlternate) && (outputZone->getIsAlternate())) continue;
-        
-        // if we are using alternate zones, this is not an alternate zone, and we have an alternate zone, skip it!
-        if((useAlternate) &&
-           ((muteOnAlternate) ||
-            ((!outputZone->getIsAlternate()) && (hasAltZone(outputZone->getZoneId()))))) continue;
         
         // Resolve zone content through a precomputed UID->ZoneContent table when available.
         // Fallback to the legacy linear lookup so call sites remain backwards-compatible.
@@ -1871,31 +1787,6 @@ bool Laser::loadSettings(){
             }
         }
         
-        ofJson altZoneNumJson = json["laseraltzones"];
-        
-        // if the json node isn't found then this should do nothing
-        for(auto jsonitem : altZoneNumJson) {
-            if(jsonitem.is_string() ) {
-                //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-                string zoneUid; // = (std::string)jsonitem;
-                jsonitem.get_to(zoneUid);
-                // if a zone exists with this index then add a LaserZone for it
-                
-                std::shared_ptr<OutputZone> laserZone = std::make_shared<OutputZone>(ZoneId());
-                laserZone->setIsAlternate(true);
-                string filename = "laser"+ ofToString(laserIndex) +"zone" + zoneUid + "alt.json";
-                outputZones.push_back(laserZone);
-                ofJson laserZoneJson = ofLoadJson(savePath + filename);
-                
-                //success &= laserZone->deserialize(laserZoneJson);
-                if(laserZone->deserialize(laserZoneJson)) {
-                    success&=true;
-                    laserZonesLastSavedMap[filename] = laserZoneJson.dump();
-                    
-                }
-            }
-        }
-        
         paused = false;
         
         ignoreParamChange = false;
@@ -1934,7 +1825,7 @@ bool Laser::saveSettings(){
 }
 
 string Laser :: getFilenameForZone(std::shared_ptr<OutputZone>& outputZone) {
-    return "laser"+ ofToString(laserIndex) +"zone" + ofToString(outputZone->getZoneId().getUid()) + (outputZone->getIsAlternate()?"alt.json" : ".json");
+    return "laser"+ ofToString(laserIndex) +"zone" + ofToString(outputZone->getZoneId().getUid()) + ".json";
 }
 
 void Laser :: deleteAllSettingsFiles() {
@@ -2015,9 +1906,7 @@ bool Laser :: deserialize(ofJson& json) {
             for(std::shared_ptr<OutputZone>& zone : outputZones) {
                 ofLogNotice("comparing zones ") << zone->getZoneId().getUid() << laserZone->getZoneId().getUid();
                 if(zone->getZoneId() == laserZone->getZoneId()) {
-                    if(zone->getIsAlternate() == laserZone->getIsAlternate()) {
-                        exists = true;
-                    }
+                    exists = true;
                 }
                 
             }
@@ -2052,7 +1941,7 @@ bool Laser :: getSaveStatus(){
 vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputZones() {
     vector<std::shared_ptr<OutputZone>> sortedzones;
     for(std::shared_ptr<OutputZone>& zone : outputZones) {
-        if(!zone->getIsAlternate()) sortedzones.push_back(zone);
+        sortedzones.push_back(zone);
     }
     sort(sortedzones.begin(), sortedzones.end(),
          [](const std::shared_ptr<OutputZone>& a, const std::shared_ptr<OutputZone>& b) -> bool {
@@ -2063,16 +1952,7 @@ vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputZones() {
 }
 
 vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputAltZones() {
-    vector<std::shared_ptr<OutputZone>> sortedzones;
-    for(std::shared_ptr<OutputZone>& zone : outputZones) {
-        if(zone->getIsAlternate()) sortedzones.push_back(zone);
-    }
-    sort(sortedzones.begin(), sortedzones.end(),
-         [](const std::shared_ptr<OutputZone>& a, const std::shared_ptr<OutputZone>& b) -> bool {
-        return a->getZoneId().getUid() < b->getZoneId().getUid();
-    });
-    return sortedzones;
-    
+    return {};
 }
 
 

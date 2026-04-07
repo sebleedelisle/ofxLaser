@@ -10,7 +10,6 @@
 #include "ofxLaserViewWithMoveables.h"
 #include "ofxLaserBaseView.h"
 #include "ofxLaserBaseController.h"
-#include "ofxLaserUI.h"
 #include "ofxLaserShapeTargetCanvas.h"
 #include "ofxLaserGuideImageUiQuad.h"
 #include "SebUtils.h"
@@ -32,7 +31,7 @@ class CanvasInputZoneQuad : public MoveablePoly  {
 class CanvasViewController : public ViewWithMoveables, public LaserBaseView, public LaserBaseController {
     
     public :
-    void drawImGui();
+    std::shared_ptr<MoveablePoly> getSelectedUiElement();
     bool updateZonesFromUI(std::shared_ptr<ShapeTargetCanvas> canvasTarget);
     void updateUIFromZones(std::shared_ptr<ShapeTargetCanvas> canvasTarget);
     

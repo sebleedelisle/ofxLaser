@@ -19,6 +19,15 @@ bool CanvasViewController :: update() {
     return wasUpdated || anyZonesChanged;
 }
 
+std::shared_ptr<MoveablePoly> CanvasViewController::getSelectedUiElement() {
+    for (std::shared_ptr<MoveablePoly>& uiElement : uiElementsSorted) {
+        if (uiElement && uiElement->getSelected()) {
+            return uiElement;
+        }
+    }
+    return nullptr;
+}
+
 
 bool CanvasViewController :: updateZonesFromUI(std::shared_ptr<ShapeTargetCanvas> canvasTarget){
     // TODO check if changed
@@ -183,76 +192,6 @@ void CanvasViewController :: updateUIFromZones( std::shared_ptr<ShapeTargetCanva
     
     
 }
-
-
-void CanvasViewController :: drawImGui() {
-    
-    if(!isVisible) return;
-    
-    vector<std::shared_ptr<MoveablePoly>> uiElementsToMoveBack;
-    
-    for(int i = 0; i<uiElementsSorted.size(); i++) {
-        ImGui::PushID(uiElementsSorted[i]->getLabel().c_str());
-        //ofLogNotice(uiElements[i]->getLabel()) << " " << i;
-        std::shared_ptr<MoveablePoly>& uiElement = uiElementsSorted[i];
-        
-        // NOTE!!! There is another part of this window that is rendered inside the
-        // Manager::drawLaserGui function.
-        
-        // OutputZone* outputZone = getOutputZoneForZoneUI(zoneUi, laser->outputZones);
-        string label ="CANVAS ZONE SETTINGS " + uiElement->getUid();
-        //if(ImGui::BeginPopup(label.c_str())) {
-        if(uiElement->getRightClickPressed()) {
-            ImGui::OpenPopup(label.c_str());
-            ofLogNotice("Opening pop up : ") << label;
-        }
-        if(ImGui::BeginPopup(label.c_str())) {
-           // ImGui::Text("CANVAS ZONE %s", label.c_str());
-
-            std::shared_ptr<GuideImageUiQuad> guideImageUiQuad = std::dynamic_pointer_cast<GuideImageUiQuad>(uiElement);
-            
-            if(guideImageUiQuad!=nullptr) {
-
-                ofFloatColor tmpRef = guideImageUiQuad->colour;
-                string label="Image tint colour";
-                if (ImGui::ColorEdit4(label.c_str(), &tmpRef.r, ImGuiColorEditFlags_DisplayHSV)){
-                    guideImageUiQuad->colour = tmpRef;
-                    zonesChangedFlag = true;
-                }
-            }
-            
-            if(UI::Button("Move to back")) {
-                uiElementsToMoveBack.push_back(uiElement);
-                ImGui::CloseCurrentPopup();
-            }
-           
-            if(uiElement->getDisabled()) UI::secondaryColourStart();
-
-            if(ImGui::Button(ICON_FK_LOCK)) {
-                uiElement->setDisabled(!uiElement->getDisabled());
-                zonesChangedFlag = true;
-                
-            }
-            UI::secondaryColourEnd();
-            
-            ImGui::EndPopup();
-        }
-        
-        ImGui::PopID();
-    }
-    
-    for(std::shared_ptr<MoveablePoly>& uiElement : uiElementsToMoveBack) {
-        vector<std::shared_ptr<MoveablePoly>>::iterator it = find(uiElementsSorted.begin(), uiElementsSorted.end(), uiElement);
-        if(it!=uiElementsSorted.end()) {
-            uiElementsSorted.erase(it);
-            uiElementsSorted.insert(uiElementsSorted.begin(), uiElement);
-            uiElement->setSelected(false);
-        }
-        
-    }
-  
-}
-
 
 
 void CanvasViewController :: drawMoveables() {

@@ -195,9 +195,6 @@ class Laser {
     ofParameter<bool>hideContentDuringTestPattern;
  
     //int numTestPatterns;
-    ofParameter<bool> useAlternate;
-    ofParameter<bool> muteOnAlternate;
-    
     ofParameter<bool> flipX;
     ofParameter<bool> flipY;
     ofParameter<int> mountOrientation;

@@ -10,44 +10,25 @@
 #include "ofMain.h"
 #include "ofxLaserConstants.h"
 #include "ofxLaserRenderProfile.h"
-#include "ofxLaserPresetBase.h"
 
 namespace ofxLaser {
-class ScannerSettings: public PresetBase {
-    
+class ScannerSettings {
+
     public :
-    
+
     ScannerSettings();
-    
-    static string getFolderPath(){
-        return "ofxLaser/scannerpresets";
-    };
-    static string getTypeName() {
-        return "Scanner";
-    }
-    static string getFileExtension() {
-        return "scan";
-    }
-    ScannerSettings& operator=( ScannerSettings& that);
-    bool operator == (ScannerSettings& that);
-    bool operator != (ScannerSettings& that);
-  
-    
+
     // scanner settings
+    ofParameterGroup params;
     ofParameterGroup renderParams;
     ofParameter<float> moveSpeed = 5;
     ofParameter<int> shapePreBlank = 0;
     ofParameter<int> shapePostBlank = 0;
     ofParameter<int> shapePreOn = 0;
     ofParameter<int> shapePostOn = 0;
-    
-    RenderProfile profileFast;
-    RenderProfile profileDefault;
-    RenderProfile profileDetail;
-    
-    map<string, RenderProfile&> renderProfiles;
+    map<string, RenderProfile> renderProfiles;
 
-    
+
 };
 
 }

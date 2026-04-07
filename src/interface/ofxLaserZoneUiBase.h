@@ -12,7 +12,6 @@
 #include "ofxLaserMoveablePoly.h"
 //#include "ofxLaserZoneTransformBase.h"
 #include "ofxLaserOutputZone.h"
-#include "ofxLaserUI.h"
 
 class ZoneTransformBase;
 

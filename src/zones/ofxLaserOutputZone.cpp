@@ -31,8 +31,6 @@ OutputZone :: OutputZone(ZoneId zoneid, ofRectangle sourcerect ) {
     enabled = true;
     
     ofAddListener(zoneParams.parameterChangedE(), this, &OutputZone::paramChanged);
-    isAlternate = false;
-    
 }
 
 OutputZone :: ~OutputZone() {
@@ -56,7 +54,7 @@ bool OutputZone :: update() {
 
 
 string OutputZone :: getLabel() {
-    return zoneId.getLabel() + (getIsAlternate()?" ALT":"");
+    return zoneId.getLabel();
 }
 
 
@@ -101,11 +99,9 @@ ofPoint OutputZone::getUnWarpedPoint(const ofPoint& p){
 }
 
 bool OutputZone::getIsAlternate() {
-    return isAlternate;
+    return false;
 }
 void OutputZone::setIsAlternate(bool v){
-    isAlternate = v;
-   
 }
 
 bool OutputZone ::setSourceRect(const ofRectangle & rect) {
@@ -163,9 +159,6 @@ void OutputZone :: serialize(ofJson& json) const{
     ofJson paramsJson;
     ofSerialize(paramsJson, zoneParams);
     json["zoneparams"] = paramsJson;
-    json["is_alternate"] = isAlternate;
-    
-    
     ofJson zoneTransformQuadJson;
     zoneTransformQuad.serialize(zoneTransformQuadJson);
     json["zonetransformquad"] = zoneTransformQuadJson;
@@ -194,12 +187,6 @@ bool OutputZone :: deserialize(ofJson& json){
         //ofJson& paramsObjectJson = *paramsJson.begin();
         
         ofDeserialize(fixedJson, zoneParams);
-    }
-    
-    if(json.contains("is_alternate")) {
-        isAlternate = json["is_alternate"].get<bool>();
-    } else {
-        isAlternate = false;
     }
     
     if(json.contains("zonetransformquad")) {

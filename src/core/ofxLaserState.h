@@ -27,7 +27,6 @@ class Laser;
 class ShapeTargetCanvas;
 class DacAssigner;
 class BitmapMaskManager;
-class BeamZoneContainer;
 
 struct LaserState {
 
@@ -35,7 +34,6 @@ struct LaserState {
     // Live references — always reflect the current state of ManagerBase
     // -------------------------------------------------------------------
     const std::vector<std::shared_ptr<Laser>>&  lasers;
-    const BeamZoneContainer&                     beamZones;
     const std::shared_ptr<ShapeTargetCanvas>&    canvasTarget;
     const DacAssigner&                           dacAssigner;
     const BitmapMaskManager&                     laserMask;
@@ -46,10 +44,8 @@ struct LaserState {
     float globalBrightness          = 0.2f;
     bool  testPatternGlobalActive   = false;
     int   testPatternGlobal         = 1;
-    bool  useAltZones               = false;
     bool  allLasersArmed            = false;
     int   numLasers                 = 0;
-    int   numBeamZones              = 0;
 };
 
 } // namespace ofxLaser

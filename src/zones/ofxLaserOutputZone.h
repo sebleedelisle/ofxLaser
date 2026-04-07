@@ -67,8 +67,6 @@ class OutputZone {
     protected :
     bool enabled;
     
-    bool isAlternate;
-    
     ZoneId zoneId; 
     
 };

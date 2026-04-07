@@ -42,9 +42,6 @@
 #include "ofxLaserZoneUiQuadComplex.h"
 #include "ofxLaserZoneUiLine.h"
 #include "ofxLaserMaskUiQuad.h"
-#ifdef OFXLASER_USE_FONT_MANAGER
-#include "ofxFontManager.h"
-#endif
 namespace ofxLaser {
 class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, public LaserBaseController {
     
@@ -59,19 +56,18 @@ class LaserZoneViewController : public ViewWithMoveables, public LaserBaseView, 
     
     std::shared_ptr<ZoneUiBase> getZoneInterfaceForOutputZone(std::shared_ptr<OutputZone>& outputZone);
     std::shared_ptr<OutputZone> getOutputZoneForZoneUI(std::shared_ptr<ZoneUiBase>& zoneUi);
+    std::shared_ptr<ZoneUiBase> getSelectedZoneUi();
+    std::shared_ptr<OutputZone> getSelectedOutputZone();
     
     bool createZoneUiForOutputZone(std::shared_ptr<OutputZone>& outputZone);
     void deselectAllButThis(std::shared_ptr<MoveablePoly>& uielement) override;
     void deselectAll() override;
-    bool doesAltZoneExistForZoneIndex(ZoneId zoneId);
-    
     bool update() override;
     void draw() override;
     
     
     void setGrid(bool snaptogrid, int gridsize, bool visible) override;
     
-    void drawImGui(); 
     void drawLaserPath();
     bool updateZones();
     bool updateMasks();

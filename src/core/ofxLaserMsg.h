@@ -39,16 +39,11 @@ namespace LaserMsg {
     struct DeleteLaser          { int laserIndex; };
     struct SelectLaser          { int laserIndex; };
 
-    // --- Beam zone management ---
-    struct CreateBeamZone       {};
-    struct DeleteBeamZone       { std::string zoneUid; };
-    struct MoveBeamZone         { int sourceIndex; int targetIndex; };
+    // --- Zone management ---
+    struct AddZone              { float x; float y; float w; float h; };
+    struct DeleteZone           { std::string zoneUid; };
     struct AddZoneToLaser       { std::string zoneUid; int laserIndex; };
-
-    // --- Canvas zone management ---
-    struct AddCanvasZone        { float x; float y; float w; float h; };
-    struct DeleteCanvasZone     { std::string zoneUid; };
-    struct CanvasZoneMoved      { std::string zoneUid; ofRectangle rect; };
+    struct ZoneMoved      { std::string zoneUid; ofRectangle rect; };
     struct SetCanvasSize        { int width; int height; };
 
     // --- Global settings ---
@@ -114,14 +109,10 @@ using LaserAppMsg = std::variant<
     LaserMsg::DeleteLaser,
     LaserMsg::SelectLaser,
 
-    LaserMsg::CreateBeamZone,
-    LaserMsg::DeleteBeamZone,
-    LaserMsg::MoveBeamZone,
+    LaserMsg::AddZone,
+    LaserMsg::DeleteZone,
     LaserMsg::AddZoneToLaser,
-
-    LaserMsg::AddCanvasZone,
-    LaserMsg::DeleteCanvasZone,
-    LaserMsg::CanvasZoneMoved,
+    LaserMsg::ZoneMoved,
     LaserMsg::SetCanvasSize,
 
     LaserMsg::SetGlobalBrightness,

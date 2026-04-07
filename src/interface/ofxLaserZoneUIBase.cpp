@@ -36,15 +36,9 @@ bool ZoneUiBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
         changed = true;
     }
     
-    if(inputZoneAlt != outputZone->getIsAlternate()) {
-        inputZoneAlt = outputZone->getIsAlternate();
-        if(inputZoneAlt) {
-            setHue(85);
-            setSaturationFloat(0.8);
-            setBrightness(180);
-        } else {
-            setHue(140);
-        }
+    if(inputZoneAlt) {
+        inputZoneAlt = false;
+        setHue(140);
         updateHandleColours();
         changed = true;
     }
@@ -108,27 +102,6 @@ void ZoneUiBase :: drawLabel() {
     ofPushMatrix();
    
     
-#ifdef OFXLASER_USE_FONT_MANAGER
-    
-    ofTranslate(round(getCentre().x), round(getCentre().y));
-    ofScale(1/scale, 1/scale);
-    
-    glm::vec3 pos;
-    string iconlabel = "";
-    if(muted) iconlabel = ofToString(ICON_FK_BAN);
-    if(muted && getDisabled()) iconlabel += " ";
-    if(getDisabled()) iconlabel += ofToString(ICON_FK_LOCK);
-    if(iconlabel.size()>0) {
-        pos.y-=ofxFontManager::getFontHeight("default")/2;
-        ofxFontManager :: drawStringAsShapes(iconlabel, pos, ofxFontManager::CENTRE, ofxFontManager::MIDDLE, "symbol-large");
-        pos.y+=ofxFontManager::getFontHeight("default");
-    }
-    ofFill();
-    ofxFontManager :: drawStringAsShapes(getLabel(), pos, ofxFontManager::CENTRE, ofxFontManager::MIDDLE, "default");
-    
-   
-            
-#else
     string labeltemp = getLabel();
     if(muted) labeltemp = labeltemp + (" (DISABLED)");
     if(locked) labeltemp = labeltemp + (" (LOCKED)");
@@ -136,7 +109,6 @@ void ZoneUiBase :: drawLabel() {
 //    ofTranslate(-ofGetMouseX()/scale, -ofGetMouseY()*scale);
 //    ofLogNotice() << ofGetMouseX() << " " << ofGetMouseY();
     ofDrawBitmapString(labeltemp, getCentre() - glm::vec3(4.0f*labeltemp.size()/scale,-4.0f/scale, 0));
-#endif
     
     ofPopMatrix();
     ofPopStyle();

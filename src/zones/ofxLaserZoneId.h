@@ -17,8 +17,7 @@ class ZoneId {
     ZoneId() ;
     
     enum ZoneType {
-        BEAM,
-        CANVAS
+        CANVAS = 1
     };
     
     string getLabel() const;
@@ -39,8 +38,6 @@ class ZoneId {
     inline bool operator< (const ZoneId& rhs) const {
         if(zoneGroup!=rhs.zoneGroup) return zoneGroup<rhs.zoneGroup;
         else return zoneIndex<rhs.zoneIndex;
-        // TODO add zone type checking
-        //return true;
     }
     
     protected :

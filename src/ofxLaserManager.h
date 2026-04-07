@@ -8,8 +8,9 @@
 #include "ofxLaserManagerBase.h"
 #include "ofxLaserUIState.h"
 #include "ofxLaserBaseController.h"
+#include "ofxButton.h"
 #include "GlobalScale.h"
-#include "ofxLaserPresetManager.h"
+#include "ofxGui.h"
 #include <memory>
 
 #ifdef OFXLASER_USE_OFXNATIVE
@@ -19,8 +20,8 @@
 namespace ofxLaser {
 
 class CanvasViewController;
-class IconSVGs;
 class LaserZoneViewController;
+class MoveablePoly;
 
 class Manager : public ManagerBase, public LaserBaseController {
     
@@ -63,7 +64,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     bool setOverlayIconsVisible(bool state); 
     
     virtual void setCanvasSize(int width, int height) override;
-    virtual bool deleteCanvasZone(std::shared_ptr<InputZone> inputZone) override;
+    virtual bool deleteZone(std::shared_ptr<InputZone> inputZone) override;
    
     void selectNextLaser();
     void selectPreviousLaser();
@@ -85,46 +86,57 @@ class Manager : public ManagerBase, public LaserBaseController {
    
     glm::vec2 screenToLaserInput(glm::vec2& pos);
     
-    void drawLaserGui();
-    void startLaserUI() ;
-    void finishLaserUI() ;
-    
-    void guiMenuBar();
-    void guiTopBar(int ypos);
-    void guiDacAssignment();
-    void guiLaserOverview();
-    void guiLaserSettings(std::shared_ptr<Laser>& laser);
-    //void guiZoneSettings();
-    
-    void guiCopyLaserSettings();
-    void drawGuiAllDacAnalytics(); 
-    void guiDacAnalytics(int index);
-    void guiCustomParameters();
-    void guiShowLaserZoneContextMenu(); 
-    
-    // pop ups
-    bool guiDeleteLaserButtonAndPopup(std::shared_ptr<Laser>& laser, int index);
-    void guiEditDacAliasButtonAndPopup(string daclabel);
+    void drawOfxGuiPanels();
+    void setupOfxGuiPanels();
+    void refreshOfxGuiPanels();
+    void refreshGlobalPanel();
+    void refreshLaserSettingsPanel();
+    void refreshSelectedZonePanel();
+    void refreshEditorPanel();
+    void refreshSelectedCanvasItemPanel();
+    void addLaserSettingParameter(ofxGuiGroup& guiGroup, ofAbstractParameter& parameter, bool topLevel);
+    bool isMouseOverOfxGuiPanels(float x, float y) const;
+    std::shared_ptr<OutputZone> getSelectedOutputZone();
+    std::shared_ptr<MoveablePoly> getSelectedCanvasUiElement();
+    void onArmAllPressed();
+    void onDisarmAllPressed();
+    void onCanvasViewToggled(bool& value);
+    void onOutputViewToggled(bool& value);
+    void onPreviousLaserPressed();
+    void onNextLaserPressed();
+    void onAddLaserPressed();
+    void onDeleteLaserPressed();
+    void onSelectedZoneMuteChanged(bool& value);
+    void onSelectedZoneLockChanged(bool& value);
+    void onSelectedZoneQuadPressed();
+    void onSelectedZoneLinePressed();
+    void onSelectedZoneSegmentedPressed();
+    void onSelectedZoneResetPressed();
+    void onSelectedZoneDeletePressed();
+    void onSelectedZoneRemoveDistortionPressed();
+    void onSelectedZoneSubdivisionDownPressed();
+    void onSelectedZoneSubdivisionUpPressed();
+    void onSelectedZoneManualBezierChanged(bool& value);
+    void onSelectedZoneSmoothLevelChanged(float& value);
+    void onOutputAddZonePressed();
+    void onOutputAddMaskPressed();
+    void onOutputTestPatternChanged(bool& value);
+    void onOutputTestPatternIndexChanged(int& value);
+    void onOutputGridSizeChanged(int& value);
+    void onGlobalTestPatternChanged(bool& value);
+    void onGlobalTestPatternIndexChanged(int& value);
+    void onLaserArmedChanged(bool& value);
+    void onCanvasAddZonePressed();
+    void onCanvasAddGuideImagePressed();
+    void onCanvasGridSizeChanged(int& value);
+    void onSelectedCanvasMoveToBackPressed();
+    void onSelectedCanvasLockChanged(bool& value);
+    void onSelectedCanvasDeletePressed();
+    void onSelectedCanvasTintChanged(ofFloatColor& value);
 
-    bool guiRenameZonePopup(std::shared_ptr<ObjectWithZoneId> zoneIdContainer);
-
-    bool renderMainMenu = true; 
-    bool renderIconBar = true; 
-    ofParameter<bool> showCustomParametersWindow;
-    ofParameter<bool> showLaserOverviewWindow;
-    ofParameter<bool> showLaserOutputSettingsWindow;
-   // bool showCanvasSettingsWindow;
-    bool showCopySettingsWindow;
-    bool showDacAssignmentWindow;
-    bool showAVBWindow;
-   // bool showBeamZoneSortWindow;
-    int canvasWidthInterface = -1; // only used for the canvas settings interface.
-    int canvasHeightInterface = -1; // there must be a better way but i can't think of it right now
-    
-    
     bool toggleGui();
     void setGuiVisible(bool visible);
-    bool isGuiVisible();
+    bool isGuiVisible() const;
     
     bool isGuiMouseDisabled();
     void setGuiMouseDisabled(bool state);
@@ -151,14 +163,8 @@ class Manager : public ManagerBase, public LaserBaseController {
     OF_DEPRECATED_MSG("ofxLaser::Manager::nextProjector - use selectNextLaser() ", void nextProjector());
     OF_DEPRECATED_MSG("ofxLaser::Manager::previousProjector - use selectPreviousLaser() ", void previousProjector());
 
-    int guiLaserSettingsPanelWidth;
-    int guiSpacing;
-    int menuBarHeight = 20;
-    int iconBarHeight = 32;
-
     bool overlayIconsVisible = true;
-    
-    
+
     ofParameterGroup interfaceParams;
     ofParameterGroup customParams;
     ofParameter<bool> zoneGridSnap;
@@ -175,9 +181,6 @@ class Manager : public ManagerBase, public LaserBaseController {
     
     ofParameter<int> globalLatency; 
 
-    vector<bool> showDacDiagnostics;
-    ofParameter<float> dacSettingsTimeSlice;
-
     ofxLaserViewMode viewMode;
    
     ofEvent<bool> armEvent;
@@ -186,49 +189,73 @@ class Manager : public ManagerBase, public LaserBaseController {
 
     vector<std::shared_ptr<LaserZoneViewController>> laserZoneViews;
     std::shared_ptr<CanvasViewController> canvasViewController;
-
-    // ============================================================
-    // UI state — extracted presentation state (Step 3)
-    // Fields above are kept for backward compatibility during migration.
-    // New code should prefer uiState.fieldName.
-    // ============================================================
-    UIState uiState;
-   
-    protected :
     
+    ofxPanel globalPanel;
+    ofxPanel laserSettingsPanel;
+    ofxPanel selectedZonePanel;
+    ofxPanel editorPanel;
+    ofxPanel selectedCanvasItemPanel;
+    ofParameter<int> selectedLaserDisplay;
+    ofxButton armAllButton;
+    ofxButton disarmAllButton;
+    ofxToggle canvasViewToggle;
+    ofxToggle outputViewToggle;
+    ofxButton previousLaserButton;
+    ofxButton nextLaserButton;
+    ofxButton addLaserButton;
+    ofxButton deleteLaserButton;
+    ofParameter<bool> selectedZoneMuteToggle;
+    ofParameter<bool> selectedZoneLockToggle;
+    ofxButton selectedZoneQuadButton;
+    ofxButton selectedZoneLineButton;
+    ofxButton selectedZoneSegmentedButton;
+    ofxButton selectedZoneResetButton;
+    ofxButton selectedZoneDeleteButton;
+    ofxButton selectedZoneRemoveDistortionButton;
+    ofxButton selectedZoneSubdivisionDownButton;
+    ofxButton selectedZoneSubdivisionUpButton;
+    ofParameter<bool> selectedZoneManualBezier;
+    ofParameter<float> selectedZoneSmoothLevel;
+    ofxButton outputAddZoneButton;
+    ofxButton outputAddMaskButton;
+    ofParameter<bool> outputTestPatternToggle;
+    ofParameter<int> outputTestPatternIndex;
+    ofParameter<int> outputGridSizeGui;
+    ofxButton canvasAddZoneButton;
+    ofxButton canvasAddGuideImageButton;
+    ofParameter<int> canvasGridSizeGui;
+    ofxButton selectedCanvasMoveToBackButton;
+    ofParameter<bool> selectedCanvasLockToggle;
+    ofParameter<ofFloatColor> selectedCanvasTint;
+    std::vector<std::unique_ptr<ofxButton>> selectedCanvasLaserButtons;
+    std::vector<std::unique_ptr<of::priv::AbstractEventToken>> selectedCanvasLaserButtonListeners;
+    ofxButton selectedCanvasDeleteButton;
+    ofParameter<bool> globalTestPatternToggle;
+    ofParameter<int> globalTestPatternIndex;
+    ofParameter<bool> laserArmedToggle;
+    int guiPanelLaserCount = -1;
+    int guiPanelSelectedLaserIndex = -1;
+    std::string guiPanelSelectedZoneUid;
+    int guiPanelSelectedZoneType = -1;
+    std::string guiPanelSelectedCanvasUid;
+    std::vector<std::unique_ptr<ofxGuiGroup>> laserSettingsOwnedGroups;
+    std::vector<std::unique_ptr<ofxButton>> laserSettingsOwnedButtons;
+    std::vector<std::unique_ptr<of::priv::AbstractEventToken>> laserSettingsButtonListeners;
+    std::vector<std::unique_ptr<ofxGuiGroup>> selectedZoneOwnedGroups;
+
+    protected :
+
     bool initialised = false;
-    bool windowActive = true; 
-   
+    bool windowActive = true;
+
     int selectedLaserIndex;
 
     bool guiIsVisible;
     bool guiIsMouseDisabled;
-    bool showEditScannerPreset = false;
-    
-    DacData dacToAssign;
-    std::shared_ptr<Laser> laserToAssign = nullptr;
-    std::shared_ptr<Laser> laserToDelete = nullptr;
-    
-    //ofImage guideImage;
-  
-    PresetManager<ScannerSettings> scannerPresetManager;
-    PresetManager<ColourSettings> colourPresetManager;
-    
-    // copy settings system :
-    // TODO Break into its own object
-    // is actually an array of booleans
-    deque<bool> lasersToCopyTo;
-    ofParameterGroup copyParams; 
-    ofParameter<bool> copyScannerSettings;
-    ofParameter<bool> copyAdvancedSettings;
-    ofParameter<bool> copyColourSettings;
-    ofParameter<bool> copyZonePositions;
-    
+
     ofRectangle windowRectangle;
     
     
-    std::unique_ptr<IconSVGs> iconSVGs;
-
     void loadAdditionalSettings(const ofJson& json) override;
    
 

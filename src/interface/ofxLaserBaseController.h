@@ -48,9 +48,6 @@ public:
     void requestSelectLaser(int index) {
         sendLaserMessage(LaserMsg::SelectLaser{index});
     }
-    void requestCreateBeamZone() {
-        sendLaserMessage(LaserMsg::CreateBeamZone{});
-    }
     void requestArmAll() {
         sendLaserMessage(LaserMsg::ArmAllLasers{});
     }
@@ -75,8 +72,8 @@ public:
     void requestSetCanvasSize(int w, int h) {
         sendLaserMessage(LaserMsg::SetCanvasSize{w, h});
     }
-    void requestAddCanvasZone(float x, float y, float w, float h) {
-        sendLaserMessage(LaserMsg::AddCanvasZone{x, y, w, h});
+    void requestAddZone(float x, float y, float w, float h) {
+        sendLaserMessage(LaserMsg::AddZone{x, y, w, h});
     }
     void requestToggleGui() {
         sendLaserMessage(LaserMsg::ToggleGui{});

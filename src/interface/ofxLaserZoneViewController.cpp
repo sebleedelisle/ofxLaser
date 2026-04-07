@@ -32,7 +32,7 @@ bool LaserZoneViewController :: update() {
 
     bool wasUpdated = ScrollableView :: update();
     
-    zoomEnabled = !ImGui::GetIO().WantCaptureMouse;
+    zoomEnabled = true;
     
     boundingRect = sourceRect;
     
@@ -173,13 +173,8 @@ void LaserZoneViewController :: draw() {
                             ofSetColor(ofColor::black);
                             ofFill();
                             ofDrawCircle(0,0,8*GlobalScale::getScale());
-#ifdef OFXLASER_USE_FONT_MANAGER
                             ofSetColor(uiLine->getStrokeColourSelected());
-                            
-                            ofxFontManager::drawString(ICON_FK_MINUS_CIRCLE, glm::vec2(), ofxFontManager::CENTRE, ofxFontManager::MIDDLE, "symbol-large" );
-#else
-                            
-#endif
+                            ofDrawBitmapString("-", glm::vec2(-4, 4));
                            
                             ofPopMatrix();
                             // display the minus sign over that point...
@@ -201,13 +196,8 @@ void LaserZoneViewController :: draw() {
                             ofSetColor(ofColor::black);
                             ofFill();
                             ofDrawCircle(0,0,8*GlobalScale::getScale());
-#ifdef OFXLASER_USE_FONT_MANAGER
                             ofSetColor(uiLine->getStrokeColourSelected());
-                            
-                            ofxFontManager::drawString(ICON_FK_PLUS_CIRCLE, glm::vec2(), ofxFontManager::CENTRE, ofxFontManager::MIDDLE, "symbol-large" );
-#else
-                            
-#endif
+                            ofDrawBitmapString("+", glm::vec2(-4, 4));
                             ofPopMatrix();
                         }
                         
@@ -520,7 +510,7 @@ std::shared_ptr<ZoneUiBase> LaserZoneViewController ::  getZoneInterfaceForOutpu
     
     for(std::shared_ptr<ZoneUiBase>& zoneUi: zoneUis) {
         
-        if((zoneUi->zoneId.getUid() == outputZone->getZoneId().getUid()) && (zoneUi->inputZoneAlt == outputZone->getIsAlternate())) {
+        if(zoneUi->zoneId.getUid() == outputZone->getZoneId().getUid()) {
             
             if((std::dynamic_pointer_cast<ZoneUiQuad>(zoneUi)!=nullptr) && (outputZone->transformType==0)) {
                 return zoneUi;
@@ -552,7 +542,7 @@ std::shared_ptr<OutputZone> LaserZoneViewController ::  getOutputZoneForZoneUI(s
     }
     
     for(std::shared_ptr<OutputZone>& outputZone : laser->outputZones) {
-        if((outputZone->getZoneId() == zoneUi->zoneId) && (outputZone->getIsAlternate() == zoneUi->inputZoneAlt) && (outputZone->transformType == zoneType) ) {
+        if((outputZone->getZoneId() == zoneUi->zoneId) && (outputZone->transformType == zoneType) ) {
             return outputZone;
         }
     }
@@ -560,19 +550,23 @@ std::shared_ptr<OutputZone> LaserZoneViewController ::  getOutputZoneForZoneUI(s
     return nullptr;
 }
 
-
-bool LaserZoneViewController :: doesAltZoneExistForZoneIndex(ZoneId zoneId) {
-  
-    for(std::shared_ptr<ZoneUiBase>& zoneUi :  zoneUis) {
-        if(zoneUi->inputZoneAlt && (zoneUi->zoneId == zoneId)) {
-            return true;
+std::shared_ptr<ZoneUiBase> LaserZoneViewController::getSelectedZoneUi() {
+    for (std::shared_ptr<ZoneUiBase>& zoneUi : zoneUis) {
+        if (zoneUi && zoneUi->getSelected()) {
+            return zoneUi;
         }
     }
-    return false; 
-
-    
-    
+    return nullptr;
 }
+
+std::shared_ptr<OutputZone> LaserZoneViewController::getSelectedOutputZone() {
+    std::shared_ptr<ZoneUiBase> zoneUi = getSelectedZoneUi();
+    if (!zoneUi) {
+        return nullptr;
+    }
+    return getOutputZoneForZoneUI(zoneUi);
+}
+
 
 bool LaserZoneViewController :: createZoneUiForOutputZone(std::shared_ptr<OutputZone>& outputZone) {
     
@@ -619,435 +613,6 @@ int LaserZoneViewController :: getLaserIndex() {
 }
 
 
-void LaserZoneViewController :: drawImGui() {
-    if(!isVisible) return;
-    
-    
-#ifdef TARGET_OSX
-    bool commandPressed = ofGetKeyPressed(OF_KEY_COMMAND);
-    string altKey = "OPTION";
-#else
-    bool commandPressed = ofGetKeyPressed(OF_KEY_CONTROL);
-    string altKey = "ALT";
-#endif
-    
-    string openRenameZoneId = "";
-    
-    std::shared_ptr<OutputZone> outputZoneToDelete = nullptr;
-    
-    for(std::shared_ptr<ZoneUiBase>& zoneUi : zoneUis) {
-        
-        ImGui::PushID(zoneUi->zoneId.getUid().c_str());
-        
-        std::shared_ptr<OutputZone> outputZone = getOutputZoneForZoneUI(zoneUi);
-        
-        if(!outputZone) {
-            ImGui::PopID();
-            continue;
-        }
-                
-        bool updateOutputZone = false;
-       
-        
-        ZoneTransformBase* zoneTransform = &outputZone->getZoneTransform();
-        
-        ZoneTransformQuadData* zoneTransformQuad = dynamic_cast<ZoneTransformQuadData*>(zoneTransform);
-        ZoneTransformLineData* zoneTransformLine = dynamic_cast<ZoneTransformLineData*>(zoneTransform);
-        ZoneTransformQuadComplexData* zoneTransformQuadComplex = dynamic_cast<ZoneTransformQuadComplexData*>(zoneTransform);
-        
-        string popupname = "ZONE SETTINGS##"+zoneUi->getLabel();
-        
-        // RIGHT CLIP MENU -----------------------------
-        if(zoneUi->getRightClickPressed()) {
-            ImGui::OpenPopup(popupname.c_str(), ImGuiPopupFlags_NoOpenOverExistingPopup);
-            //ofLogNotice(zoneUi->getLabel().c_str());
-        }
-       // ImGuiID id = ImGui::GetID(popupname.c_str());
-        if(ImGui::BeginPopup(popupname.c_str(), 0)) {
-            
-//            static char newZoneLabel[255];
-//            ZoneId zoneId = outputZone->getZoneId();
-//            string currentZoneLabel = zoneId.getLabel();
-//            bool labelchanged = false;
-            
-            zoneUi->setSelected(true);
-            
-            ImGui::PushFont(UI::mediumFont);
-            ImGui::Text("%s", zoneUi->getLabel().c_str());
-            ImGui::PopFont();
-            ImGui::SameLine();
-            
-            if(ImGui::Button("RENAME")) {
-                //strcpy(newZoneLabel, currentZoneLabel.c_str());
-                //string popupname = "Edit zone name " + zoneUi->zoneId.getUid();
-                ImGui::CloseCurrentPopup();
-                //ImGui::OpenPopup(popupname.c_str());
-                //ofLogNotice("OPEN : ") << popupname;
-                openRenameZoneId =zoneUi->zoneId.getUid();
-            }
-           
-//            if (ImGui::BeginPopupModal("Edit zone name", 0)){
-//                
-//                if(ImGui::InputText("##1", newZoneLabel, IM_ARRAYSIZE(newZoneLabel), ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_CharsUppercase)){
-//                    // don't need to do anything here
-//                    //            for(int i=0;i<strlen(newDacAlias);i++){
-//                    //                newDacAlias[i] = toupper(newDacAlias[i]);
-//                    //            }
-//                    //            ofLogNotice() << newDacAlias;
-//                }
-//                
-//                ImGui::Separator();
-//                string label = "OK## ";//+daclabel;
-//                if (ImGui::Button(label.c_str(),  ImVec2(120, 0))) {
-//                    string newzonelabel = newZoneLabel;
-//                    //  rename zoneid here :
-//                    if(zoneId.setLabel(newzonelabel)) {
-//                        // save zones!
-//                        labelchanged = true;// not sure if we need this
-//                        zoneUi->zoneId = zoneId;
-//                        updateOutputZone = true;
-//                        
-//                    }
-//                    ImGui::CloseCurrentPopup();
-//                }
-//                
-//                ImGui::SetItemDefaultFocus();
-//                ImGui::SameLine();
-//                label = "Cancel## ";//+daclabel;
-//                if (ImGui::Button(label.c_str(), ImVec2(120, 0))) {
-//                    ImGui::CloseCurrentPopup();
-//                }
-//                ImGui::EndPopup();
-//            }
-            
-            
-            ImGui::Separator();
-            ImGui::PushFont(UI::mediumFont);
-           
-            if(UI::Button(ICON_FK_BAN, false, zoneUi->muted, ImVec2(25,25))) {
-                zoneUi->muted = !zoneUi->muted;
-                sendLaserMessage(LaserMsg::ZoneMuteChanged{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, zoneUi->muted});
-            }
-            ImGui::SameLine();
-
-            UI::addDelayedTooltip("Disable output");
-            UI::toolTip("Disables output to this zone");
-
-            ImGui::SameLine();
-
-            if(UI::Button(ICON_FK_LOCK, false, zoneUi->locked, ImVec2(25,25))) {
-                zoneUi->locked = !zoneUi->locked;
-                zoneUi->setSelected(!zoneUi->locked);
-                sendLaserMessage(LaserMsg::ZoneLockChanged{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, zoneUi->locked});
-            }
-            UI::addDelayedTooltip("Lock zone");
-            UI::toolTip("Prevents the zone from being moved");
-           
-            ImGui::PopFont();
-
-            ImGui::Separator();
-
-            
-            ImGui::Text("Zone shape type:");
-            
-            if(zoneTransformQuad) UI::secondaryColourStart();
-            if(ImGui::Button("QUAD")) {
-                sendLaserMessage(LaserMsg::ZoneTypeChanged{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 0});
-                zoneUi->setSelected(true);
-            }
-
-            UI::secondaryColourEnd();
-            UI::toolTip("Standard rectangular zone. Alt-click corners to remove the constraints.");
-
-            ImGui::SameLine();
-            if(zoneTransformLine)  UI::secondaryColourStart();
-            if(ImGui::Button("LINE / CURVE")) {
-                sendLaserMessage(LaserMsg::ZoneTypeChanged{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 1});
-                zoneUi->setSelected(true);
-            }
-            UI::secondaryColourEnd();
-            UI::toolTip("Line/curve zone. Great for very thin zones. Add points to create complex bezier curve zones.");
-
-
-            ImGui::SameLine();
-            if(zoneTransformQuadComplex)  UI::secondaryColourStart();
-            if(ImGui::Button("SEGMENTED")) {
-                sendLaserMessage(LaserMsg::ZoneTypeChanged{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt, 2});
-                zoneUi->setSelected(true);
-            }
-            UI::secondaryColourEnd();
-            UI::toolTip("Segmented rectangular zone. Use for mapping and very fine control of  geometric correction.");
-
-               
-
-                        
-    
-
-            
-            
-            //ImGui::SameLine();
-            if(UI::Button("RESET TO DEFAULT"))  {
-                sendLaserMessage(LaserMsg::ZoneResetTransform{
-                    zoneUi->zoneId.getUid(), zoneUi->inputZoneAlt});
-            }
-            UI::toolTip("Reset zone to default position, size and shape");
-            
-            
-            
-            if(zoneTransformQuad) {
-                ZoneTransformQuadData* ztq = zoneTransformQuad;  //dynamic_cast<ZoneTransformQuadData*>(&outputZone->getZoneTransform());
-                
-                
-                if(ztq->isAxisAligned()) {
-                    UI::startDisabled();
-                }
-                
-                if(UI::Button("REMOVE DISTORTION")) {
-                    ztq->resetToSquare();
-                }
-                
-                UI::stopDisabled();
-                
-                UI::toolTip("Removes any distortion in the zone and makes all the corners right angles");
-                
-                //UI::addParameterGroup(ztq->transformParams, false);
-                bool useHomography = ztq->useHomography.get();
-                if(ImGui::Checkbox("Perspective correction", &useHomography)) {
-                    ztq->useHomography.set(useHomography);
-                }
-                UI::toolTip("Undistorts the image using perspective correction (good for graphics), as opposed to bi-linear interpolation (which is better for beams). ");
-                
-                
-            } else if(zoneTransformLine){
-                
-                ZoneTransformLineData* ztl = zoneTransformLine;
-                
-                
-                //UI::addParameterGroup(laserZone->getZoneTransform().transformParams, false);
-                
-                UI::addFloatSlider("Zone thickness", ztl->zoneWidth, "%.2f", ImGuiSliderFlags_Logarithmic);
-                
-                
-
-                bool manualbeziers = !ztl->autoSmooth;
-                if(ImGui::Checkbox("Manually adjust bezier curves", &manualbeziers)) {
-                    ztl->autoSmooth = !manualbeziers;
-                    ztl->setDirty(true);
-                }
-                
-                if(!ztl->autoSmooth) UI::startDisabled();
-                if(ImGui::SliderFloat("Smooth level", &ztl->smoothLevel, 0, 0.5, "%.2f")) {
-                    ztl->setDirty(true);
-                }
-                UI::stopDisabled();
-                
-                //s//tring altkey = "ALT";
-                ImGui::Text("To add / remove points, %s click on the line", altKey.c_str());
-                
-//                vector<BezierNode>& nodes = ztl->getNodes();
-//                for(int i = 0; i<nodes.size(); i++) {
-//                    ImGui::PushID(i);
-//                    BezierNode& node = nodes[i];
-//                    //nt mode = node.mode;
-//                    ImGui::Text("POINT %d", i+1);
-//                    //ImGui::SameLine();
-//                    
-//                    //                        ImGui::RadioButton("LINES", &mode, 0); ImGui::SameLine();
-//                    //                        ImGui::RadioButton("FREE BEZIER", &mode, 1); ImGui::SameLine();
-//                    //                        ImGui::RadioButton("SMOOTH BEZIER", &mode, 2);
-//                    //
-//                    //                        if(mode!=node.mode) {
-//                    //                            node.mode = mode;
-//                    //                            ztl->setDirty(true);
-//                    //                        }
-//                    if(nodes.size()>2) {
-//                        ImGui::SameLine();
-//                        
-//                        string label = "DELETE##" + ofToString(i);
-//                        if (UI::DangerButton(label, false)) {
-//                            ztl->deleteNode(i);
-//                            
-//                        }
-//                    }
-//                    
-//                    ImGui::PopID();
-//                    
-//                }
-                
-//                string label = ofToString("ADD POINT##addnode");
-//                if (UI::Button(label, false)) {
-//                    //ztl->addNode();
-//                    
-//                }
-//                
-                
-            } else if(zoneTransformQuadComplex) {
-                
-                ZoneTransformQuadComplexData* ztq = zoneTransformQuadComplex;
-                
-                
-//                if(UI::Button("RESET TO DEFAULT"))  {
-//                    ztq->setDefault(); // (ofRectangle(200,240,400,200));
-//                }
-//                UI::toolTip("Reset zone to default");
-                
-                ImGui :: Text("Subdivisions : ");
-                ImGui :: SameLine();
-                if(UI::Button(ofToString(ICON_FK_MINUS_CIRCLE))) {
-                    ztq->decSubdivisionLevel();
-                }
-
-                ImGui :: SameLine();
-                if(UI::Button(ofToString(ICON_FK_PLUS_CIRCLE))) {
-                    ztq->incSubdivisionLevel();
-                }
-                
-                //                if(ztq->isAxisAligned()) {
-                //                    UI::startDisabled();
-                //                }
-                //                if(UI::Button("Reset to square")) {
-                //                    ztq->resetToSquare();
-                //                }
-                //                UI::stopDisabled();
-                
-               
-     
-                
-                UI::addParameterGroup(ztq->transformParams, false);
-                
-                
-            }
-            
-           
-            
-            string buttonlabel = "DELETE ZONE";
-            if(zoneUi->inputZoneAlt) buttonlabel = "DELETE ALT ZONE";
-            
-            if(UI::DangerButton(buttonlabel.c_str())) {
-                if(commandPressed) {
-                    outputZoneToDelete = outputZone;
-                } else {
-                    ImGui::OpenPopup("DELETE ZONE");
-                }
-            }
-            
-            if((!zoneUi->inputZoneAlt) && (!doesAltZoneExistForZoneIndex(zoneUi->zoneId))) {
-                ImGui::SameLine();
-                if(UI::Button("ADD ALT ZONE")) {
-                    sendLaserMessage(LaserMsg::AddAltZone{
-                        zoneUi->zoneId.getUid(), getLaserIndex()});
-                    zoneUi->setSelected(false);
-                    ImGui::CloseCurrentPopup();
-                }
-            }
-            
-            if(ImGui::BeginPopup("DELETE ZONE")) {
-                
-                ImGui::Text("Are you sure you want to delete this zone?\nAll of its settings will be deleted.");
-                ImGui::Separator();
-                
-                if (UI::DangerButton("DELETE")) {
-                    //ImGui::ClosePopup("ZONE SETTINGS");
-                    ImGui::ClosePopupToLevel(0, false);
-                    
-                    outputZoneToDelete = outputZone;
-                    
-                    // if this is an alt zone, just remove this
-                    // otherwise remove this and also its alt zone if
-                    // it has one
-                    //ZoneId zoneid = outputZone->getZoneId();
-                    
-//                    if(zoneUi->inputZoneAlt) {
-//                        //laser->removeAltZone(zoneid);
-//                        zoneToDelete = zoneid;
-//                        deleteAltZone = true;
-//                        //deleteZone = true;
-//                    } else {
-//                        
-//                        zoneToDelete = zoneid;
-//                        deleteZone = true;
-//                        
-//                    }
-                    //laser->removeZone(zoneid);
-                    //
-                    // LATER - TO DO - if this is a laser zone, delete it
-                    // if it's a canvas zone, keep it
-                    
-                    deselectAll();
-                    
-                }
-                
-                
-                ImGui::SetItemDefaultFocus();
-                ImGui::SameLine();
-                if (UI::Button("Cancel")) {
-                    ImGui::CloseCurrentPopup();
-                }
-                ImGui::EndPopup();
-            }
-           
-            ImGui::EndPopup();
-        }
-        
-        // Mute/lock changes now go through the message bus (LaserMsg::ZoneMuteChanged/ZoneLockChanged)
-        // Continuous drag updates still use the direct updateDataFromUi path in update()
-        ImGui::PopID();
-    }
-    
-    // MASK GUI --------------------------------------------------------------------
-    for(size_t i = 0; i< maskUis.size(); i++) {
-        
-        std::shared_ptr<MaskUiQuad>& maskUi = maskUis[i];
-        
-        ImGui::PushID(ofToString(maskUi).c_str()); // maybe UID of memory address? Bit dumb
-        if(maskUi->getRightClickPressed()) {
-            
-            ImGui::OpenPopup("MASK SETTINGS");
-        }
-        
-        if(ImGui::BeginPopup("MASK SETTINGS")) {
-            ImGui::Text("MASK SETTINGS");
-            int level = maskUi->maskLevel;
-            ImGui::PushItemWidth(60);
-            string label = "##"+ofToString(i);
-            if (ImGui::DragInt(label.c_str(),&level,1,0,100,"%d%%")) { 
-                maskUi->maskLevel = level;
-                maskUi->setDirty();
-            }
-            ImGui::PopItemWidth();
-            
-            string buttonlabel = "DELETE MASK";
-           
-            if(UI::DangerButton(buttonlabel.c_str())) {
-                sendLaserMessage(LaserMsg::DeleteMask{getLaserIndex(), (int)i});
-                deselectAll();
-                ImGui::CloseCurrentPopup();
-            }
-            ImGui::Text("%s %s click a corner point to make it non-uniform", ICON_FK_INFO_CIRCLE, altKey.c_str());
-            
-            ImGui::EndPopup();
-        }
-        ImGui::PopID();
-    }
-            
-    if(outputZoneToDelete!=nullptr) {
-        sendLaserMessage(LaserMsg::DeleteOutputZone{
-            outputZoneToDelete->getZoneId().getUid(),
-            outputZoneToDelete->getIsAlternate()});
-    }
-    if(openRenameZoneId!="") {
-        string popupname = "Edit zone name##" + openRenameZoneId;
-        
-        ImGui::OpenPopup(popupname.c_str());
-       // ofLogNotice("OPEN : ") << popupname;
-    }
-  
-}
 void LaserZoneViewController ::setGrid(bool snaptogrid, int gridsize, bool visible) {
 
     ViewWithMoveables::setGrid(snaptogrid, gridsize, visible);

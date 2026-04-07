@@ -11,7 +11,7 @@
 using namespace ofxLaser; 
 
 ZoneId :: ZoneId(){
-    type = BEAM;
+    type = CANVAS;
     zoneGroup = 0;
     zoneIndex = 0;
     label = "";
@@ -32,43 +32,23 @@ bool ZoneId :: set(ZoneType zonetype, int group, int index) {
 }
 
 string ZoneId :: getLabel() const {
-    if(label=="") {
-        return getDefaultLabel();
-    } else {
-        return label;
-    }
-    
+    return getDefaultLabel();
 }
 string ZoneId :: getDefaultLabel() const {
-    
-    string newlabel = "";
-    
-    if(type==BEAM) newlabel = "BEAM ";
-    else newlabel = "CANVAS ";
+
+    string newlabel = "ZONE ";
     newlabel = newlabel +ofToString(zoneIndex+1);
     return newlabel;
-            
-   
-    
+
 }
 
 
 bool ZoneId :: setLabel(string newlabel) {
-        
-    if(newlabel != getDefaultLabel()) {
-        if(newlabel!=label) {
-            label = newlabel;
-            return true;
-        } else {
-            return false;
-        }
-    
-    } else {
-            
-        label = "";
+    if (!label.empty()) {
+        label.clear();
         return true;
     }
-    
+    return false;
 }
 
 //const string& getUid() const;
@@ -82,21 +62,19 @@ ofxLaser::ZoneId::ZoneType ZoneId :: getType() {
 }
 
 void ZoneId :: updateUid() {
-    
-    string uid = "";
-    if(type==BEAM) uid = "B";
-    else uid = "C";
+
+    string uid = "Z";
     uid = uid+ofToString(zoneGroup)+"_"+ofToString(zoneIndex);
-    
+
     cachedUid = uid;
-     
+
 }
 void ZoneId :: serialize(ofJson& json) const{
     ofJson& zoneIdJson = json["zoneId"];
     zoneIdJson["type"] = (int)type;
     zoneIdJson["zonegroup"] = zoneGroup;
     zoneIdJson["zoneindex"] = zoneIndex;
-    zoneIdJson["label"] = label;
+    zoneIdJson["label"] = "";
     //return true;
 }
 bool ZoneId :: deserialize(ofJson& json) {
@@ -109,7 +87,7 @@ bool ZoneId :: deserialize(ofJson& json) {
             type = zoneIdJson["type"];
             zoneGroup = zoneIdJson["zonegroup"];
             zoneIndex = zoneIdJson["zoneindex"];
-            label = zoneIdJson["label"];
+            label.clear();
             updateUid();
             return true;
             
@@ -125,7 +103,7 @@ bool ZoneId :: deserialize(ofJson& json) {
     
 }
 bool ZoneId::operator==(const ZoneId & other) const{
-    return (other.getUid()==getUid()) && (other.getLabel()==getLabel());
+    return other.getUid()==getUid();
 }
 
 //--------------------------------------------------------------

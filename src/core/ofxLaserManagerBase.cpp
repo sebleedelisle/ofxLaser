@@ -22,7 +22,7 @@ ManagerBase * ManagerBase::instance() {
 
 ManagerBase :: ManagerBase()
     : dacAssigner(*DacAssigner::instance())
-    , laserState{ lasers, beamZoneContainer, canvasTarget, dacAssigner, laserMask }
+    , laserState{ lasers, canvasTarget, dacAssigner, laserMask }
 {
 
 
@@ -40,18 +40,13 @@ ManagerBase :: ManagerBase()
     params.add(globalBrightness.set("Global brightness", 0.2,0,1));
 
     params.add(numLasers.set("numLasers", 0));
-    params.add(useAltZones.set("Use alternative zones", false));
     params.add(dontCalculateDisconnected.set("Don't calculate disconnected", false));
     params.add(hideContentDuringTestPattern.set("Hide content during test pattern", true));
-    
-    useAltZones.addListener(this, &ofxLaser::ManagerBase::useAltZonesChanged);
     
     testPatternGlobal = 1;
     testPatternGlobalActive = false; 
 
-    currentShapeTarget = canvasTarget;
-    
-    useClipRectangle = false; 
+    useClipRectangle = false;
     
     ClipperUtils::initialise();
     
@@ -81,7 +76,6 @@ void ManagerBase ::resetAllLasersToDefault() {
     while(lasers.size()>0) {
         deleteLaser(lasers[0]);
     }
-    beamZoneContainer.clearZones();
     canvasTarget->clearZones();
     
     for(int lasernum = 0; lasernum<numlasers; lasernum++) {
@@ -133,19 +127,9 @@ bool ManagerBase :: deleteLaser(std::shared_ptr<Laser>& laser) {
     // hopefully should renumber current laser OK
     
     laser->deleteAllSettingsFiles();
-    // TODO delete zones that are only assigned to this laser *************************
+    // Remove all output zones from this laser
     if(deleteZones) {
-        vector<std::shared_ptr<OutputZone>> zones = laser->getSortedOutputZones();
-        vector<std::shared_ptr<OutputZone>>  altzones = laser->getSortedOutputAltZones();
-        zones.insert(zones.end(), altzones.begin(), altzones.end());
-
-        for(std::shared_ptr<OutputZone>& zone : zones) {
-            ZoneId zoneid = zone->getZoneId();
-            if(zoneid.getType() == ZoneId::BEAM) {
-                deleteBeamZone(zone);
-            }
-           
-        }
+        laser->clearOutputZones();
     }
     
     // remove laser from laser array
@@ -172,26 +156,19 @@ bool ManagerBase :: deleteLaser(std::shared_ptr<Laser>& laser) {
     return true;
 }
 
-ZoneId ManagerBase::addCanvasZone(const ofRectangle& rect) {
-    return addCanvasZone(rect.x, rect.y, rect.width, rect.height);
-    
+ZoneId ManagerBase::addZone(const ofRectangle& rect) {
+    return addZone(rect.x, rect.y, rect.width, rect.height);
+
 }
 
-ZoneId  ManagerBase :: addCanvasZone(float x, float y, float w, float h) {
+ZoneId  ManagerBase :: addZone(float x, float y, float w, float h) {
     if(w<=0) w = canvasTarget->getWidth();
     if(h<=0) h = canvasTarget->getHeight();
     return canvasTarget->addInputZone(x, y, w, h);
 }
 
 
-ZoneId ManagerBase :: createNewBeamZone() {
-   
-    return beamZoneContainer.addBeamZone();
-}
-    
-
-
-bool ManagerBase :: deleteCanvasZone(std::shared_ptr<InputZone> inputZone) {
+bool ManagerBase :: deleteZone(std::shared_ptr<InputZone> inputZone) {
     if(inputZone==nullptr) return false;
     
     map<ZoneId, ZoneId>  changedzones = canvasTarget->removeZoneById(inputZone->getZoneId());
@@ -204,38 +181,6 @@ bool ManagerBase :: deleteCanvasZone(std::shared_ptr<InputZone> inputZone) {
     
 }
 
-bool ManagerBase::deleteBeamZone(std::shared_ptr<OutputZone>& outputZone) {
-    
-    ZoneId zoneid = outputZone->getZoneId();
-    
-    bool changed = false;
-    
-    if(outputZone->getIsAlternate()) {
-        for(std::shared_ptr<Laser>& laser : lasers) {
-            changed = laser->removeAltZone(zoneid) || changed;
-        }
-        
-    } else {
-        map<ZoneId, ZoneId> changedZones = beamZoneContainer.removeZoneById(zoneid);
-        // zone should actually only be in one of the lasers...
-       
-        for(std::shared_ptr<Laser>& laser : lasers) {
-            changed = laser->removeAltZone(zoneid) || changed;
-            changed = laser->removeZone(zoneid) || changed;
-            changed = laser->updateZones(changedZones)|| changed;
-        }
-        
-    }
-    
-    if (changed) {
-        scheduleSaveSettings();
-        return true;
-    } else{
-        return false;
-    }
-}
-
-
 void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
     if(lasers.size()<=lasernum) {
         ofLog(OF_LOG_ERROR, "Invalid laser number passed to addZoneToLaser(...)");
@@ -245,38 +190,10 @@ void ManagerBase::addZoneToLaser(ZoneId& zoneId, unsigned int lasernum) {
     lasers[lasernum]->addZone(zoneId);
 }
 
-int ManagerBase::getLaserIndexForBeamZoneId(ZoneId& zoneId) {
-        
-    for(int i = 0; i<lasers.size(); i++) {
-        Laser& laser = *lasers[i];
-        if(laser.hasZone(zoneId)) {
-            return i;
-        }
-        
-    }
-    return -1;
-}
-
-bool ManagerBase :: moveBeamZoneToIndex(int sourceindex, int targetindex) {
-    if(sourceindex == targetindex) return false;
-    if((sourceindex<0) || (sourceindex>=beamZoneContainer.getNumZoneIds()) || (targetindex<0) || (targetindex>=beamZoneContainer.getNumZoneIds()))
-        return false;
-    
-    ZoneId zoneid = beamZoneContainer.getBeamZoneAtIndex(sourceindex)->zoneId;
-    map<ZoneId, ZoneId> changedzones = beamZoneContainer.moveZoneByIdToIndex(zoneid,targetindex);
-    
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        laser->updateZones(changedzones);
-    }
-    return true;
-    
-}
-
-
-void ManagerBase::createDefaultCanvasZone() {
+void ManagerBase::createDefaultZone() {
     // check there aren't any zones yet?
     // create a zone equal to the width and height of the total output space
-    addCanvasZone(0,0,canvasTarget->getWidth(),canvasTarget->getHeight());
+    addZone(0,0,canvasTarget->getWidth(),canvasTarget->getHeight());
     
 }
 
@@ -292,7 +209,7 @@ void ManagerBase::drawDot( const glm::vec2& p, const ofColor& col, float intensi
 void ManagerBase::drawDot(const glm::vec3& p, const ofColor& col, float intensity, string profileLabel) {
     
     std::shared_ptr<Dot> d = std::make_shared<Dot>(getTransformed(p), col, intensity, profileLabel);
-    currentShapeTarget->addShape(d, useClipRectangle, clipRectangle);
+    canvasTarget->addShape(d, useClipRectangle, clipRectangle);
 }
 
 
@@ -309,7 +226,7 @@ void ManagerBase::drawLine(const glm::vec3& start, const glm::vec3& end, const o
     
     std::shared_ptr<Line> l = std::make_shared<Line>(getTransformed(start), getTransformed(end), col, profileLabel);
     
-    currentShapeTarget->addShape(l, useClipRectangle, clipRectangle);
+    canvasTarget->addShape(l, useClipRectangle, clipRectangle);
 
 }
 
@@ -334,7 +251,7 @@ void ManagerBase::drawCircle(const glm::vec3 & centre, const float& radius, cons
     }
     c->setDirty();
     
-    currentShapeTarget->addShape(c, useClipRectangle, clipRectangle);
+    canvasTarget->addShape(c, useClipRectangle, clipRectangle);
     
 }
 
@@ -362,7 +279,7 @@ void ManagerBase::drawPolyFromPoints(const vector<glm::vec3>& points, const vect
     std::shared_ptr<Polyline> p  = getPolyFromPoints(points, colours, closed, profileName, brightness);
         
     if(p->getLength()>0.1) {
-        currentShapeTarget->addShape(p, useClipRectangle, clipRectangle);
+        canvasTarget->addShape(p, useClipRectangle, clipRectangle);
     } else {
         // shape should get destroyed
     }
@@ -447,7 +364,7 @@ void ManagerBase::drawPolys(const vector<ofPolyline>& polys, vector<vector<ofCol
         std::shared_ptr<Polyline> poly = getPolyFromPoints(ofpolyline.getVertices(), colours[i], ofpolyline.isClosed(), profileName, brightness);
         poly->id = id;
         if(poly->getLength()>0.1) {
-            currentShapeTarget->addShape(poly, useClipRectangle, clipRectangle);
+            canvasTarget->addShape(poly, useClipRectangle, clipRectangle);
         } else {
            // shape should get destroyed
         }
@@ -471,7 +388,7 @@ void ManagerBase::drawPolysFromPoints(const vector<vector<glm::vec3>>& allPoints
         std::shared_ptr<Polyline> poly = getPolyFromPoints(allPoints[i], allColours[i], closed, profileName, brightness);
         poly->id = id;
         if(poly->getLength()>0.1) {
-            currentShapeTarget->addShape(poly, useClipRectangle, clipRectangle);
+            canvasTarget->addShape(poly, useClipRectangle, clipRectangle);
         } else {
             // should get destroyed
         }
@@ -508,7 +425,7 @@ void ManagerBase::drawPolysFromPointRefs(const vector<const vector<glm::vec3>*>&
         std::shared_ptr<Polyline> poly = getPolyFromPoints(*points, *colours, closed, profileName, brightness);
         poly->id = id;
         if(poly->getLength() > 0.1f) {
-            currentShapeTarget->addShape(poly, useClipRectangle, clipRectangle);
+            canvasTarget->addShape(poly, useClipRectangle, clipRectangle);
         }
     }
 }
@@ -551,7 +468,6 @@ void ManagerBase:: update(){
     //if(useBitmapMask) laserMask.update();
     // delete all the shapes - all shape objects need a destructor!
     canvasTarget->deleteShapes();
-    beamZoneContainer.deleteShapes(); 
     
     // updates all the zones. If zone->update returns true, then
     // it means that the zone has changed.
@@ -584,10 +500,6 @@ void ManagerBase:: update(){
 //        }
     }
      
-    if(useAltZones && (!hasAnyAltZones())) {
-        useAltZones.set(false);
-    }
-    
     if(settingsNeedSave && (ofGetElapsedTimef()-lastSaveTime>1)) {
         saveSettings();
     }
@@ -608,10 +520,6 @@ int ManagerBase::getNextId() {
 void ManagerBase::send(){
     
     canvasTarget->processShapes();
-    
-    for(int i = 0; i<beamZoneContainer.getNumBeamZones(); i++) {
-        beamZoneContainer.getBeamZoneAtIndex(i)->processShapes();
-    }
     
     // here's where the magic happens.
     // 1 :
@@ -657,21 +565,7 @@ void ManagerBase::send(){
         zoneContent.shapes = canvasTarget->getShapesForZoneId(inputZone->getZoneId());
 
     }
-    for(std::shared_ptr<ObjectWithZoneId>& zoneIdObject : beamZoneContainer.getZoneIds()) {
-        
-        std::shared_ptr<ShapeTargetBeamZone> beamzone = beamZoneContainer.getBeamZoneForZoneId(zoneIdObject->zoneId);
 
-        zonesContent.push_back(ZoneContent());
-        ZoneContent& zoneContent = zonesContent.back();
-        vector<std::shared_ptr<Shape>>& newshapes = zoneContent.shapes;
-        zoneContent.zoneId = zoneIdObject->zoneId;
-        zoneContent.sourceRectangle.set(0,0,800,800);
-        zoneContent.shapes = beamzone->shapes;
-        
-    }
-    
-
-    
     // 2 :
     // The lasers go through each of their zones, and pull out each shape
     // it'd need to be in zone space, then as each shape is converted to points, that's
@@ -743,15 +637,6 @@ void ManagerBase::updateGlobalTestPattern(){
         lasers[i]->setGlobalTestPattern(testPatternGlobalActive, testPatternGlobal);
     }
 }
-void ManagerBase::useAltZonesChanged(bool& state) {
-    
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        laser->useAlternate = useAltZones;
-        
-    }
-    
-}
-
 void ManagerBase::hideContentDuringTestPatternChanged(bool& state) {
     
     for(std::shared_ptr<Laser>& laser : lasers) {
@@ -788,10 +673,6 @@ bool ManagerBase::loadSettings() {
     }
     
     
-    if(!beamZoneContainer.deserialize(json["beamzones"])) {
-        // try old format
-        beamZoneContainer.deserialize(json["beamZones"]);
-    }
     canvasTarget->deserialize(json["canvastarget"]);
     loadAdditionalSettings(json);
     
@@ -828,8 +709,6 @@ bool ManagerBase::loadSettings() {
     // the vector (shouldn't be needed but it doesn't hurt)
     lasers.resize(numLasers);
     
-    // make sure the lasers adopt the zone labels from the beamZoneContainer
-    updateZoneLabels();
     // shouldn't be needed but hey
     disarmAllLasers();
     
@@ -852,17 +731,6 @@ bool ManagerBase::loadSettings() {
     
 }
 
-bool ManagerBase::updateZoneLabels() {
-    bool changed = false;
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        if(laser->updateZoneLabels(beamZoneContainer.getZoneIds())) {
-            changed = true;
-        }
-    }
-    return changed; 
-}
-
-
 bool ManagerBase::scheduleSaveSettings() {
     if(!settingsNeedSave) {
         settingsNeedSave = true;
@@ -881,7 +749,6 @@ bool ManagerBase::saveSettings() {
     ofJson json;
     ofSerialize(json, params);
 
-    beamZoneContainer.serialize(json["beamzones"]);
     canvasTarget->serialize(json["canvastarget"]);
     dacAssigner.serialize(json["dacassigner"]);
     saveAdditionalSettings(json);
@@ -955,7 +822,6 @@ void ManagerBase :: serialize(ofJson& json) {
    // ofJson& jsonLaserSettings = json; // ["managersettings"];
     ofSerialize(json, params);
 
-    beamZoneContainer.serialize(json["beamzones"]);
     canvasTarget->serialize(json["canvas"]);
     dacAssigner.serialize(json["dacassigner"]);
     
@@ -1025,26 +891,6 @@ bool ManagerBase::deserialize(ofJson& json) {
         canvasTarget->deserialize(json["canvas"]);
     }
 
-    if(!beamZoneContainer.deserialize(json["beamzones"])) {
-        // try old format
-        beamZoneContainer.deserialize(json["beamZones"]);
-    }
-    
-    vector<ZoneId> zonesToDelete;
-    // ok sanity check time! Let's make sure all the beam zones have lasers
-    for(int i = 0; i<beamZoneContainer.getNumZoneIds(); i++ ){
-        ZoneId& zoneid = beamZoneContainer.getBeamZoneAtIndex(i)->zoneId;
-        int laserindexforzone = getLaserIndexForBeamZoneId(zoneid);
-        if(laserindexforzone<0) {
-            zonesToDelete.push_back(zoneid);
-        }
-    }
-    while(zonesToDelete.size()>0) {
-        ZoneId zoneid = zonesToDelete.back();
-        beamZoneContainer.removeZoneById(zoneid);
-        zonesToDelete.pop_back();
-    } 
-    
     if(json.contains("dac_aliases")) {
         dacAssigner.dacAliasManager.deserialize(json["dac_aliases"]);
     }
@@ -1081,7 +927,7 @@ bool ManagerBase::deserialize(ofJson& json) {
 //}
 //template<typename T>
 //T ManagerBase::convert3DTo2D(T p) {
-//    return convert3DTo2D(p, currentShapeTarget->getBounds());
+//    return convert3DTo2D(p, canvasTarget->getBounds());
 //
 //}
 //
@@ -1093,29 +939,6 @@ std::shared_ptr<Laser>& ManagerBase::getLaser(int index){
 std::vector<std::shared_ptr<Laser>>& ManagerBase::getLasers(){
     return lasers;
 };
-
-bool ManagerBase::setTargetBeamZone(int index) {
-    std::shared_ptr<ShapeTargetBeamZone> beamzone = beamZoneContainer.getBeamZoneAtIndex(index);
-    if(beamzone) {
-        currentShapeTarget = beamzone;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
-std::shared_ptr<ShapeTargetBeamZone> ManagerBase::getBeamZoneByIndex(int index) {
-    return beamZoneContainer.getBeamZoneAtIndex(index);
-    
-}
-
-bool ManagerBase::setTargetCanvas(int index) {
-    // NB index for future use
-    currentShapeTarget = canvasTarget;
-    return true; 
-}
-
 
 bool ManagerBase::isLaserArmed(unsigned int i){
     if((i<0) || (i>=lasers.size())){
@@ -1134,49 +957,6 @@ bool ManagerBase::areAllLasersArmed(){
     return (lasers.size()==0)? false : true;
     
 }
-
-bool ManagerBase::areAllLasersUsingAlternateZones(){
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        if(!laser->useAlternate)  return false;
-    }
-    return (lasers.size()==0)? false : true;
-    
-}
-bool ManagerBase::hasAnyAltZones() {
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        if(laser->hasAnyAltZones()) return true;
-    }
-    return false;
-}
-
-
-bool ManagerBase::toggleAltZones() {
-
-    if (lasers.empty()) {
-        return false; // no lasers, nothing toggled
-    }
-
-    bool newState = !lasers.front()->useAlternate;
-    if(newState) setAllAltZones();
-    else unSetAllAltZones();
-    return newState; 
-
-
-}
-
-void ManagerBase::setAllAltZones() {
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        laser->useAlternate = true;
-    }
-    
-}
-void ManagerBase::unSetAllAltZones(){
-    for(std::shared_ptr<Laser>& laser : lasers) {
-        laser->useAlternate = false;
-    }
-    
-}
-
 
 //------------------- DEPRECATED --------------------------
 
@@ -1206,10 +986,8 @@ void ManagerBase::syncLaserState() {
     laserState.globalBrightness       = globalBrightness;
     laserState.testPatternGlobalActive = testPatternGlobalActive;
     laserState.testPatternGlobal      = testPatternGlobal;
-    laserState.useAltZones            = useAltZones;
     laserState.allLasersArmed         = areAllLasersArmed();
     laserState.numLasers              = (int)lasers.size();
-    laserState.numBeamZones           = (int)beamZoneContainer.getNumZoneIds();
 }
 
 
@@ -1305,45 +1083,29 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             // via its own override or signal
         },
 
-        // --- Beam zone management ---
-        [&](LaserMsg::CreateBeamZone&) {
-            createNewBeamZone();
-            fireZonesChanged();
-        },
-        [&](LaserMsg::DeleteBeamZone& m) {
-            // Use DeleteOutputZone for actual beam zone deletion.
-            // This handler is kept for direct beam-zone-by-UID deletion if needed.
-        },
-        [&](LaserMsg::MoveBeamZone& m) {
-            moveBeamZoneToIndex(m.sourceIndex, m.targetIndex);
-            fireZonesChanged();
-        },
-        [&](LaserMsg::AddZoneToLaser& m) {
-            // Find the ZoneId by uid
-            for(int i = 0; i < beamZoneContainer.getNumBeamZones(); i++) {
-                auto bz = beamZoneContainer.getBeamZoneAtIndex(i);
-                if(bz && bz->zoneId.getUid() == m.zoneUid) {
-                    addZoneToLaser(bz->zoneId, m.laserIndex);
-                    break;
-                }
-            }
-            fireZonesChanged();
-        },
-
-        // --- Canvas zone management ---
-        [&](LaserMsg::AddCanvasZone& m) {
-            addCanvasZone(m.x, m.y, m.w, m.h);
+        // --- Zone management ---
+        [&](LaserMsg::AddZone& m) {
+            addZone(m.x, m.y, m.w, m.h);
             fireCanvasChanged();
+            fireZonesChanged();
         },
-        [&](LaserMsg::DeleteCanvasZone& m) {
+        [&](LaserMsg::DeleteZone& m) {
             auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
             if(zone) {
-                deleteCanvasZone(zone);
+                deleteZone(zone);
                 fireCanvasChanged();
                 fireZonesChanged();
             }
         },
-        [&](LaserMsg::CanvasZoneMoved& m) {
+        [&](LaserMsg::AddZoneToLaser& m) {
+            // Find the ZoneId by uid
+            auto obj = canvasTarget->getObjectForZoneIdUid(const_cast<string&>(m.zoneUid));
+            if(obj) {
+                addZoneToLaser(obj->zoneId, m.laserIndex);
+            }
+            fireZonesChanged();
+        },
+        [&](LaserMsg::ZoneMoved& m) {
             auto zone = canvasTarget->getInputZoneForZoneIdUid(m.zoneUid);
             if(zone) {
                 zone->set(m.rect.x, m.rect.y, m.rect.width, m.rect.height);
@@ -1366,12 +1128,10 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
             updateGlobalTestPattern();
             fireTestPatternChanged();
         },
-        [&](LaserMsg::SetUseAltZones& m) {
-            useAltZones = m.state;
+        [&](LaserMsg::SetUseAltZones&) {
             fireGlobalSettingsChanged();
         },
         [&](LaserMsg::ToggleAltZones&) {
-            toggleAltZones();
             fireGlobalSettingsChanged();
         },
         [&](LaserMsg::SetGlobalLatency&) {
@@ -1397,7 +1157,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         [&](LaserMsg::ZoneMuteChanged& m) {
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
                         oz->muted = m.muted;
                     }
                 }
@@ -1407,7 +1167,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         [&](LaserMsg::ZoneLockChanged& m) {
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
                         oz->locked = m.locked;
                     }
                 }
@@ -1417,7 +1177,7 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         [&](LaserMsg::ZoneTypeChanged& m) {
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
                         oz->transformType = m.transformType;
                     }
                 }
@@ -1427,46 +1187,26 @@ void ManagerBase::receiveLaserMessage(LaserMsgEnvelope& env) {
         [&](LaserMsg::ZoneResetTransform& m) {
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
                         oz->resetAllTransforms();
                     }
                 }
             }
             fireZonesChanged();
         },
-        [&](LaserMsg::AddAltZone& m) {
-            if(m.laserIndex >= 0 && m.laserIndex < (int)lasers.size()) {
-                // Find matching ZoneId by UID from the laser's existing zones
-                for(auto& oz : lasers[m.laserIndex]->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && !oz->getIsAlternate()) {
-                        lasers[m.laserIndex]->addAltZone(oz->getZoneId());
-                        break;
-                    }
-                }
-                fireZonesChanged();
-            }
+        [&](LaserMsg::AddAltZone&) {
+            fireZonesChanged();
         },
         [&](LaserMsg::DeleteOutputZone& m) {
-            // Find the matching zone first, then delete outside the iterator
-            std::shared_ptr<OutputZone> found = nullptr;
-            std::shared_ptr<Laser> ownerLaser = nullptr;
+            // Find the matching zone and remove it from its laser
             for(auto& laser : lasers) {
                 for(auto& oz : laser->outputZones) {
-                    if(oz->getZoneId().getUid() == m.zoneUid && oz->getIsAlternate() == m.isAlt) {
-                        found = oz;
-                        ownerLaser = laser;
-                        break;
+                    if(oz->getZoneId().getUid() == m.zoneUid) {
+                        laser->removeZone(oz);
+                        fireZonesChanged();
+                        return;
                     }
                 }
-                if(found) break;
-            }
-            if(found && ownerLaser) {
-                if(found->getZoneId().getType() == ZoneId::ZoneType::CANVAS) {
-                    ownerLaser->removeZone(found);
-                } else {
-                    deleteBeamZone(found);
-                }
-                fireZonesChanged();
             }
         },
 

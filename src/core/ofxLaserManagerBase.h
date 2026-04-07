@@ -24,8 +24,6 @@
 #include "ofxLaserZoneContent.h"
 
 #include "ofxLaserShapeTargetCanvas.h"
-#include "ofxLaserShapeTargetBeamZone.h"
-#include "ofxLaserBeamZoneContainer.h"
 #include "ClipperUtils.h"
 #include "SebUtils.h"
 #include "ofxLaserState.h"
@@ -52,23 +50,11 @@ class ManagerBase : public TransformationManager {
    
     virtual bool deleteLaser(std::shared_ptr<Laser>& laser);
     
-    ZoneId createNewBeamZone();
-    bool deleteBeamZone(std::shared_ptr<OutputZone>& outputZone);
-    std::shared_ptr<ShapeTargetBeamZone> getBeamZoneByIndex(int index);
-    bool updateZoneLabels();
-    
-    ZoneId addCanvasZone(float x = 0 , float y = 0, float w = -1, float h= -1);
-    ZoneId addCanvasZone(const ofRectangle& zoneRect);
-    virtual bool deleteCanvasZone(std::shared_ptr<InputZone> zone);
-    
-    bool toggleAltZones();
-    bool hasAnyAltZones();
-    void setAllAltZones();
-    void unSetAllAltZones(); 
+    ZoneId addZone(float x = 0 , float y = 0, float w = -1, float h= -1);
+    ZoneId addZone(const ofRectangle& zoneRect);
+    virtual bool deleteZone(std::shared_ptr<InputZone> zone);
 
     void addZoneToLaser(ZoneId& zoneId, unsigned int lasernum);
-    int getLaserIndexForBeamZoneId(ZoneId& zoneId); 
-    bool moveBeamZoneToIndex(int sourceindex, int targetindex);
     
     virtual void setCanvasSize(int width, int height);
     int getCanvasWidth() {
@@ -103,10 +89,7 @@ public:
     void disarmAllLasers();
     void updateGlobalTestPattern();
     //void canvasSizeChanged(int&size);
-    void useAltZonesChanged(bool& state); 
-    
     void hideContentDuringTestPatternChanged(bool& state); 
-    bool areAllLasersUsingAlternateZones();
     
     void setStroke(bool strokestate) {
         strokeOn = strokestate;
@@ -149,16 +132,7 @@ public:
     vector<std::shared_ptr<Laser>>& getLasers();
     std::shared_ptr<Laser>& getLaser(int index = 0);
     int getNumLasers() { return (int)lasers.size(); };
-    int getNumBeamZones() { return (int)beamZoneContainer.getNumZoneIds(); }; 
-    vector<string> getBeamZoneLabels() {
-        vector<string> labels;
-        for(int i = 0; i<beamZoneContainer.getNumBeamZones(); i++ ) {
-            std::shared_ptr<ShapeTargetBeamZone> beamzone = beamZoneContainer.getBeamZoneAtIndex(i);
-            labels.push_back(beamzone->zoneId.getLabel());
-            
-        }
-        return labels;
-    }
+    int getNumZones() { return canvasTarget->getNumZoneIds(); }
     
     OF_DEPRECATED_MSG("ofxLaser::Manager::initGui(bool showAdvanced) - show advanced parameter no longer a feature", void initGui(bool showAdvanced));
     OF_DEPRECATED_MSG("You no longer need to call ofxLaser::Manager::setup(width, height). If you want to set the size, use setCanvasSize(w,h)", void setup(int w, int h));
@@ -167,8 +141,6 @@ public:
     OF_DEPRECATED_MSG("Lasers are no longer set up in code, use the UI within the app.", void addProjector());
   
 
-    bool setTargetBeamZone(int index);
-    bool setTargetCanvas(int canvasIndex = 0);
     
     
     bool isLaserArmed(unsigned int i);
@@ -214,7 +186,6 @@ public:
     int testPatternGlobal;
     bool testPatternGlobalActive;
     
-    ofParameter<bool> useAltZones;
     //ofParameter<bool> useBitmapMask;
     //ofParameter<bool> showBitmapMask;
     //ofParameter<bool> laserCanvasMaskOutlines;
@@ -292,16 +263,14 @@ public:
     
     virtual void createAndAddLaser();
     
-    void createDefaultCanvasZone();
+    void createDefaultZone();
     
     //ofxLaserZoneMode zoneMode = OFXLASER_ZONE_AUTOMATIC;
     //int targetZone = 0; // for OFXLASER_ZONE_MANUAL mode
     
     std::vector<std::shared_ptr<Laser>> lasers;
     
-    std::shared_ptr<ShapeTarget> currentShapeTarget;
     std::shared_ptr<ShapeTargetCanvas> canvasTarget;
-    BeamZoneContainer beamZoneContainer;
     
       
     // used in "drawPoly" functions

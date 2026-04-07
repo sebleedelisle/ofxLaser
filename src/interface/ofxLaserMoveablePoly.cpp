@@ -104,18 +104,8 @@ void MoveablePoly :: drawLabel() {
     }
     
     //
-#ifdef OFXLASER_USE_FONT_MANAGER
-    ofPushMatrix();
-    ofTranslate(round(getCentre().x), round(getCentre().y));
-    //ofDrawCircle(0,0,10);
-    ofScale(1/scale, 1/scale);
-    ofFill();
-    ofxFontManager :: drawStringAsShapes(getLabel(), glm::vec2(0,0), ofxFontManager::CENTRE, ofxFontManager::MIDDLE);
-    ofPopMatrix();
-#else
     //ofDrawBitmapString(getLabel(), centre - glm::vec3(4.0f*label.size()/scale,-4.0f/scale, 0));
     ofDrawBitmapString(getLabel(), getCentre());// - glm::vec3(4.0f*getLabel().size()/scale,-4.0f/scale, 0));
-#endif
     ofPopStyle();
     
 }

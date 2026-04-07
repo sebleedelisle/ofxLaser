@@ -12,9 +12,6 @@
 #include "ofxLaserDragHandle.h"
 #include "ofxLaserPolygonBase.h"
 #include "GlobalScale.h"
-#ifdef OFXLASER_USE_FONT_MANAGER
-#include "ofxFontManager.h"
-#endif
 namespace ofxLaser {
 
 class MoveablePoly {
@@ -174,4 +171,3 @@ class MoveablePoly {
     
 };
 }
-
