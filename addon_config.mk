@@ -110,9 +110,16 @@ common:
 		# Grix's Helios SDK still uses a few C-style constructs that MSYS2 g++
 		# treats as hard errors unless permissive mode is enabled.
 		ADDON_CFLAGS += -fpermissive
+		ADDON_CFLAGS += -DOFXLASER_DISABLE_SVG_SUPPORT
 		ADDON_PKG_CONFIG_LIBRARIES += libxml-2.0
 		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
-		ADDON_LIBS += libs/ofxSvgExtra/libs/svgtiny/lib/vs/x64/svgtiny.lib
+		# GNU ld cannot consume the vendored svgtiny Windows library, so the
+		# smoke build falls back to a local noop implementation instead.
+		ADDON_SOURCES_EXCLUDE += libs/ofxSvgExtra/src/%
+		# Grix's Helios IDN SDK defines the same log helper in multiple
+		# translation units on Windows. Keep the vendor sources untouched and
+		# let the linker accept the duplicate helper symbol.
+		ADDON_LDFLAGS += -Wl,--allow-multiple-definition
 
 
 	#win_cb:
