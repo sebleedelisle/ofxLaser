@@ -111,6 +111,8 @@ common:
 		# treats as hard errors unless permissive mode is enabled.
 		ADDON_CFLAGS += -fpermissive
 		ADDON_PKG_CONFIG_LIBRARIES += libxml-2.0
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
+		ADDON_LIBS += libs/ofxSvgExtra/libs/svgtiny/lib/vs/x64/svgtiny.lib
 
 
 	#win_cb:
