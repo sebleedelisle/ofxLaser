@@ -83,15 +83,6 @@ common:
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 	ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/shared_library/%
 
-	# Libera-only refactor strategy:
-	# stop compiling legacy per-protocol DAC implementations and managers.
-	ADDON_SOURCES_EXCLUDE += src/dacs/EtherDream/%
-	ADDON_SOURCES_EXCLUDE += src/dacs/Helios/%
-	ADDON_SOURCES_EXCLUDE += src/dacs/LaserDock/%
-	ADDON_SOURCES_EXCLUDE += src/dacs/LaserDockNetwork/%
-	ADDON_SOURCES_EXCLUDE += src/dacs/IDN/%
-	# Keep AVB UI in Manager, but do not compile legacy AVB DAC implementation.
-	ADDON_SOURCES_EXCLUDE += src/dacs/AVBSound/%
 
 	linux64:
 		# binary libraries, these will be usually parsed from the file system but some 

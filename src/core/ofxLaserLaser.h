@@ -18,7 +18,6 @@
 #include "ofxLaserConstants.h"
 #include "ofxLaserPointsForShape.h"
 #include "ofxLaserDacBase.h"
-#include "ofxLaserDacNetworkBaseThreaded.h"
 #include "ofxLaserDacEmpty.h"
 #include "ofxLaserOutputZone.h"
 #include "ofxLaserManualShape.h"

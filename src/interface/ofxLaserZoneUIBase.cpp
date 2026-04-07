@@ -1,16 +1,16 @@
 //
-//  ofxLaserZoneUiBase.cpp
+//  ofxLaserZoneUIBase.cpp
 //
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.
 //
 //
 
-#include "ofxLaserZoneUiBase.h"
+#include "ofxLaserZoneUIBase.h"
 using namespace ofxLaser;
 
 
-bool ZoneUiBase::updateDataFromUi(std::shared_ptr<OutputZone>& outputZone) {
+bool ZoneUIBase::updateDataFromUi(std::shared_ptr<OutputZone>& outputZone) {
     bool changed = false;
     if(muted!=outputZone->muted) {
         outputZone->muted = muted ;
@@ -28,7 +28,7 @@ bool ZoneUiBase::updateDataFromUi(std::shared_ptr<OutputZone>& outputZone) {
     return changed;
 }
 
-bool ZoneUiBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
+bool ZoneUIBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
     bool changed = false;
     
     if(zoneId!= outputZone->getZoneId()) {
@@ -68,7 +68,7 @@ bool ZoneUiBase::updateFromData(std::shared_ptr<OutputZone>& outputZone){
     return changed;
 }
 
-void ZoneUiBase :: updateLabel() {
+void ZoneUIBase :: updateLabel() {
     
     label = ofToString(zoneId.getLabel());
     if(inputZoneAlt) {
@@ -86,7 +86,7 @@ void ZoneUiBase :: updateLabel() {
 
 
 
-void ZoneUiBase :: drawLabel() {
+void ZoneUIBase :: drawLabel() {
     
     
     if(!showLabel) return;

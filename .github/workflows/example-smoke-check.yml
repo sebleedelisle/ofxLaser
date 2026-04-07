@@ -32,6 +32,9 @@ jobs:
           path: openFrameworks
           submodules: recursive
 
+      - name: Download OF libs
+        run: openFrameworks/scripts/osx/download_libs.sh
+
       - name: Checkout ofxLaser
         uses: actions/checkout@v4
         with:

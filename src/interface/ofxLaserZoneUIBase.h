@@ -1,5 +1,5 @@
 //
-//  ofxLaserZoneUiBase.h
+//  ofxLaserZoneUIBase.h
 //
 //
 //  Created by Seb Lee-Delisle on 14/01/2023.
@@ -17,18 +17,18 @@ class ZoneTransformBase;
 
 namespace ofxLaser {
 
-class ZoneUiBase : public MoveablePoly {
+class ZoneUIBase : public MoveablePoly {
   
     public :
     
-    ZoneUiBase() = default;
-    virtual ~ZoneUiBase() = default; 
+    ZoneUIBase() = default;
+    virtual ~ZoneUIBase() = default; 
     
     
     virtual void drawLabel() override;
     
 
-    virtual bool updateDataFromUi(std::shared_ptr<OutputZone>& outputZone);
+    virtual bool updateDataFromUI(std::shared_ptr<OutputZone>& outputZone);
     virtual bool updateFromData(std::shared_ptr<OutputZone>& outputZone);
     void updateLabel(); 
 
