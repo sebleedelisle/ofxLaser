@@ -80,7 +80,6 @@ export MAC_OS_CPP_VER = -std=c++17
 EOF
     fi
 
-    make -C "${build_dir}" clean >/dev/null
     make -C "${build_dir}" "${EXAMPLE_TARGET}" -j"${PARALLEL_JOBS}"
 done
 
