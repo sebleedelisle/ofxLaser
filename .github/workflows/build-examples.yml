@@ -46,6 +46,39 @@ jobs:
         working-directory: openFrameworks/addons/ofxLaser
         run: ./scripts/build-examples.sh
 
+  build-examples-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout openFrameworks
+        uses: actions/checkout@v4
+        with:
+          repository: openframeworks/openFrameworks
+          ref: '0.12.1'
+          path: openFrameworks
+          submodules: recursive
+
+      - name: Install OF Linux dependencies
+        run: sudo openFrameworks/scripts/linux/ubuntu/install_dependencies.sh -y
+
+      - name: Download OF Linux libs
+        run: openFrameworks/scripts/linux/download_libs.sh
+
+      - name: Checkout ofxLaser
+        uses: actions/checkout@v4
+        with:
+          path: openFrameworks/addons/ofxLaser
+          submodules: recursive
+
+      - name: Build examples
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          BUILD_CORE_TARGET: Release
+          EXAMPLE_TARGET: ReleaseNoOF
+          JOBS: 4
+        run: ./scripts/build-examples.sh
+
   build-examples-windows-msys2:
     runs-on: windows-latest
     timeout-minutes: 60
