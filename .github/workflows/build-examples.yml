@@ -118,5 +118,5 @@ jobs:
         env:
           BUILD_CORE_TARGET: Debug
           EXAMPLE_TARGET: DebugNoOF
-          JOBS: 2
+          JOBS: 4
         run: ./scripts/build-examples.sh
