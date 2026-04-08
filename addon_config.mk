@@ -85,6 +85,7 @@ common:
 
 
 	linux64:
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
 		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		# binary libraries, these will be usually parsed from the file system but some 
 		# libraries need to passed to the linker in a specific order/
@@ -99,6 +100,7 @@ common:
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
 	linux:
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
 		ADDON_SOURCES_EXCLUDE += libs/libera-core/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
