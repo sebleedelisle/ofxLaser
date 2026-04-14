@@ -41,7 +41,7 @@ Current status
 The **libera-major-refactor** branch is undergoing a significant overhaul:
 * Pure ofxGui interface (ImGui dependency removed)
 * Poco dependency removed
-* DAC communication handled by **libera-core** backend
+* DAC communication handled by **libera-laser** backend
 * All lasers, zones and masks are set up within the app's UI and saved to config files
 * Automatic discovery of laser controllers (DACs)
 * Much simpler set up in code, see examples
@@ -170,7 +170,10 @@ Network :
 
 Licence
 -------
-This project is licensed under the **ofxLaser License (Non-Commercial Share-Alike)**.\nIt may be used and modified for non-commercial purposes only.\nCommercial use requires a separate licence - contact [seb at seblee.co].\nSee the [LICENSE](LICENSE) file for details.
+This project is licensed under the **ofxLaser License (Non-Commercial Share-Alike)**.
+It may be used and modified for non-commercial purposes only.
+Commercial use requires a separate licence - contact [seb at seblee.co].
+See the [LICENSE](LICENSE) file for details.
 Copyright (c) 2012-2026 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.co](https://seblee.co)
 
 Installation
@@ -189,7 +192,7 @@ If you already cloned without submodules, run:
 	> cd openFrameworks/addons/ofxLaser
 	> git submodule update --init --recursive
 
-The repo depends on the `libs/libera-core` submodule, so a plain `git clone` is not enough.
+The repo depends on the `libs/libera-laser` submodule, so a plain `git clone` is not enough.
 
 Downloading the GitHub ZIP is not recommended because it will not fetch submodule contents automatically.
 
@@ -202,7 +205,7 @@ ofxGui (comes with oF)
 ofxSvg (comes with oF)
 
 Open source libraries (included in source) :
-libera-core (git submodule)
+libera-laser (git submodule)
 clipper
 libusb
 
