@@ -47,8 +47,51 @@ jobs:
         run: ./scripts/build-examples.sh
 
   build-examples-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
+    env:
+      OF_LINUX_APT_PACKAGES: >-
+        build-essential
+        pkg-config
+        libssl-dev
+        libcurl4-openssl-dev
+        libjack-jackd2-dev
+        freeglut3-dev
+        libasound2-dev
+        libx11-dev
+        libxmu-dev
+        libxrandr-dev
+        libxxf86vm-dev
+        libgl1-mesa-dev
+        libglu1-mesa-dev
+        libraw1394-dev
+        libudev-dev
+        libdrm-dev
+        libglew-dev
+        libxcursor-dev
+        libxi-dev
+        libxinerama-dev
+        libopenal-dev
+        libsndfile1-dev
+        libfreeimage-dev
+        libcairo2-dev
+        libfreetype6-dev
+        libfontconfig-dev
+        libharfbuzz-dev
+        libpulse-dev
+        libusb-1.0-0-dev
+        libgtk2.0-dev
+        libgtk-3-dev
+        libassimp-dev
+        librtaudio-dev
+        libgstreamer1.0-dev
+        libgstreamer-plugins-base1.0-dev
+        libglfw3-dev
+        liburiparser-dev
+        libpugixml-dev
+        libxml2-dev
+        libpoco-dev
+        zlib1g-dev
 
     steps:
       - name: Checkout openFrameworks
@@ -59,8 +102,13 @@ jobs:
           path: openFrameworks
           submodules: recursive
 
-      - name: Install OF Linux dependencies
-        run: sudo openFrameworks/scripts/linux/ubuntu/install_dependencies.sh -y
+      - name: Install Linux build dependencies
+        run: |
+          # The openFrameworks installer upgrades parts of the hosted runner and
+          # has shown 50+ minute stalls in CI. Install only the packages needed
+          # for the pinned OF 0.12.1 Linux build instead.
+          sudo apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${OF_LINUX_APT_PACKAGES}
 
       - name: Download OF Linux libs
         run: openFrameworks/scripts/linux/download_libs.sh
