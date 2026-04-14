@@ -345,18 +345,12 @@ bool DacManagerLibera::disconnectAndDeleteDac(const string& id) {
         dacsById.erase(wrapperIt);
     }
 
-    // Then drop manager-owned controller state.
-    std::shared_ptr<libera::core::LaserController> controller;
+    // Then drop manager-owned controller state. Libera managers only keep weak
+    // references, so once the wrapper is closed and this shared_ptr is erased
+    // the controller will destruct and tear down its own worker/transport.
     {
         std::scoped_lock<std::mutex> lock(controllerMutex);
-        auto controllerIt = controllerByStableId.find(id);
-        if (controllerIt != controllerByStableId.end()) {
-            controller = controllerIt->second;
-            controllerByStableId.erase(controllerIt);
-        }
-    }
-    if (controller) {
-        controller->stop();
+        controllerByStableId.erase(id);
     }
 
     return true;
@@ -428,16 +422,12 @@ void DacManagerLibera::exit() {
     }
     dacsById.clear();
 
-    // Stop manager-owned controllers.
+    // Release manager-owned controllers. Their destructors stop worker threads
+    // and close transports once no other shared owners remain.
     std::unordered_map<string, std::shared_ptr<libera::core::LaserController>> snapshot;
     {
         std::scoped_lock<std::mutex> lock(controllerMutex);
         snapshot.swap(controllerByStableId);
-    }
-    for (auto& pair : snapshot) {
-        if (pair.second) {
-            pair.second->stop();
-        }
     }
 
     // Take ownership of liberaSystem outside the lock so that the (potentially

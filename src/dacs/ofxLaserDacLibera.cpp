@@ -196,8 +196,8 @@ string DacLibera::getStatusSummary() {
 
 void DacLibera::reset() {
     // Reset strategy for generic libera wrappers:
-    // ask the current controller to stop and let the manager reconnect/create
-    // a replacement controller if needed.
+    // clear any queued/callback content, disarm output, and let the manager
+    // reconnect/create a replacement controller if needed.
     close();
 }
 
@@ -205,7 +205,8 @@ void DacLibera::close() {
     std::scoped_lock<std::mutex> lock(controllerMutex);
     std::shared_ptr<libera::core::LaserController> controller = lockController();
     if (controller) {
-        controller->stop();
+        controller->setArmed(false);
+        controller->clearContentSource();
     }
     controllerWeak.reset();
 }
