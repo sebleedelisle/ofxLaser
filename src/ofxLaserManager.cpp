@@ -1371,11 +1371,7 @@ void Manager::onCanvasAddZonePressed() {
 }
 
 void Manager::onCanvasAddGuideImagePressed() {
-#ifdef OFXLASER_USE_OFXNATIVE
-    ofFileDialogResult result = ofxNative::systemLoadDialog("Choose guide image file", false, "", {"png", "jpg", "gif", "jpeg", "bmp"});
-#else
     ofFileDialogResult result = ofSystemLoadDialog("Choose guide image file");
-#endif
     if(result.bSuccess) {
         canvasTarget->addGuideImage(result.filePath);
         scheduleSaveSettings();

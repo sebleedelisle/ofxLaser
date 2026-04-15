@@ -57,10 +57,8 @@ void ViewWithMoveables :: drawMoveables() {
     for(std::shared_ptr<MoveablePoly>& uiElement: uiElementsSorted) {
         uiElement->draw();
         ofPushMatrix();
-#ifndef OFXLASER_USE_FONT_MANAGER
         // fix for bitmap fonts which act weird with translation / scale
         ofTranslate(-outputRect.getTopLeft() / scale);
-#endif
         uiElement->drawLabel();
         ofPopMatrix();
         

@@ -13,10 +13,6 @@
 #include "ofxGui.h"
 #include <memory>
 
-#ifdef OFXLASER_USE_OFXNATIVE
-#include "ofxNative.h"
-#endif
-
 namespace ofxLaser {
 
 class CanvasViewController;
