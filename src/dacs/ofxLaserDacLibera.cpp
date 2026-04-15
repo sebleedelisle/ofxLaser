@@ -1,0 +1,245 @@
+//
+//  ofxLaserDacLibera.cpp
+//  ofxLaser
+//
+//  Adapter strategy:
+//  - This class never discovers controllers.
+//  - It only forwards ofxLaser frame/rate/arm/shift calls into a controller
+//    provided by a manager.
+//  - Blanking after arm is delegated to libera so we can remove duplicated
+//    blanking behavior from legacy ofxLaser DAC paths over time.
+
+#include "ofxLaserDacLibera.h"
+
+#include <algorithm>
+#include <chrono>
+#include <utility>
+
+using namespace ofxLaser;
+
+namespace {
+
+const char* controllerStatusLabel(libera::core::ControllerStatus status) {
+    switch (status) {
+        case libera::core::ControllerStatus::Good:
+            return "Good";
+        case libera::core::ControllerStatus::Issues:
+            return "Warning";
+        case libera::core::ControllerStatus::Error:
+            return "Error";
+    }
+
+    return "Unknown";
+}
+
+} // namespace
+
+DacLibera::DacLibera(Descriptor descriptor,
+                     const std::shared_ptr<libera::core::LaserController>& controller)
+: descriptor(std::move(descriptor))
+, controllerWeak(controller) {
+    // ofxLaser should not do legacy per-frame colour shifting for this adapter;
+    // libera handles scanner-sync colour delay internally.
+    colourShiftImplemented = true;
+    if (controller) {
+        applyRuntimeStateToController(*controller);
+    }
+}
+
+DacLibera::~DacLibera() {
+    close();
+}
+
+std::shared_ptr<libera::core::LaserController> DacLibera::lockController() const {
+    return controllerWeak.lock();
+}
+
+void DacLibera::applyRuntimeStateToController(libera::core::LaserController& controller) const {
+    // When a wrapper is rebound to a new controller, we immediately mirror
+    // the user-facing DAC settings so output behavior stays consistent.
+    controller.setPointRate(configuredPointRate.load(std::memory_order_relaxed));
+    configuredPointRate.store(controller.getPointRate(), std::memory_order_relaxed);
+    controller.setScannerSync(std::max(0.0, static_cast<double>(colourShift.load(std::memory_order_relaxed))));
+    controller.setArmed(armed);
+    // Keep ofxLaser's existing latency setting as the source of truth for
+    // libera frame scheduling whenever a controller is attached/rebound.
+    libera::core::LaserController::setTargetLatency(
+        std::chrono::milliseconds(std::max(0, maxLatencyMS.load(std::memory_order_relaxed))));
+}
+
+bool DacLibera::sendFrame(const vector<Point>& points) {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (!controller) {
+        return false;
+    }
+
+    if (points.empty()) {
+        return true;
+    }
+
+    if (!controller->isReadyForNewFrame()) {
+        return false;
+    }
+
+    libera::core::Frame frame;
+    PointConverter::convertPoints(points, frame.points, descriptor.pointPolicy);
+    // Leave the presentation time unset so libera can stamp it using the
+    // current targetLatency configured via isReadyForFrame().
+
+    return controller->sendFrame(std::move(frame));
+}
+
+bool DacLibera::setPointsPerSecond(uint32_t newpps) {
+    configuredPointRate.store(newpps, std::memory_order_relaxed);
+
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        controller->setPointRate(newpps);
+        configuredPointRate.store(controller->getPointRate(), std::memory_order_relaxed);
+    }
+    return true;
+}
+
+uint32_t DacLibera::getPointsPerSecond() {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        const auto controllerPointRate = controller->getPointRate();
+        if (controllerPointRate > 0) {
+            configuredPointRate.store(controllerPointRate, std::memory_order_relaxed);
+            return controllerPointRate;
+        }
+    }
+
+    return configuredPointRate.load(std::memory_order_relaxed);
+}
+
+bool DacLibera::setColourShift(float shiftSeconds) {
+    colourShift.store(shiftSeconds, std::memory_order_relaxed);
+    const double tenThousandths = std::max(0.0, static_cast<double>(shiftSeconds));
+
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        controller->setScannerSync(tenThousandths);
+    }
+    return true;
+}
+
+void DacLibera::setArmed(bool state) {
+    // We intentionally bypass DacBase::setArmed blank-point behavior here and
+    // rely on libera's own startup/arm blanking semantics.
+    armed = state;
+    blankPointsAfterReArmRemaining = 0;
+
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        controller->setArmed(state);
+    }
+}
+
+string DacLibera::getType() {
+    return descriptor.type;
+}
+
+string DacLibera::getRawId() {
+    return descriptor.rawId;
+}
+
+int DacLibera::getStatus() {
+    std::shared_ptr<libera::core::LaserController> controller;
+    {
+        std::scoped_lock<std::mutex> lock(controllerMutex);
+        controller = lockController();
+    }
+    if (!controller) {
+        return OFXLASER_DACSTATUS_ERROR;
+    }
+
+    switch (controller->getStatus()) {
+        case libera::core::ControllerStatus::Good:
+            return OFXLASER_DACSTATUS_GOOD;
+        case libera::core::ControllerStatus::Issues:
+            return OFXLASER_DACSTATUS_WARNING;
+        case libera::core::ControllerStatus::Error:
+            return OFXLASER_DACSTATUS_ERROR;
+    }
+
+    return OFXLASER_DACSTATUS_ERROR;
+}
+
+string DacLibera::getStatusSummary() {
+    std::shared_ptr<libera::core::LaserController> controller;
+    {
+        std::scoped_lock<std::mutex> lock(controllerMutex);
+        controller = lockController();
+    }
+    if (!controller) {
+        return "Status: Error\nController missing";
+    }
+
+    std::string summary =
+        std::string("Status: ") + controllerStatusLabel(controller->getStatus());
+    const std::vector<libera::core::ControllerErrorInfo> errors = controller->getErrors();
+    if (!errors.empty()) {
+        summary += "\nErrors:";
+        for (const auto& error : errors) {
+            summary += "\n- " + error.label + " x" + std::to_string(error.count);
+        }
+    }
+
+    return summary;
+}
+
+void DacLibera::reset() {
+    // Reset strategy for generic libera wrappers:
+    // clear any queued/callback content, disarm output, and let the manager
+    // reconnect/create a replacement controller if needed.
+    close();
+}
+
+void DacLibera::close() {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (controller) {
+        controller->setArmed(false);
+        controller->clearContentSource();
+    }
+    controllerWeak.reset();
+}
+
+bool DacLibera::isReadyForFrame(int maxLatencyMS) {
+    this->maxLatencyMS = maxLatencyMS;
+
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    std::shared_ptr<libera::core::LaserController> controller = lockController();
+    if (!controller) {
+        return false;
+    }
+
+    // Legacy API asks "are we ready for a frame at this latency?". Libera
+    // exposes a global target latency for frame mode, so we update that first.
+    libera::core::LaserController::setTargetLatency(std::chrono::milliseconds(maxLatencyMS));
+    return controller->isReadyForNewFrame();
+}
+
+void DacLibera::setController(const std::shared_ptr<libera::core::LaserController>& controller) {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    controllerWeak = controller;
+    if (controller) {
+        applyRuntimeStateToController(*controller);
+    }
+}
+
+void DacLibera::setDescriptor(Descriptor newDescriptor) {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    descriptor = std::move(newDescriptor);
+}
+
+std::shared_ptr<libera::core::LaserController> DacLibera::getController() const {
+    std::scoped_lock<std::mutex> lock(controllerMutex);
+    return lockController();
+}

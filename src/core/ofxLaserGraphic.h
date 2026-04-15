@@ -7,10 +7,9 @@
 
 #pragma once
 #include "ofMain.h"
-//#include "ofxLaserManagerBase.h"
 #include "ofxClipper.h"
 #include "ofxLaserFactory.h"
-#include "ofxSvgExtra.h"
+#include "ofxSvg.h"
 
 namespace ofxLaser {
 
@@ -50,7 +49,7 @@ class Graphic {
         
     void addSvgFromFile(string filename, bool optimise = true, bool subtractFills = true);
     void addSvgFromString(string data, bool optimise = true, bool subtractFills = true);
-    void addSvg(ofxSVGExtra& svg, bool optimise = true, bool subtractFills = true);
+    void addSvg(ofxSVG& svg, bool optimise = true, bool subtractFills = true);
 	void addPolyline(const ofPolyline* poly, ofColor colour, bool filled = true, bool useTransform = true){
 		addPolyline(*poly, colour, filled, useTransform);
 	}
@@ -107,7 +106,7 @@ class Graphic {
     
     // ----------------------- DEPRECATED ------------------------------
     
-    OF_DEPRECATED_MSG("ofxLaser::Graphic::renderToLaser(laser, brightness, profile) - has been moved into the LaserManager class - use laserManager", void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = ""));
+    OF_DEPRECATED_MSG("ofxLaser::Graphic::renderToLaser(laser, brightness, profile) - has been moved into the LaserManager class - use laserManager.drawLaserGraphic(graphic);", void renderToLaser(ofxLaser::ManagerBase& laser, float brightness = 1, string renderProfile = ""));
 	
 	vector<ofPolyline*> polylines;
 	vector<ofColor> colours;

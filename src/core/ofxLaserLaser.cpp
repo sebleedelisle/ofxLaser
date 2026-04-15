@@ -7,168 +7,188 @@
 //
 
 #include "ofxLaserLaser.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 using namespace ofxLaser;
 
 Laser::Laser(int _index) {
     laserIndex = _index;
-    dac = &emptyDac;
+    emptyDac = std::make_shared<DacEmpty>();
+    dac = emptyDac;
     
-	laserHomePosition = ofPoint(400,400);
-	
-	numTestPatterns = 9;
- 	
-	guiInitialised = false;
+    laserHomePosition = ofPoint(400,400);
+    testPatternActive = false;
+    testPattern = 1;
+    testPatternGlobalActive = false;
+    testPatternGlobal = 1;
+    
+    guiInitialised = false;
     maskManager.init(800,800);
-   
-    previewScale = 1;
-    previewOffset = glm::vec2(0,0);
-    previewDragging = false; 
-	
+    
+    pauseStateRecorded = false;
+    
+    lastSaveTime = 0;
+    
 };
 
 Laser::~Laser() {
     
     // NOTE that the manager saves the laser settings when it closes
-	ofLog(OF_LOG_NOTICE, "ofxLaser::Laser destructor called");
-	pps.removeListener(this, &Laser::ppsChanged);
-	armed.removeListener(this, &ofxLaser::Laser::setDacArmed);
+    ofLog(OF_LOG_NOTICE, "ofxLaser::Laser destructor called");
+    pps.removeListener(this, &Laser::ppsChanged);
+    armed.removeListener(this, &ofxLaser::Laser::setDacArmed);
     ofRemoveListener(params.parameterChangedE(), this, &Laser::paramsChanged);
-   
-	if(dac!=nullptr) dac->close();
-	//delete gui;
+    
+    if(dac!=nullptr) dac->close();
+    dac = nullptr;
+    
+    ofLogNotice("Laser::~Laser()"); 
 }
 
-void Laser::setDac(DacBase* newdac){
+void Laser::setDac(std::shared_ptr<DacBase>  newdac){
+    
     if(dac!=newdac) {
+        
         dac = newdac;
         newdac->setPointsPerSecond(pps);
-        dacId = dac->getId();
+        pps = newdac->getPointsPerSecond();
+        newdac->setColourShift(scannerSync);
+        newdac->maxLatencyMS = maxLatencyMS;
+        dacLabel = dac->getFullId();
+
         armed = false; // automatically calls setArmed because of listener on parameter
     }
-    
 }
-DacBase* Laser::getDac(){
+
+std::shared_ptr<DacBase> Laser::getDac(){
     return dac;
-    
 }
 
 bool Laser::hasDac() {
-    return (dac != &emptyDac);
-    
+    return dac.get() != emptyDac.get();
 }
+
+void Laser::setDacDiagnostics(bool state) {
+    // DAC diagnostics recording was removed with the legacy threaded network DACs.
+    // Keep this as a no-op so older callers still build against the current API.
+    (void)state;
+}
+
+
 bool Laser::removeDac(){
-	if (dac != &emptyDac) {
-		dac = &emptyDac;
-		dacId = "";
-		return true;
-	}
-	else {
-		return false;
-	}
+    
+    if(dac) {
+        dac = emptyDac;
+        dacLabel = "";
+        return true;
+    } else {
+        return false;
+    }
+
 }
 
 int Laser::getPointRate() {
     return pps;
-};
-float Laser::getFrameRate() {
-    if(numPoints>0) return (float)pps/(float)numPoints;
-    else return pps;
 }
 
-void Laser::setDefaultHandleSize(float size) {
-	
-	defaultHandleSize = size;
-	//for(ZoneTransform* zonetrans : zoneTransforms) {
-	//	zonetrans->setHandleSize(defaultHandleSize);
-	//}
-	
+float Laser::getFrameRate() {
+    if(numPoints>1) return (float)pps/(float)numPoints;
+    else return INFINITY;
 }
 
 void Laser :: init() {
-
-    // TODO is this used for anything other than display?
-	params.setName(ofToString(laserIndex));
-	
-//    params.add(armed.set("ARMED", false));
-    params.add(intensity.set("Brightness", 1,0,1));
-//    params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
-    armed.set("ARMED", false);
-    testPattern.set("Test Pattern", 0,0,numTestPatterns);
     
-    params.add(dacId.set("dacId", ""));
+    // TODO is this used for anything other than display?
+    params.setName(ofToString(laserIndex));
+    
+    //    params.add(armed.set("ARMED", false));
+    params.add(intensity.set("Brightness", 1,0,1));
+    //    params.add(testPattern.set("Test Pattern", 0,0,numTestPatterns));
+    armed.set("ARM", false);
+    //testPattern.set("Test Pattern", 0,0,numTestPatterns);
+    
+    paused.set("Paused", false);
+    
+    params.add(dacLabel.set("dacId", ""));
+    //params.add(dacAlias.set("dacAlias", ""));
     
     hideContentDuringTestPattern.set("Test pattern only", true);
-	ofParameterGroup laserparams;
-	laserparams.setName("Laser settings");
-	
-    laserparams.add(speedMultiplier.set("Speed", 1,0.12,2));
+    ofParameterGroup laserparams;
+    laserparams.setName("Laser settings");
     
-	 
-	laserparams.add(colourChangeShift.set("Colour shift", 2,0,6));
-		
-	laserparams.add(flipX.set("Flip Horizontal", false));
-	laserparams.add(flipY.set("Flip Vertical",false));
-	laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
-	laserparams.add(rotation.set("Output rotation",0,-90,90));
-
-	
-	ofParameterGroup& advanced = advancedParams;
+    laserparams.add(speed.set("Speed", 1,0.12,2));
+    
+    laserparams.add(scannerSync.set("Scanner sync", 2,0,12));
+    
+    //laserparams.add(maxLatencyMS.set("Frame latency", 100,5,300));
+    maxLatencyMS = 100;
+    
+    laserparams.add(flipX.set("Flip Horizontal", false));
+    laserparams.add(flipY.set("Flip Vertical",false));
+    laserparams.add(mountOrientation.set("Orientation",0,0,3));
+    laserparams.add(outputOffset.set("Output position offset", glm::vec2(0,0), glm::vec2(-20,-20),glm::vec2(20,20)));
+    laserparams.add(rotation.set("Output rotation",0,-90,90));
+    
+    ofParameterGroup& advanced = advancedParams;
     advanced.setName("Advanced");
     laserparams.add(pps.set("Points per second", 30000,1000,80000));
     advanced.add(laserOnWhileMoving.set("Laser on while moving", false));
-	advanced.add(smoothHomePosition.set("Smooth home position", true));
+    advanced.add(smoothHomePosition.set("Smooth home position", true));
     advanced.add(sortShapes.set("Optimise shape draw order", true));
     advanced.add(newShapeSortMethod.set("Experimental shape sorting", true));
+    advanced.add(coherentShapeSort.set("Use coherent shape sorting", false));
+    advanced.add(coherentSortMemoryStrength.set("Coherent sort memory", 0.35f, 0.0f, 1.0f));
     //advanced.add(alwaysClockwise.set("Always clockwise sorting", true));
     advanced.add(targetFramerate.set("Target framerate", 25, 23, 120));
-	advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
-	advanced.add(syncShift.set("Sync shift", 0, -50, 50));
-
-	laserparams.add(advanced);
-	
-	params.add(laserparams);
+    advanced.add(syncToTargetFramerate.set("Sync to Target framerate", false));
+    advanced.add(syncShift.set("Sync shift", 0, -50, 50));
+    // Preview mesh generation is useful in UI mode, but it is significant work in
+    // high-point scenes. Keeping this toggle in advanced settings lets us disable
+    // that cost without affecting real laser output.
+    advanced.add(buildPreviewPathMeshes.set("Build preview path mesh", true));
+    //advanced.add(disableSpeedCompensation.set("Disable speed compensation",false));
+    
+    laserparams.add(advanced);
+    
+    params.add(laserparams);
     params.add(scannerSettings.params);
-	
-	ofParameterGroup renderparams;
-	renderparams.setName("Render profiles");
-	
-	   
-	
-	
-	params.add(colourSettings.params);
-
-     
-     
+    
+    ofParameterGroup renderparams;
+    renderparams.setName("Render profiles");
+    
+    params.add(colourSettings.params);
+    
     armed.addListener(this, &ofxLaser::Laser::setDacArmed);
     pps.addListener(this, &Laser::ppsChanged);
-  
-
-    //loadSettings();
-   
+    scannerSync.addListener(this, &Laser::colourShiftChanged);
+    
+ 
     dac->setPointsPerSecond(pps);
-	// error checking on blank shift for older config files
-	if(colourChangeShift<0) colourChangeShift = 0;
-
-//	for(size_t i = 0; i<zoneTransforms.size(); i++) {
-//		zoneTransforms[i]->initGuiListeners();
-//		zoneTransforms[i]->loadSettings();
-//	}
-	
-	armed = false;
-	testPattern = 0;
-    //for(size_t i = 0; i<zonesSoloed.size(); i++ ) zonesSoloed[i] = false;
+    // error checking on blank shift for older config files
+    if(scannerSync<0) scannerSync = 0;
+    
+    
+    armed = false;
+    
     
     ofAddListener(params.parameterChangedE(), this, &Laser::paramsChanged);
-   
-	guiInitialised = true;
-
-    //masks.resize(5); 
-	
+    
+    guiInitialised = true;
+    
+    
 }
 
+void Laser :: reset() {
+    init();
 
-
+    
+}
+void Laser :: setGlobalTestPattern(bool active, int pattern) {
+    testPatternGlobal = pattern;
+    testPatternGlobalActive = active;
+}
 
 
 void Laser ::setDacArmed(bool& _armed){
@@ -182,80 +202,124 @@ bool Laser ::toggleArmed() {
 }
 
 void Laser:: ppsChanged(int& e){
-	//ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
-	pps=round(pps/100)*100;
-	if(pps<=100) pps =100;
-	dac->setPointsPerSecond(pps);
+    //ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
+    pps=round(pps/100)*100;
+    if(pps<=100) pps =100;
+    dac->setPointsPerSecond(pps);
+
+    pps = dac->getPointsPerSecond(); // in case the dac can't do it
+    
+}
+void Laser:: colourShiftChanged(float& e){
+    //ofLog(OF_LOG_NOTICE, "ppsChanged"+ofToString(pps));
+    //pps=round(pps/100)*100;
+    //if(pps<=100) pps =100;
+    dac->setColourShift(e);
 }
 
 
-void Laser::addZone(Zone* zone, float srcwidth, float srcheight) {
-
-	if(hasZone(zone)) {
-		ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
-		return;
-	}
+void Laser::addZone(ZoneId zoneId) {
+    if(hasZone(zoneId)) {
+        ofLog(OF_LOG_ERROR, "Laser::addZone(...) - Laser already contains zone");
+        return;
+    }
     
-    LaserZone* laserZone = new LaserZone(*zone);
-    laserZones.push_back(laserZone);
-    
-    // initialise zoneTransform
-    laserZone->zoneTransform.init(zone->rect);
-
-    laserZone->zoneMask = zone->rect;
+    std::shared_ptr<OutputZone> outputzone = std::make_shared<OutputZone>(zoneId);
+        
+    ofJson laserZoneJson;
+    string filename = savePath + "laser"+ ofToString(laserIndex) +"zone" + outputzone->getZoneId().getUid() + ".json";
+    if(!laserZoneJson.empty()) {
+        outputzone->deserialize(laserZoneJson);
+    } else {
+        // this should be done above I think ?
+        // initialise zoneTransform
+        //outputzone->init(sourceRect);
+        //outputzone->zoneMask = inputzone->rect;
+        outputzone->zoneTransformQuad.useHomography = true;
+    }
+    outputZones.push_back(outputzone);
     
     // sort the zones... oh a fancy lambda check me out
-    std::sort(laserZones.begin(), laserZones.end(), [](const LaserZone* a, const LaserZone* b) -> bool {
-        return (a->getZoneIndex()<b->getZoneIndex());
+    std::sort(outputZones.begin(), outputZones.end(), [](const std::shared_ptr<OutputZone>& a, const std::shared_ptr<OutputZone>& b) -> bool {
+        return (a->getZoneId().getUid()<b->getZoneId().getUid());
     });
+    
     saveSettings();
-     
+    
 }
 
-bool Laser :: hasZone(Zone* zone){
-    for(LaserZone* laserZone : laserZones) {
-        if(zone == &laserZone->zone) return true;
+
+bool Laser :: hasZone(ZoneId zoneId){
+   
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(zoneId == laserZone->getZoneId()) return true;
     }
     return false;
 }
 
-bool Laser :: removeZone(Zone* zone){
 
-    LaserZone* laserZone = getLaserZoneForZone(zone);
-    if(laserZone==nullptr) return false;
+bool Laser :: removeZone(ZoneId zoneId){
     
-    vector<LaserZone*>::iterator it = std::find(laserZones.begin(), laserZones.end(), laserZone);
-
-    // TODO Check cleanup
-    laserZones.erase(it);
-    delete laserZone;
+    std::shared_ptr<OutputZone> outputZone = getLaserZoneForZoneId(zoneId);
     
-    saveSettings();
-    
-    return true;
-    
-    
+    return removeZone(outputZone);
     
 }
-LaserZone* Laser::getLaserZoneForZone(Zone* zone) {
-    for(LaserZone* laserZone : laserZones) {
-        if(&laserZone->zone == zone) return laserZone;
+
+bool Laser :: removeZone(std::shared_ptr<OutputZone>& outputZone){
+    
+    if(outputZone==nullptr) return false;
+    ZoneId zoneId = outputZone->getZoneId();
+    bool changed = false;
+
+    deleteSettingsFileForZone(outputZone);
+    changed = SebUtils::removeElementFromVector(outputZones, outputZone) || changed;
+
+    if(changed) {
+        saveSettings();
+    }
+
+    return changed;
+    
+}
+
+
+std::shared_ptr<OutputZone> Laser::getLaserZoneForZoneId(ZoneId zoneId) {
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(laserZone->getZoneId() == zoneId) return laserZone;
     }
     return nullptr;
-
 }
 
-void Laser::updateZoneMasks() {
-	
-    for(LaserZone* laserZone : laserZones) {
-        
-        laserZone->updateZoneMask();
+
+const int Laser::findZoneContentIndexForId(ZoneId zoneId, const vector<ZoneContent>& zonesContent ) {
+    for(int i = 0; i<zonesContent.size(); i++) {
+        const ZoneContent& zoneContent = zonesContent[i];
+        ZoneId zoneContentId = zoneContent.zoneId;
+        if(zoneContentId == zoneId) return i;
     }
+    // else return ?
+    return -1;
+    
 }
-vector<LaserZone*> Laser::getActiveZones(){
+
+
+
+
+
+bool Laser::hasZoneContentForId(ZoneId zoneId,const vector<ZoneContent>& zonesContent ){
+    
+    for(const ZoneContent& zoneContent: zonesContent) {
+        ZoneId zoneContentId = zoneContent.zoneId;
+        if(zoneContentId == zoneId) return true;
+    }
+    return false;
+}
+
+vector<std::shared_ptr<OutputZone>> Laser::getActiveZones(){
     bool soloActive = areAnyZonesSoloed();
-    vector<LaserZone*> activeZones;
-    for(LaserZone* laserZone : laserZones) {
+    vector<std::shared_ptr<OutputZone>> activeZones;
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
         if(soloActive && laserZone->soloed) {
             activeZones.push_back(laserZone);
         } else if(!laserZone->muted) {
@@ -265,8 +329,67 @@ vector<LaserZone*> Laser::getActiveZones(){
     return activeZones;
 }
 
+
+bool Laser::updateZones(map<ZoneId, ZoneId>& changedZones){
+    
+    bool changed = false;
+    for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
+        //for (auto const& [key, val] : symbolTable)
+        const ZoneId oldid = outputZone->getZoneId();
+        ZoneId newid;
+        for (const auto& kv : changedZones) {
+        //for(auto const& [key, val] : changedZones) {
+            if(kv.first == oldid) {
+                newid = kv.second;
+                outputZone->setZoneId(newid);
+                changed = true;
+                break;
+            }
+        }
+    }
+    
+    if(changed) {
+        saveSettings();
+        return true;
+    } else {
+        return false;
+    }
+    
+}
+
+bool Laser::updateZoneLabels(vector<std::shared_ptr<ObjectWithZoneId>>& zoneids){
+    
+   // ofLogNotice("Laser::updateZoneLabels");
+    bool changed = false;
+    
+    for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
+        //for (auto const& [key, val] : symbolTable)
+        ZoneId id = outputZone->getZoneId();
+        
+        ofLogNotice(id.getUid()) << " " << id.getLabel()<< " " ;
+       
+        for (std::shared_ptr<ObjectWithZoneId>& objectWithZoneId : zoneids) {
+            ZoneId& updatedzoneid  =objectWithZoneId->zoneId;
+            if(id.getUid()==updatedzoneid.getUid()) {
+                if(id.getLabel()!=updatedzoneid.getLabel()) {
+                    ofLogNotice("    changed to: ") << updatedzoneid.getLabel();
+                    changed = true;
+                    outputZone->setZoneId(updatedzoneid);
+                }
+                
+            }
+        }
+    }
+    return changed;
+}
+
+
+void Laser::clearOutputZones() {
+    outputZones.clear();
+}
+
 bool Laser::areAnyZonesSoloed() {
-    for(LaserZone* laserZone : laserZones) {
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
         if(laserZone->soloed) {
             return true;
         }
@@ -275,720 +398,734 @@ bool Laser::areAnyZonesSoloed() {
     return false;
 }
 
+bool Laser ::muteZone(ZoneId zoneId) {
+    bool changed = false;
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(laserZone->getZoneId() == zoneId) {
+            if(!laserZone->muted) {
+                laserZone->muted = true;
+                changed = true;
+            } else {
+                //return false;
+            }
+        }
+    }
+    return changed;
+}
+bool Laser ::unMuteZone(ZoneId zoneId){
+    bool changed = false;
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(laserZone->getZoneId() == zoneId) {
+            if(laserZone->muted) {
+                laserZone->muted = false;
+                changed = true;
+            } else {
+                //return false;
+            } 
+        }
+    }
+    return changed;
+}
+
+bool Laser ::soloZone(ZoneId zoneId) {
+    bool changed = false;
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(laserZone->getZoneId() == zoneId) {
+            if(!laserZone->soloed) {
+                laserZone->soloed = true;
+                changed = true;
+                
+            } else {
+                
+            }
+        }
+    }
+    return changed;
+}
+bool Laser ::unSoloZone(ZoneId zoneId){
+    bool changed = false; 
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        if(laserZone->getZoneId() == zoneId) {
+            if(laserZone->soloed) {
+                laserZone->soloed = false;
+                changed = true; // return true;
+            } else {
+                // return false;
+            }
+        }
+    }
+    return changed;
+}
+
 string Laser :: getLabel() {
     return "Laser " + ofToString(laserIndex+1);
 }
 
 string Laser::getDacLabel() {
-    if(dac!=&emptyDac) {
-        return dac->getId();
+    if(dac) {
+        return dac->getFullId();
     } else {
-        return "No laser controller assigned";
+        return "";
     }
 }
+
 
 int Laser::getDacConnectedState() {
     
-    if(dac!=nullptr) {
+    if(dac) {
         return dac->getStatus();
     } else {
-        return OFXLASER_DACSTATUS_ERROR;
+        return OFXLASER_DACSTATUS_NO_DAC;
     }
 }
 
-void Laser::drawTransformUI() {
-	
-	ofPushStyle();
+
+void Laser::update() {
     
-    ofFill();
-    ofSetColor(0);
-    ofDrawRectangle(previewOffset.x, previewOffset.y, 800*previewScale, 800*previewScale);
-	ofNoFill();
-
-   // float scale = w/800.0f;
-    //ofPoint offset = ofPoint(x,y) + (ofPoint(outputOffset)*scale);
-    for(LaserZone* laserZone : laserZones) {
-        //if(!laserZone->getEnabled()) continue;
-        laserZone->setScale(previewScale);
-        laserZone->setOffset(previewOffset);
-        laserZone->draw();
-        
-        
-    }
-    maskManager.setOffsetAndScale(previewOffset,previewScale);
-    maskManager.draw();
-   
-    ofPopStyle();
-}   
-
-void Laser::zoomAroundPoint(glm::vec2 anchor, float zoomMultiplier){
-    glm::vec2 clickoffset = anchor-previewOffset;
-    clickoffset-=(clickoffset*zoomMultiplier);
-    previewOffset+=clickoffset;
-    previewScale*=zoomMultiplier;
-    
-}
-void Laser::startDrag(glm::vec2 p){
-    
-    previewDragging = true;
-    dragStartPoint = p - previewOffset;
-    
-}
-
-void Laser::stopDrag() {
-    previewDragging = false;
-}
-void Laser::setOffsetAndScale(glm::vec2 newoffset, float newscale){
-    previewOffset = newoffset;
-    previewScale = newscale;
-}
-
-void Laser::drawTransformAndPath(ofRectangle rect) {
-    ofRectangle bounds;
-    
-    vector<LaserZone*> activeZones = getActiveZones();
-    
-    
-    vector<glm::vec3> perimeterpoints;
-    bool firsttime = true;
-    for(LaserZone* zone : activeZones) {
-        ZoneTransform& zonetransform = zone->zoneTransform;
-       
-        zonetransform.getPerimeterPoints(perimeterpoints);
-        if(firsttime) {
-            bounds.setPosition(*perimeterpoints.begin());
-            firsttime = false;
-        }
-        for(glm::vec3& p:perimeterpoints) {
-            bounds.growToInclude(p);
-        }
-        
-        
-    }
-    //drawTransformUI(rect.x, rect.y, rect.width, rect.height);
-    ofSetColor(255);
-    ofDrawBitmapString(ofToString(laserIndex+1), rect.getRight()-20, rect.getTop()+20);
-
-    ofPushMatrix();
-    ofTranslate(rect.x, rect.y);
-    float rectscale = rect.width/800;
-    ofScale(rect.width/800, rect.height/800);
-    ofPushStyle();
-    ofNoFill();
-    ofSetColor(50,50,200);
-   
-    float scale = 800.0f/bounds.width;
-    if(800/bounds.height<scale) scale = 800/bounds.height;
-    if(scale<1.1) {
-        scale = 1;
-        bounds.set(0,0,800,800);
-    }
-    ofPushMatrix();
-    ofScale(scale, scale);
-    ofTranslate(-bounds.x, -bounds.y); //getTopLeft());
-    drawLaserPath(false, 4/(scale*rectscale));
-   
-    
-    for(LaserZone* zone : activeZones) {
-        
-        zone->zoneTransform.getPerimeterPoints(perimeterpoints);
-        
-        ofBeginShape();
-        for(glm::vec3& p:perimeterpoints) {
-            ofVertex(p);
-        }
-        ofEndShape();
-        
-    }
-    ofPopStyle();
-    
-    ofPopMatrix();
-    if(scale>1) {
-        // draw the scale widget in the bottom right
-        ofPushMatrix();
-        ofPushStyle();
-        ofTranslate(700,700);
-        ofScale(0.1,0.1);
-        ofFill();
-        ofSetColor(0);
-        ofDrawRectangle(0,0,800,800);
-        ofNoFill();
-        ofSetColor(50,50,200);
-        ofDrawRectangle(0,0,800,800);
-        ofDrawRectangle(bounds);
-//        for(LaserZone* zone : laserZones) {
-//
-//            zone->zoneTransform.getPerimeterPoints(perimeterpoints);
-//
-//            ofBeginShape();
-//            for(glm::vec3& p:perimeterpoints) {
-//                ofVertex(p);
-//            }
-//            ofEndShape();
-//
-//        }
-        ofPopStyle();
-        ofPopMatrix();
-        
-    }
-    
-    
-    
-    ofPopMatrix();
-    
-}
-
-
-//void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
-//	drawLaserPath(rect.x, rect.y, rect.width, rect.height, drawDots, radius);
-//}
-
-void Laser :: drawLaserPath(bool drawDots, float radius) {
-    ofRectangle previewRect(previewOffset.x, previewOffset.y, previewScale*800, previewScale*800);
-    drawLaserPath(previewRect, drawDots, radius);
-}
-
-void Laser :: drawLaserPath(ofRectangle rect, bool drawDots, float radius) {
-	ofPushStyle();
-	
-    ofSetColor(100);
-	ofEnableBlendMode(OF_BLENDMODE_ADD);
-	ofPushMatrix();
-	ofTranslate(rect.getTopLeft());
-	ofScale(rect.getWidth()/800.0f, rect.getHeight()/800.0f);
-    float scale = rect.getWidth()/800.0f; 
-	ofTranslate(outputOffset);
-
-	ofPoint p;
-
-  	ofNoFill();
-	ofSetColor(255);
-    //ofSetColor(MIN(255 * w / 800.0f, 255));// what's this for?
-	
-    ofSetLineWidth(0.5/scale);
-	
-	previewPathMesh.setMode(OF_PRIMITIVE_POINTS);
-	if(drawDots) previewPathMesh.draw();
-	
-    // draw the coloured line in the background
-	for(size_t i = 0; i<previewPathMesh.getNumVertices();i++) {
-		previewPathMesh.addColor(ofColor::fromHsb(ofMap(i,0,previewPathMesh.getNumVertices(), 227, 128),255,255));
-	}
-
-	
-	
-	ofSetLineWidth(2 * scale);
-	previewPathMesh.setMode(OF_PRIMITIVE_LINE_STRIP);
-	previewPathMesh.draw();
-	
-	// draws the animated laser path
-	
-	if(previewPathMesh.getNumVertices()>0) {
-		
-        // 100 points per second
-		float time = previewPathMesh.getNumVertices()/100.0f;
-		int pointindex =ofMap(fmod(ofGetElapsedTimef(),time),0,time,0,previewPathMesh.getNumVertices());
-        
-        Point& lp =laserPoints[pointindex];
-        ofPoint p = previewPathMesh.getVertex(pointindex);
-        ofColor c = lp.getColour()*255;
-        
-        if(c==ofColor::black) {
-            ofSetColor(200);
-            ofDrawCircle(p, radius);
-        } else {
-            ofFill();
-            c.setBrightness(255);
-            ofSetColor(c);
-            ofDrawCircle(p, radius);
-            ofNoFill();
-            ofSetLineWidth(2); 
-            c.setBrightness(128);
-            ofSetColor(c);
-            ofDrawCircle(p, radius*1.5);
-        }
-	}
-	
-
-	ofDisableBlendMode();
-	ofPopStyle();
-	
-	
-	ofPopMatrix();
-	
-}
-
-void Laser :: disableTransformGui() {
-	
-    for(LaserZone* laserZone : laserZones) {
-        laserZone->setEnabled(false);
-    }
-	
-	
-}
-void Laser :: enableTransformGui() {
-    for(LaserZone* laserZone : laserZones) {
-        if(laserZone->getVisible()) laserZone->setEnabled(true);
-    }
-	
-}
-
-
-
-
-void Laser::update(bool updateZones) {
-	
-    if(previewDragging) {
-        previewOffset = glm::vec2(ofGetMouseX(), ofGetMouseY())-dragStartPoint;
-    }
-        
-    
-    bool soloMode = areAnyZonesSoloed();
     bool needsSave = false;
-    
-    if(soloMode) {
-        for(LaserZone* laserZone : laserZones) {
-            laserZone->setVisible(laserZone->soloed);
-        }
-        
-    } else {
-        for(LaserZone* laserZone : laserZones) {
-            laserZone->setVisible(!laserZone->muted);
-        }
-    }
-    
     
     // if any of the source rectangles have changed then update all the warps
     // (shouldn't need anything saving)
-    if(updateZones) {
-        for(LaserZone* laserZone : laserZones) {
-            ZoneTransform& warp = laserZone->zoneTransform;
-            warp.setSrc(laserZone->zone.rect);
-            warp.updateHomography();
-            updateZoneMasks();
-        }
-    }
+    //    if(updateZones) {
+    //       
+    //        for(OutputZone* laserZone : outputZones) {
+    //            //ZoneTransform& warp = laserZone->zoneTransform;
+    //            //laserZone->init(laserZone->zone.rect);
+    //            //laserZone->updateHomography();
+    //            
+    //        }
+    //        
+    //        //updateZoneMasks();
+    //    }
     
     needsSave = maskManager.update() | needsSave;
     
-    
-	laserPoints.clear();
-	previewPathMesh.clear();
     bool laserZoneChanged = false;
-    for(LaserZone* laserZone : laserZones) {
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
         laserZoneChanged |= laserZone->update();
-	}
-	
+    }
+    
     needsSave |= laserZoneChanged;
     float framerate = getFrameRate();
-	smoothedFrameRate += (framerate - smoothedFrameRate)*0.2;
+    smoothedFrameRate += (framerate - smoothedFrameRate)*0.2;
     frameTimeHistory[frameTimeHistoryOffset] = 1/framerate;
     frameTimeHistoryOffset++;
     if(frameTimeHistoryOffset>=frameTimeHistorySize) frameTimeHistoryOffset = 0;
     
     if(needsSave) saveSettings();
- 
+    
 }
 
 
-void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, Zone* zone, float masterIntensity ){
-    
-    LaserZone* laserZone = getLaserZoneForZone(zone);
-    if(laserZone==nullptr) {
-        ofLogError("Laser::sendRawPoints(...), zone "+zone->zoneLabel + " not added to laser ");
+void Laser::sendRawPoints(const vector<ofxLaser::Point>& points, ZoneId* zoneId, float masterIntensity ){
+    // TODO FIX THIS
+    clearPoints();
+
+}
+
+
+void Laser :: clearPoints() {
+    laserPoints.clear();
+    previewPathMesh.clear();
+    previewPathColoured.clear();
+}
+
+void Laser::sortShapePointsLegacy(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes) {
+    sortedShapes.clear();
+    if(allShapePoints.empty()) {
         return;
-        
     }
-    ofRectangle& maskRectangle = laserZone->zoneMask;
-    ZoneTransform& warp = laserZone->zoneTransform;
-    bool offScreen = true;
-    
-    vector<Point>segmentpoints;
-    
-    //iterate through the points
-    for(size_t k = 0; k<points.size(); k++) {
-        
-        Point p = points[k];
-        
-        // are we outside the mask? NB can't use inside because I want points on the edge
-        //
-        
-        if(p.x<maskRectangle.getLeft() ||
-           p.x>maskRectangle.getRight() ||
-           p.y<maskRectangle.getTop() ||
-           p.y>maskRectangle.getBottom())  {
-            
-            if(!offScreen) {
-                offScreen = true;
-                // if we already have points then add an inbetween point
-                if(k>0) {
-                    Point lastpoint = p;
-                    
-                    // TODO better point on edge rather than just clamp
-                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-                    segmentpoints.push_back(lastpoint);
-                    
-                    
-                }
-            }
-            
-        } else {
-            // we're on screen!
-            if(offScreen) {
 
-                offScreen = false;
-                if(k>0) {
-                    Point lastpoint = points[k-1];
-                    
-                    // TODO better point on edge rather than just clamp
-                    lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-                    lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-                    
-                    segmentpoints.push_back(lastpoint);
-                }
-            }
-            segmentpoints.push_back(p);
+    // Legacy sorter:
+    // 1) Build a route greedily by always taking the nearest unvisited shape endpoint.
+    // 2) Optionally run a second insertion-style pass (`newShapeSortMethod`) to reduce travel.
+    // 3) If total travel improvement is too small, keep original order to avoid pointless churn.
+    for(PointsForShape& shape : allShapePoints) {
+        shape.tested = false;
+        shape.reversed = false;
+    }
+
+    bool reversed = false;
+    float shortestDistance = INFINITY;
+    PointsForShape* currentShape = nullptr;
+    PointsForShape* nextShape = nullptr;
+    ofPoint position = laserHomePosition;
+
+    const float moveDistanceForUnSortedShapes = getMoveDistanceForShapes(allShapePoints);
+
+    do {
+        if(currentShape != nullptr) {
+            PointsForShape& shape1 = *currentShape;
+            shape1.tested = true;
+            sortedShapes.push_back(&shape1);
+            shape1.reversed = reversed;
+            position = shape1.getEnd();
+            shortestDistance = INFINITY;
+            nextShape = nullptr;
         }
-        
-        // create a point object for it
-        
-    } // end shapepoints
-    // add the segment points to the points for the zone
 
+        // Evaluate every unvisited shape and pick whichever start/end endpoint is closest.
+        // We use squared distance here (no sqrt) because only relative ordering matters.
+        for(size_t i = 0; i < allShapePoints.size(); i++) {
+            PointsForShape& shape2 = allShapePoints[i];
+            if((currentShape == &shape2) || shape2.tested) {
+                continue;
+            }
 
-    
-    // go through all the points and warp them into output space
+            shape2.reversed = false;
+            const float distanceToStart = position.squareDistance(shape2.getStart());
+            if(distanceToStart < shortestDistance) {
+                shortestDistance = distanceToStart;
+                nextShape = &shape2;
+                reversed = false;
+            }
 
-    for(size_t k= 0; k<segmentpoints.size(); k++) {
-        addPoint(warp.getWarpedPoint(segmentpoints[k]));
+            if(shape2.reversable) {
+                const float distanceToEnd = position.squareDistance(shape2.getEnd());
+                if(distanceToEnd < shortestDistance) {
+                    shortestDistance = distanceToEnd;
+                    nextShape = &shape2;
+                    reversed = true;
+                }
+            }
+        }
+        currentShape = nextShape;
+    } while(currentShape != nullptr);
+
+    if(newShapeSortMethod) {
+        // Experimental second pass:
+        // for each element (backwards), test whether moving it earlier lowers local bridge cost.
+        for(PointsForShape* shape : sortedShapes) {
+            shape->tested = false;
+        }
+
+        int currentIndex = static_cast<int>(sortedShapes.size()) - 1;
+        while(currentIndex > 1) {
+            PointsForShape& shape = *sortedShapes[currentIndex];
+            if(shape.tested) {
+                currentIndex--;
+                continue;
+            }
+
+            int targetIndex = currentIndex;
+            PointsForShape& neighbourAfter = *sortedShapes[(currentIndex + 1) % sortedShapes.size()];
+            PointsForShape& neighbourBefore = *sortedShapes[currentIndex - 1];
+
+            // Local bridge-delta cost: "if shape stays here", how much connector travel does it add?
+            float distanceToBeat =
+                neighbourAfter.getStart().distance(shape.getEnd()) +
+                shape.getStart().distance(neighbourBefore.getEnd()) -
+                neighbourBefore.getEnd().distance(neighbourAfter.getStart());
+            // Require a minimum improvement margin to avoid tiny oscillatory edits.
+            distanceToBeat *= 0.95f;
+
+            for(int i = currentIndex - 1; i > 0; i--) {
+                const int shapeIndexBefore = (i == 0) ? static_cast<int>(sortedShapes.size()) - 1 : i - 1;
+                const int shapeIndexAfter = i;
+                PointsForShape& shapeBefore = *sortedShapes[shapeIndexBefore];
+                PointsForShape& shapeAfter = *sortedShapes[shapeIndexAfter];
+
+                const float distanceToCompare =
+                    shapeBefore.getEnd().distance(shape.getStart()) +
+                    shape.getEnd().distance(shapeAfter.getStart()) -
+                    shapeBefore.getEnd().distance(shapeAfter.getStart());
+
+                if(distanceToCompare < distanceToBeat) {
+                    targetIndex = i;
+                    distanceToBeat = distanceToCompare;
+                }
+            }
+
+            shape.tested = true;
+            if(targetIndex != currentIndex) {
+                sortedShapes.erase(sortedShapes.begin() + currentIndex);
+                sortedShapes.insert(sortedShapes.begin() + targetIndex, &shape);
+            } else {
+                currentIndex--;
+            }
+        }
     }
-    
-    
-    
-    processPoints(masterIntensity, false);
-    dac->sendPoints(laserPoints);
-    
-   
+
+    if((moveDistanceForUnSortedShapes > 0) && (!sortedShapes.empty())) {
+        // Keep original order if sorting barely helps:
+        // 0.9 means the sorted route must save >10% travel to be accepted.
+        const float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedShapes);
+        if((moveDistanceForSortedShapes / moveDistanceForUnSortedShapes) > 0.9f) {
+            sortedShapes.clear();
+            for(size_t j = 0; j < allShapePoints.size(); j++) {
+                allShapePoints[j].reversed = false;
+                sortedShapes.push_back(&allShapePoints[j]);
+            }
+        }
+    }
 }
 
+void Laser::pruneCoherentSortMemory(const std::unordered_set<std::string>& activeZoneUids) {
+    for(auto it = coherentSortMemoryByZoneUid.begin(); it != coherentSortMemoryByZoneUid.end();) {
+        if(activeZoneUids.find(it->first) == activeZoneUids.end()) {
+            it = coherentSortMemoryByZoneUid.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
 
-                        
+void Laser::sortShapePointsCoherent(vector<PointsForShape>& allShapePoints, vector<PointsForShape*>& sortedShapes) {
+    sortedShapes.clear();
+    if(allShapePoints.empty()) {
+        return;
+    }
 
-void Laser::send(ofPixels* pixels, float masterIntensity) {
+    struct ShapeDescriptor {
+        PointsForShape* shape = nullptr;
+        glm::vec2 start;
+        glm::vec2 end;
+        glm::vec2 center;
+        float length = 0.0f;
+        bool reversable = false;
+        int prevOrder = -1;
+        bool preferredReversed = false;
+        bool selected = false;
+    };
 
+    struct MatchCandidate {
+        int currentIndex = -1;
+        int prevIndex = -1;
+        float score = INFINITY;
+        bool preferredReversed = false;
+    };
 
-	if(!guiInitialised) {
-		ofLog(OF_LOG_ERROR, "Error, ofxLaser::laser not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
-		return;
-	}
-	
-	vector<PointsForShape> allzoneshapes;
+    // Coherent sorter parameters.
+    // - matchGate: max geometry mismatch allowed when linking current shape to prior-frame entry.
+    // - matchWeightCenter / matchWeightLength: how much center drift and length drift matter in matching.
+    // - orderPenalty / orientationPenalty / unmatchedPenalty: coherence costs added in route scoring.
+    // - lowMatchRatioThreshold: if too few shapes match prior frame, disable memory for quick adaptation.
+    constexpr float matchGate = 220.0f;
+    constexpr float matchWeightCenter = 0.35f;
+    constexpr float matchWeightLength = 0.20f;
+    constexpr float orderPenalty = 40.0f;
+    constexpr float orientationPenalty = 18.0f;
+    constexpr float unmatchedPenalty = 22.0f;
+    constexpr float lowMatchRatioThreshold = 0.45f;
 
-	// TODO add speed multiplier to getPointsForMove function
-	getAllShapePoints(&allzoneshapes, pixels, speedMultiplier);
-	
-	vector<PointsForShape*> sortedshapes;
-	
-	
-	// sort the point objects
-	if(allzoneshapes.size()>0) {
-		bool reversed = false;
-		float shortestDistance = INFINITY;
+    for(PointsForShape& shape : allShapePoints) {
+        shape.reversed = false;
+        shape.tested = false;
+    }
 
-        PointsForShape* currentShape = nullptr;
-        PointsForShape* nextShape = nullptr;
-        ofPoint position = laserHomePosition;
+    // Memory is maintained per output-zone UID (per laser instance).
+    std::unordered_map<std::string, vector<PointsForShape*>> shapesByZoneUid;
+    shapesByZoneUid.reserve(allShapePoints.size());
+    vector<std::string> zoneOrder;
+    zoneOrder.reserve(allShapePoints.size());
 
+    for(PointsForShape& shape : allShapePoints) {
+        const std::string zoneUid = shape.zoneUid.empty() ? std::string("__global__") : shape.zoneUid;
+        auto found = shapesByZoneUid.find(zoneUid);
+        if(found == shapesByZoneUid.end()) {
+            zoneOrder.push_back(zoneUid);
+            found = shapesByZoneUid.insert({zoneUid, {}}).first;
+        }
+        found->second.push_back(&shape);
+    }
 
-		if(sortShapes) {
-            
-            float moveDistanceForUnSortedShapes = getMoveDistanceForShapes(allzoneshapes);
-            
-			do {
-                
-                if(currentShape!=nullptr) {
-                    // get the shape object at the current index
-                    PointsForShape& shape1 = *currentShape; // allzoneshapes[currentIndex];
-				
-                    // set its tested flag to say we've checked it
-                    shape1.tested = true;
-                    // add it to the list
-                    sortedshapes.push_back(&shape1);
-                    // set its reversed flag - this is set during the
-                    // previous iterative process to find the next shape
-                    shape1.reversed = reversed;
-                    
-                    position = shape1.getEnd();
-                    
-                    // set the distance to infinity
-                    shortestDistance = INFINITY;
-                    // reset the next shape in case we don't find any
-                    nextShape = nullptr;
-                }
-                    
-				
-                // go through all the shapes
-				for(size_t i = 0; i<allzoneshapes.size(); i++) {
-					
-                    // get the shape at j
-					PointsForShape& shape2 = allzoneshapes[i];
-					// if it's the same shape as this one or we've already checked it skip this one
-                    if((currentShape==&shape2) || (shape2.tested)) continue;
-					
-                    // check non-reversed first
-					shape2.reversed = false;
-					
-                    // if the distance between our first shape and the second shape is
-                    // the shortest we've found...
-					if(position.squareDistance(shape2.getStart()) < shortestDistance) {
-                        // set the new shortest distance...
-						shortestDistance = position.squareDistance(shape2.getStart());
-                        // set this as the next shape to check
-						nextShape = &shape2;
-                        // set reversed to be false (this is set the next time around
-						reversed = false;
-					}
-					
-                    // now do the same thing but with the next shape reversed
-					if((shape2.reversable) && (position.squareDistance(shape2.getEnd()) < shortestDistance)) {
-						shortestDistance = position.squareDistance(shape2.getEnd());
-                        nextShape = &shape2;
-						reversed = true;
-					}
-					
-				}
-                currentShape = nextShape;
-				
-			} while (currentShape!=nullptr);
-            
-            
-            if(newShapeSortMethod) {
-                
-                //cout << " NEW SHAPE SORT START -------------- " <<sortedshapes.size()<<  endl;
-             
-                // reset the tested flags
-                for (PointsForShape* shape : sortedshapes) shape->tested = false;
-             
-                // start at the end
-                int currentIndex = sortedshapes.size()-1;
-                
-                while(currentIndex>1) { // don't think we need to do this process for 0 and 1
-                
-                    PointsForShape& shape = *sortedshapes[currentIndex];
-                    if(shape.tested) {
-                        currentIndex--;
+    std::unordered_set<std::string> activeZoneUids;
+    activeZoneUids.reserve(zoneOrder.size());
+    for(const std::string& zoneUid : zoneOrder) {
+        activeZoneUids.insert(zoneUid);
+    }
+    pruneCoherentSortMemory(activeZoneUids);
+
+    ofPoint currentPosition = laserHomePosition;
+    // User slider: 0 => pure travel greedy, 1 => full configured coherence penalties.
+    const float memoryStrength = ofClamp(coherentSortMemoryStrength.get(), 0.0f, 1.0f);
+
+    for(const std::string& zoneUid : zoneOrder) {
+        vector<PointsForShape*>& zoneShapes = shapesByZoneUid[zoneUid];
+        if(zoneShapes.empty()) {
+            continue;
+        }
+
+        vector<ShapeDescriptor> descriptors;
+        descriptors.reserve(zoneShapes.size());
+        for(PointsForShape* shape : zoneShapes) {
+            if((shape == nullptr) || shape->empty()) {
+                continue;
+            }
+
+            ShapeDescriptor descriptor;
+            descriptor.shape = shape;
+            const Point& first = shape->front();
+            const Point& last = shape->back();
+            descriptor.start = glm::vec2(first.x, first.y);
+            descriptor.end = glm::vec2(last.x, last.y);
+            descriptor.center = (descriptor.start + descriptor.end) * 0.5f;
+            descriptor.length = glm::distance(descriptor.start, descriptor.end);
+            descriptor.reversable = shape->reversable;
+            descriptors.push_back(descriptor);
+        }
+
+        if(descriptors.empty()) {
+            coherentSortMemoryByZoneUid[zoneUid].route.clear();
+            continue;
+        }
+
+        size_t matchedCount = 0;
+        float effectiveMemory = memoryStrength;
+        const auto previousMemory = coherentSortMemoryByZoneUid.find(zoneUid);
+        if((previousMemory != coherentSortMemoryByZoneUid.end()) && (!previousMemory->second.route.empty())) {
+            const vector<CoherentShapeMemoryEntry>& previousRoute = previousMemory->second.route;
+            vector<MatchCandidate> candidates;
+            candidates.reserve(descriptors.size() * previousRoute.size());
+
+            // Step 1: Match current shapes to prior route entries by geometry only (no IDs).
+            // We compare endpoint alignment, center movement, and length change.
+            for(size_t i = 0; i < descriptors.size(); i++) {
+                const ShapeDescriptor& current = descriptors[i];
+                for(size_t j = 0; j < previousRoute.size(); j++) {
+                    const CoherentShapeMemoryEntry& prev = previousRoute[j];
+
+                    const float directEndpointCost =
+                        glm::distance(current.start, prev.start) + glm::distance(current.end, prev.end);
+                    float reversedEndpointCost = std::numeric_limits<float>::max();
+                    if(current.reversable) {
+                        reversedEndpointCost =
+                            glm::distance(current.start, prev.end) + glm::distance(current.end, prev.start);
+                    }
+
+                    const bool preferReversed = reversedEndpointCost < directEndpointCost;
+                    const float endpointCost = preferReversed ? reversedEndpointCost : directEndpointCost;
+                    const float centerCost = glm::distance(current.center, prev.center);
+                    const float lengthCost = std::abs(current.length - prev.length);
+                    const float score =
+                        endpointCost + (centerCost * matchWeightCenter) + (lengthCost * matchWeightLength);
+                    // Reject weak/ambiguous matches so bad history links don't inject jitter.
+                    if(score > matchGate) {
                         continue;
                     }
-                    // position to move this shape to
-                    int targetIndex = currentIndex;
-                    
-                    // get the distance between this and its two neighbours
-                    PointsForShape& neighbourAfter = *sortedshapes[(currentIndex+1) % sortedshapes.size()];
-                    PointsForShape& neighbourBefore = *sortedshapes[currentIndex-1]; // should always be >0
-                  
-                    float distanceToBeat = neighbourAfter.getStart().distance(shape.getEnd()) + shape.getStart().distance(neighbourBefore.getEnd()) - neighbourBefore.getEnd().distance(neighbourAfter.getStart());
-                    distanceToBeat *= 0.95; // so close calls do nothing
-                    
-                    // now iterate back to the first shape
-                    for(int i = currentIndex-1; i>0; i--) { // don't think we need to go all the way back to 0
-                        // check the distance if we were to insert the shape between i and i-1
-                        int shapeIndexBefore = (i==0) ? sortedshapes.size()-1 : i-1 ;
-                        int shapeIndexAfter = i;
-                        
-                        PointsForShape& shapeBefore = *sortedshapes[shapeIndexBefore];
-                        PointsForShape& shapeAfter = *sortedshapes[shapeIndexAfter];
-                        
-                        float distanceToCompare = shapeBefore.getEnd().distance(shape.getStart()) + shape.getEnd().distance(shapeAfter.getStart()) -                            shapeBefore.getEnd().distance(shapeAfter.getStart());
-                        
-                       // if((shape.getStart()!=shape.getEnd()) && (shapeBefore.getEnd().squareDistance(shapeAfter.getStart()) < 1)) continue; // if the shapes are connected don't insert a new one here unless it starts and ends at the same place
-                       
-                        if(distanceToCompare<distanceToBeat) {
-                            // set target position of this shape to be i
-                            targetIndex = i;
-                            distanceToBeat = distanceToCompare; 
+
+                    MatchCandidate candidate;
+                    candidate.currentIndex = static_cast<int>(i);
+                    candidate.prevIndex = static_cast<int>(j);
+                    candidate.score = score;
+                    candidate.preferredReversed = preferReversed;
+                    candidates.push_back(candidate);
+                }
+            }
+
+            std::sort(candidates.begin(), candidates.end(), [](const MatchCandidate& a, const MatchCandidate& b) {
+                return a.score < b.score;
+            });
+
+            vector<bool> currentTaken(descriptors.size(), false);
+            vector<bool> prevTaken(previousRoute.size(), false);
+            for(const MatchCandidate& candidate : candidates) {
+                if(currentTaken[candidate.currentIndex] || prevTaken[candidate.prevIndex]) {
+                    continue;
+                }
+                currentTaken[candidate.currentIndex] = true;
+                prevTaken[candidate.prevIndex] = true;
+                descriptors[candidate.currentIndex].prevOrder = candidate.prevIndex;
+                descriptors[candidate.currentIndex].preferredReversed = candidate.preferredReversed;
+                matchedCount++;
+            }
+
+            const float matchRatio = static_cast<float>(matchedCount) / static_cast<float>(descriptors.size());
+            if(matchRatio < lowMatchRatioThreshold) {
+                // Scene changed significantly: prioritise fast adaptation over memory.
+                effectiveMemory = 0.0f;
+            }
+        }
+
+        vector<PointsForShape*> sortedZoneShapes;
+        sortedZoneShapes.reserve(descriptors.size());
+        int lastPrevOrder = -1;
+
+        for(size_t placed = 0; placed < descriptors.size(); placed++) {
+            int bestIndex = -1;
+            bool bestReversed = false;
+            float bestScore = std::numeric_limits<float>::max();
+            float bestTravel = std::numeric_limits<float>::max();
+
+            // Step 2: Build route greedily with coherence-aware scoring:
+            // score = travelDistance + memoryStrength * coherencePenalty
+            // When memoryStrength is 0, this becomes pure distance greedy.
+            for(size_t i = 0; i < descriptors.size(); i++) {
+                ShapeDescriptor& candidate = descriptors[i];
+                if(candidate.selected) {
+                    continue;
+                }
+
+                auto evaluateOrientation = [&](bool candidateReversed) {
+                    if(candidateReversed && !candidate.reversable) {
+                        return;
+                    }
+
+                    const glm::vec2 candidateStart = candidateReversed ? candidate.end : candidate.start;
+                    const float travelDistance = glm::distance(glm::vec2(currentPosition.x, currentPosition.y), candidateStart);
+
+                    float coherencePenalty = 0.0f;
+                    if(effectiveMemory > 0.0f) {
+                        if((lastPrevOrder >= 0) && (candidate.prevOrder >= 0)) {
+                            const int expectedPrevOrder = lastPrevOrder + 1;
+                            // Penalise jumps away from prior-frame order continuity.
+                            coherencePenalty += std::abs(candidate.prevOrder - expectedPrevOrder) * orderPenalty;
+                        } else if((lastPrevOrder >= 0) && (candidate.prevOrder < 0)) {
+                            // Penalise injecting unmatched shapes in the middle of a matched sequence.
+                            coherencePenalty += unmatchedPenalty;
                         }
-                    
+
+                        if((candidate.prevOrder >= 0) && (candidateReversed != candidate.preferredReversed)) {
+                            // Penalise direction flips relative to the previous-frame correspondence.
+                            coherencePenalty += orientationPenalty;
+                        }
                     }
-                    
-                    shape.tested = true;
-                    // if the target position != currentIndex then move it there
-                    if(targetIndex!=currentIndex) {
-                        sortedshapes.erase(sortedshapes.begin() + currentIndex);
-                        //if(targetIndex == 0 ) targetIndex = sortedshapes.size();
-                        sortedshapes.insert(sortedshapes.begin() +targetIndex, &shape);
-                        //ofLogNotice("moving shape at ") << currentIndex << " to " << targetIndex;
-                    } else {
-                        // else subtract 1 from the currentIndex
-                        currentIndex--;
+
+                    const float totalScore = travelDistance + (effectiveMemory * coherencePenalty);
+                    if((totalScore < bestScore) || ((totalScore == bestScore) && (travelDistance < bestTravel))) {
+                        bestScore = totalScore;
+                        bestTravel = travelDistance;
+                        bestIndex = static_cast<int>(i);
+                        bestReversed = candidateReversed;
+                    }
+                };
+
+                evaluateOrientation(false);
+                evaluateOrientation(true);
+            }
+
+            if(bestIndex < 0) {
+                break;
+            }
+
+            ShapeDescriptor& selected = descriptors[bestIndex];
+            selected.selected = true;
+            selected.shape->reversed = bestReversed;
+            selected.shape->tested = true;
+            sortedZoneShapes.push_back(selected.shape);
+
+            currentPosition = selected.shape->getEnd();
+            if(selected.prevOrder >= 0) {
+                lastPrevOrder = selected.prevOrder;
+            }
+        }
+
+        // Step 3: Store this zone's final route as next frame's memory seed.
+        CoherentZoneMemory& zoneMemory = coherentSortMemoryByZoneUid[zoneUid];
+        zoneMemory.route.clear();
+        zoneMemory.route.reserve(sortedZoneShapes.size());
+        for(PointsForShape* sortedShape : sortedZoneShapes) {
+            if((sortedShape == nullptr) || sortedShape->empty()) {
+                continue;
+            }
+            CoherentShapeMemoryEntry memoryEntry;
+            const Point& start = sortedShape->getStart();
+            const Point& end = sortedShape->getEnd();
+            memoryEntry.start = glm::vec2(start.x, start.y);
+            memoryEntry.end = glm::vec2(end.x, end.y);
+            memoryEntry.center = (memoryEntry.start + memoryEntry.end) * 0.5f;
+            memoryEntry.length = glm::distance(memoryEntry.start, memoryEntry.end);
+            memoryEntry.reversed = sortedShape->reversed;
+            memoryEntry.reversable = sortedShape->reversable;
+            zoneMemory.route.push_back(memoryEntry);
+        }
+
+        sortedShapes.insert(sortedShapes.end(), sortedZoneShapes.begin(), sortedZoneShapes.end());
+    }
+}
+
+
+void Laser::send(const vector<ZoneContent>& zonesContent, float masterIntensity, ofPixels* pixelmask) {
+    
+    if(!guiInitialised) {
+        ofLog(OF_LOG_ERROR, "Error, ofxLaser::laser not initialised yet. (Probably missing a ofxLaser::Manager.initGui() call...");
+        return;
+    }
+    
+    if(!dac->isReadyForFrame(maxLatencyMS)) {
+        // register skipped frame
+        return;
+    }
+
+    // Build a one-frame lookup table for zone content by UID.
+    // The old path repeatedly performed linear scans for every output zone.
+    std::unordered_map<std::string, const ZoneContent*> zoneContentLookup;
+    zoneContentLookup.reserve(zonesContent.size());
+    for(const ZoneContent& zoneContent : zonesContent) {
+        zoneContentLookup[zoneContent.zoneId.getUid()] = &zoneContent;
+    }
+
+    auto getZoneContent = [&zoneContentLookup](const ZoneId& zoneId) -> const ZoneContent* {
+        const auto lookup = zoneContentLookup.find(zoneId.getUid());
+        if(lookup == zoneContentLookup.end()) {
+            return nullptr;
+        }
+        return lookup->second;
+    };
+    
+    // Keep per-output-zone source rectangles in sync with current content layout.
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        const ZoneContent* zoneContent = getZoneContent(laserZone->getZoneId());
+        if(zoneContent != nullptr) {
+            laserZone->setSourceRect(zoneContent->sourceRectangle);
+        }
+    }
+    
+    // PAUSE FUNCTION
+    if(paused) {
+        if(!pauseStateRecorded) {
+            // record all zone shapes;
+            pauseStateRecorded = true;
+            
+            for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+                
+                
+                const ZoneContent* zoneContent = getZoneContent(laserZone->getZoneId());
+                if(zoneContent != nullptr) {
+                    const vector<std::shared_ptr<Shape>>& zoneShapes = zoneContent->shapes;
+                    vector<std::shared_ptr<Shape>>& shapes = pauseShapesByZoneUid[laserZone->getZoneId().getUid()];
+                    for(std::shared_ptr<Shape> shape : zoneShapes) {
+                        shapes.push_back(shape->clone());
                     }
                 }
-                
-                //cout << "----------------------------------- " << endl;
-
-                
-                
             }
             
-            if(alwaysClockwise) {
-                
-                // TODO this algorithm doesn't seem to work right now :/
-//
-//                // CHECK HANDEDNESS
-//                float sum = 0;
-//                ofPoint p1 = sortedshapes[0]->getStart();
-//                ofPoint p2 = p1;
-//                for(size_t i = 0; i< sortedshapes.size(); i++) {
-//
-//                    PointsForShape& shape = *sortedshapes[i];
-//                    p1 = p2;
-//                    p2 = shape.getStart();
-//
-//                    float value = (p2.x-p1.x) * (p2.y+p1.y);
-//                    sum+=value;
-//
-//                    if(shape.getStart()!=shape.getEnd()) {
-//                        p1 = p2;
-//                        p2 = shape.getEnd();
-//                        value = (p2.x-p1.x) * (p2.y+p1.y);
-//                        sum+=value;
-//                    }
-//
-//
-//                }
-//
-//                //cout << sum << ((sum>0) ? "RIGHT" : "LEFT") << endl;
-//
-//                if(sum<0) {
-//                    reverse(sortedshapes.begin(),sortedshapes.end());
-//                    for (PointsForShape* shape : sortedshapes) shape->reversed = !shape->reversed;
-//
-//                }
+        }
+    } else if(pauseStateRecorded) {
+        pauseStateRecorded = false;
+        // delete all zone shapes
+        pauseShapesByZoneUid.clear();
+        
+    }
+    
+    clearPoints();
+    
+    vector<PointsForShape> allzoneshapepoints;
+    
+    // TODO add speed multiplier to getPointsForMove function
+    getAllShapePoints(zonesContent, &allzoneshapepoints, pixelmask, getSpeedMultiplier(), &zoneContentLookup);
+    
+    vector<PointsForShape*> sortedshapes;
+    
+    // sort the point objects
+    if(allzoneshapepoints.size()>0) {
+        if(sortShapes) {
+            // Coherent mode keeps per-zone route memory across frames.
+            // Legacy mode is stateless and only minimises this-frame travel.
+            if(coherentShapeSort) {
+                sortShapePointsCoherent(allzoneshapepoints, sortedshapes);
+            } else {
+                coherentSortMemoryByZoneUid.clear();
+                sortShapePointsLegacy(allzoneshapepoints, sortedshapes);
             }
-            float moveDistanceForSortedShapes = getMoveDistanceForShapes(sortedshapes);
-            // if the sorted shapes don't save much then don't bother sorting them!
-            if(moveDistanceForSortedShapes/moveDistanceForUnSortedShapes > 0.9) {
-                sortedshapes.clear();
-                for(size_t j = 0; j<allzoneshapes.size(); j++) {
-                    allzoneshapes[j].reversed = false;
-                    sortedshapes.push_back(&allzoneshapes[j]);
-                }
-                
+        } else {
+            for(size_t j = 0; j<allzoneshapepoints.size(); j++) {
+                allzoneshapepoints[j].reversed = false;
+                sortedshapes.push_back(&allzoneshapepoints[j]);
             }
-            
-		} else {
-			for(size_t j = 0; j<allzoneshapes.size(); j++) {
-				sortedshapes.push_back(&allzoneshapes[j]);
-			}
-			
-		}
-		
-
-		// go through the point objects
-		// add move between each one
-		// add points to the laser
-		
-		ofPoint currentPosition = laserHomePosition; // MUST be in output space
-		
-		for(size_t j = 0; j<sortedshapes.size(); j++) {
-			PointsForShape& shapepoints = *sortedshapes[j];
-			if(shapepoints.size()==0) continue;
-			
-			if(currentPosition.distance(shapepoints.getStart())>2){
-				addPointsForMoveTo(currentPosition, shapepoints.getStart());
-			
-				for(int k = 0; k<scannerSettings.shapePreBlank; k++) {
-					addPoint((ofPoint)shapepoints.getStart(), ofColor(0));
-				}
-				for(int k = 0;k<scannerSettings.shapePreOn;k++) {
-					addPoint(shapepoints.getStart());
-				}
-			}
-			
-			addPoints(shapepoints, shapepoints.reversed);
-
-			currentPosition = shapepoints.getEnd();
-			
-			PointsForShape* nextshapepoints = nullptr;
-			
-			if(j<sortedshapes.size()-1) {
-				nextshapepoints = sortedshapes[j+1];
-			}
-			if((nextshapepoints==nullptr) || (currentPosition.distance(nextshapepoints->getStart())>2)){
-				for(int k = 0;k<scannerSettings.shapePostOn;k++) {
-					addPoint(shapepoints.getEnd());
-				}
-				for(int k = 0; k<scannerSettings.shapePostBlank; k++) {
-					addPoint((ofPoint)shapepoints.getEnd(), ofColor(0));
-				}
-			}
-		
-			
-			
-		}
-        // if we have a really fast frame, let's duplicate it and reverse it
-        // (this helps for things like a single line where we maybe don't want to
-        // jump back to the beginning if we can draw the line again reversed)
-        if(sortShapes && ((pps/ laserPoints.size()) >100)) {
-            int numpoints = laserPoints.size();
-            for(int i = numpoints-1; i>=0; i--) {
-                addPoint(laserPoints[i]);
-                
-            }
-            currentPosition = laserPoints.back();
+            coherentSortMemoryByZoneUid.clear();
         }
         
-		if(smoothHomePosition) addPointsForMoveTo(currentPosition, laserHomePosition);
-		
-	}
-	
-	if (laserPoints.size() == 0) {
-		laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
-        // if we have a super short frame, might as well duplicate and reverse it
-    }
         
+        // go through the point objects
+        // add move between each one
+        // add points to the laser
+        
+        ofPoint currentPosition = laserHomePosition; // MUST be in output space
+        
+        for(size_t j = 0; j<sortedshapes.size(); j++) {
+            PointsForShape& shapepoints = *sortedshapes[j];
+            if(shapepoints.size()==0) continue;
+            
+            if(laserOnWhileMoving) { 
+                laserMoveCol = ofColor::green;
+                laserMoveCol.lerp( ofColor::red, (float)j/(float)sortedshapes.size());
+
+            }
+
+            if(currentPosition.distance(shapepoints.getStart())>2){
+                addPointsForMoveTo(currentPosition, shapepoints.getStart());
+                
+                for(int k = 0; k<scannerSettings.shapePreBlank; k++) {
+                    addPoint((ofPoint)shapepoints.getStart(), ofColor(0));
+                }
+                for(int k = 0;k<scannerSettings.shapePreOn;k++) {
+                    addPoint(shapepoints.getStart());
+                }
+            }
+            
+            addPoints(shapepoints, shapepoints.reversed);
+            
+            currentPosition = shapepoints.getEnd();
+            
+            PointsForShape* nextshapepoints = nullptr;
+            
+            if(j<sortedshapes.size()-1) {
+                nextshapepoints = sortedshapes[j+1];
+            }
+            if((nextshapepoints==nullptr) || (currentPosition.distance(nextshapepoints->getStart())>2)){
+                for(int k = 0;k<scannerSettings.shapePostOn;k++) {
+                    addPoint(shapepoints.getEnd());
+                }
+                for(int k = 0; k<scannerSettings.shapePostBlank; k++) {
+                    addPoint((ofPoint)shapepoints.getEnd(), ofColor(0));
+                }
+            }
+            
+            
+            
+        }
+        addPointsForMoveTo(currentPosition, laserHomePosition);
+        
+    }
+    
+    if (laserPoints.size() == 0) {
+        laserPoints.push_back(Point(laserHomePosition, ofColor(0)));
+    }
     
     
-	int targetNumPoints;
+    int targetNumPoints = 0;
     
-	// TODO add system to speed up if too much stuff to draw
-	if (syncToTargetFramerate) {
-		
-		targetNumPoints = round((float)pps / targetFramerate);
-		
-		if(syncShift!=0) {
-			targetNumPoints+=syncShift;
-			if(!ofGetMousePressed()) syncShift = 0;
-		}
-		
-		while (laserPoints.size() < targetNumPoints) {
-			addPoint(laserHomePosition, ofColor::black);
-		}
-	}
-	
-	processPoints(masterIntensity);
-	
-	if(syncToTargetFramerate && (laserPoints.size()!=targetNumPoints)) {
-	
-		ofLogError("syncToTargetFramerate failed! " + ofToString(targetNumPoints)+ " " + ofToString(laserPoints.size()));
-	}
-	
-	dac->sendFrame(laserPoints);
+    // TODO add system to speed up if too much stuff to draw
+    if (syncToTargetFramerate) {
+        
+        targetNumPoints = round((float)pps / targetFramerate);
+        
+        if(syncShift!=0) {
+            targetNumPoints+=syncShift;
+            if(!ofGetMousePressed()) syncShift = 0;
+        }
+        
+        while (laserPoints.size() < targetNumPoints) {
+            addPoint(laserHomePosition, ofColor::black);
+        }
+    }
+    
+    processPoints(masterIntensity, !dac->colourShiftImplemented); // if the colour shift isn't implemented at the DAC level, do it here
+    
+    if(syncToTargetFramerate && (laserPoints.size()!=targetNumPoints)) {
+        
+        //ofLogError("syncToTargetFramerate failed! " + ofToString(targetNumPoints)+ " " + ofToString(laserPoints.size()));
+    }
+    
+    dac->sendFrame(laserPoints);
     numPoints = (int)laserPoints.size();
-	
-	if(sortedshapes.size()>0) {
-		if(smoothHomePosition) {
-			laserHomePosition += (sortedshapes.front()->getStart()-laserHomePosition)*0.05;
-		} else {
-			laserHomePosition = sortedshapes.back()->getEnd();
-		}
-	}
+    
+    if(sortedshapes.size()>0) {
+        if(smoothHomePosition) {
+            laserHomePosition += (sortedshapes.front()->getStart()-laserHomePosition)*0.05;
+        } else {
+            laserHomePosition = sortedshapes.front()->getStart();
+        }
+    }
 }
+
 
 float Laser ::getMoveDistanceForShapes(vector<PointsForShape>& shapes){
     float distance = 0;
     ofPoint position = laserHomePosition;
-    for(PointsForShape shape : shapes) {
+    // Iterate by const-reference to avoid copying each shape's full point stream.
+    for(const PointsForShape& shape : shapes) {
         distance+= shape.getStart().distance(position);
         position = shape.getEnd();
     }
@@ -1008,615 +1145,681 @@ float Laser ::getMoveDistanceForShapes(vector<PointsForShape*>& shapes){
     
 }
 
+bool Laser ::isLaserZoneActive(std::shared_ptr<OutputZone>& outputZone) {
+    // mute / solo functionality
+    if(areAnyZonesSoloed()) {
+        return outputZone->soloed;
+    } else {
+        return !outputZone->muted;
+    }
+}
 
-void Laser ::getAllShapePoints(vector<PointsForShape>* shapepointscontainer, ofPixels*pixels, float speedmultiplier){
-	
-	vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
-	
-	// temp vectors for storing the shapes in
-	vector<PointsForShape> zonePointsForShapes;
-	vector<Point> shapePointBuffer;
-	
-	// go through each zone
-	//for(int i = 0; i<(int)laserZones.size(); i++) {
-    for(LaserZone* laserZone : laserZones) {
-      
-        if(!laserZone->getVisible()) continue;
+void Laser ::getAllShapePoints(
+    const vector<ZoneContent>& zonesContent,
+    vector<PointsForShape>* shapepointscontainer,
+    ofPixels* pixels,
+    float speedmultiplier,
+    const std::unordered_map<std::string, const ZoneContent*>* zoneContentLookup
+) {
+    
+    vector<PointsForShape>& allzoneshapepoints = *shapepointscontainer;
+    
+    // Temporary vectors reused for every zone in this frame.
+    // Keeping them outside inner loops avoids repeated allocations.
+    vector<PointsForShape> zonePointsForShapes;
+    vector<Point> shapePointBuffer;
+    
+    // go through each zone
+    for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
         
-		Zone& zone = laserZone->zone;
-        ZoneTransform& warp = laserZone->zoneTransform;
-		ofRectangle& maskRectangle = laserZone->zoneMask;
+        if(!isLaserZoneActive(outputZone)) continue;
         
-        // doesn't make a copy, just a pointer to the original shapes in the zone
-        // CHECK - is this OK ?
-		deque<Shape*>* zoneshapes = &zone.shapes;
-		
+        // Resolve zone content through a precomputed UID->ZoneContent table when available.
+        // Fallback to the legacy linear lookup so call sites remain backwards-compatible.
+        const ZoneContent* zoneContentPtr = nullptr;
+        if(zoneContentLookup != nullptr) {
+            const auto foundZone = zoneContentLookup->find(outputZone->getZoneId().getUid());
+            if(foundZone != zoneContentLookup->end()) {
+                zoneContentPtr = foundZone->second;
+            }
+        } else {
+            const int idindex = findZoneContentIndexForId(outputZone->getZoneId(), zonesContent);
+            if(idindex >= 0) {
+                zoneContentPtr = &zonesContent[idindex];
+            }
+        }
+        if(zoneContentPtr == nullptr) {
+            continue;
+        }
+        const ZoneContent& zoneContent = *zoneContentPtr;
+
+        // Keep a pointer to the active shape list so we can avoid copying zone shapes
+        // in the common non-test-pattern path.
+        const vector<std::shared_ptr<ofxLaser::Shape>>* zoneShapesPtr = nullptr;
+        vector<std::shared_ptr<ofxLaser::Shape>> zoneShapesStorage;
+        const string zoneUid = outputZone->getZoneId().getUid();
+        if(paused) {
+            const auto pausedShapesIt = pauseShapesByZoneUid.find(zoneUid);
+            if(pausedShapesIt != pauseShapesByZoneUid.end()) {
+                zoneShapesPtr = &pausedShapesIt->second;
+            } else {
+                static const vector<std::shared_ptr<ofxLaser::Shape>> emptyShapes;
+                zoneShapesPtr = &emptyShapes;
+            }
+        } else {
+            zoneShapesPtr = &zoneContent.shapes;
+        }
+        
+        ofRectangle maskRectangle = zoneContent.sourceRectangle;
+        
         // get test pattern shapes - we have to do this even if
         // we don't have a test pattern, so that the code at the end
         // of this function can delete the shapes.
-        deque<Shape*> testPatternShapes = getTestPatternShapesForZone(*laserZone);
+        vector<std::shared_ptr<Shape>> testPatternShapes;
         
-        // define this here so we don't lose scope
-        deque<Shape*> zoneShapesWithTestPatternShapes;
-        
-        if(testPattern>0) {
-            // copy zone shapes into it
-            if(!hideContentDuringTestPattern) zoneShapesWithTestPatternShapes = zone.shapes;
+        if(testPatternActive) {
+            testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPattern, zoneContent.sourceRectangle);
+        } else if(testPatternGlobalActive) {
+            testPatternShapes = TestPatternGenerator :: getTestPatternShapes(testPatternGlobal, zoneContent.sourceRectangle);
             
-            // add testpattern points for this zone...
-            zoneShapesWithTestPatternShapes.insert(zoneShapesWithTestPatternShapes.end(), testPatternShapes.begin(), testPatternShapes.end());
-            zoneshapes = &zoneShapesWithTestPatternShapes;
         }
         
+        // define this here so we don't lose scope
+        vector<std::shared_ptr<Shape>> zoneShapesWithTestPatternShapes;
+
+        if(testPatternActive || testPatternGlobalActive) {
+            // Merge content + test pattern only when needed.
+            if(!hideContentDuringTestPattern) {
+                zoneShapesWithTestPatternShapes = *zoneShapesPtr;
+            }
+            zoneShapesWithTestPatternShapes.insert(zoneShapesWithTestPatternShapes.end(), testPatternShapes.begin(), testPatternShapes.end());
+            zoneShapesStorage = std::move(zoneShapesWithTestPatternShapes);
+            zoneShapesPtr = &zoneShapesStorage;
+        }
         
-        // so this is either going to be the test pattern shapes or
-        // a reference to the zone shapes
-        deque<Shape*>& shapesInZone = *zoneshapes;
+        // This points at either:
+        // - the original zone shapes (no copy), or
+        // - a merged vector containing test-pattern overlays.
+        const vector<std::shared_ptr<Shape>>& shapesInZone = *zoneShapesPtr;
         
         // reuse the last vector of shapepoints
-		zonePointsForShapes.clear();
-		
-		// go through each shape in the zone
-		
-		for(size_t j = 0; j<shapesInZone.size(); j++)  {
-			
-			// get the points
-			Shape& shape = *(shapesInZone[j]);
-			
-			RenderProfile& renderProfile = getRenderProfile(shape.profileLabel);
-			
+        zonePointsForShapes.clear();
+        zonePointsForShapes.reserve(shapesInZone.size());
+        
+        // go through each shape in the zone
+        
+        for(size_t j = 0; j<shapesInZone.size(); j++)  {
+            
+            // get the points
+            Shape& shape = *(shapesInZone[j]);
+            
+            RenderProfile& renderProfile = getRenderProfile(shape.profileLabel);
+            
             // calculate the points for the shape and put them
             // in the temporary point storage buffer.
-			shapePointBuffer.clear();
-			shape.appendPointsToVector(shapePointBuffer, renderProfile, speedmultiplier);
-			
+            shapePointBuffer.clear();
+            shape.appendPointsToVector(shapePointBuffer, renderProfile, speedmultiplier);
+            
             // now we need to go through the shape and see if any of it is
             // off the edge of the input zone. If it is we split the
             // shape up into separate segments.
             
-			bool offScreen = true;
-			PointsForShape segmentPoints;
-            segmentPoints.reversable = shape.reversable;
+            bool offScreen = true;
+            PointsForShape segmentPoints;
+            segmentPoints.reversable = shape.getReversable();
+            segmentPoints.zoneUid = zoneUid;
             
-			//iterate through the points
-			for(int k = 0; k<shapePointBuffer.size(); k++) {
-				
-				Point& p = shapePointBuffer[k];
-				
-				// check each point against the mask
-				// are we outside the edge mask?
+            //iterate through the points
+            for(int k = 0; k<shapePointBuffer.size(); k++) {
+                
+                Point& p = shapePointBuffer[k];
+                
+                // check each point against the mask
+                // are we outside the edge mask?
                 // NB can't use inside because I want points on the edge
-				
+                
                 // if we are outside the mask area
-				if(p.x<maskRectangle.getLeft() ||
-				   p.x>maskRectangle.getRight() ||
-				   p.y<maskRectangle.getTop() ||
-				   p.y>maskRectangle.getBottom())  {
-					
+                if(p.x<maskRectangle.getLeft() ||
+                   p.x>maskRectangle.getRight() ||
+                   p.y<maskRectangle.getTop() ||
+                   p.y>maskRectangle.getBottom())  {
+                    
                     // and we're not already offscreen
                     if(!offScreen) {
-						offScreen = true;
-						// if we already have points then add an end point
+                        offScreen = true;
+                        // if we already have points then add an end point
                         // for the shape that is on the edge of the mask
-						if(k>0) {
+                        if(k>0) {
                             
-							Point lastpoint = p;
-							
-							// TODO better point on edge rather than just clamp
-							lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-							lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
-							segmentPoints.push_back(lastpoint);
-							
-							// add this bunch to the collection for this zone
-							zonePointsForShapes.push_back(segmentPoints); // should copy
-							
-							//clear the vector and start again
-							segmentPoints.clear();
-							
-						}
-					}
+                            Point pointOnEdge = p;
+                            
+                            // TODO better point on edge rather than just clamp
+                            pointOnEdge.x = ofClamp(pointOnEdge.x, maskRectangle.getLeft(), maskRectangle.getRight());
+                            pointOnEdge.y = ofClamp(pointOnEdge.y, maskRectangle.getTop(), maskRectangle.getBottom());
+                            
+                            segmentPoints.push_back(pointOnEdge);
+                            
+                            // Move the finished segment into the zone container.
+                            // With move-enabled PointsForShape this transfers the point buffer.
+                            zonePointsForShapes.push_back(std::move(segmentPoints));
+
+                            // Reset state for the next segment while preserving behaviour.
+                            segmentPoints = PointsForShape();
+                            segmentPoints.reversable = shape.getReversable();
+                            segmentPoints.zoneUid = zoneUid;
+                            
+                        }
+                    }
+                    
                     // otherwise if we are already off screen we don't need
                     // to do anything except ignore this point
-				
-                // else if we are inside the mask rectangle
-				} else {
                     
-					// and we're currently off screen
-					if(offScreen) {
-						// clear the points - do we need to if we
+                    // else if we are inside the mask rectangle
+                    
+                } else {
+                    
+                    // and we're currently off screen
+                    if(offScreen) {
+                        // clear the points - do we need to if we
                         // cleared them already at the end of the last one?
-						segmentPoints.clear();
-						offScreen = false;
+                        segmentPoints.clear();
+                        offScreen = false;
                         // if we have points already
-						if(k>0) {
+                        if(k>0) {
                             
                             // then figure out the position on the edge
                             // of the mask
-							Point lastpoint = shapePointBuffer[k-1];
-							
-							// TODO better point on edge rather than just clamp
-							lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
-							lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
+                            Point lastpoint = shapePointBuffer[k-1];
+                            
+                            // TODO better point on edge rather than just clamp
+                            lastpoint.x = ofClamp(lastpoint.x, maskRectangle.getLeft(), maskRectangle.getRight());
+                            lastpoint.y = ofClamp(lastpoint.y, maskRectangle.getTop(), maskRectangle.getBottom());
                             
                             // and add it to the beginning of the new segment
                             segmentPoints.push_back(lastpoint);
-						}
-					}
+                        }
+                    }
                     
                     // either way, add this next point because we are on screen
-					segmentPoints.push_back(p);
-				}
-				
-			
-				
-			}
-			// add the final segment points to zone points
-			if(segmentPoints.size()>0) {
-				zonePointsForShapes.push_back(segmentPoints);
-			}
-			
-		} // end zoneshapes
-		
-		
-		// go through all the points and warp them into output space
-		for(size_t j = 0; j<zonePointsForShapes.size(); j++) {
-			PointsForShape& segmentpoints = zonePointsForShapes[j];
-			for(int k= 0; k<segmentpoints.size(); k++) {
-				
-				// Check against the mask image
-				if(pixels!=NULL) {
-					Point& p = segmentpoints[k];
-					ofFloatColor c = pixels->getColor(p.x, p.y);
-					float brightness = c.getBrightness();
-					p.r*=brightness;
-					p.g*=brightness;
-					p.b*=brightness;
-				}
+                    segmentPoints.push_back(p);
+                }
+                
+                
+                
+            }
+            // add the final segment points to zone points
+            if(segmentPoints.size()>0) {
+                zonePointsForShapes.push_back(std::move(segmentPoints));
+            }
+            
+        } // end zoneshapes
+        
+        // go through all the points and warp them into output space
+        for(size_t j = 0; j<zonePointsForShapes.size(); j++) {
+            PointsForShape& segmentpoints = zonePointsForShapes[j];
+            for(int k= 0; k<segmentpoints.size(); k++) {
+                
+                // Check against the mask image
+                if(pixels!=nullptr) {
+                    Point& p = segmentpoints[k];
+                    ofFloatColor c = pixels->getColor(p.x, p.y);
+                    float brightness = c.getBrightness();
+                    p.r*=brightness;
+                    p.g*=brightness;
+                    p.b*=brightness;
+                }
                 Point& p = segmentpoints[k];
-                p = warp.getWarpedPoint(p);
+                p = outputZone->getWarpedPoint(p);
                 
                 // check if it's in any of the masks!
-                for(QuadMask* mask : maskManager.quads){
-                    if(mask->hitTest(p)) {
+                for(std::shared_ptr<QuadMask>& mask : maskManager.quads){
+                    if(mask->hitTest(p.x, p.y)) {
                         p.multiplyColour(ofMap(mask->maskLevel,100,0,0,1));
                     }
                 }
                 
-			}
-		}
-		
-		
-		// add all the segments for the zone into the big container for all the segs
-		allzoneshapepoints.insert(allzoneshapepoints.end(), zonePointsForShapes.begin(), zonePointsForShapes.end());
-		
-		// delete all the test pattern shapes
-		for(size_t j = 0; j<testPatternShapes.size(); j++) {
-			delete testPatternShapes[j];
-		}
+            }
+        }
+        
+        // add all the segments for the zone into the big container for all the segs
 
-		testPatternShapes.clear();
-		
-	} // end zones
-	
-	
-	
-	
+        std::move(zonePointsForShapes.begin(), zonePointsForShapes.end(), std::back_inserter(allzoneshapepoints));
+
+        testPatternShapes.clear();
+        
+    } // end zones
+    
 }
-
-
 
 RenderProfile& Laser::getRenderProfile(string profilelabel) {
-	
-		if(scannerSettings.renderProfiles.count(profilelabel) == 0) {
-			// if we don't have a profile with that name then
-			// something has seriously gone wrong
-			profilelabel = OFXLASER_PROFILE_DEFAULT;
-		}
-		return scannerSettings.renderProfiles.at(profilelabel);
-	
-}
-
-deque<Shape*> Laser ::getTestPatternShapesForZone(LaserZone& laserZone) {
-	
-	deque<Shape*> shapes;
-    if(testPattern==0) return shapes;
-   
-	Zone& zone = laserZone.zone;
-
-	ofRectangle& maskRectangle = laserZone.zoneMask;
-
-	if(testPattern==1) {
-
-		ofRectangle& rect = maskRectangle;
-
-		ofColor col = ofColor(0,255,0);
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getTopRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getBottomRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getBottomLeft(), rect.getTopLeft(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopLeft(), rect.getBottomRight(), col, OFXLASER_PROFILE_FAST));
-		shapes.push_back(new Line(rect.getTopRight(), rect.getBottomLeft(), col, OFXLASER_PROFILE_FAST));
-
-
-	} else if(testPattern==2) {
-
-		ofRectangle& rect = zone.rect;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-		for(float y = 0; y<=1.1; y+=0.333333333) {
-
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(255), OFXLASER_PROFILE_FAST));
-		}
-
-		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-
-
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(255,0,0), OFXLASER_PROFILE_FAST ));
-
-		}
-
-		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/12, ofColor(0,0,255), OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Circle(rect.getCenter(), rect.getWidth()/6, ofFloatColor(0,1,0), OFXLASER_PROFILE_DEFAULT));
-
-
-
-	}else if(testPattern==3) {
-
-		ofRectangle& rect = zone.rect;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-
-		for(float y = 0; y<=1.1; y+=0.333333333) {
-
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1, rect.getTop()+0.1+v.y*y),ofPoint(rect.getRight()-0.1, rect.getTop()+0.1+v.y*y), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-		}
-		shapes.push_back(new Line(rect.getTopLeft(),  glm::mix( rect.getTopLeft(), rect.getBottomLeft(), 1.0f/3.0f ), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(rect.getBottomLeft(), glm::mix(rect.getTopLeft(), rect.getBottomLeft(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line( glm::mix(rect.getTopRight(), rect.getBottomRight(), 1.0f/3.0f), mix(rect.getTopRight(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-
-	} else if(testPattern==4) {
-
-		ofRectangle& rect = zone.rect;
-
-		ofPoint v = rect.getBottomRight() - rect.getTopLeft()-ofPoint(0.2,0.2);
-
-		for(float x =0 ; x<=1.1; x+=0.3333333333) {
-			shapes.push_back(new Line(ofPoint(rect.getLeft()+0.1+ v.x*x, rect.getTop()+0.1),ofPoint(rect.getLeft()+0.1 + v.x*x, rect.getBottom()-0.1), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT ));
-
-		}
-
-		shapes.push_back(new Line(rect.getTopLeft(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 1.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(rect.getTopRight(), glm::mix( rect.getTopLeft(), rect.getTopRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-		shapes.push_back(new Line(glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 1.0f/3.0f), glm::mix(rect.getBottomLeft(), rect.getBottomRight(), 2.0f/3.0f), ofColor(0,255,0), OFXLASER_PROFILE_DEFAULT));
-
-
-	} else if((testPattern>=5) && (testPattern<=8)) {
-		ofColor c;
-
-		ofRectangle rect = maskRectangle;
-
-		rect.scaleFromCenter(0.5, 0.1);
-		vector<ofPoint> points;
-		vector<ofColor> colours;
-
-		ofPoint currentPosition = rect.getTopLeft();
-
-		for(int row = 0; row<5; row ++ ) {
-
-
-			float y =rect.getTop() + (rect.getHeight()*row/4);
-
-			ofPoint left = ofPoint(rect.getLeft(), y);
-
-			ofPoint right = ofPoint(rect.getRight(), y);
-
-			int moveIterations = currentPosition.distance(left)/1;
-
-			for(int i = 0; i<moveIterations; i++) {
-				points.push_back(currentPosition.getInterpolated(left, (float)i/(float)moveIterations));
-				colours.push_back(ofColor(0));
-
-			}
-			currentPosition = right;
-
-			if(testPattern == 5) c.set(255,0,0);
-			else if(testPattern == 6) c.set(0,255,0);
-			else if(testPattern == 7) c.set(0,0,255);
-			else if(testPattern == 8) c.set(255,255,255);
-
-			switch (row) {
-				case 0 :
-					c.r *= colourSettings.red100;
-					c.g *= colourSettings.green100;
-					c.b *= colourSettings.blue100;
-					break;
-				case 1 :
-					c.r *= colourSettings.red75;
-					c.g *= colourSettings.green75;
-					c.b *= colourSettings.blue75;
-					break;
-				case 2 :
-					c.r *= colourSettings.red50;
-					c.g *= colourSettings.green50;
-					c.b *= colourSettings.blue50;
-					break;
-				case 3 :
-					c.r *= colourSettings.red25;
-					c.g *= colourSettings.green25;
-					c.b *= colourSettings.blue25;
-					break;
-				case 4 :
-					c.r *= colourSettings.red0;
-					c.g *= colourSettings.green0;
-					c.b *= colourSettings.blue0;
-					break;
-			}
-
-			float speed = 10 * ( 1- (row*0.25));
-			if(speed<2.5) speed = 2.5;
-
-			int blanks = 5;
-			for(int i = 0; i< blanks; i++) {
-				points.push_back(left);
-				colours.push_back(ofColor(0));
-			}
-			for(float x =left.x ; x<=right.x; x+=speed) {
-				points.push_back(ofPoint(x,y));
-				colours.push_back(c);
-			}
-
-			for(int i = 0; i< blanks; i++) {
-				points.push_back(right);
-				colours.push_back(ofColor(0));
-			}
-
-
-		}
-		shapes.push_back(new ManualShape(points, colours, false,OFXLASER_PROFILE_DEFAULT));
-
-	} else if(testPattern ==9) {
-		ofRectangle rect = maskRectangle;
-
-		shapes.push_back(new Dot(rect.getTopLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getTopRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getBottomLeft(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-		shapes.push_back(new Dot(rect.getBottomRight(), ofColor(255,255,255), 1, OFXLASER_PROFILE_DEFAULT));
-
-	}
-	return shapes; 
-	
+    
+    if(scannerSettings.renderProfiles.count(profilelabel) == 0) {
+        // if we don't have a profile with that name then
+        // something has seriously gone wrong
+        profilelabel = OFXLASER_PROFILE_DEFAULT;
+    }
+    return scannerSettings.renderProfiles.at(profilelabel);
+    
 }
 
 
 void Laser :: addPointsForMoveTo(const ofPoint & currentPosition, const ofPoint & targetpoint){
-
-	ofPoint target = targetpoint;
-	ofPoint start = currentPosition;
-
-	ofPoint v = target-start;
-
-	float blanknum = (v.length()/scannerSettings.moveSpeed)/speedMultiplier;// + movePointsPadding;
-
-	for(int j = 0; j<blanknum; j++) {
-
-		float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
-
-		ofPoint c = (v* t) + start;
-		addPoint(c, (laserOnWhileMoving && j%2==0) ? ofColor(200,0,0) : ofColor(0));
-
-	}
-
+    
+    ofPoint target = targetpoint;
+    ofPoint start = currentPosition;
+    
+    ofPoint v = target-start;
+    
+    float blanknum = (v.length()/scannerSettings.moveSpeed)/getSpeedMultiplier();// + movePointsPadding;
+    
+    for(int j = 0; j<blanknum; j++) {
+        
+        float t = Quint::easeInOut((float)j, 0.0f, 1.0f, blanknum);
+        
+        ofPoint c = (v* t) + start;
+        addPoint(c, (laserOnWhileMoving && j%2==0) ? laserMoveCol : ofColor(0));
+        
+    }
+    
 }
 
 void Laser :: addPoint(ofPoint p, ofFloatColor c, bool useCalibration) {
-	
-	
-	addPoint(ofxLaser::Point(p, c, useCalibration));
-	
+    
+    
+    addPoint(ofxLaser::Point(p, c, useCalibration));
+    
 }
 void Laser :: addPoints(vector<ofxLaser::Point>&points, bool reversed) {
-	if(!reversed) {
-		for(size_t i = 0; i<points.size();i++) {
-			addPoint(points[i]);
-		}
-	} else {
-		for(int i=(int)points.size()-1;i>=0; i--) {
-			addPoint(points[i]);
-		}
-	}
+    if(!reversed) {
+        for(size_t i = 0; i<points.size();i++) {
+            addPoint(points[i]);
+        }
+    } else {
+        for(int i=(int)points.size()-1;i>=0; i--) {
+            addPoint(points[i]);
+        }
+    }
 }
 
 void Laser :: addPoint(ofxLaser::Point p) {
-	
-	p+=(ofPoint)outputOffset;
-	
-	laserPoints.push_back(p);
-	
-	previewPathMesh.addVertex(ofPoint(p.x, p.y));
+    
+    laserPoints.push_back(p);
 
+    // Preview meshes are editor-only visual aids. They are not part of DAC output,
+    // so we can skip this work in performance-focused runs.
+    if(buildPreviewPathMeshes) {
+        previewPathMesh.addVertex(ofPoint(p.x, p.y));
+        previewPathColoured.addVertex(ofPoint(p.x, p.y));
+        previewPathColoured.addColor(p.getColour());
+    }
+    
 }
 
 
 
 void  Laser :: processPoints(float masterIntensity, bool offsetColours) {
-			
-	// Lasers usually change colour sooner than the mirrors can move to the next
-	// position, so the colourChangeOffset system
-	// mitigates against that by shifting the colours for the points.
-	// Some optimisation makes this slightly hard to read but we iterate through
-	// the points backwards, and store the .
-	// To avoid creating a whole new vector, we're storing the overlap in a buffer of
-	// colours.
-	// I'm sure there must be some slicker C++ way of doing this...
-	
-	frameCounter++;
-	
-	if(offsetColours) {
-        // the offset value is in time, so we convert it to a number of points.
-		// this way we can change the PPS and this should still work
-        // TODO do we need to take into account the speed multiplier?
-		int colourChangeIndexOffset = (float)pps/10000.0f*colourChangeShift ;
-		
-		// we switch the front and rear buffers every frame, so we copy the
-		// rear points to the front
-		vector<Point>& frontBuffer = (frameCounter%2==0) ? sparePoints : sparePoints2;
-		vector<Point>& rearBuffer = (frameCounter%2==0) ? sparePoints2 : sparePoints;
-
-		// we change the colour later, ie we shift the colours forward (later)
-		
-		// resize the spare points to match the number we need
-		if(rearBuffer.size()!= colourChangeIndexOffset) {
-			// should be blank point but might wanna give it a
-			// default value with the current position
-			rearBuffer.resize(colourChangeIndexOffset);
-			// maybe do some other stuff as well for safety
-		}
-		if(frontBuffer.size()!= colourChangeIndexOffset) {
-			frontBuffer.resize(colourChangeIndexOffset);
-		}
-		
-		for(int i = (int)(laserPoints.size()+rearBuffer.size())-1; i>=0; i--) {
-			
-			Point& p = (i<laserPoints.size()) ? laserPoints[i] : rearBuffer[i-laserPoints.size()];
-
-			//now shift the colour from an earlier point
-			if(i>=colourChangeIndexOffset){
-				p.copyColourFromPoint(laserPoints[i-colourChangeIndexOffset]);
-			} else {
-				p.copyColourFromPoint(frontBuffer[i-colourChangeIndexOffset+frontBuffer.size()]);
-			}
-		}
-	}
-
-	
-	for(size_t i = 0; i<laserPoints.size(); i++) {
-		
-		ofxLaser::Point &p = laserPoints[i];
     
-		
-		if(flipY) p.y= 800-p.y;
-		if(flipX) p.x= 800-p.x;
-		if(rotation!=0) {
-			p.x-=400;
-			p.y-=400;
-
-			glm::vec3 vec = glm::vec3(p.x,p.y,0);
-			float angle = ofDegToRad(rotation);
-			
-			glm::vec2 rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
-			p.x=rotatedVec.x+400;
-			p.y=rotatedVec.y+400;
-
-		}
-		
-		// bounds check
+    // Lasers usually change colour sooner than the mirrors can move to the next
+    // position, so the colourChangeOffset system
+    // mitigates against that by shifting the colours for the points.
+    // Some optimisation makes this slightly hard to read but we iterate through
+    // the points backwards, and store the .
+    // To avoid creating a whole new vector, we're storing the overlap in a buffer of
+    // colours.
+    // I'm sure there must be some slicker C++ way of doing this...
+    
+    frameCounter++;
+    
+    if(offsetColours) {
+        // the offset value is in time, so we convert it to a number of points.
+        // this way we can change the PPS and this should still work
+        // TODO do we need to take into account the speed multiplier?
+        int colourChangeIndexOffset = (float)pps/10000.0f*scannerSync ;
+        
+        // we switch the front and rear buffers every frame, so we copy the
+        // rear points to the front
+        vector<Point>& frontBuffer = (frameCounter%2==0) ? sparePoints : sparePoints2;
+        vector<Point>& rearBuffer = (frameCounter%2==0) ? sparePoints2 : sparePoints;
+        
+        // we change the colour later, ie we shift the colours forward (later)
+        
+        // resize the spare points to match the number we need
+        if(rearBuffer.size()!= colourChangeIndexOffset) {
+            // should be blank point but might wanna give it a
+            // default value with the current position
+            rearBuffer.resize(colourChangeIndexOffset);
+            // maybe do some other stuff as well for safety
+        }
+        if(frontBuffer.size()!= colourChangeIndexOffset) {
+            frontBuffer.resize(colourChangeIndexOffset);
+        }
+        
+        for(int i = (int)(laserPoints.size()+rearBuffer.size())-1; i>=0; i--) {
+            
+            Point& p = (i<laserPoints.size()) ? laserPoints[i] : rearBuffer[i-laserPoints.size()];
+            
+            //now shift the colour from an earlier point
+            if(i>=colourChangeIndexOffset){
+                p.copyColourFromPoint(laserPoints[i-colourChangeIndexOffset]);
+            } else {
+                p.copyColourFromPoint(frontBuffer[i-colourChangeIndexOffset+frontBuffer.size()]);
+            }
+        }
+    }
+    
+    
+    for(size_t i = 0; i<laserPoints.size(); i++) {
+        
+        ofxLaser::Point &p = laserPoints[i];
+        
+        // fine adjustments
+        p+=(ofPoint)outputOffset;
+        
+        if(rotation!=0) {
+            p.x-=400;
+            p.y-=400;
+            
+            glm::vec3 vec = glm::vec3(p.x,p.y,0);
+            float angle = ofDegToRad(rotation);
+            
+            glm::vec2 rotatedVec = glm::rotate(vec, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+            p.x=rotatedVec.x+400;
+            p.y=rotatedVec.y+400;
+            
+        }
+        
+        if(flipY) p.y= 800-p.y;
+        if(flipX) p.x= 800-p.x;
+        
+        if(mountOrientation == 1) {
+            float y = 800-p.x;
+            p.x = p.y;
+            p.y = y;
+        } else if (mountOrientation ==2) {
+            p.x = 800-p.x;
+            p.y = 800-p.y;
+        } else if (mountOrientation ==3) {
+            float y = 800-p.x;
+            p.x = p.y;
+            p.y = y;
+            
+            p.x = 800-p.x;
+            p.y = 800-p.y;
+        }
+        
+        
+        
+        // bounds check
         if(p.x<0) {
             p.x = p.r = p.g = p.b = 0;
         } else if(p.x>800) {
-			p.x = 800;
-			p.r = p.g = p.b = 0;
-		}
+            p.x = 800;
+            p.r = p.g = p.b = 0;
+        }
         if(p.y<0) {
             p.y = p.r = p.g = p.b = 0;
         } else if(p.y>800) {
-			p.y = 800;
-			p.r = p.g = p.b = 0;
-		}
-		
-		if(p.useCalibration) {
+            p.y = 800;
+            p.r = p.g = p.b = 0;
+        }
+        
+        if(p.useCalibration) {
             colourSettings.processColour(p, intensity*masterIntensity);
         } else {
             
             
         }
-		
-		if(!armed) {
-			p.r = 0;
-			p.g = 0;
-			p.b = 0;
-		}
-	
-		
-	}
-	
+        
+        //		if(!armed) {
+        //			p.r = 0;
+        //			p.g = 0;
+        //			p.b = 0;
+        //            p.x = laserHomePosition.x;
+        //            p.y = laserHomePosition.y;
+        //		}
+        
+    }
 }
 
 
 void Laser::paramsChanged(ofAbstractParameter& e){
+    if((e.getName() == sortShapes.getName()) || (e.getName() == coherentShapeSort.getName())) {
+        coherentSortMemoryByZoneUid.clear();
+    }
     if(ignoreParamChange) return;
     else saveSettings();
 }
 
 
-bool Laser::loadSettings(vector<Zone*>& zones){
-    ignoreParamChange = true;
-    ofJson json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
-    ofDeserialize(json, params);
-    
-    bool success = maskManager.deserialize(json);
-    
-    ofJson zoneNumJson = json["laserzones"];
-    
-    // if the json node isn't found then this should do nothing
-    for(auto jsonitem : zoneNumJson) {
-        //cout << "Laser::loadSettings " << (int) jsonitem << endl;
-        int zoneNum = (int)jsonitem;
-        if(zones.size()>zoneNum) {
-            LaserZone* laserZone = new LaserZone(*zones[zoneNum]);
-            laserZones.push_back(laserZone);
-            ofJson laserZoneJson = ofLoadJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(zoneNum) + ".json");
-
-            success &= laserZone->deserialize(laserZoneJson);
+bool Laser::loadSettings(){
+    // Strategy:
+    // loading should fail soft. If filesystem state is broken (for example a
+    // missing/invalid working directory), return false and keep the app alive.
+    ofJson json;
+    try {
+        json = ofLoadJson(savePath + "laser"+ ofToString(laserIndex)+".json");
+    } catch(const std::exception& e) {
+        ofLogError("Laser::loadSettings") << "laser " << laserIndex << " load failed : " << e.what();
+        return false;
+    } catch(...) {
+        ofLogError("Laser::loadSettings") << "laser " << laserIndex << " load failed : unknown exception";
+        return false;
+    }
+    // new format
+    if(!json.contains("laserzones")) {
+        return deserialize(json); 
+    } else {
+        // old format!
+        
+        
+        ignoreParamChange = true;
+        
+        ofDeserialize(json, params);
+        //ofDeserialize(json, visual3DParams);
+        bool success = maskManager.deserialize(json);
+        
+        clearOutputZones();
+        
+        ofJson zoneNumJson = json["laserzones"];
+        
+        // if the json node isn't found then this should do nothing
+        for(auto jsonitem : zoneNumJson) {
+            //cout << "Laser::loadSettings " << (int) jsonitem << endl;
+            if(jsonitem.is_string() ) {
+                string zoneUid;
+                jsonitem.get_to(zoneUid); // = (std::string)jsonitem;
+                ofLogNotice("Laser::loadSettings, loading zoneid ") << zoneUid;
+                
+                // if a zone exists with this index then add a LaserZone for it
+                
+                std::shared_ptr<OutputZone> laserZone = std::make_shared<OutputZone> (ZoneId());
+                outputZones.push_back(laserZone);
+                
+                string filename ="laser"+ ofToString(laserIndex) +"zone" + zoneUid + ".json";
+                ofJson laserZoneJson = ofLoadJson(savePath + filename);
+                if(laserZone->deserialize(laserZoneJson)) {
+                    success&=true;
+                    laserZonesLastSavedMap[filename] = laserZoneJson.dump();
+                    
+                }
+            }
+        }
+        
+        paused = false;
+        
+        ignoreParamChange = false;
+        
+        if(json.empty() || (!success)) {
+            return false;
+        } else {
+            // replace with new format!
+            deleteOldZoneFiles();
+            saveSettings();
+            
+            return true;
         }
     }
+}
+
+
+bool Laser::saveSettings(){
+    ofLogNotice("Laser::saveSettings() - dacLabel : ") << dacLabel;
+    ofJson json;
+    serialize(json);
+    bool success = false;
+    try {
+        success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
+    } catch(const std::exception& e) {
+        ofLogError("Laser::saveSettings") << "laser " << laserIndex << " save failed : " << e.what();
+        success = false;
+    } catch(...) {
+        ofLogError("Laser::saveSettings") << "laser " << laserIndex << " save failed : unknown exception";
+        success = false;
+    }
+    
+    lastSaveTime = ofGetElapsedTimef();
+    return success;
+    
+}
+
+string Laser :: getFilenameForZone(std::shared_ptr<OutputZone>& outputZone) {
+    return "laser"+ ofToString(laserIndex) +"zone" + ofToString(outputZone->getZoneId().getUid()) + ".json";
+}
+
+void Laser :: deleteAllSettingsFiles() {
+    for(std::shared_ptr<OutputZone>& outputZone : outputZones) {
+        deleteSettingsFileForZone(outputZone);
+    }
+    ofFile :: removeFile(savePath + "laser"+ ofToString(laserIndex) +".json");
+    
+}
+
+
+
+bool Laser :: deleteSettingsFileForZone(std::shared_ptr<OutputZone>& outputZone) {
+    //string filename = getFilenameForZone(outputZone);
+    return ofFile :: removeFile(savePath + getFilenameForZone(outputZone));
+}
+
+void Laser :: deleteOldZoneFiles() {
+    ofDirectory settingsDir(savePath);
+    settingsDir.listDir();
+    vector<ofFile> files = settingsDir.getFiles();
+    settingsDir.close();
+    for(ofFile& file : files) {
+        if(file.getFileName().find("zone")!=std::string::npos) {
+            cout << "removing file : " << file.getBaseName() << endl;;
+            file.remove();
+        }
+    }
+    
+}
+
+
+
+void Laser :: serialize(ofJson& json) {
+    
+    string name =ofToString(laserIndex);
+    if(params.getName()!= name) params.setName(name);
+    
+    ofSerialize(json, params);
+        
+    maskManager.serialize(json);
+    
+    ofJson& zonejson = json["outputzones"];
+    for(std::shared_ptr<OutputZone>& laserZone : outputZones) {
+        ofJson laserzonejson;
+        laserZone->serialize(laserzonejson);
+        zonejson.push_back(laserzonejson);
+        
+    }
+    
+    
+}
+
+bool Laser :: deserialize(ofJson& json) {
+    ignoreParamChange = true;
+    
+    //cout << json.dump(3) << endl;
+    
+    ofDeserialize(json, params);
+    //ofDeserialize(json, visual3DParams);
+    bool success = maskManager.deserialize(json);
+    
+    clearOutputZones();
+    
+    ofJson zonejson = json["outputzones"];
+    
+    // if the json node isn't found then this should do nothing
+    for(auto jsonitem : zonejson) {
+    
+        // if a zone exists with this index then add a LaserZone for it
+        
+        std::shared_ptr<OutputZone> laserZone = std::make_shared<OutputZone>(ZoneId());
+       
+
+        if(laserZone->deserialize(jsonitem)) {
+            success&=true;
+            bool exists = false;
+            for(std::shared_ptr<OutputZone>& zone : outputZones) {
+                ofLogNotice("comparing zones ") << zone->getZoneId().getUid() << laserZone->getZoneId().getUid();
+                if(zone->getZoneId() == laserZone->getZoneId()) {
+                    exists = true;
+                }
+                
+            }
+            if(!exists) outputZones.push_back(laserZone);
+
+        }
+        
+        
+        
+    }
+    
+    paused = false;
+    
     ignoreParamChange = false;
+    
     if(json.empty() || (!success)) {
         return false;
     } else {
         return true;
     }
     
-}
-
-
-bool Laser::saveSettings(){
-    // update the laser index if necessary
-    params.setName(ofToString(laserIndex));
-    
-    ofJson json;
-    ofSerialize(json, params);
-    
-    //scannerSettings.serialize(json);
-
-    vector<int>laserzonenums;
-    for(LaserZone* laserZone : laserZones) {
-        laserzonenums.push_back(laserZone->getZoneIndex());
-    }
-    
-    json["laserzones"] = laserzonenums;
-
-    maskManager.serialize(json);
-    //cout << json.dump(3) << endl;
-    bool success = ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +".json", json);
-
-    
-    for(LaserZone* laserZone : laserZones) {
-        ofJson laserzonejson;
-        laserZone->serialize(laserzonejson);
-        //cout << "Laser::saveSettings() " << laserZone->getZoneIndex();
-        success &= ofSavePrettyJson(savePath + "laser"+ ofToString(laserIndex) +"zone" + ofToString(laserZone->getZoneIndex()) + ".json", laserzonejson);
-    }
-    
-    lastSaveTime = ofGetElapsedTimef(); 
-    return success;
     
 }
+
+
 
 bool Laser :: getSaveStatus(){
     return (ofGetElapsedTimef()-lastSaveTime<1);
+}
+
+
+vector<std::shared_ptr<OutputZone>> Laser ::getSortedOutputZones() {
+    vector<std::shared_ptr<OutputZone>> sortedzones;
+    for(std::shared_ptr<OutputZone>& zone : outputZones) {
+        sortedzones.push_back(zone);
+    }
+    sort(sortedzones.begin(), sortedzones.end(),
+         [](const std::shared_ptr<OutputZone>& a, const std::shared_ptr<OutputZone>& b) -> bool {
+        return a->getZoneId()< b->getZoneId();
+    });
+    return sortedzones;
+    
+}
+
+
+
+float Laser :: getSpeedMultiplier() {
+    if(disableSpeedCompensation) {
+        return speed.get();
+    } else {
+        float newmultiplier = 30000.0f/(float)pps * speed.get();
+       //ofLogNotice() << newmultiplier;
+        return newmultiplier;
+    }
+    
+    
+    
 }

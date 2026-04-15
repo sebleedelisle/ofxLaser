@@ -5,6 +5,9 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
+    // ensures the laser framerate can be faster than the screen update
+    ofSetVerticalSync(false);
+    
     
     // get the filenames of all the svgs in the data/svgs folder
     string path = "svgs/";
@@ -71,26 +74,27 @@ void ofApp::draw() {
             renderProfile = OFXLASER_PROFILE_FAST;
             break;
     }
-    renderProfileLabel = "Render Profile : OFXLASER_PROFILE_" + renderProfile;
+    if(renderProfileLabel.get() != ("Render Profile : OFXLASER_PROFILE_" + renderProfile))
+        renderProfileLabel = ("Render Profile : OFXLASER_PROFILE_" + renderProfile);
     
 	ofxLaser::Graphic& laserGraphic = laserGraphics[currentSVG];
 	
-    currentSVGFilename = fileNames[currentSVG];
+    if(currentSVGFilename.get()!=fileNames[currentSVG]) currentSVGFilename = fileNames[currentSVG];
 	
     laserManager.beginDraw();
     
-    ofPushMatrix();
+    laserManager.pushMatrix();
 
-    ofTranslate(400, 400);
-	ofScale(scale, scale);
+    laserManager.translate(400, 400);
+    laserManager.scale(scale, scale);
     if(rotate3D) {
         float angle = fmod(ofGetElapsedTimef()*30, 180)-90;
-        ofRotateYDeg(angle);
+        laserManager.rotateYDeg(angle);
     }
     if(laserGraphics.size()>currentSVG) {
 		laserManager.drawLaserGraphic(laserGraphics[currentSVG], 1, renderProfile);
     }
-    ofPopMatrix();
+    laserManager.popMatrix();
     
     laserManager.endDraw();
     

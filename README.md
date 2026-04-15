@@ -3,8 +3,11 @@
 ofxLaser
 =========
 
-ofxLaser is a core library for sending laser frames to supported DACs (Ether Dream, Helios, LaserCube, AVB, etc).  
-It provides the **low-level building blocks** for laser output: connection management, point optimisation, colour correction, and zone handling.
+[![Build Examples](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml/badge.svg?branch=libera-major-refactor)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml)
+
+ofxLaser is a core library for sending laser frames to supported laser controllers (DACs) (Ether Dream, Helios, LaserCube, AVB, etc).  
+
+It's built on [libera-laser](https://github.com/sebleedelisle/libera-laser) which provides all the low level discovery, communication, and frame queuing functionality, while ofxLaser adds an openFrameworks wrapper, along with complex point stream generation, colour correction and zone handling. 
 
 This library is intended for developers, educators, and hobbyists who want to experiment with laser control in openFrameworks.  
 It is licensed for **non-commercial use only** (see [LICENSE](LICENSE)).
@@ -21,6 +24,7 @@ Liberation is built on the same foundation as ofxLaser, but adds:
 - Powerful node editing tool for creating laser graphics and beam effects
 - Clip deck, timeline, and FX systems  
 - MIDI/DMX/Art-Net integration  
+- PONK support for integration with TouchDesigner, MadMapper and openFrameworks
 - Professional support and reliability  
 
 Liberation is the **polished, supported application**, while ofxLaser remains a lean toolkit for learning and prototyping.
@@ -29,42 +33,36 @@ Safety Notice
 =============
 **LASERS ARE DANGEROUS - USE THIS SOFTWARE AT YOUR OWN RISK. NEVER LOOK INTO THE BEAM.** Always have an emergency stop button at hand and do not let anyone enter the laser exposure area. Check the exposure area for reflective surfaces. Take laser safety training and get licenced to use high power lasers in your location. In the UK I can recommend [this one](https://www.lvroptical.com/display.html). 
 
-Seriously, don't mess around with this stuff. You can really damage your eyes.  
+Seriously, don't mess around with this stuff. You can really damage your eyes / burn your house down.  
 
-Major Update May 2021
+Current status
 ==================
 
-Version **1.0 beta** is now available. This is a significant upgrade from previous versions. 
-* Advanced GUI that uses DearImGui
-* All lasers, zones and masks are set up within compiled app's UI and saved to config files
+The **libera-major-refactor** branch is undergoing a significant overhaul:
+* Pure ofxGui interface (ImGui dependency removed)
+* Poco dependency removed
+* DAC communication handled by **libera-laser** backend
+* All lasers, zones and masks are set up within the app's UI and saved to config files
+* Automatic discovery of laser controllers (DACs)
 * Much simpler set up in code, see examples
-* Automatic discovery of laser controllers (DACs), with support for Ether Dream, Helios, and LaserCube / LaserDock
-
-API changes
-* No laser set up required in code any more. laser.setup(), laser.initGui no longer needed. 
-* Terminology has been changed from "projector" to "laser" to avoid confusing with newcomers used to working with conventional projectors
-* Adding lasers, assigning zones and editing masks is now all done within the app's GUI. No need for laser.addProjector(), laser.addZone(), laser.addZoneToProjector(), etc. 
 
 Summary
 -----------
 
 The system is primarily designed to render graphics to one or more lasers. Conceptually we have an input canvas, and we draw everything into that. Within the canvas we can define one or more input zones that can be assigned to one or more lasers. The output for the zones can be adjusted for size and perspective. 
 
-The default size of the canvas is 800,800 but you can change it using ofxLaser::Manager::setCanvasSize(width, height). 
 
 ofxLaser features
 ----------
 * Can draw any vector shape to lasers with simple function calls
 * Shapes are sorted to find the optimal path for the laser
-* Automatic laser controller detection
-* Comprehensive multiple laser support (has been tested with 16 lasers and is limited only by CPU and network speed)
+* Automatic laser controller detection (using libera)
 * Masking system to provide blank areas within the laser output 
 * Many calibration options for blanking - colour change shift, pre/post blanks, pre/post on points
 * Specify laser speed and acceleration for each shape using "render profiles" 
 * Output zone transformation for projection mapping and to compensate for perspective distortion
 * Multiple zones can be sent to multiple projectors and individually warped for mapping onto separate planes
 * Colour calibration system to compensate for laser power to brightness curves
-* Full rewrite of the Ether Dream library using Poco sockets, very reliable
 * Shapes take into account the current transformation matrix, so works with ofTransform, ofRotate, and ofScale
 * Works with 3D co-ordinates and shapes
 * Cross platform - developed on OSX, but also tested on Windows and Linux
@@ -161,77 +159,71 @@ Supported Laser controllers
 --------------------------
 USB : 
 * HeliosDAC 
-* Laserdock / Lasercube
+* LaserCube USB
 
 Network :
-* Etherdream
-* IDN ILDA Digital Network standard (alpha and needs adding to the DacAssigner)
-
-Roadmap
------------
-
-* LaserCube network protocol (for the wifi cube)
-* Add IDN to the DacAssigner system (needs the IDN Hello protocol added)
-* Save / load laser presets (which contain scanner and colour presets)
-* Save / load colour calibration presets
-* Smart 3D mesh rendering, with silhouette and sharp edge detection
-* Input masks - masks defined at the canvas side
-* Improvements to shape sorting
-* Persistence between frames, so that the laser doesn't change the draw order too dramatically (can cause slight flicker)
-* Improvements to rendering complex shapes, slow down the laser path dependent of tightness of curves
-
+* Ether Dream
+* LaserCube (WiFi)
+* IDN (ILDA Digital Network)
+* AVB (Audio Video Bridging)
 
 
 Licence
 -------
-This project is licensed under the **ofxLaser License (Non-Commercial Share-Alike)**.\nIt may be used and modified for non-commercial purposes only.\nCommercial use requires a separate licence - contact [your email].\nSee the [LICENSE](LICENSE) file for details.
-Copyright (c) 2012-2025 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.co](https://seblee.co)
+This project is licensed under the **ofxLaser License (Non-Commercial Share-Alike)**.
+It may be used and modified for non-commercial purposes only.
+Commercial use requires a separate licence - contact [seb at seblee.co].
+See the [LICENSE](LICENSE) file for details.
+Copyright (c) 2012-2026 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.co](https://seblee.co)
 
 Installation
 -------
 
-The current main branch works with [openFrameworks](https://openframeworks.cc) v 0.11.x. 
+The **libera-major-refactor** branch targets [openFrameworks](https://openframeworks.cc) 0.12.x.
 
-* OF 0.11.x [main](https://github.com/openframeworks/openFrameworks) : use [ofxLaser/main](https://github.com/sebleedelisle/ofxLaser/) 
-
-Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder. 
-Either clone the source code using git:
+Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder.
+Clone the source code with submodules:
 
 	> cd openFrameworks/addons/
-	> git clone https://github.com/sebleedelisle/ofxLaser.git
+	> git clone --recurse-submodules https://github.com/sebleedelisle/ofxLaser.git
 
-Or download the source from GitHub [here](https://github.com/sebleedelisle/ofxLaser/archive/master.zip), unzip the folder, rename it from `ofxLaser-main` to `ofxLaser` and place it in your `openFrameworks/addons` folder.
+If you already cloned without submodules, run:
+
+	> cd openFrameworks/addons/ofxLaser
+	> git submodule update --init --recursive
+
+The repo depends on the `libs/libera-laser` submodule, so a plain `git clone` is not enough.
+
+Downloading the GitHub ZIP is not recommended because it will not fetch submodule contents automatically.
 
 To run the examples, import them into the project generator, create a new project, and open the project file in your IDE.
-
-Legacy versions (no longer supported): 
-* OF 0.11.x: use [ofxLaser/of_0.11.2](https://github.com/sebleedelisle/ofxLaser/tree/of_11.0.2)
-* OF 0.10.x: use [ofxLaser/of_0.10.1](https://github.com/sebleedelisle/ofxLaser/tree/of_10.0.1) 
-* OF 0.9.x : use [ofxLaser/of_0.9.8](https://github.com/sebleedelisle/ofxLaser/tree/of_0.9.8)
 
 Dependencies
 ------------
 addons : 
-ofxOpenCv (comes with oF)  
-ofxNetwork (comes with oF)  
-ofxPoco (comes with oF)  
+ofxGui (comes with oF)  
+ofxSvg (comes with oF)
 
-Open source libraries (included in source files) 
-DearImGui
+Open source libraries (included in source) :
+libera-laser (git submodule)
+clipper
 libusb
-libsvgtiny
-clipperlib
-heliosdac
-laserdocklib
-ofxHersheyFont by Tobias Zimmer
+
+
+Example build check
+-------------------
+
+To compile every example without relying on checked-in project files, run:
+
+```sh
+./scripts/build-examples.sh
+```
+
+The script builds openFrameworks once in `Release`, generates temporary
+makefile-based wrappers for each `example_*` folder, and then compiles each
+example in turn.
 
 Compatibility
 ------------
 
-main branch : 
-openFrameworks 0.11.x 
-
-legacy versions (no longer supported)
-openFrameworks 0.11.x 
-openFrameworks 0.10.1 
-openFrameworks 0.9.8
+openFrameworks 0.12.x 

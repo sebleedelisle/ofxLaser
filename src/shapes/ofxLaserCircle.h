@@ -8,25 +8,27 @@
 
 #pragma once
 
-#include "ofxLaserShape.h"
+#include "ofxLaserPolyline.h"
 
 namespace ofxLaser {
-	class Circle :public Shape {
+	class Circle :public Polyline {
 	
 		public:
 		Circle(){};
-		Circle(const ofPoint& _centre, const float _radius, const ofColor& col, string profilelabel);
-		void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
+		Circle(const glm::vec3& _centre, const float _radius, const ofColor& col, string profilelabel);
 		
-		virtual bool intersectsRect(ofRectangle & rect);
-		
-		void addPreviewToMesh(ofMesh& mesh);
-        ofPolyline polyline; // to store the circle shape in once it's been projected
-  
+        virtual std::shared_ptr<ofxLaser::Shape> clone() const override {
+            std::shared_ptr<Circle> circle =  std::make_shared<Circle>();
+            circle->setPoints(points);
+            circle->setColours(colours);
+            circle->setFilled(isFilled());
+            circle->setClosed(true); 
+            circle->profileLabel = profileLabel ;
+            circle->setClipRectangle(clipRectangle);
+            return circle;
+        }
+        
 		protected:
-		
-	    float radius;
-        glm::vec3 centre;
 		
 		private:
 

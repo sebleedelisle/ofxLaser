@@ -6,7 +6,6 @@
 
 #pragma once
 #include "ofMain.h"
-#include "ofxSvgExtra.h"
 #include "ofxLaserGraphic.h"
 
 class SVGLoader : public ofThread{
@@ -35,8 +34,6 @@ class SVGLoader : public ofThread{
 	vector<ofxLaser::Graphic> frames;
 	ofxLaser::Graphic empty;
 	string svgData;
-	
-	ofxSVGExtra svg;
 
 	void replaceAll( string& content, string toFind, string toReplace);
     
@@ -52,13 +49,12 @@ class SVGLoader : public ofThread{
 	
 	protected:
 	void threadedFunction();
-    volatile int loadedCount;
+    volatile int loadedCount = 0;
     int totalFileCount;
-    
+    bool loadStarted = false;
     bool useLoadOptimisation = true;
     
 
 	
 };
-
 

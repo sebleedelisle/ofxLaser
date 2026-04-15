@@ -14,25 +14,23 @@ class ManualShape : public Shape{
 	
 	public :
 	
-	ManualShape(const vector<ofPoint> allpoints, const vector<ofColor> pointcolours, bool usecalibration, string profilelabel){
+	ManualShape(const vector<glm::vec3> allpoints, const vector<ofColor> pointcolours, bool usecalibration, string profilelabel){
 		
 		useCalibration = usecalibration;
 		
-		startPos.set(allpoints.front());
-		endPos.set(allpoints.back());
-		
 		points = allpoints; // hopefully copies
 		colours = pointcolours;
-		
-		while(colours.size()<points.size()) {
-			colours.push_back(colours.back());
-		}
 		
 		tested = false;
 		profileLabel = profilelabel;
 		
 	}
-	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) {
+    
+    virtual std::shared_ptr<ofxLaser::Shape> clone() const override {
+        return std::make_shared<ManualShape>(points, colours, useCalibration, profileLabel);
+    }
+    
+	void appendPointsToVector(vector<ofxLaser::Point>& destpoints, const RenderProfile& profile, float speedMultiplier) override {
 		
 		for(size_t i = 0; i<points.size(); i++) {
 			destpoints.push_back(ofxLaser::Point(points[i], colours[i], useCalibration));
@@ -40,19 +38,19 @@ class ManualShape : public Shape{
 	};
 	
 	
-	void addPreviewToMesh(ofMesh& mesh){
+	void addPreviewToMesh(ofMesh& mesh) override {
 		for(size_t i = 0; i<points.size();i++) {
 			mesh.addVertex(points[i]);
 			mesh.addColor(colours[i]); 
 			
 		}
 	}
-
-    bool intersectsRect(ofRectangle & rect) {
-        return true;
+    
+    bool clipNearPlane(float nearPlaneZ) override {
+        return false;
     }
     
-	vector<ofPoint> points;
+	vector<glm::vec3> points;
 	vector<ofColor> colours;
 	bool useCalibration;
 		

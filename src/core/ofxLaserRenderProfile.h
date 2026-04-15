@@ -30,6 +30,7 @@ namespace ofxLaser {
 			params.add(acceleration.set("acceleration",1,0.01,10));
 			params.add(cornerThreshold.set("corner threshold",90,0,180));
 			params.add(dotMaxPoints.set("dot max points", 2, 0, 100));
+            params.add(dotMinPoints.set("dot min points", 2, 0, 100));
 			
 		}
         void setLabel(string _label) {
@@ -41,8 +42,9 @@ namespace ofxLaser {
 		ofParameter<float> speed;
 		ofParameter<float> acceleration;
 		ofParameter<float> cornerThreshold;
-		ofParameter<int> dotMaxPoints;
-		
+        ofParameter<int> dotMaxPoints;
+        ofParameter<int> dotMinPoints;
+        
 		ofParameterGroup params;
         private :
         string label;

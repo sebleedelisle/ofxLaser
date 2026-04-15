@@ -25,7 +25,7 @@ BitmapMaskManager ::~BitmapMaskManager() {
     
     if(fbo.isAllocated()) fbo.clear();
     while(quads.size()>0) {
-        delete quads.back();
+        //delete quads.back();
         quads.pop_back();
     }
 }
@@ -52,10 +52,10 @@ bool BitmapMaskManager ::update() {
             
             ofBeginShape();
             
-            ofVertex(quad.handles[0]);
-            ofVertex(quad.handles[1]);
-            ofVertex(quad.handles[3]);
-            ofVertex(quad.handles[2]);
+            ofVertex(quad[0]);
+            ofVertex(quad[1]);
+            ofVertex(quad[2]);
+            ofVertex(quad[3]);
             ofEndShape();
         }
         
@@ -66,32 +66,32 @@ bool BitmapMaskManager ::update() {
     }
     return isdirty;
 }
-
-bool BitmapMaskManager ::draw(bool showBitmap) {
-    
-    if(showBitmap) {
-        ofPushStyle();
-		ofPushMatrix();
-		ofTranslate(offset);
-		ofScale(scale, scale);
-        ofEnableBlendMode(OF_BLENDMODE_ADD);
-        ofSetColor(50,0,0);
-        fbo.draw(0,0);
-        
-        ofPopStyle();
-		ofPopMatrix();
-        for(int i= 0; i<quads.size(); i++) {
-            quads[i]->draw();
-        }
-    }
-    return true;
-
-//    if(dirty) {
-//        ofSetColor(255,0,0);
-//        ofFill();
-//        ofDrawRectangle(0,0,20,20);
+//
+//bool BitmapMaskManager ::draw(bool showBitmap) {
+//    
+//    if(showBitmap) {
+//        ofPushStyle();
+//		ofPushMatrix();
+//		ofTranslate(offset);
+//		ofScale(scale, scale);
+//        ofEnableBlendMode(OF_BLENDMODE_ADD);
+//        ofSetColor(50,0,0);
+//        fbo.draw(0,0);
+//        
+//        ofPopStyle();
+//		ofPopMatrix();
+//        for(int i= 0; i<quads.size(); i++) {
+//            quads[i]->draw();
+//        }
 //    }
-}
+//    return true;
+//
+////    if(dirty) {
+////        ofSetColor(255,0,0);
+////        ofFill();
+////        ofDrawRectangle(0,0,20,20);
+////    }
+//}
 
 void BitmapMaskManager ::init(int w, int h){
 	width = w;

@@ -26,7 +26,7 @@ common:
 	# or use += in several lines
 	# NOTE - we only include ofxKinect as it's the easiest way to ensure libusb
 	# is included cross platform
-	ADDON_DEPENDENCIES = ofxOpenCv ofxNetwork ofxPoco  
+	ADDON_DEPENDENCIES = ofxGui ofxSvg
 	
 	# include search paths, this will be usually parsed from the file system
 	# but if the addon or addon libraries need special search paths they can be
@@ -62,7 +62,34 @@ common:
 	# a specific platform
 	# ADDON_LIBS_EXCLUDE =
 
+		# avoid pulling in bundled app/test sources from libera-laser
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/apps/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/tests/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/examples/%
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/build/%
+		ADDON_SOURCES_EXCLUDE += libs/ofxSvgExtra/src/%
+
+		# Helios is enabled, but only its host-side SDK is relevant for desktop builds.
+	# Exclude firmware, hardware assets and utility/tool projects so the parser
+	# doesn't try to compile embedded/device-side C sources.
+	# Also exclude the older top-level Helios SDK copy; the addon now uses the
+	# libera-laser bundled SDK instead.
+	ADDON_SOURCES_EXCLUDE += libs/heliosdac/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/firmware/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/hardware/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/utility/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/media/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/examples/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/dotnet/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/shared_library/%
+	# Build idnServerList.cpp through a local shim so its private logging helpers
+	# don't collide with idn.cpp during MSYS2/GCC linking.
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/idnServerList.cpp
+
+
 	linux64:
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		# binary libraries, these will be usually parsed from the file system but some 
 		# libraries need to passed to the linker in a specific order/
 		# 
@@ -76,13 +103,26 @@ common:
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
 	linux:
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
 		#ADDON_PKG_CONFIG_LIBRARIES = libusb-1.0
 		#ADDON_INCLUDES_EXCLUDE = libs/libusb-1.0/%
 
+	osx:
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/plt-windows.cpp
+		ADDON_FRAMEWORKS += AudioToolbox CoreAudio CoreFoundation
 
-	win_cb:
+	msys2:
+		# Grix's Helios SDK still uses a few C-style constructs that MSYS2 g++
+		# treats as hard errors unless permissive mode is enabled.
+		ADDON_CFLAGS += -fpermissive
+		ADDON_PKG_CONFIG_LIBRARIES += libusb-1.0
+		ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/plt-posix.cpp
 
-	linuxarmv6l:
-	linuxarmv7l:
-	android/armeabi:	
-	android/armeabi-v7a:
+
+	#win_cb:
+
+	#linuxarmv6l:
+	#linuxarmv7l:
+	#android/armeabi:	
+	#android/armeabi-v7a:

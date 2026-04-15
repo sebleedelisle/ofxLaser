@@ -15,14 +15,23 @@ class Line : public Shape{
 	
 	public :
 	
-    Line(const ofPoint& startpos, const ofPoint& endpos, const ofColor& col, string profilelabel);
+    Line(glm::vec3 startpos, glm::vec3 endpos, ofColor col, string profilelabel);
 	
+    virtual std::shared_ptr<ofxLaser::Shape> clone() const override {
+        glm::vec3 start = points.front();
+        glm::vec3 end = points.back();
+        ofColor c = colours.front();
+        std::shared_ptr<Line> line =std::make_shared<Line>(start, end, c, profileLabel);
+        line->setClipRectangle(clipRectangle);
+        return line;
+    }
+    
+	void appendPointsToVector(vector<ofxLaser::Point>& pointsToAppendTo, const RenderProfile& profile, float speedMultiplier) override;
 	
-	void appendPointsToVector(vector<ofxLaser::Point>& points, const RenderProfile& profile, float speedMultiplier);
+    void addPreviewToMesh(ofMesh& mesh) override;
 	
-    void addPreviewToMesh(ofMesh& mesh);
-	
-    virtual bool intersectsRect(ofRectangle & rect);
+    virtual bool clipNearPlane(float nearPlaneZ) override;
+    //virtual bool intersectsRect(ofRectangle & rect) override;
 
 		
 };

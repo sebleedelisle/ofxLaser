@@ -6,6 +6,9 @@
 //
 
 #include "ofxLaserGraphic.h"
+
+#include <cmath>
+
 using namespace ofxLaser;
 
 // static class members
@@ -23,12 +26,12 @@ void Graphic :: addSvgFromFile(string filename, bool optimise, bool subtractFill
 
 void Graphic :: addSvgFromString(string data, bool optimise, bool subtractFills) {
 
-    ofxSVGExtra svg;
+    ofxSVG svg;
     svg.loadFromString(data);
     addSvg(svg, optimise, subtractFills);
 }
 
-void Graphic :: addSvg(ofxSVGExtra& svg, bool optimise, bool subtractFills) {
+void Graphic :: addSvg(ofxSVG& svg, bool optimise, bool subtractFills) {
     
     const vector <ofPath> & paths = svg.getPaths();
     
@@ -57,17 +60,18 @@ void Graphic::subtractPathFromPolylines(ofPath& sourcepath) {
 	for(size_t i= 0; i<polylines.size(); i++) {
 		
 		clipper.Clear();
+        
 		
 		ofPolyline& target = *polylines[i];
 		
 		// Add the clipper subjects (i.e. the things that will be clipped).
-		clipper.addPolyline(target, ClipperLib::ptSubject);
+		clipper.addPolyline(target, ofxLaserClipper::ptSubject);
 		
 		// add the clipper masks (i.e. the things that will do the clipping).
-		clipper.addPath(sourcepath, ClipperLib::ptClip, true); // third param autocloses
+		clipper.addPath(sourcepath, ofxLaserClipper::ptClip, true); // third param autocloses
 		
 		// Execute the clipping operation based on the current clipping type.
-		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ClipperLib::ctDifference);
+		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ofxLaserClipper::ctDifference);
 		for(ofPolyline& poly : targetPieces) {
 			poly.simplify();
 			newPolylines.push_back(Factory::getPolyline(&poly));
@@ -101,15 +105,15 @@ void Graphic::intersectRect(ofRectangle& rect) {
 		try {
 			
 			// Add the clipper subjects (i.e. the things that will be clipped).
-			clipper.addPolyline(target, ClipperLib::ptSubject);
+			clipper.addPolyline(target, ofxLaserClipper::ptSubject);
 		} catch (...) {
 			continue;
 		}
 		// add the clipper masks (i.e. the things that will do the clipping).
-		clipper.addPath(sourcepath, ClipperLib::ptClip, true); // third param autocloses
+		clipper.addPath(sourcepath, ofxLaserClipper::ptClip, true); // third param autocloses
 		
 		// Execute the clipping operation based on the current clipping type.
-		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ClipperLib::ctIntersection);
+		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ofxLaserClipper::ctIntersection);
 		for(ofPolyline& poly : targetPieces) {
 			poly.simplify();
 			newPolylines.push_back(Factory::getPolyline(&poly));
@@ -140,14 +144,14 @@ void Graphic::intersectPaths(vector<ofPath>& paths) {
 		ofPolyline& target = *polylines[i];
 		
 		// Add the clipper subjects (i.e. the things that will be clipped).
-		clipper.addPolyline(target, ClipperLib::ptSubject);
+		clipper.addPolyline(target, ofxLaserClipper::ptSubject);
 		
 		// add the clipper masks (i.e. the things that will do the clipping).
 		for(ofPath & path : paths) {
-			clipper.addPath(path, ClipperLib::ptClip, true); // third param autocloses
+			clipper.addPath(path, ofxLaserClipper::ptClip, true); // third param autocloses
 		}
 		// Execute the clipping operation based on the current clipping type.
-		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ClipperLib::ctIntersection);
+		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ofxLaserClipper::ctIntersection);
 		for(ofPolyline& poly : targetPieces) {
 			poly.simplify();
 			newPolylines.push_back(Factory::getPolyline(&poly));
@@ -290,14 +294,13 @@ void Graphic :: addPolyline(const ofPolyline& poly, ofColor colour, bool filled,
 		
 		clipper.Clear();
 		
-		clipper.addPolylines(polylineMask,ClipperLib::ptSubject, true);
-		clipper.addPolyline(*newPoly, ClipperLib::ptClip, true);
-		polylineMask = clipper.getClipped(ClipperLib::ctUnion);
+		clipper.addPolylines(polylineMask,ofxLaserClipper::ptSubject, true);
+		clipper.addPolyline(*newPoly, ofxLaserClipper::ptClip, true);
+		polylineMask = clipper.getClipped(ofxLaserClipper::ctUnion);
 	}
 	
 	breakPolyline(newPoly);
 	newPoly->simplify();
-	
 	
 	polylines.push_back(newPoly);
 	colours.push_back(colour);
@@ -337,7 +340,7 @@ void Graphic::breakPolyline(ofPolyline* newPoly) {
 		// and subtract it from the last point
 		vertices.back()-=v; // (vertices.back()+v);
 		
-		if(isnan(v.x)){
+		if(std::isnan(v.x)){
 			ofLog(OF_LOG_NOTICE,ofToString(v));
 		}
 	}
@@ -365,16 +368,16 @@ void Graphic::subtractPolyline(ofPolyline* polyToSubtract, bool useTransform) {
 		
 		// Add the clipper subjects (i.e. the things that will be clipped).
 		try {
-			clipper.addPolyline(target, ClipperLib::ptSubject);
+			clipper.addPolyline(target, ofxLaserClipper::ptSubject);
 		}
 		catch(...) {
 			return;
 		}
 		// add the clipper masks (i.e. the things that will do the clipping).
-		clipper.addPolyline(*newPoly, ClipperLib::ptClip, true); // third param autocloses
+		clipper.addPolyline(*newPoly, ofxLaserClipper::ptClip, true); // third param autocloses
 
 		// Execute the clipping operation based on the current clipping type.
-		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ClipperLib::ctDifference);
+		vector<ofPolyline> targetPieces = clipper.getClippedPolyTree(ofxLaserClipper::ctDifference);
 		for(ofPolyline& poly : targetPieces) {
 			newPolylines.push_back(Factory::getPolyline(&poly));
 			newPolylines.back()->simplify();
@@ -464,7 +467,7 @@ void Graphic ::  connectLineSegments() {
 			
 		}
 		if(closestIndex>=0) {
-			ofPolyline* poly2 = polylines[closestIndex];
+			//ofPolyline* poly2 = polylines[closestIndex];
 			//ofLog(OF_LOG_NOTICE, "found touching lines");
 			//ofLog(OF_LOG_NOTICE, ofToString(ofRadToDeg(comparePolylines(poly1, poly2))));
 			if(joinPolylines(*poly1, *polylines[closestIndex])){

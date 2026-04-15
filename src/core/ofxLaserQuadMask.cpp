@@ -10,9 +10,9 @@
 
 using namespace ofxLaser;
 
-QuadMask::QuadMask() : QuadGui() {
+QuadMask::QuadMask() {
     maskLevel.set("Reduction amount", 100, 0,100);
-    setColours(ofColor::red,ofColor::red,ofColor::red);
+    //setColours(ofColor::red,ofColor::red,ofColor::red);
     maskLevel.addListener(this, &QuadMask::maskLevelChanged);
     
     
@@ -22,45 +22,32 @@ QuadMask::~QuadMask() {
     maskLevel.removeListener(this, &QuadMask::maskLevelChanged);
 }
 
+
+
+void QuadMask::maskLevelChanged(int&e) {
+    isDirty = true;
+}
+
+
 void QuadMask::serialize(ofJson&json) const {
-    QuadGui::serialize(json);
+    
+    
+    PolygonBase::serialize(json);
     json["masklevel"] = (int)maskLevel;
+    
+    
+    
   
 }
 
 bool QuadMask::deserialize(ofJson& jsonGroup) {
     
-    QuadGui::deserialize(jsonGroup);
-
-    maskLevel = jsonGroup["masklevel"];
-    
-    return true;
-}
-
-void QuadMask:: draw() {
-    
-    ofPushStyle();
-    
-    ofPushMatrix();
-    ofTranslate(offset);
-    ofScale(scale, scale);
-    
-    ofFill();
-    
-    //ofEnableBlendMode(OF_BLENDMODE_MULTIPLY);
-    //ofDisableBlendMode();
-    ofSetColor(0,0,0,ofMap(maskLevel,0,100,0,255));
-
-    ofBeginShape();
-    ofVertex(handles[0]);
-    ofVertex(handles[1]);
-    ofVertex(handles[3]);
-    ofVertex(handles[2]);
-    ofEndShape();
-    
-    ofPopMatrix();
-    ofPopStyle();
-    
-    QuadGui::draw();
+    if(PolygonBase::deserialize(jsonGroup)) {
+        
+        maskLevel = jsonGroup["masklevel"];
+        return true;
+    } else {
+        return false;
+    }
     
 }

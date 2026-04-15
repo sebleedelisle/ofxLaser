@@ -38,107 +38,107 @@
 namespace ofx {
 
 
-class Clipper: public ClipperLib::Clipper
+class Clipper: public ofxLaserClipper::Clipper
 {
 public:
     Clipper();
     ~Clipper();
 
-	std::vector<ofPolyline> getClipped(ClipperLib::ClipType clipType,
+	std::vector<ofPolyline> getClipped(ofxLaserClipper::ClipType clipType,
 									   ofPolyWindingMode subFillType = OF_POLY_WINDING_ODD,
 									   ofPolyWindingMode clipFillType = OF_POLY_WINDING_ODD,
-									   ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+									   ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 	
-	std::vector<ofPolyline> getClippedPolyTree(ClipperLib::ClipType clipType,
+	std::vector<ofPolyline> getClippedPolyTree(ofxLaserClipper::ClipType clipType,
 									   ofPolyWindingMode subFillType = OF_POLY_WINDING_ODD,
 									   ofPolyWindingMode clipFillType = OF_POLY_WINDING_ODD,
-									   ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+									   ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
-    ofRectangle getBounds(ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE) const;
+    ofRectangle getBounds(ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE) const;
 
     bool addRectangle(const ofRectangle& rectangle,
-                      ClipperLib::PolyType PolyTyp,
+                      ofxLaserClipper::PolyType PolyTyp,
                       bool autoClose = false,
-                      ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                      ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     bool addPolyline(const ofPolyline& polyline,
-                     ClipperLib::PolyType PolyTyp,
+                     ofxLaserClipper::PolyType PolyTyp,
                      bool autoClose = false,
-                     ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                     ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     bool addPolylines(const std::vector<ofPolyline>& polylines,
-                      ClipperLib::PolyType PolyTyp,
+                      ofxLaserClipper::PolyType PolyTyp,
                       bool autoClose = false,
-                      ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                      ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     bool addPath(const ofPath& path,
-                 ClipperLib::PolyType PolyTyp,
+                 ofxLaserClipper::PolyType PolyTyp,
                  bool autoClose = false,
-                 ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                 ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     static void close(ofPolyline& polyline);
     static void close(std::vector<ofPolyline>& polylines);
 
     static bool areAllClosed(const std::vector<ofPolyline>& polylines);
 
-    static ClipperLib::IntPoint toClipper(const ofDefaultVertexType& vertex,
-                                          ClipperLib::cInt scale);
+    static ofxLaserClipper::IntPoint toClipper(const ofDefaultVertexType& vertex,
+                                          ofxLaserClipper::cInt scale);
 
-    static ClipperLib::IntRect toClipper(const ofRectangle& rectangle,
-                                         ClipperLib::cInt scale);
+    static ofxLaserClipper::IntRect toClipper(const ofRectangle& rectangle,
+                                         ofxLaserClipper::cInt scale);
 
-    static ClipperLib::Path toClipper(const ofPolyline& polyline,
-                                      ClipperLib::cInt scale);
+    static ofxLaserClipper::Path toClipper(const ofPolyline& polyline,
+                                      ofxLaserClipper::cInt scale);
 
-    static ClipperLib::Paths toClipper(const std::vector<ofPolyline>& polylines,
-                                       ClipperLib::cInt scale);
+    static ofxLaserClipper::Paths toClipper(const std::vector<ofPolyline>& polylines,
+                                       ofxLaserClipper::cInt scale);
 
-    static ClipperLib::Paths toClipper(const ofPath& path,
-                                       ClipperLib::cInt scale);
+    static ofxLaserClipper::Paths toClipper(const ofPath& path,
+                                       ofxLaserClipper::cInt scale);
 
-    static ofRectangle toOf(const ClipperLib::IntRect& rectangle,
-                            ClipperLib::cInt scale);
+    static ofRectangle toOf(const ofxLaserClipper::IntRect& rectangle,
+                            ofxLaserClipper::cInt scale);
 
-    static ofDefaultVertexType toOf(const ClipperLib::IntPoint& point,
-                                    ClipperLib::cInt scale);
+    static ofDefaultVertexType toOf(const ofxLaserClipper::IntPoint& point,
+                                    ofxLaserClipper::cInt scale);
 
-    static ofPolyline toOf(const ClipperLib::Path& path,
+    static ofPolyline toOf(const ofxLaserClipper::Path& path,
                            bool isClosed,
-                           ClipperLib::cInt scale);
+                           ofxLaserClipper::cInt scale);
 
-    static std::vector<ofPolyline> toOf(const ClipperLib::Paths& paths,
+    static std::vector<ofPolyline> toOf(const ofxLaserClipper::Paths& paths,
                                         bool isClosed,
-                                        ClipperLib::cInt scale);
+                                        ofxLaserClipper::cInt scale);
 
-    static std::string toString(ClipperLib::ClipType clipType);
-    static std::string toString(ClipperLib::PolyType polyType);
-    static std::string toString(ClipperLib::PolyFillType polyfillType);
-    static std::string toString(ClipperLib::InitOptions initOption);
-    static std::string toString(ClipperLib::JoinType joinType);
-    static std::string toString(ClipperLib::EndType endType);
+    static std::string toString(ofxLaserClipper::ClipType clipType);
+    static std::string toString(ofxLaserClipper::PolyType polyType);
+    static std::string toString(ofxLaserClipper::PolyFillType polyfillType);
+    static std::string toString(ofxLaserClipper::InitOptions initOption);
+    static std::string toString(ofxLaserClipper::JoinType joinType);
+    static std::string toString(ofxLaserClipper::EndType endType);
     
-    static ofPolyWindingMode toOf(ClipperLib::PolyFillType polyfillType);
-    static ClipperLib::PolyFillType toClipper(ofPolyWindingMode windingMode);
+    static ofPolyWindingMode toOf(ofxLaserClipper::PolyFillType polyfillType);
+    static ofxLaserClipper::PolyFillType toClipper(ofPolyWindingMode windingMode);
 
     static std::vector<ofPolyline> simplifyPolyline(const ofPolyline& polyline,
                                                     ofPolyWindingMode windingMode = OF_POLY_WINDING_ODD,
-                                                    ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                                                    ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     static std::vector<ofPolyline> simplifyPolylines(const std::vector<ofPolyline>& polylines,
                                                      ofPolyWindingMode windingMode = OF_POLY_WINDING_ODD,
-                                                     ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                                                     ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     static std::vector<ofPolyline> simplifyPath(const ofPath& path,
                                                 ofPolyWindingMode windingMode = OF_POLY_WINDING_ODD,
-                                                ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                                                ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     static std::vector<ofPolyline> getOffsets(const std::vector<ofPolyline>& polylines,
                                               double offset,
-                                              ClipperLib::JoinType jointype = ClipperLib::jtSquare,
-                                              ClipperLib::EndType endtype = ClipperLib::etOpenSquare,
+                                              ofxLaserClipper::JoinType jointype = ofxLaserClipper::jtSquare,
+                                              ofxLaserClipper::EndType endtype = ofxLaserClipper::etOpenSquare,
                                               double miterLimit = DEFAULT_MITER_LIMIT,
                                               double arcTolerance = DEFAULT_ARC_TOLERANCE,
-                                              ClipperLib::cInt scale = DEFAULT_CLIPPER_SCALE);
+                                              ofxLaserClipper::cInt scale = DEFAULT_CLIPPER_SCALE);
 
     //    // Static Utility Functions
 //    ////////////////////////////////////////////////
@@ -188,7 +188,7 @@ public:
 //    static void ReversePath(ofPath& p,std::vector<ofPolyline> &out_polys);
 //
 
-    static const ClipperLib::cInt DEFAULT_CLIPPER_SCALE;
+    static const ofxLaserClipper::cInt DEFAULT_CLIPPER_SCALE;
     static const double DEFAULT_MITER_LIMIT;
     static const double DEFAULT_ARC_TOLERANCE;
 

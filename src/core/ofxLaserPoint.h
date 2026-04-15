@@ -10,8 +10,6 @@
 namespace ofxLaser {
 class Point : public ofPoint {
 
-    // TODO remove intensity - I don't think it's used
-    
 public:
 	
     Point();
@@ -26,7 +24,6 @@ public:
 	float g;
 	float b;
 	
-	//float intensity;
 	bool useCalibration;
 	
 

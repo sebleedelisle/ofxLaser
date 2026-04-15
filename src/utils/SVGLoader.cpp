@@ -19,8 +19,6 @@ SVGLoader::~SVGLoader() {
 int SVGLoader:: startLoad(string path) {
     
     dir = ofDirectory(path);
-	dir.listDir();
-	const vector<ofFile>& allFiles = dir.getFiles();
 
 	//only show svg files
 	dir.allowExt("svg");
@@ -36,10 +34,13 @@ int SVGLoader:: startLoad(string path) {
 	loadedCount = 0;
 	
     totalFileCount = (int)files.size();
-
+    
+    
 	SVGLoader::addToQueue(this); 
 	SVGLoader::startQueueLoading();
-	
+    
+    loadStarted = true;
+    
 	return totalFileCount;
 }
 void SVGLoader::threadedFunction() {
@@ -48,7 +49,6 @@ void SVGLoader::threadedFunction() {
 	
 	string dataString;
 	int dupeCount = 0;
-	loadedCount = 0;
 	
 	// load the file
 	for(size_t i = 0; i<files.size();i++) {
@@ -87,8 +87,8 @@ void SVGLoader::threadedFunction() {
             if(!useLoadOptimisation) {
                 ofxlgfile.remove();
             } else {
-                auto ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
-                auto originalfiletime = std::filesystem::last_write_time(file);
+                const auto ofxlgfiletime = std::filesystem::last_write_time(ofxlgfile);
+                const auto originalfiletime = std::filesystem::last_write_time(file);
                 if(ofxlgfiletime>originalfiletime) {
                     loadOptimised = true;
                 }
@@ -164,13 +164,13 @@ void SVGLoader::threadedFunction() {
 	unlock();
 	stopThread();
 	
-	ofLog(OF_LOG_NOTICE, "SVGLoader finished : " + dir.getOriginalDirectory());
+	//ofLog(OF_LOG_NOTICE, "SVGLoader finished : " + dir.getOriginalDirectory());
 	SVGLoader::loadNext(); 
 	
 }
 
 bool SVGLoader::hasFinishedLoading() {
-    return !isThreadRunning();
+    return ((getLoadedCount() == totalFileCount) && (loadStarted));
 }
 int SVGLoader :: getLoadedPercent(){
     return ofMap(getLoadedCount(), 0, totalFileCount, 0, 100);

@@ -10,99 +10,175 @@
 
 using namespace ofxLaser;
 
-DacAssigner * DacAssigner :: dacAssigner = NULL;
+namespace {
+
+string makeDefaultDisplayLabel(const string& daclabel) {
+    const string liberaPrefix = "Libera ";
+    if (daclabel.rfind(liberaPrefix, 0) == 0) {
+        return daclabel.substr(liberaPrefix.size());
+    }
+    return daclabel;
+}
+
+string chooseDisplayLabel(const DacData& dacdata,
+                          DacAliasManager& aliasManager) {
+    const string explicitAlias = aliasManager.getAliasForLabel(dacdata.getLabel());
+    if (explicitAlias != dacdata.getLabel()) {
+        return explicitAlias;
+    }
+
+    if (!dacdata.defaultDisplayLabel.empty()) {
+        return dacdata.defaultDisplayLabel;
+    }
+
+    return makeDefaultDisplayLabel(dacdata.getLabel());
+}
+
+} // namespace
+
+DacAssigner * DacAssigner :: dacAssigner = nullptr;
 
 DacAssigner * DacAssigner::instance() {
-	if(dacAssigner == NULL) {
+	if(dacAssigner == nullptr) {
 		dacAssigner = new DacAssigner();
 	}
 	return dacAssigner;
 }
+void DacAssigner::destroy() {
+    delete dacAssigner;
+    dacAssigner = nullptr;
+    
+}
+
+void DacAssigner::shutdown() {
+    if (shutdownStarted.exchange(true)) {
+        return;
+    }
+
+    // The laser manager singleton is intentionally long-lived, so app exit
+    // must stop manager-owned discovery threads explicitly instead of waiting
+    // for process teardown.
+    stopAndClearManagers();
+    dacDataList.clear();
+    availableDacDataList.clear();
+}
+
+void DacAssigner::handleCoreExit(ofEventArgs& args) {
+    (void)args;
+    shutdown();
+}
+
+void DacAssigner::stopAndClearManagers() {
+    // Managers can own threads/sockets/devices, so always ask them to exit
+    // before releasing shared_ptr references.
+    for(std::shared_ptr<DacManagerBase>& manager : dacManagers) {
+        if(manager != nullptr) {
+            manager->exit();
+        }
+    }
+    dacManagers.clear();
+}
+
+void DacAssigner::configureManagers() {
+    stopAndClearManagers();
+    // Libera-only branch strategy:
+    // keep protocol-specific discovery/connection inside libera for hardware DACs.
+    dacManagers.push_back(std::make_shared<DacManagerLibera>());
+}
 
 
 DacAssigner :: DacAssigner() {
-
-    if(dacAssigner == NULL) {
+    if(dacAssigner == nullptr) {
 		dacAssigner = this;
 	} else {
 		ofLog(OF_LOG_ERROR, "Multiple ofxLaser::DacManager instances created");
         throw;
 	}
-    
-    aliasByLabel = {
-       
-        {"Etherdream 66E647A5986A", "SebLee ED A01"},
-        {"Etherdream 5EE67D9E3666", "SebLee ED A02"},
-        {"Etherdream 4AE1B1A5006A", "SebLee ED A03"},
-        {"Etherdream 66E62D9EFE66", "SebLee ED A04"},
-        {"Etherdream 66E653A5686A", "SebLee ED A05"},
-        {"Etherdream 76E6069EE666", "SebLee ED A06"},
-        {"Etherdream 4EE1A5A5246A", "SebLee ED A07"},
-        {"Etherdream 76E6FA9D2267", "SebLee ED A08"},
-        {"Etherdream 3AE1D9A5386A", "SebLee ED A09"},
-        {"Etherdream 66E641A5BC6A", "SebLee ED A10"},
-        {"Etherdream 4AE1AAA51C6A", "SebLee ED A11"},
-        {"Etherdream 36E1E6A5346A", "SebLee ED A12"},
-        {"Etherdream 124DACB1EF44", "SebLee ED B01"},
-        {"Etherdream 124DACE7DAFB", "SebLee ED B02"},
-        {"Etherdream 124DAC75882B", "SebLee ED B03"},
-        {"Etherdream 124DACCE68EA", "SebLee ED B04"},
-        {"Etherdream 124DAC730C99", "SebLee ED B05"},
-        {"Etherdream 124DACD146EB", "SebLee ED B06"},
-        {"Etherdream 124DACF2D99A", "SebLee ED B07"},
-        {"Etherdream 124DACE6D0CC", "SebLee ED B08"},
-        {"Etherdream 124DAC193A1B", "SebLee ED B09"},
-        {"Etherdream 124DAC1BBFD3", "SebLee ED B10"},
-        {"Etherdream 124DAC62CB62", "SebLee ED B11"},
-        {"Etherdream 124DACC90945", "SebLee ED B12"}
-    };
 
-    
-    dacManagers.push_back(new DacManagerLaserdock());
-    dacManagers.push_back(new DacManagerHelios());
-    dacManagers.push_back(new DacManagerEtherdream());
+    // Run manager shutdown during the normal openFrameworks exit event, after
+    // the app's own exit callback but before static teardown starts.
+    ofAddListener(ofEvents().exit, this, &DacAssigner::handleCoreExit, OF_EVENT_ORDER_AFTER_APP);
+    dacAliasManager.load();
+
+    configureManagers();
     updateDacList();
 	
 }
 
 DacAssigner :: ~DacAssigner() {
-    //dacAssigner = NULL;
+    ofRemoveListener(ofEvents().exit, this, &DacAssigner::handleCoreExit, OF_EVENT_ORDER_AFTER_APP);
+    shutdown();
 }
 
-const vector<DacData>& DacAssigner ::getDacList(){
-    return dacDataList;
+
+bool DacAssigner :: update() {
+    if (shutdownStarted.load()) {
+        return false;
+    }
+
+    bool changed = false;
+    for(std::shared_ptr<DacManagerBase>& dacManager : dacManagers) {
+        if(dacManager->checkDacsChanged()) changed = true;
+    }
+    
+    if(changed) updateDacList();
+    
+    return changed;
 }
 
-const vector<DacData>& DacAssigner ::updateDacList(){
+const vector<std::shared_ptr<DacData>>& DacAssigner ::getAvailableDacList(){
+    
+    return availableDacDataList;
+}
+
+
+void DacAssigner ::updateDacList(){
+    if (shutdownStarted.load()) {
+        availableDacDataList.clear();
+        dacDataList.clear();
+        return;
+    }
+
     
     // get a new list of dacdata
     vector<DacData> newdaclist;
     
-    for(DacManagerBase* dacManager : dacManagers) {
+    for(std::shared_ptr<DacManagerBase>& dacManager : dacManagers) {
         // ask every dac manager for an updated list of DacData objects
         // and insert them into our new vector.
         vector<DacData> newdacs = dacManager->updateDacList();
         newdaclist.insert( newdaclist.end(), newdacs.begin(), newdacs.end() );
-        
     }
+    
     for(DacData& newdacdata : newdaclist) {
-        if(aliasByLabel.find(newdacdata.label)!=aliasByLabel.end()) {
-            newdacdata.alias = aliasByLabel[newdacdata.label];
-            
+        newdacdata.alias = chooseDisplayLabel(newdacdata, dacAliasManager);
+
+        ofLogNotice(" DacAssigner ::updateDacList " ) << newdacdata.getLabel() << " " << newdacdata.alias;
+        if(newdacdata.alias==" ") {
+            ofLogError("MISSING DAC ALIAS!");
         }
+        
+
+        //
+//        if(aliasByLabel.find(newdacdata.getLabel())!=aliasByLabel.end()) {
+//            newdacdata.alias = aliasByLabel[newdacdata.getLabel()];
+//        } else {
+//            newdacdata.alias = "";
+//        }
+
     }
     
     // go through the existing list, check against the new
     // list and if it can't find it any more, mark it as
     // unavailable.
     
-    for(DacData& dacdata : dacDataList) {
+    for(std::shared_ptr<DacData>& dacdata : dacDataList) {
         bool nowavailable = false;
         // Look up alias here!
        
         for(DacData& newdacdata : newdaclist) {
             // compare the new dac to the existing one
-            if(newdacdata.id == dacdata.id) {
+            if(newdacdata.id == dacdata->id) {
                 
                 // Store the new dac's availability
                 // (the new dac should always be
@@ -114,19 +190,23 @@ const vector<DacData>& DacAssigner ::updateDacList(){
                 // the laser object is waiting for that dac to
                 // become available.
                 // So let's get the dac and assign it to the laser!
-                if(!dacdata.available && (dacdata.assignedLaser!=nullptr)) {
-                    DacBase* dacToAssign = getManagerForType(dacdata.type)->getAndConnectToDac(dacdata.id);
-                    if(dacToAssign!=nullptr) {
-                        dacToAssign->alias = dacdata.alias;
-                        dacdata.assignedLaser->setDac(dacToAssign);
-                        dacdata.available = true;
+                if(((!dacdata->available) || (dacdata->unavailable) ) && (dacdata->assignedLaser!=nullptr)) {
+                    if(!newdacdata.unavailable) {
+                        std::shared_ptr<DacManagerBase>manager = getManagerForType(dacdata->type);
+                        std::shared_ptr<DacBase> dacToAssign = nullptr;
+                        if(manager) dacToAssign = manager->getAndConnectToDac(dacdata->id);
+                        if(dacToAssign!=nullptr) {
+                            //dacToAssign->setAlias(dacdata.alias);
+                            dacdata->assignedLaser->setDac(dacToAssign);
+                        }
+                        dacdata->available = true;
                     }
                 }
                 break;
             }
         }
         
-        dacdata.available = nowavailable;
+        dacdata->available = nowavailable;
         
     }
     
@@ -134,8 +214,15 @@ const vector<DacData>& DacAssigner ::updateDacList(){
     // dacs that are not already in the existing list
     for(DacData& newdacdata : newdaclist) {
         bool isnew = true;
-        for(DacData& dacdata : dacDataList) {
-            if(dacdata.id == newdacdata.id) {
+        for(std::shared_ptr<DacData>& dacdata : dacDataList) {
+            if(dacdata->id == newdacdata.id) {
+                // trying this because sometimes the ip address is lost when
+                // passing back and forth
+                dacdata->address = newdacdata.address;
+                dacdata->defaultDisplayLabel = newdacdata.defaultDisplayLabel;
+                dacdata->alias = newdacdata.alias;
+                // update state in case it's changed
+                dacdata->unavailable = newdacdata.unavailable;
                 isnew = false;
                 break;
             }
@@ -144,24 +231,61 @@ const vector<DacData>& DacAssigner ::updateDacList(){
         // if it's new, add it to the list
         if(isnew) {
            
-            dacDataList.push_back(newdacdata);
+            dacDataList.push_back(std::make_shared<DacData>(newdacdata)); // copy constructor
         }
     }
     
     // sort the list (the DacData class has overloaded operators
     // that make the list sortable alphanumerically by their IDs
 	std::sort(dacDataList.begin(), dacDataList.end());
+    std::sort(dacDataList.begin(), dacDataList.end(), [](std::shared_ptr<DacData>& a, std::shared_ptr<DacData>& b) {
+        return (*a.get() < *b.get());
+        });
     
-    return dacDataList; 
+    
+    
+    availableDacDataList.clear();
+    for(std::shared_ptr<DacData>& dacdata : dacDataList) {
+        if(dacdata->available) availableDacDataList.push_back(dacdata);
+    }
+    
+    //return dacDataList;
     
 }
 
+string DacAssigner :: getAliasForLabel(const string& daclabel) {
+    return dacAliasManager.getAliasForLabel(daclabel);
+    
+}
 
-bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
+string DacAssigner :: getDefaultDisplayLabelForLabel(const string& daclabel) {
+    std::shared_ptr<DacData> dacdata = getDacDataForLabel(daclabel);
+    if (dacdata != nullptr && !dacdata->defaultDisplayLabel.empty()) {
+        return dacdata->defaultDisplayLabel;
+    }
+
+    return makeDefaultDisplayLabel(daclabel);
+}
+
+string DacAssigner :: getDisplayLabelForLabel(const string& daclabel) {
+    const string alias = dacAliasManager.getAliasForLabel(daclabel);
+    if (alias != daclabel) {
+        return alias;
+    }
+
+    return getDefaultDisplayLabelForLabel(daclabel);
+}
+
+bool DacAssigner :: addAliasForLabel(string alias, const string& daclabel, bool force) {
+    return dacAliasManager.addAliasForLabel(alias, daclabel, force);
     
-    DacData* dacdataptr = &getDacDataForLabel(daclabel);
+}
+
+bool DacAssigner ::assignToLaser(const string& daclabel, std::shared_ptr<Laser>& laser){
+    ofLogNotice("DacAssigner ::assignToLaser " ) << daclabel; 
+    std::shared_ptr<DacData> dacdata = getDacDataForLabel(daclabel);
     
-    if(&emptyDacData==dacdataptr) {
+    if(dacdata == nullptr) {
         
         // no dacdata found! This usually means that we're loading
         // and the new dac hasn't been found yet. So we need to reserve
@@ -172,26 +296,25 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         string dactype = daclabel.substr(0, daclabel.find(" "));
         string dacid = daclabel.substr(daclabel.find(" ")+1, string::npos);
         
-        dacDataList.emplace_back(dactype, dacid, "", &laser);
-        dacdataptr = &dacDataList.back();
-        dacdataptr->available = false;
-        if(aliasByLabel.find(dacdataptr->label)!=aliasByLabel.end()) {
-            dacdataptr->alias = aliasByLabel[dacdataptr->label];
-            
-        }
-       
+        
+        dacdata = std::make_shared<DacData>(dactype, dacid, "", false, laser);
+        dacDataList.push_back(dacdata);
+        
+        dacdata->alias = getDisplayLabelForLabel(dacdata->getLabel());
+        dacdata->available = false;
+
         return false;
         
     }
-    DacData& dacdata = *dacdataptr;
     
-    ofLogNotice("DacAssigner::assignToLaser - " + dacdata.label, ofToString(laser.laserIndex));
+    
+    ofLogNotice("DacAssigner::assignToLaser - " + dacdata->getLabel(), ofToString(laser->laserIndex));
     
   
     // get manager for type
-    DacManagerBase* manager = getManagerForType(dacdata.type);
+    std::shared_ptr<DacManagerBase> manager = getManagerForType(dacdata->type);
     if(manager==nullptr) {
-        ofLogError("DacAssigner ::assignToLaser - invalid type " + dacdata.type);
+        ofLogError("DacAssigner ::assignToLaser - invalid type " + dacdata->type);
         return false;
     }
     
@@ -199,41 +322,41 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
     // if laser already has a dac then delete it!
     disconnectDacFromLaser(laser);
     
-    DacBase* dacToAssign = nullptr;
+    std::shared_ptr<DacBase> dacToAssign;
     
-    if(dacdata.assignedLaser!=nullptr) {
+    if(dacdata->assignedLaser!=nullptr) {
         // remove from current laser
         
         // Is this bad? Maybe better to get the dac
         // from its manager?
-        dacToAssign = dacdata.assignedLaser->getDac();
-        dacdata.assignedLaser->removeDac();
-        dacdata.assignedLaser = nullptr;
+        dacToAssign = dacdata->assignedLaser->getDac();
+        dacdata->assignedLaser->removeDac();
+        dacdata->assignedLaser = nullptr;
         
     } else {
     
         // get dac from manager
-        dacToAssign = manager->getAndConnectToDac(dacdata.id);
+        dacToAssign = manager->getAndConnectToDac(dacdata->id);
         
     }
     // if success
     if(dacToAssign!=nullptr) {
         
         // is there a better place to assign this?
-        dacToAssign->alias = dacdata.alias;
+        //dacToAssign->setAlias(dacdata.alias);
         
         // give the dac to the laser
-        laser.setDac(dacToAssign);
+        laser->setDac(dacToAssign);
         // store a reference to the laser in the
         // dacdata
-        dacdata.assignedLaser = &laser;
+        dacdata->assignedLaser = laser;
         
         
         // clear the reference to this laser from the other dac data
-        for(DacData& dacdataToCheck : dacDataList) {
-            if(&dacdata == &dacdataToCheck) continue;
-            else if(dacdataToCheck.assignedLaser == &laser) {
-                dacdataToCheck.assignedLaser = nullptr;
+        for(std::shared_ptr<DacData> dacdataToCheck : dacDataList) {
+            if(dacdata.get() == dacdataToCheck.get()) continue;
+            else if(dacdataToCheck->assignedLaser.get() == laser.get()) {
+                dacdataToCheck->assignedLaser = nullptr;
             }
         }
         
@@ -244,28 +367,34 @@ bool DacAssigner ::assignToLaser(const string& daclabel, Laser& laser){
         // Maybe we should store the laser in the
         // DacData anyway it can be connected if / when
         // it's found?
-        dacdata.available = false;
+        dacdata->assignedLaser = laser;
+        laser->dacLabel = dacdata->getLabel();
+        dacdata->available = false;
         return false;
     }
     
     return true; 
 }
 
-bool DacAssigner :: disconnectDacFromLaser(Laser& laser) {
-    DacData& dacData = getDacDataForLaser(laser);
-    if(dacData.assignedLaser!=nullptr) {
-        dacData.assignedLaser = nullptr;
-        laser.removeDac();
-        getManagerForType(dacData.type)->disconnectAndDeleteDac(dacData.id);
+bool DacAssigner :: disconnectDacFromLaser(std::shared_ptr<Laser>& laser) {
+    std::shared_ptr<DacData> dacData = getDacDataForLaser(laser);
+    if((dacData!=nullptr) && (dacData->assignedLaser!=nullptr)) {
+        dacData->assignedLaser = nullptr;
+        laser->removeDac();
+        std::shared_ptr<DacManagerBase> manager = getManagerForType(dacData->type);
+        if(manager) manager->disconnectAndDeleteDac(dacData->id);
+        else {
+            ofLogNotice("Error - disconnected non existent dac ");
+        }
         return true;
     } else {
         return false;
     }
 }
-DacManagerBase* DacAssigner :: getManagerForType(string type){
-    for(DacManagerBase* manager : dacManagers) {
-        if(manager->getType() == type) {
-            return manager;
+std::shared_ptr<DacManagerBase> DacAssigner :: getManagerForType(string type){
+    for(std::shared_ptr<DacManagerBase>& dacManager : dacManagers) {
+        if(dacManager->getType() == type) {
+            return dacManager;
             
             break;
         }
@@ -274,19 +403,35 @@ DacManagerBase* DacAssigner :: getManagerForType(string type){
     
 }
 
-DacData& DacAssigner ::getDacDataForLabel(const string& label){
-    for(DacData& dacData : dacDataList) {
-        if(dacData.label == label) {
+std::shared_ptr<DacData> DacAssigner ::getDacDataForLabel(const string& label){
+    for(std::shared_ptr<DacData>& dacData : dacDataList) {
+        if(dacData->getLabel() == label) {
             return dacData;
         }
     }
     
     
-    return emptyDacData ;
+    return nullptr ;
 }
 
 
-DacData& DacAssigner ::getDacDataForLaser(Laser& laser){
-    return getDacDataForLabel(laser.getDacLabel());
+std::shared_ptr<DacData> DacAssigner ::getDacDataForLaser(std::shared_ptr<Laser>& laser){
+    return getDacDataForLabel(laser->getDacLabel());
 }
 
+
+
+void DacAssigner::serialize(ofJson&json) const {
+    for(const std::shared_ptr<DacManagerBase>& manager : dacManagers) {
+        ofJson& managerJson = json[manager->getType()];
+        manager->serialize(managerJson);
+    }
+}
+bool DacAssigner::deserialize(ofJson&jsonGroup) {
+    for(const std::shared_ptr<DacManagerBase>& manager : dacManagers) {
+        if(jsonGroup.contains(manager->getType())) {
+            manager->deserialize(jsonGroup[manager->getType()]);
+        }
+    }
+    return true;
+}

@@ -5,25 +5,23 @@
 //  Created by Seb Lee-Delisle on 01/02/2018.
 //
 
-#pragma once 
-#include "ofxLaserQuadGui.h"
+#pragma once
+
+#include "ofxLaserPolygonBase.h"
 
 namespace ofxLaser {
-class QuadMask : public QuadGui{
+class QuadMask : public PolygonBase {
     
     public :
     QuadMask();
-    ~QuadMask(); 
+    ~QuadMask();
+    
     virtual void serialize(ofJson&json) const override;
     virtual bool deserialize(ofJson&jsonGroup) override;
-    virtual void draw() override;
-
-    void maskLevelChanged(int&e) {
-        isDirty = true; 
-    }
     
+    void maskLevelChanged(int&e);
     ofParameter<int> maskLevel;
-
+    
     
 };
 }

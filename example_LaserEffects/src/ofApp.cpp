@@ -5,11 +5,14 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	
+    // enables the laser to have a faster framerate than the screen
+    ofSetVerticalSync(false);
+    
 	laserWidth = 800;
 	laserHeight = 800;
 	laserManager.setCanvasSize(laserWidth, laserHeight);
 	
-    numLaserEffects = 9;
+    numLaserEffects = 8;
     
 	// if you don't want to manage your own GUI for your
     // app you can add extra params to the laser GUI
@@ -23,10 +26,10 @@ void ofApp::setup(){
     
     ofParameter<string> description;
     description.setName("description"); 
-    description.set("INSTRUCTIONS : \nTAB to toggle output editor \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
+    description.set("INSTRUCTIONS : \nLeft and Right Arrows to change current effect \nMouse to draw polylines \nC to clear");
     laserManager.addCustomParameter(description);
     
-    currentLaserEffect = 0;
+    currentLaserEffect = 1;
      
 }
 
@@ -235,9 +238,9 @@ void ofApp :: showLaserEffect(int effectnum) {
             laserManager.beginDraw();
             
             float speed = 20;
-            ofPushMatrix();
-            ofTranslate(laserWidth/2,laserHeight/2);
-            ofRotateYDeg(elapsedTime*speed);
+            laserManager.pushMatrix();
+            laserManager.translate(laserWidth/2,laserHeight/2);
+            laserManager.rotateYDeg(elapsedTime*speed);
             int hue = (int)(elapsedTime*32)%255; // 8 seconds to go around
             ofColor c;
             c.setHsb(hue, 255, 255);
@@ -246,8 +249,8 @@ void ofApp :: showLaserEffect(int effectnum) {
             
             for(int j = 0; j<4; j++) {
                 poly.clear();
-                ofPushMatrix();
-                ofRotateXDeg(j*90);
+                laserManager.pushMatrix();
+                laserManager.rotateXDeg(j*90);
                 
                 poly.addVertex(glm::vec3(100,-100,100));
                 poly.addVertex(glm::vec3(100, 100,100));
@@ -255,9 +258,9 @@ void ofApp :: showLaserEffect(int effectnum) {
                 poly.addVertex(glm::vec3(-100, -100,100));
                 laserManager.drawPoly(poly, c, renderProfile);
                
-                ofPopMatrix();
+                laserManager.popMatrix();
             }
-            ofPopMatrix();
+            laserManager.popMatrix();
             
             laserManager.endDraw();
           
@@ -289,7 +292,6 @@ void ofApp::keyPressed(ofKeyEventArgs& e){
 	}
     if(e.key==OF_KEY_TAB) {
         laserManager.selectNextLaser();
-       
     }
    
 }
@@ -300,7 +302,6 @@ void ofApp::mouseDragged(ofMouseEventArgs& e){
 	
     glm::vec2 mouse = laserManager.screenToLaserInput(e);
     
-    
 	ofPolyline &poly = polyLines.back();
 	poly.addVertex((ofPoint)mouse);
 
@@ -308,7 +309,7 @@ void ofApp::mouseDragged(ofMouseEventArgs& e){
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(ofMouseEventArgs& e){
-    if(!laserManager.isAnyLaserSelected()) {
+    if(laserManager.viewMode == OFXLASER_VIEW_CANVAS) {
         polyLines.push_back(ofPolyline());
         drawingShape = true;
     }

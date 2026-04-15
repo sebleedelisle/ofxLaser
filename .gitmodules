@@ -1,0 +1,3 @@
+[submodule "libs/libera-laser"]
+	path = libs/libera-laser
+	url = https://github.com/sebleedelisle/libera-laser.git

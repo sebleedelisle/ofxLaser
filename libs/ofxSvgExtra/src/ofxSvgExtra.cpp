@@ -1,5 +1,6 @@
 #include "ofxSvgExtra.h"
 #include "ofConstants.h"
+#include "ofUtils.h"
 #include <regex>
 
 using namespace std;
@@ -31,6 +32,10 @@ ofPath & ofxSVGExtra::getPathAt(int n){
 }
 
 void ofxSVGExtra::load(std::string path){
+    
+    std::locale original_locale = std::locale();  // Save current locale
+    std::locale::global(std::locale("C"));
+
 	path = ofToDataPath(path);
 
 	if(path.compare("") == 0){
@@ -38,13 +43,28 @@ void ofxSVGExtra::load(std::string path){
 		return;
 	}
 
-	ofBuffer buffer = ofBufferFromFile(path);
-	
-	loadFromString(buffer.getText(), path);
-	
+    ofFile svgFile(path);
+    if(!svgFile.exists()) {
+        ofLogError("Missing SVG file : ") << path;
+    } else {
+        ofBuffer buffer = ofBufferFromFile(path, false);
+        
+        loadFromString(buffer.getText(), path);
+    }
+    
+    std::locale::global(original_locale);
+    
+    
+
+    
+    
 }
 
 void ofxSVGExtra::loadFromString(std::string stringdata, std::string urlstring){
+    
+    std::locale original_locale = std::locale();  // Save current locale
+    std::locale::global(std::locale("C"));
+    
     if(increaseCompatibility) fixSvgText(stringdata);
     if(stringdata.empty()) return ;
     
@@ -84,6 +104,8 @@ void ofxSVGExtra::loadFromString(std::string stringdata, std::string urlstring){
 	setupDiagram(diagram);
 
 	svgtiny_free(diagram);
+    
+    std::locale::global(original_locale);
 }
 
 void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
@@ -99,10 +121,16 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 		
 		for(ofXml & element: strokeWidthElements){
 			//cout << element.toString() << endl;
-			float strokewidth = element.getAttribute("stroke-width").getFloatValue();
-			//cout << strokewidth << endl;
-			strokewidth = MAX(1,round(strokewidth));
-			element.getAttribute("stroke-width").set(strokewidth);
+			try {
+				float strokewidth = element.getAttribute("stroke-width").getFloatValue();
+				if (strokewidth > 0.0) {
+					strokewidth = MAX(1, round(strokewidth));
+					element.getAttribute("stroke-width").set(strokewidth);
+				}
+			}
+			catch (...) {
+				ofLogError() << "Invalid stroke-width value "<< element.toString();
+			}
 			//cout << strokewidth << endl;
 		}
 	}
@@ -111,12 +139,18 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
     // inside of style tags!
     ofXml::Search styleElements = xml.find("//*[@style]");
     if(!styleElements.empty()) {
-        
-        for(ofXml & element: styleElements){
+        //cout << styleElements.size() << endl;
+        //cout << xmlstring<< endl;
+        for(int i = 0; i<styleElements.size(); i++) {
+            ofXml element = styleElements[i];
             //cout << element.toString() << endl;
+        //for(ofXml element: styleElements){
+  
+            //ofXml::Attribute att = element.getAttribute("style");
+            //if(att.)
             string style = element.getAttribute("style").getValue();
            
-           // cout << style << endl;
+            //cout << style << endl;
             size_t startpos = style.find("stroke-width");
             if(startpos!=string::npos) {
                 
@@ -185,6 +219,165 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 		
 	}
 	
+
+    auto parseOpacity = [](const std::string& value) -> float {
+        if(value.empty()) return 1.f;
+        std::string trimmed = ofTrim(value);
+        if(trimmed.empty()) return 1.f;
+        std::string cleaned = trimmed;
+        ofStringReplace(cleaned, "%", "");
+        try {
+            return ofToFloat(cleaned);
+        } catch(...) {
+            return 1.f;
+        }
+    };
+    
+    auto removeElementsWithZeroOpacityAttribute = [&](const std::string& attributeName){
+        bool removed = true;
+        while (removed) {
+            removed = false;
+
+            ofXml::Search elements = xml.find("//*[@" + attributeName + "]");
+            for (ofXml element : elements) { // <-- copy, not reference
+                float opacityValue = parseOpacity(
+                    element.getAttribute(attributeName).getValue()
+                );
+
+                if (opacityValue <= 0.f) {
+                    ofXml parent = element.getParent();
+                    if (parent && element) {
+                        parent.removeChild(element);
+                        removed = true;
+                        break; // restart search safely
+                    }
+                }
+            }
+        }
+    };
+    
+    auto styleHasZeroOpacity = [&](const std::string& style) -> bool {
+        if(style.empty()) return false;
+        vector<string> styleEntries = ofSplitString(style, ";", true, true);
+        for(std::string entry : styleEntries) {
+            vector<string> parts = ofSplitString(entry, ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "opacity") {
+                if(parseOpacity(parts[1]) <= 0.f) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    
+    auto removeStyleOpacityElements = [&](){
+        bool removed = true;
+        while(removed) {
+            removed = false;
+            ofXml::Search styleElements = xml.find("//*[@style]");
+            for(ofXml & element : styleElements){
+                std::string style = element.getAttribute("style").getValue();
+                if(styleHasZeroOpacity(style)) {
+                    ofXml parent = element.getParent();
+                    if(parent && element){
+                        parent.removeChild(element);
+                        removed = true;
+                        break;
+                    }
+                }
+            }
+        }
+    };
+    
+    removeStyleOpacityElements();
+    removeElementsWithZeroOpacityAttribute("opacity");
+    
+    auto disableStrokeOnElement = [&](ofXml &element){
+        element.setAttribute("stroke", "none");
+        if(element.getAttribute("stroke-width")) {
+            element.setAttribute("stroke-width", "0");
+        }
+        if(element.getAttribute("stroke-opacity")) {
+            element.removeAttribute("stroke-opacity");
+        }
+    };
+    
+    auto styleHasZeroStrokeOpacity = [&](const std::string& style, bool &disableStroke) -> std::vector<std::string> {
+        disableStroke = false;
+        vector<string> entries = ofSplitString(style, ";", true, true);
+        for(std::string & entry : entries) {
+            vector<string> parts = ofSplitString(entry, ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "stroke-opacity") {
+                if(parseOpacity(parts[1]) <= 0.f) {
+                    disableStroke = true;
+                }
+            }
+        }
+        return entries;
+    };
+    
+    auto applyDisableStrokeToStyleEntries = [&](std::vector<std::string>& entries){
+        int strokeIndex = -1;
+        for(size_t i = 0; i<entries.size(); ++i) {
+            vector<string> parts = ofSplitString(entries[i], ":", true, true);
+            if(parts.size()!=2) continue;
+            std::string key = ofToLower(ofTrim(parts[0]));
+            if(key == "stroke") {
+                strokeIndex = static_cast<int>(i);
+            } else if(key == "stroke-opacity") {
+                entries.erase(entries.begin() + i);
+                --i;
+            }
+        }
+        if(strokeIndex>=0) {
+            entries[strokeIndex] = "stroke:none";
+        } else {
+            entries.push_back("stroke:none");
+        }
+    };
+    
+    auto removeStrokeUsingOpacityAttributes = [&](){
+        bool modified = true;
+        while(modified) {
+            modified = false;
+            ofXml::Search strokeOpacityElements = xml.find("//*[@stroke-opacity]");
+            for(ofXml & element : strokeOpacityElements){
+                if(parseOpacity(element.getAttribute("stroke-opacity").getValue()) <= 0.f) {
+                    disableStrokeOnElement(element);
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    };
+    
+    auto removeStrokeUsingStyleOpacity = [&](){
+        bool modified = true;
+        while(modified) {
+            modified = false;
+            ofXml::Search styleElements = xml.find("//*[@style]");
+            for(ofXml & element : styleElements){
+                std::string style = element.getAttribute("style").getValue();
+                bool disableStroke = false;
+                auto entries = styleHasZeroStrokeOpacity(style, disableStroke);
+                if(disableStroke) {
+                    applyDisableStrokeToStyleEntries(entries);
+                    element.setAttribute("style", ofJoinString(entries, ";"));
+                    disableStrokeOnElement(element);
+                    modified = true;
+                    break;
+                }
+            }
+        }
+    };
+    
+    removeStrokeUsingOpacityAttributes();
+    removeStrokeUsingStyleOpacity();
+	
 	// implement the SVG "use" element by expanding out those elements into
 	// XML that svgtiny will parse correctly.
 
@@ -233,29 +426,45 @@ void ofxSVGExtra::fixSvgText(std::string& xmlstring) {
 	
 }
 
-void ofxSVGExtra::draw(){
+void ofxSVGExtra::draw(bool useColour){
 	for(int i = 0; i < (int)paths.size(); i++){
+        paths[i].setUseShapeColor(useColour); 
 		paths[i].draw();
 	}
 }
 
 void ofxSVGExtra::setupDiagram(struct svgtiny_diagram * diagram){
 
-	width = diagram->width;
-	height = diagram->height;
+    // diagram width and height always seem to be 0! svgtiny - the gift that keeps giving :|
+//	width = diagram->width;
+//	height = diagram->height;
 
+    ofRectangle bounds;
+    bool firstShape = true;
 	paths.clear();
 
 	for(int i = 0; i < (int)diagram->shape_count; i++){
 		if(diagram->shape[i].path){
 			paths.push_back(ofPath());
 			setupShape(&diagram->shape[i],paths.back());
+            if(firstShape){
+                bounds = getBoundingBoxOfPath(paths.back());
+                firstShape = false;
+            } else {
+                bounds.growToInclude(getBoundingBoxOfPath(paths.back()));
+            }
+            
 		}else if(diagram->shape[i].text){
 			ofLogWarning("ofxSVGExtra") << "setupDiagram(): text: not implemented yet";
 		}
 	}
+    width = bounds.getWidth();
+    height = bounds.getHeight();
+    boundingBox = bounds; 
 }
 
+    
+    
 void ofxSVGExtra::setupShape(struct svgtiny_shape * shape, ofPath & path){
 	float * p = shape->path;
 
