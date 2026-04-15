@@ -14,20 +14,19 @@ It is licensed for **non-commercial use only** (see [LICENSE](LICENSE)).
 
 ---
 
-## Looking for complete show software?
+## Need a full show application?
 
-If you need a full professional environment for designing and running shows, check out **[Liberation](https://liberationlaser.com)**.  
+If you want a standalone application for designing and running laser shows, take a look at **[Liberation](https://liberationlaser.com)**.  
 
-Liberation is built on the same foundation as ofxLaser, but adds:
+Liberation is built on the same foundation as ofxLaser and adds:
 
-- A 3D visualiser and advanced editing tools
-- Powerful node editing tool for creating laser graphics and beam effects
+- A 3D visualiser and editing tools
+- Node-based tools for creating laser graphics and beam effects
 - Clip deck, timeline, and FX systems  
 - MIDI/DMX/Art-Net integration  
-- PONK support for integration with TouchDesigner, MadMapper and openFrameworks
-- Professional support and reliability  
+- PONK support, so you can send paths to it via [ofxPonk](https://github.com/jonasfehr/ofxPonk), or from TouchDesigner or MadLaser
 
-Liberation is the **polished, supported application**, while ofxLaser remains a lean toolkit for learning and prototyping.
+ofxLaser remains the lower-level openFrameworks toolkit, while Liberation is the application built on top of the same backend.
 
 Safety Notice
 =============
