@@ -81,7 +81,10 @@ common:
 	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/media/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/examples/%
 	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/dotnet/%
-		ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/shared_library/%
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/shared_library/%
+	# Build idnServerList.cpp through a local shim so its private logging helpers
+	# don't collide with idn.cpp during MSYS2/GCC linking.
+	ADDON_SOURCES_EXCLUDE += libs/libera-laser/libs/helios_dac/sdk/cpp/idn/idnServerList.cpp
 
 
 	linux64:
