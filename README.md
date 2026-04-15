@@ -3,7 +3,7 @@
 ofxLaser
 =========
 
-[![Build Examples](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml/badge.svg?branch=libera-major-refactor)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml)
+[![Build Examples](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml/badge.svg?branch=main)](https://github.com/sebleedelisle/ofxLaser/actions/workflows/build-examples.yml)
 
 ofxLaser is a core library for sending laser frames to supported laser controllers (DACs) (Ether Dream, Helios, LaserCube, AVB, etc).  
 
@@ -38,7 +38,7 @@ Seriously, don't mess around with this stuff. You can really damage your eyes / 
 Current status
 ==================
 
-The **libera-major-refactor** branch is undergoing a significant overhaul:
+The current **main** branch includes the libera-based refactor:
 * Pure ofxGui interface (ImGui dependency removed)
 * Poco dependency removed
 * DAC communication handled by **libera-laser** backend
@@ -179,7 +179,7 @@ Copyright (c) 2012-2026 Seb Lee-Delisle [seblee.me](https://seblee.me) [seblee.c
 Installation
 -------
 
-The **libera-major-refactor** branch targets [openFrameworks](https://openframeworks.cc) 0.12.x.
+The **main** branch targets [openFrameworks](https://openframeworks.cc) 0.12.x.
 
 Once you have downloaded the openFrameworks source code, add the ofxLaser folder to the addons folder.
 Clone the source code with submodules:
