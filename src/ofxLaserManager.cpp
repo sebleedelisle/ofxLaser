@@ -393,7 +393,7 @@ void Manager :: updateGridSettings() {
         laserview->setGrid(zoneGridSnap, zoneGridSize, zoneGridVisible);
         
     }
-    canvasViewController->setGrid(canvasGridSnap, canvasGridSize, canvasGridSnap);
+    canvasViewController->setGrid(canvasGridSnap, canvasGridSize, canvasGridVisible);
     
 }
 
@@ -576,10 +576,14 @@ void Manager::selectNextLaser() {
         
         setSelectedLaserIndex(next);
     } else {
+        ofxLaserViewMode previousViewMode = viewMode;
         if(viewMode == OFXLASER_VIEW_OUTPUT) {
             viewMode = OFXLASER_VIEW_CANVAS;
         } else {
             viewMode = OFXLASER_VIEW_OUTPUT;
+        }
+        if(viewMode != previousViewMode) {
+            refreshPanelsForViewModeChange();
         }
     }
 }
@@ -602,11 +606,15 @@ bool Manager::setSelectedLaserIndex(int i){
 }
 
 bool Manager::selectAndShowLaser(int i) {
+    ofxLaserViewMode previousViewMode = viewMode;
     bool changed = setSelectedLaserIndex(i);
     if(changed || (viewMode == OFXLASER_VIEW_CANVAS)) {
         viewMode = OFXLASER_VIEW_OUTPUT;
     } else {
         viewMode = OFXLASER_VIEW_CANVAS;
+    }
+    if(viewMode != previousViewMode) {
+        refreshPanelsForViewModeChange();
     }
     return changed;
     
@@ -1266,6 +1274,13 @@ void Manager::refreshOfxGuiPanels() {
     refreshLaserSettingsPanel();
     refreshSelectedZonePanel();
     refreshEditorPanel();
+    refreshSelectedCanvasItemPanel();
+}
+
+void Manager::refreshPanelsForViewModeChange() {
+    refreshViewPanel();
+    refreshEditorPanel();
+    refreshSelectedZonePanel();
     refreshSelectedCanvasItemPanel();
 }
 

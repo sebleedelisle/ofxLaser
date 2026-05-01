@@ -92,6 +92,7 @@ class Manager : public ManagerBase, public LaserBaseController {
     void refreshSelectedZonePanel();
     void refreshEditorPanel();
     void refreshSelectedCanvasItemPanel();
+    void refreshPanelsForViewModeChange();
     void addLaserSettingParameter(ofxGuiGroup& guiGroup, ofAbstractParameter& parameter, bool topLevel);
     void addLaserControllerControls(ofxGuiGroup& guiGroup, std::shared_ptr<Laser> laser);
     void addLaserSettingsButton(ofxGuiGroup& guiGroup, const std::string& label, std::function<void()> onPressed);
