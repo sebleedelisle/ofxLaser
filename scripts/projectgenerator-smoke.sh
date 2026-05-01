@@ -58,7 +58,7 @@ if [[ ! -d "${ADDON_ROOT}/${PG_EXAMPLE}/src" ]]; then
     exit 1
 fi
 
-BUILD_ROOT="${TMP_ROOT}/${PG_PLATFORM}/${PG_PROJECT_NAME}"
+BUILD_ROOT="${TMP_ROOT}/${PG_PROJECT_NAME}"
 rm -rf "${BUILD_ROOT}"
 mkdir -p "${BUILD_ROOT}"
 
