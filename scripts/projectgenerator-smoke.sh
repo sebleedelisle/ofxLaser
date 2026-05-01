@@ -112,6 +112,16 @@ case "${PG_BUILD_PLATFORM}" in
         fi
         make -C "${BUILD_ROOT}" "${PG_BUILD_TARGET:-${EXAMPLE_TARGET:-ReleaseNoOF}}" -j"${PARALLEL_JOBS}"
         ;;
+    vs)
+        if [[ ! -f "${BUILD_ROOT}/${PG_PROJECT_NAME}.sln" ]]; then
+            echo "Expected Visual Studio solution not found: ${BUILD_ROOT}/${PG_PROJECT_NAME}.sln" >&2
+            exit 1
+        fi
+        if [[ ! -f "${BUILD_ROOT}/${PG_PROJECT_NAME}.vcxproj" ]]; then
+            echo "Expected Visual Studio project not found: ${BUILD_ROOT}/${PG_PROJECT_NAME}.vcxproj" >&2
+            exit 1
+        fi
+        ;;
     *)
         echo "Generation completed for ${PG_PLATFORM}; no build command configured for ${PG_BUILD_PLATFORM}"
         ;;

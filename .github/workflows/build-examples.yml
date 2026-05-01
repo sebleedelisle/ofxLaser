@@ -266,8 +266,7 @@ jobs:
       - name: ProjectGenerator smoke test
         working-directory: openFrameworks/addons/ofxLaser
         env:
-          PG_PLATFORM: vscode
-          PG_BUILD_PLATFORM: msys2
-          PG_BUILD_TARGET: DebugNoOF
+          PG_PLATFORM: vs
+          PG_BUILD_PLATFORM: vs
           JOBS: 4
         run: ./scripts/projectgenerator-smoke.sh
