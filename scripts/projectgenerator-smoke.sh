@@ -8,7 +8,7 @@ OF_ROOT="${OF_ROOT:-$(cd "${ADDON_ROOT}/../.." && pwd -P)}"
 PROJECT_GENERATOR="${PROJECT_GENERATOR:-${PG_BIN:-projectGenerator}}"
 PG_EXAMPLE="${PG_EXAMPLE:-example_HelloLaser}"
 PG_PROJECT_NAME="${PG_PROJECT_NAME:-ofxLaserProjectGeneratorSmoke}"
-TMP_ROOT="${TMPDIR:-/tmp}/ofxlaser-projectgenerator-smoke"
+TMP_ROOT="${PG_TMP_ROOT:-${OF_ROOT}/apps/ofxlaser-projectgenerator-smoke}"
 PARALLEL_JOBS="${JOBS:-4}"
 
 detect_platform() {
