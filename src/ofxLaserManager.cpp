@@ -635,8 +635,22 @@ int Manager::getLaserIndex(std::shared_ptr<Laser>& laser) {
 }
 
 void Manager::setCanvasSize(int width, int height) {
+    const ofRectangle previousBounds = canvasTarget->getBounds();
     ManagerBase::setCanvasSize(width, height);
+
+    if(canvasTarget->getBounds() == previousBounds) {
+        return;
+    }
+
+    if(canvasViewController) {
+        canvasViewController->updateUIFromZones(canvasTarget);
+        canvasViewController->setOutputRect(getCanvasPreviewRect());
+        canvasViewController->update();
+    }
+
     setDefaultPreviewOffsetAndScale();
+    fireCanvasChanged();
+    scheduleSaveSettings();
 }
 
 

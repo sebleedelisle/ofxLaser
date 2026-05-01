@@ -90,7 +90,17 @@ void ManagerBase ::resetAllLasersToDefault() {
 
 
 void ManagerBase :: setCanvasSize(int w, int h){
-    canvasTarget->setBounds(0,0,w,h);
+    const ofRectangle previousBounds = canvasTarget->getBounds();
+    if(!canvasTarget->setBounds(0,0,w,h)) {
+        return;
+    }
+
+    const ofRectangle newBounds = canvasTarget->getBounds();
+    for(std::shared_ptr<InputZone>& inputZone : canvasTarget->getInputZones()) {
+        if(inputZone && inputZone->getRect() == previousBounds) {
+            inputZone->set(newBounds.x, newBounds.y, newBounds.width, newBounds.height);
+        }
+    }
 }
 
 void ManagerBase::createAndAddLaser() {
