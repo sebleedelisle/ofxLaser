@@ -255,7 +255,7 @@ jobs:
         working-directory: openFrameworks/addons/ofxLaser
         run: |
           PG_CMD_DIR="../../apps/projectGenerator/commandLine"
-          make -C "${PG_CMD_DIR}" DebugNoOF -j"${JOBS:-4}"
+          make -C "${PG_CMD_DIR}" DebugNoOF PROJECT_CFLAGS="-include algorithm" -j"${JOBS:-4}"
 
           for PG_BIN in \
             "${PG_CMD_DIR}/bin/projectGenerator_debug.exe" \
