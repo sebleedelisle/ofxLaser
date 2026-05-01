@@ -860,6 +860,7 @@ void Manager::refreshLaserSettingsPanel() {
     laserSettingsPanel.setWidthElements(320);
     laserSettingsOwnedGroups.clear();
     laserSettingsOwnedButtons.clear();
+    laserSettingsOwnedLabels.clear();
     laserSettingsButtonListeners.clear();
 
     std::shared_ptr<Laser> laser = getSelectedLaser();
@@ -879,6 +880,7 @@ void Manager::refreshLaserSettingsPanel() {
         // Speed and scanner sync are prominent controls
         laserSettingsPanel.add(laser->speed);
         laserSettingsPanel.add(laser->scannerSync);
+        addLaserControllerControls(laserSettingsPanel, laser);
 
         ofxGuiSetDefaultHeight(20);
 
@@ -890,10 +892,19 @@ void Manager::refreshLaserSettingsPanel() {
             addLaserSettingParameter(laserSettingsPanel, param, true);
         }
         laserSettingsPanel.minimizeAll();
-        laserSettingsPanel.getGroup("Laser settings").maximize();
+        if (laserSettingsPanel.getControl("Controller") != nullptr) {
+            laserSettingsPanel.getGroup("Controller").maximize();
+        }
+        if (laserSettingsPanel.getControl("Laser settings") != nullptr) {
+            laserSettingsPanel.getGroup("Laser settings").maximize();
+        }
         laserSettingsPanel.setWidthElements(320);
     }
     guiPanelSelectedLaserIndex = getSelectedLaserIndex();
+    guiPanelDacSignature = getDacUiSignature();
+    guiPanelSelectedLaserDacLabel = laser ? laser->dacLabel.get() : "";
+    guiPanelSelectedLaserHasDac = laser && laser->hasDac();
+    guiPanelSelectedLaserDacStatus = laser ? getLaserStatusSummary(laser) : "";
 }
 
 std::shared_ptr<OutputZone> Manager::getSelectedOutputZone() {
@@ -1067,6 +1078,141 @@ void Manager::refreshSelectedCanvasItemPanel() {
     guiPanelSelectedCanvasUid = uiElement->getUid();
 }
 
+std::string Manager::getDacUiSignature() {
+    std::string signature;
+    const vector<std::shared_ptr<DacData>>& dacList = dacAssigner.getAvailableDacList();
+    for (const std::shared_ptr<DacData>& dacdata : dacList) {
+        if (!dacdata) continue;
+        signature += dacdata->getLabel();
+        signature += "|";
+        signature += dacdata->alias;
+        signature += "|";
+        signature += dacdata->address;
+        signature += "|";
+        signature += ofToString(dacdata->available);
+        signature += "|";
+        signature += ofToString(dacdata->unavailable);
+        signature += "|";
+        if (dacdata->assignedLaser) {
+            signature += ofToString(dacdata->assignedLaser->laserIndex);
+        }
+        signature += ";";
+    }
+    return signature;
+}
+
+void Manager::addLaserSettingsLabel(ofxGuiGroup& guiGroup, const std::string& name, const std::string& value) {
+    auto label = std::make_unique<ofxLabel>();
+    label->setup(name, value, 300, 20);
+    guiGroup.add(label.get());
+    laserSettingsOwnedLabels.push_back(std::move(label));
+}
+
+void Manager::addLaserSettingsButton(ofxGuiGroup& guiGroup, const std::string& label, std::function<void()> onPressed) {
+    auto button = std::make_unique<ofxButton>();
+    ofParameter<void> buttonParameter;
+    buttonParameter.set(label);
+    button->setup(buttonParameter);
+
+    auto token = static_cast<ofParameter<void>&>(button->getParameter()).newListener([onPressed]() {
+        if (onPressed) {
+            onPressed();
+        }
+    });
+
+    guiGroup.add(button.get());
+    laserSettingsButtonListeners.push_back(std::move(token));
+    laserSettingsOwnedButtons.push_back(std::move(button));
+}
+
+void Manager::addLaserControllerControls(ofxGuiGroup& guiGroup, std::shared_ptr<Laser> laser) {
+    if (!laser) {
+        return;
+    }
+
+    auto controllerGroup = std::make_unique<ofxGuiGroup>();
+    controllerGroup->setup("Controller");
+    controllerGroup->setWidthElements(300);
+
+    const std::string savedDacLabel = laser->dacLabel.get();
+    std::string controllerLabel = "None";
+    if (laser->hasDac()) {
+        controllerLabel = dacAssigner.getDisplayLabelForLabel(laser->getDacLabel());
+    } else if (!savedDacLabel.empty()) {
+        controllerLabel = dacAssigner.getDisplayLabelForLabel(savedDacLabel) + " (saved)";
+    }
+
+    addLaserSettingsLabel(*controllerGroup, "Assigned", controllerLabel);
+    addLaserSettingsLabel(*controllerGroup, "Status", getLaserStatusSummary(laser));
+
+    if (!savedDacLabel.empty()) {
+        addLaserSettingsButton(*controllerGroup, "Reconnect", [this, savedDacLabel, laser]() {
+            sendLaserMessage(LaserMsg::AssignDac{savedDacLabel, laser->laserIndex});
+            guiPanelDacSignature = "__refresh__";
+            guiPanelSelectedLaserDacLabel = "__refresh__";
+            guiPanelSelectedLaserDacStatus = "__refresh__";
+        });
+    }
+
+    if (laser->hasDac() || !savedDacLabel.empty()) {
+        addLaserSettingsButton(*controllerGroup, "Disconnect", [this, laser]() {
+            sendLaserMessage(LaserMsg::DisconnectDac{laser->laserIndex});
+            guiPanelDacSignature = "__refresh__";
+            guiPanelSelectedLaserDacLabel = "__refresh__";
+            guiPanelSelectedLaserDacStatus = "__refresh__";
+        });
+    }
+
+    addLaserSettingsButton(*controllerGroup, "Refresh Controllers", [this]() {
+        dacAssigner.updateDacList();
+        fireDacStatusChanged();
+        guiPanelDacSignature = "__refresh__";
+        guiPanelSelectedLaserDacLabel = "__refresh__";
+        guiPanelSelectedLaserDacStatus = "__refresh__";
+    });
+
+    const vector<std::shared_ptr<DacData>>& dacList = dacAssigner.getAvailableDacList();
+    if (dacList.empty()) {
+        addLaserSettingsLabel(*controllerGroup, "Available", "None found");
+    } else {
+        addLaserSettingsLabel(*controllerGroup, "Available", ofToString(dacList.size()) + " found");
+        for (const std::shared_ptr<DacData>& dacdata : dacList) {
+            if (!dacdata) continue;
+
+            const std::string dacLabel = dacdata->getLabel();
+            const std::string displayLabel = dacAssigner.getDisplayLabelForLabel(dacLabel);
+            const bool assignedToThisLaser = dacdata->assignedLaser && dacdata->assignedLaser.get() == laser.get();
+            const bool assignedToAnotherLaser = dacdata->assignedLaser && dacdata->assignedLaser.get() != laser.get();
+
+            if (assignedToThisLaser) {
+                addLaserSettingsLabel(*controllerGroup, displayLabel, "Assigned here");
+                continue;
+            }
+
+            if (dacdata->unavailable) {
+                addLaserSettingsLabel(*controllerGroup, displayLabel, "In use");
+                continue;
+            }
+
+            std::string buttonLabel = "Assign " + displayLabel;
+            if (assignedToAnotherLaser) {
+                buttonLabel = "Move " + displayLabel + " from Laser " + ofToString(dacdata->assignedLaser->laserIndex + 1);
+            }
+
+            addLaserSettingsButton(*controllerGroup, buttonLabel, [this, dacLabel, laser]() {
+                sendLaserMessage(LaserMsg::AssignDac{dacLabel, laser->laserIndex});
+                guiPanelDacSignature = "__refresh__";
+                guiPanelSelectedLaserDacLabel = "__refresh__";
+                guiPanelSelectedLaserDacStatus = "__refresh__";
+            });
+        }
+    }
+
+    controllerGroup->maximize();
+    guiGroup.add(controllerGroup.get());
+    laserSettingsOwnedGroups.push_back(std::move(controllerGroup));
+}
+
 void Manager::addLaserSettingParameter(ofxGuiGroup& guiGroup, ofAbstractParameter& parameter, bool topLevel) {
     const std::string type = parameter.type();
 
@@ -1135,6 +1281,17 @@ void Manager::drawOfxGuiPanels() {
     if (guiPanelSelectedLaserIndex != getSelectedLaserIndex()) {
         refreshLaserSettingsPanel();
         refreshEditorPanel();
+    }
+    std::shared_ptr<Laser> selectedLaserForDac = getSelectedLaser();
+    std::string dacSignature = getDacUiSignature();
+    std::string selectedLaserDacLabel = selectedLaserForDac ? selectedLaserForDac->dacLabel.get() : "";
+    bool selectedLaserHasDac = selectedLaserForDac && selectedLaserForDac->hasDac();
+    std::string selectedLaserDacStatus = selectedLaserForDac ? getLaserStatusSummary(selectedLaserForDac) : "";
+    if (dacSignature != guiPanelDacSignature
+        || selectedLaserDacLabel != guiPanelSelectedLaserDacLabel
+        || selectedLaserHasDac != guiPanelSelectedLaserHasDac
+        || selectedLaserDacStatus != guiPanelSelectedLaserDacStatus) {
+        refreshLaserSettingsPanel();
     }
     std::shared_ptr<OutputZone> selectedZone = getSelectedOutputZone();
     std::string selectedZoneUid = selectedZone

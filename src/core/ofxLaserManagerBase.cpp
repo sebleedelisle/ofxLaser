@@ -444,12 +444,15 @@ void ManagerBase:: update(){
     // bit of a hack to check dacs that may take a little while to appear
     if(ofGetFrameNum()==1000) {
         dacAssigner.updateDacList();
+        fireDacStatusChanged();
     }
 
     // resets transformations
     resetTransformations();
     
-    dacAssigner.update();
+    if(dacAssigner.update()) {
+        fireDacStatusChanged();
+    }
     
     // delete all the shapes - all shape objects need a destructor!
     canvasTarget->deleteShapes();

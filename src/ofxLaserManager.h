@@ -11,6 +11,7 @@
 #include "ofxButton.h"
 #include "GlobalScale.h"
 #include "ofxGui.h"
+#include <functional>
 #include <memory>
 
 namespace ofxLaser {
@@ -92,6 +93,10 @@ class Manager : public ManagerBase, public LaserBaseController {
     void refreshEditorPanel();
     void refreshSelectedCanvasItemPanel();
     void addLaserSettingParameter(ofxGuiGroup& guiGroup, ofAbstractParameter& parameter, bool topLevel);
+    void addLaserControllerControls(ofxGuiGroup& guiGroup, std::shared_ptr<Laser> laser);
+    void addLaserSettingsButton(ofxGuiGroup& guiGroup, const std::string& label, std::function<void()> onPressed);
+    void addLaserSettingsLabel(ofxGuiGroup& guiGroup, const std::string& name, const std::string& value);
+    std::string getDacUiSignature();
     bool isMouseOverOfxGuiPanels(float x, float y) const;
     std::shared_ptr<OutputZone> getSelectedOutputZone();
     std::shared_ptr<MoveablePoly> getSelectedCanvasUiElement();
@@ -236,8 +241,13 @@ class Manager : public ManagerBase, public LaserBaseController {
     std::string guiPanelSelectedCanvasUid;
     std::vector<std::unique_ptr<ofxGuiGroup>> laserSettingsOwnedGroups;
     std::vector<std::unique_ptr<ofxButton>> laserSettingsOwnedButtons;
+    std::vector<std::unique_ptr<ofxLabel>> laserSettingsOwnedLabels;
     std::vector<std::unique_ptr<of::priv::AbstractEventToken>> laserSettingsButtonListeners;
     std::vector<std::unique_ptr<ofxGuiGroup>> selectedZoneOwnedGroups;
+    std::string guiPanelDacSignature;
+    std::string guiPanelSelectedLaserDacLabel;
+    std::string guiPanelSelectedLaserDacStatus;
+    bool guiPanelSelectedLaserHasDac = false;
 
     protected :
 
