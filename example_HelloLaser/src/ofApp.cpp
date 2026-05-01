@@ -7,7 +7,7 @@ void ofApp::setup(){
     
     // NOTE that you no longer need to set up anything at all in code!
     // If you want to change the size of the laser area, use
-    laser.setCanvasSize(900, 800); //  - default is 800 x 800.
+    laser.setCanvasSize(1200, 800); //  - default is 800 x 800.
     ofSetVerticalSync(false);
     starPoly = makeStarPolyline(4, 200);
     starPolyInner = makeStarPolyline(4, 100);
