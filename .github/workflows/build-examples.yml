@@ -251,8 +251,32 @@ jobs:
           JOBS: 4
         run: ./scripts/build-examples.sh
 
-      - name: Skip projectGenerator smoke test
+      - name: Build projectGenerator
         working-directory: openFrameworks/addons/ofxLaser
         run: |
-          echo "Skipping Windows projectGenerator smoke test because projectGenerator ${PROJECT_GENERATOR_VERSION} exits 127 under MSYS2 before generating a usable project."
-          echo "Windows compiler coverage is provided by the Build examples step above; projectGenerator coverage is still checked on macOS and Linux."
+          PG_CMD_DIR="../../apps/projectGenerator/commandLine"
+          make -C "${PG_CMD_DIR}" DebugNoOF -j"${JOBS:-4}"
+
+          for PG_BIN in \
+            "${PG_CMD_DIR}/bin/projectGenerator_debug.exe" \
+            "${PG_CMD_DIR}/bin/projectGenerator.exe" \
+            "${PG_CMD_DIR}/bin/commandLine_debug.exe" \
+            "${PG_CMD_DIR}/bin/commandLine.exe"
+          do
+            if [[ -f "${PG_BIN}" ]]; then
+              echo "PROJECT_GENERATOR=${PG_BIN}" >> "${GITHUB_ENV}"
+              exit 0
+            fi
+          done
+
+          echo "Could not find built projectGenerator binary" >&2
+          find "${PG_CMD_DIR}/bin" -maxdepth 2 -type f -print >&2
+          exit 1
+
+      - name: ProjectGenerator smoke test
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          PG_PLATFORM: msys2
+          PG_BUILD_TARGET: DebugNoOF
+          JOBS: 4
+        run: ./scripts/projectgenerator-smoke.sh
