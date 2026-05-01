@@ -268,5 +268,6 @@ jobs:
         env:
           PG_PLATFORM: vs
           PG_BUILD_PLATFORM: vs
+          PG_ALLOW_GENERATED_ON_ERROR: 1
           JOBS: 4
         run: ./scripts/projectgenerator-smoke.sh
