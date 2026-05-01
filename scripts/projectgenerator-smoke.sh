@@ -84,7 +84,9 @@ if [[ -n "${PG_TEMPLATE:-}" ]]; then
 fi
 "${PG_BIN_PATH}" "${PG_ARGS[@]}" "${BUILD_ROOT_FOR_PG}"
 
-if ! grep -R -F -q "libs/libera-laser/include" "${BUILD_ROOT}"; then
+if [[ "${PG_BUILD_PLATFORM}" == "msys2" ]]; then
+    echo "Skipping literal include-path grep for msys2; generated project build validates addon include paths"
+elif ! grep -R -F -q "libs/libera-laser/include" "${BUILD_ROOT}"; then
     echo "Generated project is missing libs/libera-laser/include" >&2
     exit 1
 fi
