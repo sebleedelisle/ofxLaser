@@ -82,17 +82,7 @@ PG_ARGS=(-o"${OF_ROOT_FOR_PG}" -p"${PG_PLATFORM}" -a"ofxLaser")
 if [[ -n "${PG_TEMPLATE:-}" ]]; then
     PG_ARGS+=(-t"${PG_TEMPLATE}")
 fi
-set +e
 "${PG_BIN_PATH}" "${PG_ARGS[@]}" "${BUILD_ROOT_FOR_PG}"
-PG_EXIT_STATUS=$?
-set -e
-
-if (( PG_EXIT_STATUS != 0 )); then
-    if [[ "${PG_ALLOW_GENERATED_ON_ERROR:-}" != "1" ]]; then
-        exit "${PG_EXIT_STATUS}"
-    fi
-    echo "projectGenerator exited with ${PG_EXIT_STATUS}; validating generated project files anyway"
-fi
 
 if ! grep -R -F -q "libs/libera-laser/include" "${BUILD_ROOT}"; then
     echo "Generated project is missing libs/libera-laser/include" >&2
