@@ -2,7 +2,6 @@ name: Build Examples
 
 env:
   PROJECT_GENERATOR_VERSION: v0.95.0
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   push:
@@ -30,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout openFrameworks
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: openframeworks/openFrameworks
           ref: '0.12.1'
@@ -41,7 +40,7 @@ jobs:
         run: openFrameworks/scripts/osx/download_libs.sh
 
       - name: Checkout ofxLaser
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: openFrameworks/addons/ofxLaser
           submodules: recursive
@@ -124,7 +123,7 @@ jobs:
 
     steps:
       - name: Checkout openFrameworks
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: openframeworks/openFrameworks
           ref: '0.12.1'
@@ -144,7 +143,7 @@ jobs:
         run: openFrameworks/scripts/linux/download_libs.sh
 
       - name: Checkout ofxLaser
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: openFrameworks/addons/ofxLaser
           submodules: recursive
@@ -187,7 +186,7 @@ jobs:
 
     steps:
       - name: Checkout openFrameworks
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: openframeworks/openFrameworks
           ref: '0.12.1'
@@ -195,13 +194,13 @@ jobs:
           submodules: recursive
 
       - name: Checkout ofxLaser
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: openFrameworks/addons/ofxLaser
           submodules: recursive
 
       - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2.27.0
+        uses: msys2/setup-msys2@v2.31.1
         with:
           cache: true
           release: true
