@@ -1,5 +1,8 @@
 name: Build Examples
 
+env:
+  PROJECT_GENERATOR_VERSION: v0.95.0
+
 on:
   push:
     paths:
@@ -45,6 +48,31 @@ jobs:
       - name: Build examples
         working-directory: openFrameworks/addons/ofxLaser
         run: ./scripts/build-examples.sh
+
+      - name: Install projectGenerator
+        working-directory: openFrameworks/addons/ofxLaser
+        run: |
+          PG_DIR="${RUNNER_TEMP}/projectGenerator"
+          rm -rf "${PG_DIR}"
+          mkdir -p "${PG_DIR}"
+          PG_ASSET="projectGenerator-osx.zip"
+          if [[ "$(uname -m)" == "arm64" ]]; then
+            PG_ASSET="projectGenerator-mac-arm64.zip"
+          fi
+          curl -L -o "${PG_DIR}/${PG_ASSET}" \
+            "https://github.com/openframeworks/projectGenerator/releases/download/${PROJECT_GENERATOR_VERSION}/${PG_ASSET}"
+          unzip -q "${PG_DIR}/${PG_ASSET}" -d "${PG_DIR}"
+          PG_BIN="$(find "${PG_DIR}" -path "*/Contents/Resources/app/app/projectGenerator" -type f -print -quit)"
+          test -n "${PG_BIN}"
+          chmod +x "${PG_BIN}"
+          echo "PROJECT_GENERATOR=${PG_BIN}" >> "${GITHUB_ENV}"
+
+      - name: ProjectGenerator smoke test
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          PG_PLATFORM: osx
+          PG_BUILD_TARGET: Release
+        run: ./scripts/projectgenerator-smoke.sh
 
   build-examples-linux:
     runs-on: ubuntu-24.04
@@ -108,6 +136,7 @@ jobs:
           # has shown 50+ minute stalls in CI. Install only the packages needed
           # for the pinned OF 0.12.1 Linux build instead.
           sudo apt-get update
+          # shellcheck disable=SC2086
           sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ${OF_LINUX_APT_PACKAGES}
 
       - name: Download OF Linux libs
@@ -126,6 +155,26 @@ jobs:
           EXAMPLE_TARGET: ReleaseNoOF
           JOBS: 4
         run: ./scripts/build-examples.sh
+
+      - name: Install projectGenerator
+        working-directory: openFrameworks/addons/ofxLaser
+        run: |
+          PG_DIR="${RUNNER_TEMP}/projectGenerator"
+          rm -rf "${PG_DIR}"
+          mkdir -p "${PG_DIR}"
+          curl -L -o "${PG_DIR}/projectGenerator-linux.tar.bz2" \
+            "https://github.com/openframeworks/projectGenerator/releases/download/${PROJECT_GENERATOR_VERSION}/projectGenerator-linux.tar.bz2"
+          tar -xjf "${PG_DIR}/projectGenerator-linux.tar.bz2" -C "${PG_DIR}"
+          chmod +x "${PG_DIR}/projectGenerator"
+          echo "PROJECT_GENERATOR=${PG_DIR}/projectGenerator" >> "${GITHUB_ENV}"
+
+      - name: ProjectGenerator smoke test
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          PG_PLATFORM: linux64
+          PG_BUILD_TARGET: ReleaseNoOF
+          JOBS: 4
+        run: ./scripts/projectgenerator-smoke.sh
 
   build-examples-windows-msys2:
     runs-on: windows-latest
@@ -201,3 +250,23 @@ jobs:
           EXAMPLE_TARGET: DebugNoOF
           JOBS: 4
         run: ./scripts/build-examples.sh
+
+      - name: Install projectGenerator
+        working-directory: openFrameworks/addons/ofxLaser
+        run: |
+          PG_DIR="/tmp/projectGenerator"
+          rm -rf "${PG_DIR}"
+          mkdir -p "${PG_DIR}"
+          curl -L -o "${PG_DIR}/projectGenerator-vs.zip" \
+            "https://github.com/openframeworks/projectGenerator/releases/download/${PROJECT_GENERATOR_VERSION}/projectGenerator-vs.zip"
+          unzip -q "${PG_DIR}/projectGenerator-vs.zip" -d "${PG_DIR}"
+          test -f "${PG_DIR}/projectGenerator.exe"
+          echo "PROJECT_GENERATOR=${PG_DIR}/projectGenerator.exe" >> "${GITHUB_ENV}"
+
+      - name: ProjectGenerator smoke test
+        working-directory: openFrameworks/addons/ofxLaser
+        env:
+          PG_PLATFORM: msys2
+          PG_BUILD_TARGET: DebugNoOF
+          JOBS: 4
+        run: ./scripts/projectgenerator-smoke.sh

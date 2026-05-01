@@ -32,6 +32,9 @@ common:
 	# but if the addon or addon libraries need special search paths they can be
 	# specified here separated by spaces or one per line using +=
 	# ADDON_INCLUDES =
+	ADDON_INCLUDES += libs/libera-laser/include
+	ADDON_INCLUDES += libs/libera-laser/libs/asio/include
+	ADDON_INCLUDES += libs/libera-laser/libs/helios_dac/sdk/cpp
 
 	# any special flag that should be passed to the compiler when using this
 	# addon
