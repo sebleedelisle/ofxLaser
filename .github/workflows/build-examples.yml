@@ -2,6 +2,7 @@ name: Build Examples
 
 env:
   PROJECT_GENERATOR_VERSION: v0.95.0
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   push:
