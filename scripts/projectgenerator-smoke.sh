@@ -30,6 +30,7 @@ detect_platform() {
 }
 
 PG_PLATFORM="${PG_PLATFORM:-$(detect_platform)}"
+PG_BUILD_PLATFORM="${PG_BUILD_PLATFORM:-${PG_PLATFORM}}"
 
 resolve_executable() {
     local executable="$1"
@@ -77,9 +78,18 @@ if command -v cygpath >/dev/null 2>&1; then
 fi
 
 echo "Running projectGenerator for ${PG_PLATFORM}"
-"${PG_BIN_PATH}" -o"${OF_ROOT_FOR_PG}" -p"${PG_PLATFORM}" -a"ofxLaser" "${BUILD_ROOT_FOR_PG}"
+PG_ARGS=(-o"${OF_ROOT_FOR_PG}" -p"${PG_PLATFORM}" -a"ofxLaser")
+if [[ -n "${PG_TEMPLATE:-}" ]]; then
+    PG_ARGS+=(-t"${PG_TEMPLATE}")
+fi
+"${PG_BIN_PATH}" "${PG_ARGS[@]}" "${BUILD_ROOT_FOR_PG}"
 
-case "${PG_PLATFORM}" in
+if ! grep -R -F -q "libs/libera-laser/include" "${BUILD_ROOT}"; then
+    echo "Generated project is missing libs/libera-laser/include" >&2
+    exit 1
+fi
+
+case "${PG_BUILD_PLATFORM}" in
     osx)
         XCODE_PROJECT="${BUILD_ROOT}/${PG_PROJECT_NAME}.xcodeproj"
         if [[ ! -d "${XCODE_PROJECT}" ]]; then
@@ -95,7 +105,7 @@ case "${PG_PLATFORM}" in
             ARCHS="$(uname -m)" \
             CODE_SIGN_IDENTITY=-
         ;;
-    linux*|msys2)
+    linux*|msys2|vscode)
         if [[ ! -f "${BUILD_ROOT}/Makefile" ]]; then
             echo "Expected Makefile not found: ${BUILD_ROOT}/Makefile" >&2
             exit 1
@@ -103,8 +113,8 @@ case "${PG_PLATFORM}" in
         make -C "${BUILD_ROOT}" "${PG_BUILD_TARGET:-${EXAMPLE_TARGET:-ReleaseNoOF}}" -j"${PARALLEL_JOBS}"
         ;;
     *)
-        echo "Generation completed for ${PG_PLATFORM}; no build command configured"
+        echo "Generation completed for ${PG_PLATFORM}; no build command configured for ${PG_BUILD_PLATFORM}"
         ;;
 esac
 
-echo "projectGenerator smoke test passed for ${PG_PLATFORM}"
+echo "projectGenerator smoke test passed for ${PG_PLATFORM} on ${PG_BUILD_PLATFORM}"
