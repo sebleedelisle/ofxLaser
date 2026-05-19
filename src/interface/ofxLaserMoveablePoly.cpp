@@ -151,7 +151,6 @@ bool MoveablePoly::setDisabled(bool v) {
         for(DragHandle& handle : handles) {
             handle.stopDrag();
         }
-        if(isDisabled) setSelected(false);
         return true;
     } else {
         return false;
@@ -240,7 +239,20 @@ void MoveablePoly ::updateHandleColours() {
 bool MoveablePoly :: mousePressed(ofMouseEventArgs &e) {
     mousePos = e;
     
-    if(isDisabled) return true;
+    if(isDisabled) {
+        bool hit = hitTest(mousePos);
+        if(hit) {
+            if(!getSelected()) {
+                setSelected(true);
+                mainDragHandleIndex = -1;
+            }
+            return false;
+        } else {
+            setSelected(false);
+            mainDragHandleIndex = -1;
+            return true;
+        }
+    }
         
     bool handlehit = false;
 

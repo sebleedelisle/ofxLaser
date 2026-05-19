@@ -262,7 +262,7 @@ void ViewWithMoveables :: mouseReleased(ofMouseEventArgs &e) {
      }
      if(nudge) {
          for(std::shared_ptr<MoveablePoly>& uiElement: uiElementsSorted) {
-             if(uiElement->getSelected()) {
+             if(uiElement->getSelected() && !uiElement->getDisabled()) {
                  uiElement->nudge(nudgevector);
              }
          }

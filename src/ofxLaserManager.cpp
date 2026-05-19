@@ -1431,7 +1431,6 @@ void Manager::onSelectedZoneMuteChanged(bool& value) {
 }
 
 void Manager::onSelectedZoneLockChanged(bool& value) {
-    std::shared_ptr<LaserZoneViewController> laserView = getCurrentLaserViewController();
     std::shared_ptr<OutputZone> outputZone = getSelectedOutputZone();
     if (!outputZone) {
         return;
@@ -1440,15 +1439,6 @@ void Manager::onSelectedZoneLockChanged(bool& value) {
     sendLaserMessage(LaserMsg::ZoneLockChanged{
         outputZone->getZoneId().getUid(),
         value});
-
-    if (laserView) {
-        std::shared_ptr<ZoneUIBase> zoneUi = laserView->getSelectedZoneUi();
-        if (zoneUi && value) {
-            zoneUi->setSelected(false);
-            guiPanelSelectedZoneUid = "__refresh__";
-            guiPanelSelectedZoneType = -2;
-        }
-    }
 }
 
 void Manager::onSelectedZoneQuadPressed() {
