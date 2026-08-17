@@ -2,6 +2,7 @@ name: Build Examples
 
 env:
   PROJECT_GENERATOR_VERSION: v0.95.0
+  OF_MSYS2_LIBS_VERSION: v12.1.1
 
 on:
   push:
@@ -241,7 +242,14 @@ jobs:
 
       - name: Download OF MSYS2 libs
         working-directory: openFrameworks
-        run: ./scripts/msys2/download_libs.sh --silent -a ucrt64
+        run: ./scripts/msys2/download_libs.sh --silent -a ucrt64 -t "${OF_MSYS2_LIBS_VERSION}"
+
+      - name: Validate OF MSYS2 libs
+        working-directory: openFrameworks
+        run: |
+          file addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a
+          ar t addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a >/dev/null
+          ranlib addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a
 
       - name: Build examples
         working-directory: openFrameworks/addons/ofxLaser
