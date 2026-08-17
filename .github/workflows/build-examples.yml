@@ -247,6 +247,37 @@ jobs:
       - name: Normalize OF MSYS2 libs
         working-directory: openFrameworks
         run: |
+          export OF_MSYS2_LIBS_ZIP="libs/download/openFrameworksLibs_${OF_MSYS2_LIBS_VERSION}_msys2_ucrt64.zip"
+          python - <<'PY'
+          import os
+          import zipfile
+          from pathlib import Path
+
+          addon_libs = {
+              "assimp": "ofxAssimpModelLoader",
+              "libxml2": "ofxSvg",
+              "svgtiny": "ofxSvg",
+          }
+
+          with zipfile.ZipFile(os.environ["OF_MSYS2_LIBS_ZIP"]) as archive:
+              for member in archive.infolist():
+                  if member.is_dir():
+                      continue
+
+                  member_path = Path(member.filename)
+                  data = archive.read(member)
+
+                  libs_target = Path("libs") / member_path
+                  libs_target.parent.mkdir(parents=True, exist_ok=True)
+                  libs_target.write_bytes(data)
+
+                  addon = addon_libs.get(member_path.parts[0])
+                  if addon is not None:
+                      addon_target = Path("addons") / addon / "libs" / member_path
+                      addon_target.parent.mkdir(parents=True, exist_ok=True)
+                      addon_target.write_bytes(data)
+          PY
+
           LIB="addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a"
           if ! ar t "${LIB}" >/dev/null 2>&1; then
             python addons/ofxLaser/scripts/repack-ar-archive.py "${LIB}"
