@@ -244,12 +244,15 @@ jobs:
         working-directory: openFrameworks
         run: ./scripts/msys2/download_libs.sh --silent -a ucrt64 -t "${OF_MSYS2_LIBS_VERSION}"
 
-      - name: Validate OF MSYS2 libs
+      - name: Normalize OF MSYS2 libs
         working-directory: openFrameworks
         run: |
-          file addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a
-          ar t addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a >/dev/null
-          ranlib addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a
+          LIB="addons/ofxSvg/libs/svgtiny/lib/msys2/libsvgtiny.a"
+          if ! ar t "${LIB}" >/dev/null 2>&1; then
+            python addons/ofxLaser/scripts/repack-ar-archive.py "${LIB}"
+          fi
+          file "${LIB}"
+          ar t "${LIB}" >/dev/null
 
       - name: Build examples
         working-directory: openFrameworks/addons/ofxLaser
